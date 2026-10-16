@@ -23,7 +23,8 @@ def experiment_index(experiments):
   'charles-law-volume':'charles law gay lussac volume thermal expansion constant pressure gas thermometer dilatometer absolute zero beta coefficient',
    'charles-law-pressure':'charles law gay lussac pressure thermal expansion coefficient constant volume air thermometer jolly bulb absolute zero pressure temperature',
    'vapor-pressure':'saturated vapor pressure enthalpy vaporization volatile liquid ethanol clausius clapeyron boiling point manometer mercury phase equilibrium temperature',
-   'air-humidity':'atmospheric humidity psychrometer hygrometer wet dry bulb depression dew point water vapor relative humidity sprung ferrel regnault'}
+   'air-humidity':'atmospheric humidity psychrometer hygrometer wet dry bulb depression dew point water vapor relative humidity sprung ferrel regnault',
+   'loaded-spring':'loaded helical spring simple harmonic motion shm oscillation period rayleigh effective mass spring constant stiffness hooke law slotted weights'}
  for exp in experiments:
   c=configs.get(exp['slug'],{});index.append({'slug':exp['slug'],'title':c.get('title',exp['title']),'subject':'physics','subjectName':'Physics','path':exp['page_path'],'summary':c.get('aim','Determine Planck’s constant from stopping potential and frequency.'),'keywords':' '.join([aliases.get(exp['slug'],''),*[a['name'] for a in c.get('apparatus',[])]])})
  return index
