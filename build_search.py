@@ -13,7 +13,8 @@ def experiment_index(experiments):
   'conical-pendulum':'conical pendulum uniform circular motion centripetal force gravity angle period revolution governor watt',
   'flywheel-inertia':'flywheel moment of inertia rotational acceleration dynamics torque angular acceleration drum cord',
   'specific-heat-capacity':'specific heat capacity method mixtures calorimeter heat thermal energy copper water equivalent thermodynamics',
-  'newtons-cooling':'newtons law cooling thermal radiation rate decay temperature heat loss calorimeter water jacket'}
+  'newtons-cooling':'newtons law cooling thermal radiation rate decay temperature heat loss calorimeter water jacket',
+  'solidification-cooling':'solidification cooling latent heat fusion salol phase change crystalline amorphous wax melting freezing plateau supercooling'}
  for exp in experiments:
   c=configs.get(exp['slug'],{});index.append({'slug':exp['slug'],'title':c.get('title',exp['title']),'subject':'physics','subjectName':'Physics','path':exp['page_path'],'summary':c.get('aim','Determine Planck’s constant from stopping potential and frequency.'),'keywords':' '.join([aliases.get(exp['slug'],''),*[a['name'] for a in c.get('apparatus',[])]])})
  return index
