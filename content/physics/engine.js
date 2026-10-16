@@ -739,6 +739,43 @@ function draw(t){
     const bX=470,bY=45,bW=220,bH=220,lambda_m=2.0*(L_cm+2.45)/100.0,v_est=fHz*lambda_m;
     svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#182824" stroke="'+soft+'" stroke-width="1.5"/><text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#718e79" font-size="9">EXCITATION FREQUENCY (f₁)</text><text x="'+(bX+15)+'" y="'+(bY+52)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+fHz.toFixed(1)+'</text><text x="'+(bX+105)+'" y="'+(bY+50)+'" fill="'+soft+'" font-size="11">Hz</text><text x="'+(bX+130)+'" y="'+(bY+50)+'" fill="#9fb498" font-size="8">(Fundamental)</text><line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#253a34"/><text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#718e79" font-size="9">RESONANT LENGTH (L)</text><text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="18" font-family="monospace">'+L_cm.toFixed(2)+' cm</text><text x="'+(bX+130)+'" y="'+(bY+108)+'" fill="#9fb498" font-size="8.5">(±0.05 cm)</text><line x1="'+(bX+15)+'" y1="'+(bY+125)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+125)+'" stroke="#253a34"/><text x="'+(bX+15)+'" y="'+(bY+144)+'" fill="#718e79" font-size="9">WAVELENGTH λ & SOUND VELOCITY v</text><text x="'+(bX+15)+'" y="'+(bY+168)+'" fill="'+orange+'" font-size="15" font-family="monospace" font-weight="bold">'+v_est.toFixed(1)+' m s⁻¹</text><text x="'+(bX+135)+'" y="'+(bY+168)+'" fill="#9fb498" font-size="9">(λ='+(lambda_m*100).toFixed(1)+' cm)</text><text x="'+(bX+15)+'" y="'+(bY+184)+'" fill="#9fb498" font-size="8">2c = 2(0.6133 r) = 2.45 cm · T = 20.0 °C</text><line x1="'+(bX+15)+'" y1="'+(bY+195)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+195)+'" stroke="#253a34"/>'+text(bX+15,bY+210,'L = (v/2)(1/f₁) − 2c ⇔ v = 2m · 2c = −b',ink,9)+text(240,22,'Telescoping Open Organ Pipe Apparatus')+text(240,308,'Open-Open Standing Wave: λ/2 = L + 2c · Dual Rayleigh End Correction 2c = 1.2266 r');
   }
+   else if(cfg.slug==='vibration-strings-sonometer'){
+    const fHz=p.input;
+    const L_cm=v.raw;
+    const boxX=50,boxY=180,boxW=370,boxH=55;
+    const bridge1X=85;
+    const segL_px=80.0+(L_cm-15.0)*6.5;
+    const bridge2X=bridge1X+segL_px;
+    const wireY=boxY-12;
+    svg+='<rect x="'+boxX+'" y="'+boxY+'" width="'+boxW+'" height="'+boxH+'" rx="4" fill="#78350f" stroke="#b45309" stroke-width="2"/><rect x="'+(boxX+4)+'" y="'+(boxY+4)+'" width="'+(boxW-8)+'" height="'+(boxH-8)+'" rx="3" fill="#92400e" opacity="0.6"/><ellipse cx="'+(boxX+50)+'" cy="'+(boxY+28)+'" rx="16" ry="6" fill="#1b2a26" stroke="#451a03" stroke-width="1.5"/><ellipse cx="'+(boxX+boxW-50)+'" cy="'+(boxY+28)+'" rx="16" ry="6" fill="#1b2a26" stroke="#451a03" stroke-width="1.5"/><circle cx="'+(boxX+15)+'" cy="'+wireY+'" r="4.5" fill="#94a3b8" stroke="#475569" stroke-width="1.5"/>';
+    const pulleyX=boxX+boxW+12,pulleyY=wireY+4;
+    svg+='<circle cx="'+pulleyX+'" cy="'+pulleyY+'" r="14" fill="#475569" stroke="#94a3b8" stroke-width="2"/><circle cx="'+pulleyX+'" cy="'+pulleyY+'" r="4" fill="#1e293b"/>';
+    const massY=pulleyY+60;
+    svg+='<line x1="'+(pulleyX+14)+'" y1="'+pulleyY+'" x2="'+(pulleyX+14)+'" y2="'+massY+'" stroke="#cbd5e1" stroke-width="1.5"/><rect x="'+(pulleyX+4)+'" y="'+massY+'" width="20" height="25" rx="3" fill="#d97706" stroke="#f59e0b" stroke-width="1.5"/><text x="'+(pulleyX+14)+'" y="'+(massY+16)+'" text-anchor="middle" fill="#fff" font-size="8" font-weight="bold">3 kg</text><text x="'+(pulleyX+14)+'" y="'+(massY+36)+'" text-anchor="middle" fill="'+soft+'" font-size="7.5">T=29.4N</text><polygon points="'+(bridge1X-8)+','+boxY+' '+bridge1X+','+(boxY-12)+' '+(bridge1X+8)+','+boxY+'" fill="#fde68a" stroke="#d97706" stroke-width="1.5"/><circle cx="'+bridge1X+'" cy="'+(boxY-12)+'" r="1.5" fill="#475569"/><polygon points="'+(bridge2X-8)+','+boxY+' '+bridge2X+','+(boxY-12)+' '+(bridge2X+8)+','+boxY+'" fill="#fde68a" stroke="#d97706" stroke-width="1.5"/><circle cx="'+bridge2X+'" cy="'+(boxY-12)+'" r="1.5" fill="#475569"/><line x1="'+(boxX+15)+'" y1="'+wireY+'" x2="'+bridge1X+'" y2="'+wireY+'" stroke="#cbd5e1" stroke-width="1.5"/><line x1="'+bridge2X+'" y1="'+wireY+'" x2="'+(pulleyX)+'" y2="'+wireY+'" stroke="#cbd5e1" stroke-width="1.5"/>';
+    let wirePts=[];
+    const midBridgeX=(bridge1X+bridge2X)/2.0,standingAmp=Math.cos(phase*16)*8.0;
+    for(let s=0;s<=30;s++){
+      const ns=s/30.0,wx=bridge1X+ns*(bridge2X-bridge1X),wy=wireY+Math.sin(Math.PI*ns)*standingAmp;
+      wirePts.push(wx.toFixed(1)+','+wy.toFixed(1));
+    }
+    svg+='<polyline points="'+wirePts.join(' ')+'" fill="none" stroke="'+ink+'" stroke-width="2"/>';
+    const riderY=wireY+standingAmp,isEjected=Math.abs(standingAmp)>6.0,riderOffY=isEjected?riderY-Math.abs(Math.sin(phase*20)*18)-6:riderY-5;
+    svg+='<path d="M '+(midBridgeX-4)+' '+(riderOffY+6)+' L '+midBridgeX+' '+riderOffY+' L '+(midBridgeX+4)+' '+(riderOffY+6)+'" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/><text x="'+midBridgeX+'" y="'+(riderOffY-6)+'" text-anchor="middle" fill="#ef4444" font-size="7.5" font-weight="bold">'+(isEjected?'Rider Ejected!':'Paper Rider')+'</text>';
+    const forkX=boxX+32,forkY=boxY-28;
+    svg+='<rect x="'+(forkX-2)+'" y="'+(boxY-8)+'" width="4" height="8" rx="1" fill="#94a3b8"/><path d="M '+(forkX-7)+' '+(forkY-18)+' V '+forkY+' H '+(forkX+7)+' V '+(forkY-18)+'" fill="none" stroke="#e2e8f0" stroke-width="2.5" stroke-linecap="round"/><line x1="'+forkX+'" y1="'+forkY+'" x2="'+forkX+'" y2="'+(boxY-8)+'" stroke="#94a3b8" stroke-width="3"/><text x="'+forkX+'" y="'+(forkY-22)+'" text-anchor="middle" fill="'+orange+'" font-size="8" font-weight="bold">'+fHz.toFixed(1)+' Hz</text>';
+    for(let r=1;r<=3;r++){
+      const ripR=r*8+((phase*20)%10);
+      svg+='<ellipse cx="'+(boxX+50)+'" cy="'+(boxY+10)+'" rx="'+ripR+'" ry="'+(ripR*0.45)+'" fill="none" stroke="'+orange+'" stroke-width="1" opacity="'+(1-r*0.28)+'"/>';
+    }
+    svg+='<line x1="'+bridge1X+'" y1="'+(boxY+boxH+12)+'" x2="'+bridge2X+'" y2="'+(boxY+boxH+12)+'" stroke="'+soft+'" stroke-width="1.5"/><line x1="'+bridge1X+'" y1="'+(boxY+boxH+6)+'" x2="'+bridge1X+'" y2="'+(boxY+boxH+18)+'" stroke="'+soft+'" stroke-width="1.5"/><line x1="'+bridge2X+'" y1="'+(boxY+boxH+6)+'" x2="'+bridge2X+'" y2="'+(boxY+boxH+18)+'" stroke="'+soft+'" stroke-width="1.5"/><text x="'+((bridge1X+bridge2X)/2)+'" y="'+(boxY+boxH+26)+'" text-anchor="middle" fill="'+soft+'" font-size="9" font-weight="bold">Resonant Length L = '+L_cm.toFixed(2)+' cm</text>';
+    for(let g=0;g<=20;g++){
+      const gx=boxX+20+g*(300/20),isMaj=(g%5===0);
+      svg+='<line x1="'+gx+'" y1="'+boxY+'" x2="'+gx+'" y2="'+(boxY+(isMaj?6:3))+'" stroke="'+soft+'" stroke-width="'+(isMaj?1.2:0.8)+'"/>';
+    }
+    const bX=470,bY=45,bW=220,bH=220,lambda_m=2.0*L_cm/100.0,v_est=fHz*lambda_m,mu_est=29.41995/(v_est*v_est);
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#182824" stroke="'+soft+'" stroke-width="1.5"/><text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#718e79" font-size="9">TUNING FORK FREQUENCY (f)</text><text x="'+(bX+15)+'" y="'+(bY+52)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+fHz.toFixed(1)+'</text><text x="'+(bX+105)+'" y="'+(bY+50)+'" fill="'+soft+'" font-size="11">Hz</text><text x="'+(bX+130)+'" y="'+(bY+50)+'" fill="#9fb498" font-size="8">(Middle Scale)</text><line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#253a34"/><text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#718e79" font-size="9">RESONANT SEGMENT LENGTH (L)</text><text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="18" font-family="monospace">'+L_cm.toFixed(2)+' cm</text><text x="'+(bX+130)+'" y="'+(bY+108)+'" fill="#9fb498" font-size="8.5">(±0.05 cm)</text><line x1="'+(bX+15)+'" y1="'+(bY+125)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+125)+'" stroke="#253a34"/><text x="'+(bX+15)+'" y="'+(bY+144)+'" fill="#718e79" font-size="9">WAVE SPEED v & LINEAR DENSITY μ</text><text x="'+(bX+15)+'" y="'+(bY+168)+'" fill="'+orange+'" font-size="15" font-family="monospace" font-weight="bold">'+v_est.toFixed(1)+' m s⁻¹</text><text x="'+(bX+130)+'" y="'+(bY+168)+'" fill="#9fb498" font-size="9">μ='+(mu_est*1000).toFixed(3)+' g/m</text><text x="'+(bX+15)+'" y="'+(bY+184)+'" fill="#9fb498" font-size="8">T = M g = 29.42 N (M = 3.0 kg) · d = 0.50 mm</text><line x1="'+(bX+15)+'" y1="'+(bY+195)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+195)+'" stroke="#253a34"/>'+text(bX+15,bY+210,'L = (v/2)(1/f) ⇔ v = 2m · μ = T / (4m²)',ink,9)+text(240,22,'Sonometer Soundboard Apparatus')+text(240,308,'Mersenne\'s Laws: f = (1/2L)√(T/μ) · Transverse Wave Speed v = 138.2 m s⁻¹');
+  }
+
 
 
    $('apparatusDiagram').innerHTML=svg;}

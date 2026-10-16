@@ -8093,5 +8093,223 @@
       "Approach the resonance peak slowly from both shortening and lengthening directions to eliminate sliding friction hysteresis and ear perception lag."
     ],
     "limitations": "The teaching model assumes an idealized planar 1D acoustic wave without transverse radial modes and treats the tube wall as perfectly rigid and isothermal. In a physical laboratory, small viscous and thermal boundary-layer damping at the inner wall produces slight Kirchhoff-Helmholtz phase velocity dispersion, minor acoustic radiation leaks through sliding joints can slightly broaden resonance peaks, and ambient room temperature gradients introduce small velocity uncertainties."
+  },
+  {
+    "number": 41,
+    "slug": "vibration-strings-sonometer",
+    "title": "The Vibration of Strings: Sonometer, Mersenne's Laws, and Transverse Wave Dynamics",
+    "shortTitle": "The Vibration of Strings",
+    "subject": "physics",
+    "aim": "To investigate the transverse standing wave modes on a stretched wire using a sonometer soundboard, verify Mersenne's laws relating fundamental frequency to vibrating length, tension, and linear density, observe sympathetic acoustic resonance and acoustic beats, and determine the transverse wave velocity and wire linear mass density using linear regression.",
+    "intro": "The physics of vibrating strings constitutes the historical and theoretical foundation of wave mechanics, Fourier analysis, and musical acoustics. In 1636, Marin Mersenne published the empirical laws governing vibrating strings in his seminal treatise 'Harmonie Universelle', which were subsequently given rigorous mathematical foundation by Brook Taylor, Jean le Rond d'Alembert, and Leonhard Euler through the 1D wave equation: ∂²y/∂t² = (T / μ) (∂²y/∂x²), where T is the mechanical tension in the wire and μ is its linear mass density (mass per unit length). The general solution represents transverse waves propagating in opposite directions at a characteristic phase velocity v = √(T / μ). When a wire of length L is clamped between two rigid triangular bridges, the boundary conditions enforce zero transverse displacement at both contact points: y(0, t) = 0 and y(L, t) = 0 (displacement nodes). Wave reflection at these fixed boundaries produces stationary standing waves where the vibrating segment must accommodate an exact integer number of half-wavelengths: L = n (λ_n / 2), with n = 1, 2, 3, ... For the fundamental transverse mode (n = 1), a single displacement antinode forms at the geometric midpoint, yielding the fundamental frequency formula: f₁ = v / λ₁ = v / (2L) = (1 / 2L) √(T / μ). This fundamental relation encapsulates Mersenne's three classical laws: frequency is inversely proportional to length (f ∝ 1/L), directly proportional to the square root of tension (f ∝ √T), and inversely proportional to the square root of linear mass density (f ∝ 1/√μ). In this classic laboratory investigation, a steel wire stretched across a hollow wooden resonance box is coupled to calibrated acoustic tuning forks. Unison tuning is detected with extreme precision by monitoring sympathetic resonance using lightweight paper riders placed at the antinode or by listening for the extinction of acoustic beats. Rearranging the fundamental equation yields the linear form L = (v / 2) (1 / f₁). Plotting the resonant length L against reciprocal frequency 1/f₁ allows students to determine the transverse wave velocity v directly from twice the regression slope (v = 2m) and to deduce the wire's linear density μ = T / v² = M g / (4m²), demonstrating the mechanical principles that govern pianos, harps, guitars, and violins.",
+    "fitEquation": "L = \\left(\\frac{v}{2}\\right)\\left(\\frac{1}{f}\\right) \\iff y = m x + b \\iff v = 2 m, \\quad \\mu = \\frac{T}{v^2} = \\frac{M g}{4 m^2}",
+    "gradientUnit": "m s⁻¹",
+    "target": 138.16,
+    "targetName": "Transverse wave speed v",
+    "resultUnit": "m s⁻¹",
+    "resultDecimals": 2,
+    "resultScale": 1,
+    "reference": 138.16,
+    "min": 100.0,
+    "max": 500.0,
+    "step": 1.0,
+    "initial": 256.0,
+    "inputLabel": "Tuning fork frequency f",
+    "shortInput": "Frequency f",
+    "inputUnit": "Hz",
+    "inputDecimals": 1,
+    "rawLabel": "Resonant string segment L",
+    "rawUnit": "cm",
+    "rawDecimals": 2,
+    "angle": false,
+    "timed": true,
+    "observationLabel": "Sonometer string resonance observations",
+    "xAxis": "Inverse frequency (1 / f)",
+    "yAxis": "Resonant segment length L",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "emptyX": "1/f (s)",
+    "emptyY": "L (m)",
+    "samples": [
+      128.0,
+      160.0,
+      192.0,
+      256.0,
+      320.0,
+      384.0
+    ],
+    "measureLabel": "Adjust Sonometer Bridge Position",
+    "settings": [
+      "Sonometer soundboard: hollow seasoned spruce resonant body with internal soundpost and f-holes",
+      "Test wire specimen: high-tensile cold-drawn piano steel wire (diameter d = 0.500 mm, ρ = 7850 kg/m³)",
+      "Tensioning system: frictionless ball-bearing pulley with calibrated load hanger (mass M = 3.000 kg, T = 29.420 N)",
+      "Bridges: hard triangular hardwood wedges with sharp metal fret knife-edges defining rigid boundary nodes",
+      "Resonance indicator: lightweight folded paper rider (mass < 15 mg) positioned at string antinode",
+      "Reference standards: theoretical transverse speed v = 138.16 m/s; wire linear mass density μ = 1.541 g/m"
+    ],
+    "modelExtra": "The sonometer experiment provides a definitive validation of Mersenne's acoustic laws for continuous 1D elastic media. By tuning the string segment between movable fret bridges to unison with calibrated tuning forks using sympathetic paper rider ejection and beat minimization, students confirm the half-wave relation L = (v/2)(1/f). Linear regression yields the transverse propagation speed v = 138.2 m s⁻¹ and wire linear density μ = 1.541 g m⁻¹ with exceptional precision, demonstrating the physical foundation of stringed musical instrument acoustics.",
+    "published": true,
+    "apparatus": [
+      {
+        "name": "Precision Laboratory Sonometer Soundboard Assembly",
+        "purpose": "A rigid hollow acoustic resonator box (length 110 cm, width 14 cm, depth 10 cm) constructed of seasoned Sitka spruce soundboard with internal spruce bracing and twin acoustic sound holes, designed to provide high mechanical-acoustic impedance matching that efficiently amplifies string vibrations into audible sound waves."
+      },
+      {
+        "name": "High-Tensile Cold-Drawn Piano Steel Wire",
+        "purpose": "A precision-drawn metallurgical music spring wire (diameter d = 0.500 mm ± 0.005 mm, density ρ = 7850 kg/m³, linear density μ = 1.541 g/m) anchored at one end to a heavy cast brass hitch pin and passing over a low-friction ball-bearing pulley at the opposite end."
+      },
+      {
+        "name": "Calibrated Slotted Weight Hanger & Precision Mass Set",
+        "purpose": "A nickel-plated steel weight hanger suspended vertically from the wire over the pulley, loaded with calibrated brass weights totaling M = 3.000 kg (yielding string mechanical tension T = M g = 29.420 N), establishing uniform, creep-free axial tension."
+      },
+      {
+        "name": "Twin Movable Triangular Hardwood Fret Bridges",
+        "purpose": "A pair of prism-shaped hardwood bridges capped with narrow nickel-silver fret wire knife-edges that slide smoothly along the soundboard beneath the wire, defining sharp, unequivocal displacement nodes that delineate the active vibrating segment length L."
+      },
+      {
+        "name": "Calibrated Acoustic Tuning Fork Set & Rubber Striking Mallet",
+        "purpose": "A matched laboratory set of steel tuning forks milled to precise frequencies spanning the musical scale (C3 128.0 Hz, E3 160.0 Hz, G3 192.0 Hz, Middle C 256.0 Hz, E4 320.0 Hz, and G4 384.0 Hz), used to transfer pure sinusoidal reference vibrations to the soundboard."
+      },
+      {
+        "name": "High-Sensitivity Paper Riders & Millimetre Rule",
+        "purpose": "Ultra-lightweight V-shaped folded slips of tissue paper (mass ~10 mg) straddling the wire midpoint to provide visual detection of sympathetic resonance agitation and violently jump off the wire at resonance, alongside an engraved 100 cm metric scale reading to 0.5 mm."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Wire Tensioning and Initial Visual Alignment",
+        "text": "Inspect the steel sonometer wire to ensure it is completely straight, free from kinks, rust, or surface bends. Load the weight hanger with slotted masses until the total suspended mass equals M = 3.000 kg (tension T = 29.420 N). Verify that the wire runs smoothly over the center of the frictionless ball-bearing pulley and hangs vertically without rubbing against the soundboard frame.",
+        "why": "Eliminating pulley friction and ensuring free vertical suspension guarantees that the mechanical tension T across the active segment equals the gravitational weight M g without frictional reduction."
+      },
+      {
+        "title": "Bridge Placement and Scale Alignment",
+        "text": "Place the fixed zero-bridge firmly at the left end of the soundboard (aligned with the 0.0 cm graduation mark). Position the sliding bridge approximately 60 cm to the right. Verify that the wire rests snugly in the shallow guide notches atop the metal frets, ensuring both bridges establish rigid, unambiguous displacement nodes with zero lateral rocking.",
+        "why": "Rigid bridge contact prevents rocking compliance that would effectively lengthen the vibrating segment beyond the visually measured distance between fret edges."
+      },
+      {
+        "title": "Paper Rider Preparation and Antinode Placement",
+        "text": "Cut a small V-shaped rider from lightweight paper (approximately 15 mm long by 2 mm wide) and fold it into an inverted 'V'. Carefully balance the rider upside down across the wire at the exact geometric midpoint between the two bridges (x = L / 2).",
+        "why": "The midpoint of a string vibrating in its fundamental mode is the spatial displacement antinode; placing the rider here maximizes sympathetic agitation and ensures instantaneous ejection at true resonance."
+      },
+      {
+        "title": "Sympathetic Resonance Search with Middle C (256.0 Hz)",
+        "text": "Strike the 256.0 Hz tuning fork firmly with the soft rubber mallet. Immediately press the solid stem base of the vibrating fork firmly against the spruce soundboard near the fixed bridge. While the fork vibrates, slowly slide the movable bridge toward the fixed bridge. Observe the paper rider: it will remain motionless until the segment length approaches resonance, begin to flutter vigorously, and finally be thrown completely off the wire when the segment achieves perfect sympathetic resonance. Record this length as L.",
+        "why": "Vibrational energy from the fork conducts through the soundboard into the wire; when the wire's natural fundamental frequency matches the fork frequency (unison), resonant energy transfer builds up standing wave amplitude until the rider is violently ejected."
+      },
+      {
+        "title": "Acoustic Beat Minimization and Plucked Unison Tuning",
+        "text": "Replace the paper rider. Pluck the wire gently near one bridge while simultaneously holding the sounding tuning fork against the soundboard. Listen intently for acoustic beats (pulsations in loudness caused by interference between the fork and string). Finely adjust the bridge position in sub-millimetre increments until the beats become slower and slower, finally dying out into a pure, unified, beatless unison note. Record the verified resonant length L to 0.5 mm.",
+        "why": "The acoustic beat frequency equals the difference Δf = |f_fork − f_string|. Eliminating beats guarantees frequency matching to within a fraction of a Hertz, providing exceptional metrological accuracy."
+      },
+      {
+        "title": "Systematic Frequency Sweep Across Calibrated Forks",
+        "text": "Repeat the sympathetic rider resonance and beat-elimination procedure for each of the remaining tuning forks: 128.0 Hz, 160.0 Hz, 192.0 Hz, 320.0 Hz, and 384.0 Hz. For each frequency, execute three independent settings approaching from both shorter and longer directions, and record all observations in the formal laboratory notebook.",
+        "why": "Collecting data across a wide range of frequencies spanning 128 Hz to 384 Hz provides an extended lever arm for linear regression of L against 1/f, isolating the transverse wave speed v and linear density μ."
+      }
+    ],
+    "topics": [
+      {
+        "title": "D'Alembert's 1D Wave Equation and Transverse Wave Speed",
+        "text": "The dynamics of a stretched flexible string represent the prototypical 1D wave system in continuum mechanics. Consider an infinitesimal string segment of unstretched length dx and linear mass density μ under mechanical tension T. When displaced transversely by a small deflection y(x, t), the net vertical restoring force acting on the element arises from the difference in the vertical components of tension at its ends: dF_y = T sin(θ + dθ) − T sin(θ) ≈ T (∂²y/∂x²) dx, under the small-angle approximation where tan(θ) ≈ ∂y/∂x. Applying Newton's second law to the segment mass dm = μ dx yields: μ dx (∂²y/∂t²) = T (∂²y/∂x²) dx. Dividing by μ dx produces d'Alembert's classic 1D wave equation: ∂²y/∂t² = (T / μ) (∂²y/∂x²). Comparing this with the standard wave equation ∂²y/∂t² = v² (∂²y/∂x²) identifies the transverse wave propagation speed: v = √(T / μ). This fundamental relation demonstrates that the speed of transverse mechanical waves depends exclusively on the restoring tension T (the elastic stiffness factor) and the linear density μ (the inertial factor). For a steel wire (diameter d = 0.50 mm, μ = 1.541 g/m) under a tension of T = 29.42 N (load mass M = 3.0 kg), transverse waves propagate at v = √(29.42 / 0.001541) = 138.16 m/s.",
+        "formula": "\\frac{\\partial^2 y}{\\partial t^2} = \\frac{T}{\\mu} \\frac{\\partial^2 y}{\\partial x^2} \\implies v = \\sqrt{\\frac{T}{\\mu}} = \\sqrt{\\frac{M g}{\\rho \\frac{\\pi d^2}{4}}}",
+        "question": "How does increasing the suspended load mass on a sonometer wire from 1 kg to 4 kg affect the transverse wave speed?",
+        "answer": "Because transverse wave speed is proportional to the square root of tension (v = √(T/μ)), quadrupling the suspended mass (multiplying T by 4) exactly doubles the wave speed: v_new = √4 · v_old = 2 v_old."
+      },
+      {
+        "title": "Mersenne's Laws: History, Formulation, and Empirical Proof",
+        "text": "In 1636, French polymath Marin Mersenne published 'Harmonie Universelle', establishing the empirical relationships that govern vibrating strings. By subjecting strings of various lengths, tensions, and materials to rigorous pitch comparison, Mersenne deduced three fundamental proportionalities that form the cornerstone of musical acoustics: (1) First Law (Length): At constant tension and linear density, fundamental frequency is inversely proportional to vibrating length: f ∝ 1/L. Halving the length raises the pitch by an exact octave (ratio 2:1). (2) Second Law (Tension): At constant length and linear density, fundamental frequency is directly proportional to the square root of tension: f ∝ √T. To raise the pitch by an octave, the tension must be increased by a factor of four. (3) Third Law (Linear Density): At constant length and tension, fundamental frequency is inversely proportional to the square root of linear mass density: f ∝ 1/√μ. For strings of identical material (density ρ), linear density scales with cross-sectional area: μ = ρ (π d² / 4), so that frequency is inversely proportional to wire diameter: f ∝ 1/d. Combining all three laws yields the unified formula f = (1 / 2L) √(T / μ), which Brook Taylor formally derived from dynamic principles in 1713.",
+        "formula": "f_1 = \\frac{1}{2 L} \\sqrt{\\frac{T}{\\mu}} \\implies f_1 \\propto \\frac{1}{L}, \\quad f_1 \\propto \\sqrt{T}, \\quad f_1 \\propto \\frac{1}{\\sqrt{\\mu}} \\propto \\frac{1}{d}",
+        "question": "If you wish to double the fundamental frequency of a sonometer wire without changing its length or material, how must the hanging weight be adjusted?",
+        "answer": "From Mersenne's second law (f ∝ √T), doubling the frequency requires increasing the mechanical tension by a factor of 2² = 4; thus, the hanging weight must be made four times as large."
+      },
+      {
+        "title": "Normal Modes, Standing Waves, and Boundary Conditions",
+        "text": "When a stretched string is terminated by rigid bridges at x = 0 and x = L, boundary conditions enforce zero displacement at both extremities: y(0, t) = 0 and y(L, t) = 0. Expressing the transverse wave motion as a Fourier superposition of standing normal modes, the spatial shape function must satisfy Y(x) = A sin(k x). Enforcing Y(L) = A sin(k L) = 0 restricts the allowable wavenumbers to discrete eigenvalues: k_n L = n π for integer n = 1, 2, 3, ... Substituting k_n = 2π / λ_n yields the wavelength quantization condition: L = n (λ_n / 2) ⟹ λ_n = 2L / n. The corresponding harmonic frequencies are f_n = v / λ_n = n [v / (2L)] = n f₁, with n = 1 (fundamental), n = 2 (second harmonic / first overtone, octave), n = 3 (third harmonic, twelfth), n = 4 (fourth harmonic, double octave), etc. Because a string fixed at both ends satisfies symmetric boundary conditions identical to an open organ pipe, it generates a complete harmonic spectrum containing all integer multiples (1f, 2f, 3f, 4f, ...). Plucking or bowing the string at different fractional positions excites specific subsets of these normal modes, shaping the harmonic spectrum and timbre.",
+        "formula": "L = n \\frac{\\lambda_n}{2} \\implies \\lambda_n = \\frac{2 L}{n}, \\qquad f_n = n \\frac{v}{2 L} = n f_1 \\quad (n = 1, 2, 3, 4, \\dots)",
+        "question": "Where should a student touch a vibrating string lightly while plucking it to suppress the fundamental mode and isolate the first overtone (second harmonic)?",
+        "answer": "The student should touch the string lightly at its exact midpoint (x = L/2). This forces a displacement node at the center, suppressing the fundamental mode (which requires an antinode at L/2) and allowing the second harmonic (which naturally has a node at L/2) to ring freely at double frequency (2f₁)."
+      },
+      {
+        "title": "Sympathetic Resonance, Acoustic Impedance, and Paper Riders",
+        "text": "Direct plucking of a thin string produces remarkably little sound because the small wire surface area has extremely poor acoustic impedance matching with the unconfined air (Z_air = 415 Pa s/m), radiating virtually no acoustic power. In a sonometer, the string rests upon hardwood bridges mounted directly on a hollow spruce soundboard. When the string vibrates, its transverse dynamic forces drive the bridges, which flex the large wooden soundboard. Because the soundboard has a large surface area, it radiates sound into the air with hundreds of times greater acoustic efficiency. Conversely, when an external tuning fork is struck and its stem is pressed against the soundboard, the process reverses: vibrational acoustic energy transmits through the soundboard into the bridges and excites transverse waves in the wire. Under non-resonant conditions, this forced excitation produces microscopic wire amplitudes. However, when the natural fundamental frequency of the wire segment matches the driving frequency of the fork (f_string = f_fork), resonant constructive interference builds up standing wave energy cycle after cycle, amplifying the midpoint displacement until a lightweight paper rider straddling the antinode is agitated violently and thrown clear of the wire. This sympathetic resonance provides an objective, visual indicator of resonance requiring zero electrical instrumentation.",
+        "formula": "Z_{\\text{mech}} = \\frac{F}{u}, \\qquad P_{\\text{rad}} = \\frac{1}{2} R_{\\text{rad}} u_{\\text{board}}^2 \\gg P_{\\text{wire}}",
+        "question": "Why is a sonometer wire virtually inaudible when stretched between rigid metal posts in open air, but loudly audible when mounted on a wooden soundboard?",
+        "answer": "A thin wire has tiny surface area and cannot effectively move surrounding air parcels (acoustic impedance mismatch). The wooden soundboard acts as an acoustic transformer, converting the high-force, low-velocity bridge vibrations into large-area, low-pressure acoustic wavefronts that radiate sound efficiently."
+      },
+      {
+        "title": "Acoustic Beats: Interference in the Time Domain",
+        "text": "When two acoustic harmonic sources of slightly different frequencies f₁ and f₂ vibrate simultaneously, their superposition produces the phenomenon of acoustic beats. Let the acoustic pressure waves arriving at the listener's ear be p₁(t) = A cos(2π f₁ t) and p₂(t) = A cos(2π f₂ t). Applying the trigonometric sum-to-product identity yields: p_tot(t) = 2 A cos[2π (f₁ − f₂) / 2 · t] cos[2π (f₁ + f₂) / 2 · t]. This represents a high-frequency carrier wave vibrating at the average frequency f_avg = (f₁ + f₂) / 2 whose amplitude is slowly modulated by an envelope cos[2π (f_beat / 2) t]. Because acoustic loudness (intensity) is proportional to the square of pressure amplitude, loudness peaks occur twice per envelope cycle, yielding a beat frequency equal to the absolute difference: f_beat = |f₁ − f₂|. When tuning a sonometer wire to a tuning fork, the experimenter listens for these rapid pulsations in volume. As the bridge is adjusted toward perfect unison, the beat frequency decreases: 8 beats/s → 4 beats/s → 2 beats/s → 1 beat every several seconds. When the beats vanish entirely, the wire is tuned to exact mathematical unison with the fork.",
+        "formula": "p_{\\text{tot}}(t) = 2 A \\cos\\left(2\\pi \\frac{f_1 - f_2}{2} t\\right) \\cos\\left(2\\pi \\frac{f_1 + f_2}{2} t\\right) \\implies f_{\\text{beat}} = |f_1 - f_2|",
+        "question": "If a tuning fork of 256 Hz is sounded alongside a sonometer wire and 3 distinct beats are heard per second, what are the two possible fundamental frequencies of the wire?",
+        "answer": "The beat frequency is f_beat = |f_fork − f_wire| = 3 Hz. Therefore, the wire frequency is either 256 + 3 = 259 Hz (sharp) or 256 − 3 = 253 Hz (flat)."
+      },
+      {
+        "title": "Linear Regression Formulation and Transverse Velocity Isolation",
+        "text": "To determine the transverse wave speed and linear mass density without relying on a single fallible measurement, experimentalists record the fundamental resonant segment length L across a calibrated set of tuning forks of known frequencies f. From the fundamental standing wave relation L = λ₁ / 2 = v / (2f), rearranging yields: L = (v / 2) (1 / f). Designating x = 1 / f (in seconds) as the independent variable and y = L (in metres) as the dependent variable, the data fit the canonical linear regression equation y = m x + b. Here, the slope m represents half of the transverse wave velocity: m = v / 2, which allows the wave speed to be determined directly as v = 2m. Crucially, ordinary least-squares regression averages out random bridge setting errors across all frequency stations. Once v is obtained, the linear mass density μ of the wire is calculated from the known mechanical tension T = M g via μ = T / v² = M g / (4m²). Furthermore, the vertical intercept b evaluates whether any zero-offset or bridge knife-edge indentation error is present (theoretically b = 0). Comparing experimental linear density μ_exp with the gravimetric value μ = m_wire / L_wire or micrometer value μ = ρ (π d² / 4) provides rigorous confirmation of continuum mechanics.",
+        "formula": "L = m \\left(\\frac{1}{f}\\right) + b \\implies m = \\frac{v}{2} \\iff v = 2 m, \\qquad \\mu = \\frac{T}{v^2} = \\frac{M g}{4 m^2}",
+        "question": "What is the physical significance of the slope m when plotting the resonant segment length L against reciprocal frequency 1/f for a sonometer?",
+        "answer": "The slope m represents one-half of the transverse wave propagation speed along the wire: m = v/2. Multiplying the regression slope by 2 yields the true wave speed v = 2m."
+      },
+      {
+        "title": "Engineering Applications: Piano String Scaling and String Inharmonicity",
+        "text": "Mersenne's laws govern the design and scaling of all stringed musical instruments, most notably the concert grand piano. A standard piano spans over seven octaves from A0 (27.5 Hz) to C8 (4186 Hz)—a frequency ratio of more than 150:1. If piano designers relied solely on Mersenne's first law (f ∝ 1/L) with uniform steel wire, an 88-key piano whose treble strings are 5 cm long would require bass strings exceeding 7.5 metres (25 feet!) in length. To maintain a practical instrument length (~2 to 3 metres), piano makers combine all three of Mersenne's laws: bass strings are made with thicker steel cores and wrapped with dense copper wire winding. The copper winding increases the linear mass density μ by a factor of over 100 without increasing the bending stiffness of the steel core, lowering the fundamental pitch into the deep bass register. However, real piano strings possess finite bending stiffness (elastic modulus E), which adds a small restoring moment to tension. This bending stiffness makes the string behave slightly like a rigid bar, shifting overtones slightly sharp according to Fletcher's inharmonicity formula: f_n ≈ n f₁ √(1 + B n²), where B = (π³ E d⁴) / (64 T L²) is the inharmonicity coefficient. Piano tuners must 'stretch' piano octave tuning to compensate for this physical inharmonicity.",
+        "formula": "f_n \\approx n f_1 \\sqrt{1 + B n^2}, \\qquad B = \\frac{\\pi^3 E d^4}{64 T L^2}",
+        "question": "Why are the lowest bass strings of a piano wrapped with copper wire rather than simply made from solid, extra-thick steel wire?",
+        "answer": "Solid thick steel wire has excessive flexural (bending) stiffness, which destroys acoustic harmonicity and makes overtones sharply out of tune (inharmonicity). Wrapping a thin steel core with soft copper coils adds linear mass density μ without significantly increasing bending stiffness, maintaining a musical, harmonious tone."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "According to Mersenne's laws, if the length of a vibrating wire is halved while its tension is quadrupled, how does its fundamental frequency change?",
+        "options": [
+          "It quadruples (increases by a factor of 4)",
+          "It doubles (increases by a factor of 2)",
+          "It remains unchanged",
+          "It increases by a factor of 8"
+        ],
+        "correct": 0,
+        "explanation": "From f = (1 / 2L) √(T/μ), halving L doubles f (×2), and quadrupling T doubles f (√4 = 2). The combined effect is 2 × 2 = 4 times the original frequency."
+      },
+      {
+        "question": "When plotting the resonant segment length L against the reciprocal frequency 1/f, the slope m represents:",
+        "options": [
+          "Half the transverse wave velocity (v / 2)",
+          "The transverse wave velocity v",
+          "The linear mass density μ",
+          "The tension in the wire T"
+        ],
+        "correct": 0,
+        "explanation": "From the fundamental half-wave standing wave condition L = λ/2 = v / (2f), rearranging gives L = (v/2)(1/f). Thus the slope m equals v/2."
+      },
+      {
+        "question": "Why does a lightweight paper rider jump off the sonometer wire when the tuning fork's frequency matches the wire's natural frequency?",
+        "options": [
+          "Sympathetic resonance builds up large standing wave amplitudes at the antinode",
+          "The magnetic field of the steel fork repels the paper",
+          "Air turbulence from the fork blows the rider away",
+          "Static electrical charge accumulates at the fixed bridges"
+        ],
+        "correct": 0,
+        "explanation": "When the fork and wire are in resonance (unison), energy transferred through the soundboard into the wire undergoes constructive interference cycle after cycle, building up a large transverse displacement at the antinode that violently throws the rider off."
+      },
+      {
+        "question": "If a steel wire of linear density 1.54 g/m is stretched under a tension of 29.4 N, what is the transverse wave velocity?",
+        "options": [
+          "138.2 m/s",
+          "343.2 m/s",
+          "19.1 m/s",
+          "190.9 m/s"
+        ],
+        "correct": 0,
+        "explanation": "Using v = √(T / μ) with T = 29.42 N and μ = 0.001541 kg/m gives v = √(29.42 / 0.001541) = √19091.5 ≈ 138.2 m/s."
+      }
+    ],
+    "precautions": [
+      "Ensure the sonometer wire rests cleanly in the knife-edge notches of the bridges without lateral binding or pinching, verifying the bridges do not rock on the soundboard.",
+      "Strike tuning forks exclusively with the soft vulcanized rubber mallet and press only the stem base against the wooden soundboard; never touch vibrating prongs to the box or wire.",
+      "Lower slotted weights onto the hanger gently to prevent shock loading, elastic wire yielding, or bridge dislocation.",
+      "Position the paper rider at the exact geometric midpoint between bridges (the fundamental antinode) to ensure maximum sympathetic sensitivity."
+    ],
+    "limitations": "The teaching model assumes an ideally flexible, infinitely thin wire with zero bending stiffness, negligible damping, and perfectly rigid bridge knife-edges. In a physical laboratory, small wire flexural rigidity (stiffness inharmonicity) slightly elevates higher overtone frequencies, minor bridge compliance adds small effective length offsets, and auditory beat detection threshold introduces slight visual/auditory setting scatter."
   }
 ]
