@@ -51,6 +51,7 @@ function drawComparativeSim(t,p,v,phase,ink,soft,orange){
   const isHeat=['specific-heat-capacity','newtons-cooling','solidification-cooling','latent-heat-vaporization','latent-heat-fusion','thermal-expansion','mechanical-equivalent-heat'].includes(cfg.slug);
   const isOptics=['convex-lens','glass-slab','diffraction-grating'].includes(cfg.slug);
   const isElec=['ohms-law','metre-bridge','rc-charging'].includes(cfg.slug);
+  const isSound=['resonance-air-column','modes-air-column','vibration-strings-sonometer','interference-sound-waves'].includes(cfg.slug);
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
   const text=(x,y,str,color='#9fb498',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
@@ -236,6 +237,44 @@ function drawComparativeSim(t,p,v,phase,ink,soft,orange){
     });
     svg+=text(360,305,'Electrical Transport: Constant vs Temperature-Dependent Dynamic Resistance',soft,10);
   }
+  else if(isSound){
+    const gX=60,gY=55,gW=340,gH=210;
+    svg+='<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#14221e" stroke="'+soft+'" stroke-width="1.5" rx="4"/>';
+    svg+=text(gX+gW/2,gY-15,'ACOUSTIC WAVE PROPAGATION ACROSS GASES & MEDIA','#e2ecd7',11);
+    const media=[
+      {name:'Helium Gas (He)',v:965,col:'#38bdf8',type:'Gas · γ=1.67, M=4.0 g/mol'},
+      {name:'Dry Air (20°C)',v:343,col:ink,type:'Gas · γ=1.40, M=29.0 g/mol'},
+      {name:'Carbon Dioxide (CO₂)',v:267,col:orange,type:'Gas · γ=1.30, M=44.0 g/mol'}
+    ];
+    media.forEach((m,idx)=>{
+      const rowY=gY+35+idx*55;
+      svg+='<text x="'+(gX+18)+'" y="'+(rowY-8)+'" fill="'+m.col+'" font-size="10" font-weight="bold">'+m.name+'</text>';
+      svg+='<text x="'+(gX+gW-18)+'" y="'+(rowY-8)+'" text-anchor="end" fill="'+m.col+'" font-size="10" font-family="monospace">'+m.v+' m/s</text>';
+      svg+='<rect x="'+(gX+18)+'" y="'+rowY+'" width="'+(gW-36)+'" height="14" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+      const barW=((m.v/1000)*(gW-36)).toFixed(1);
+      svg+='<rect x="'+(gX+18)+'" y="'+rowY+'" width="'+barW+'" height="14" rx="3" fill="'+m.col+'"/>';
+      const pulseX=gX+18+((phase*(m.v/300))%1)*(gW-36);
+      svg+='<circle cx="'+pulseX.toFixed(1)+'" cy="'+(rowY+7)+'" r="4.5" fill="#fde68a" stroke="#fff" stroke-width="1"/>';
+      svg+='<text x="'+(gX+22)+'" y="'+(rowY+26)+'" fill="#9fb498" font-size="8">'+m.type+'</text>';
+    });
+    const bX=425,bY=55,bW=265,bH=210;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'ACOUSTIC IMPEDANCE & MODULUS','#718e79',9.5);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+    const acStats=[
+      {mat:'Air (20°C, 1 atm)',z:'415 Pa·s/m',k:'142 kPa',col:ink},
+      {mat:'Water (Fresh, 20°C)',z:'1.48 × 10⁶ Pa·s/m',k:'2.20 GPa',col:'#38bdf8'},
+      {mat:'Steel (Structural)',z:'4.05 × 10⁷ Pa·s/m',k:'160 GPa',col:orange}
+    ];
+    acStats.forEach((s,idx)=>{
+      const rowY=bY+52+idx*46;
+      svg+='<circle cx="'+(bX+22)+'" cy="'+(rowY-4)+'" r="4.5" fill="'+s.col+'"/>';
+      svg+='<text x="'+(bX+34)+'" y="'+rowY+'" fill="'+s.col+'" font-size="11" font-weight="bold">'+s.mat+'</text>';
+      svg+='<text x="'+(bX+34)+'" y="'+(rowY+15)+'" fill="#9fb498" font-size="8.5">Z = '+s.z+' · K = '+s.k+'</text>';
+      if(idx<2)svg+='<line x1="'+(bX+20)+'" y1="'+(rowY+24)+'" x2="'+(bX+bW-20)+'" y2="'+(rowY+24)+'" stroke="#253a34" stroke-dasharray="2 2"/>';
+    });
+    svg+=text(360,305,'Laplace Sound Speed: v = √(γRT/M) = √(K/ρ) · Radiation Mismatch Z_water >> Z_air',soft,10);
+  }
   else{
     const gX=60,gY=55,gW=340,gH=210;
     svg+='<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#14221e" stroke="'+soft+'" stroke-width="1.5" rx="4"/>';
@@ -291,6 +330,7 @@ function drawDynamicSandbox(t,p,v,phase,ink,soft,orange){
   const isHeat=['specific-heat-capacity','newtons-cooling','solidification-cooling','latent-heat-vaporization','latent-heat-fusion','thermal-expansion','mechanical-equivalent-heat'].includes(cfg.slug);
   const isOptics=['convex-lens','glass-slab','diffraction-grating'].includes(cfg.slug);
   const isElec=['ohms-law','metre-bridge','rc-charging'].includes(cfg.slug);
+  const isSound=['resonance-air-column','modes-air-column','vibration-strings-sonometer','interference-sound-waves'].includes(cfg.slug);
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
   const text=(x,y,str,color='#9fb498',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
@@ -469,6 +509,57 @@ function drawDynamicSandbox(t,p,v,phase,ink,soft,orange){
 
     svg+=text(360,305,'Solid-State Conduction: Electronic Scattering, Mobility μ = eτ/m, and Joule Dissipation',soft,10);
   }
+  else if(isSound){
+    const cX=50,cY=50,cW=340,cH=220;
+    svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#101c18" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+    svg+=text(cX+cW/2,cY-15,'LONGITUDINAL MOLECULAR STANDING WAVE (N = 48 MOLECULES)','#e2ecd7',11);
+    const fVal=p.input||384.0;
+    const omega=2*Math.PI*(fVal/200);
+    for(let row=0;row<6;row++){
+      const yRow=cY+35+row*28;
+      svg+='<line x1="'+(cX+15)+'" y1="'+yRow+'" x2="'+(cX+cW-15)+'" y2="'+yRow+'" stroke="#1f332c" stroke-width="1" stroke-dasharray="2 4"/>';
+      for(let col=0;col<8;col++){
+        const xEq=cX+25+col*((cW-50)/7);
+        const normX=col/7;
+        const disp=Math.sin((Math.PI/2)*normX)*Math.cos(omega*phase)*14;
+        const curX=xEq+disp;
+        const colParticle=(disp>2)?orange:(disp<-2)?'#38bdf8':ink;
+        svg+='<circle cx="'+curX.toFixed(1)+'" cy="'+yRow+'" r="3.5" fill="'+colParticle+'"/>';
+      }
+    }
+    let prPoints=[];
+    for(let i=0;i<=40;i++){
+      const nx=i/40;
+      const px=cX+20+nx*(cW-40);
+      const prVal=Math.cos((Math.PI/2)*nx)*Math.sin(omega*phase);
+      const py=cY+cH-30-prVal*22;
+      prPoints.push(px.toFixed(1)+','+py.toFixed(1));
+    }
+    svg+='<polyline points="'+prPoints.join(' ')+'" fill="none" stroke="#fde68a" stroke-width="2"/>';
+    svg+='<line x1="'+(cX+20)+'" y1="'+(cY+cH-30)+'" x2="'+(cX+cW-20)+'" y2="'+(cY+cH-30)+'" stroke="'+soft+'" stroke-dasharray="2 2"/>';
+    svg+=text(cX+35,cY+cH-8,'Node (Water)',soft,8);
+    svg+=text(cX+cW-45,cY+cH-8,'Antinode (Open)',orange,8);
+    svg+=text(cX+cW/2,cY+cH-8,'Acoustic Pressure ΔP(x,t)',soft,8);
+
+    const bX=420,bY=50,bW=270,bH=220;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'ACOUSTIC ENERGY & HARMONIC DENSITY','#718e79',9);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+    const sinT=Math.sin(omega*phase),cosT=Math.cos(omega*phase);
+    const Ek=sinT*sinT,Ep=cosT*cosT;
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+58)+'" fill="'+ink+'" font-size="9">Acoustic Kinetic Energy (Particle Velocity ~ u²)</text>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+65)+'" width="220" height="12" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+65)+'" width="'+(Ek*220).toFixed(1)+'" height="12" rx="3" fill="'+ink+'"/>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+100)+'" fill="'+orange+'" font-size="9">Acoustic Potential Energy (Compression ~ ΔP²)</text>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+107)+'" width="220" height="12" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+107)+'" width="'+(Ep*220).toFixed(1)+'" height="12" rx="3" fill="'+orange+'"/>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+142)+'" fill="#fde68a" font-size="9">Total Acoustic Energy Density ε = E_k + E_p</text>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+149)+'" width="220" height="14" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+149)+'" width="220" height="14" rx="3" fill="#fde68a"/>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+185)+'" fill="#9fb498" font-size="8.5">Quarter-Wave Condition: L + c = (2n − 1) λ / 4</text>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+202)+'" fill="'+soft+'" font-size="8">Orthogonal Modes: Odd Harmonics f₁ (1f), f₂ (3f), f₃ (5f)</text>';
+    svg+=text(360,305,'Longitudinal Waves: Molecular Compressions & Rarefactions · Rayleigh Boundary Dissipation',soft,10);
+  }
   else{
     const cX=50,cY=50,cW=340,cH=220;
     svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#101c18" stroke="'+soft+'" stroke-width="2" rx="6"/>';
@@ -580,5 +671,43 @@ function draw(t){
    else if(cfg.slug==='loaded-spring'){const spX=220,topY=50,m_kg=p.input/1000.0,M_tot=m_kg+0.0200,T_osc=v.period,oscAmp=14*Math.cos(phase*(2*Math.PI/T_osc)),eqExt=45+(p.input/350.0)*40,currExt=eqExt+oscAmp,botY=topY+currExt+60;svg+='<rect x="30" y="280" width="400" height="14" rx="2" fill="#1b2a26" stroke="'+soft+'" stroke-width="1.5"/><rect x="70" y="270" width="80" height="10" rx="2" fill="#20312d" stroke="'+soft+'" stroke-width="1.5"/><line x1="110" y1="270" x2="110" y2="40" stroke="#1b2a26" stroke-width="10"/><line x1="108" y1="270" x2="108" y2="40" stroke="'+soft+'" stroke-width="2"/><rect x="100" y="44" width="20" height="16" rx="2" fill="#364e46" stroke="'+soft+'" stroke-width="1.5"/><line x1="110" y1="52" x2="'+(spX+8)+'" y2="52" stroke="'+soft+'" stroke-width="5"/><circle cx="'+spX+'" cy="52" r="3" fill="'+orange+'"/>';const numTurns=16,coilW=14;let coilD='M '+spX+' 52 L '+spX+' '+(topY+5);const coilH=botY-topY-45;for(let i=0;i<numTurns;i++){const y1=topY+5+(i+0.25)*(coilH/numTurns),y2=topY+5+(i+0.75)*(coilH/numTurns),y3=topY+5+(i+1.0)*(coilH/numTurns);coilD+=' C '+(spX-coilW)+' '+y1+', '+(spX+coilW)+' '+y2+', '+spX+' '+y3;}coilD+=' L '+spX+' '+(botY-35);svg+='<path d="'+coilD+'" fill="none" stroke="'+ink+'" stroke-width="2.5" stroke-linecap="round"/><path d="M '+spX+' '+(botY-35)+' V '+(botY-25)+' A 4 4 0 0 0 '+(spX+8)+' '+(botY-25)+'" fill="none" stroke="'+orange+'" stroke-width="2"/><line x1="'+spX+'" y1="'+(botY-25)+'" x2="'+spX+'" y2="'+(botY+20)+'" stroke="'+orange+'" stroke-width="2.5"/>';const numDisks=Math.max(1,Math.round(p.input/50)),hBaseY=botY+20;svg+='<rect x="'+(spX-22)+'" y="'+hBaseY+'" width="44" height="6" rx="2" fill="#d97706" stroke="#b45309" stroke-width="1"/>';for(let d=0;d<numDisks;d++){const diskY=hBaseY-4-(d+1)*6;svg+='<rect x="'+(spX-18)+'" y="'+diskY+'" width="36" height="5.5" rx="1.5" fill="#f59e0b" stroke="#b45309" stroke-width="0.8"/><line x1="'+(spX-4)+'" y1="'+diskY+'" x2="'+(spX-4)+'" y2="'+(diskY+5.5)+'" stroke="#78350f" stroke-width="0.8"/>';}const ptrY=botY-25;svg+='<line x1="'+spX+'" y1="'+ptrY+'" x2="'+(spX+55)+'" y2="'+ptrY+'" stroke="'+orange+'" stroke-width="1.8"/><polygon points="'+(spX+55)+','+ptrY+' '+(spX+48)+','+(ptrY-3)+' '+(spX+48)+','+(ptrY+3)+'" fill="'+orange+'"/>';const scX=spX+60,scY1=50,scY2=270;svg+='<rect x="'+scX+'" y="'+scY1+'" width="22" height="'+(scY2-scY1)+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5"/>';for(let k=0;k<=22;k++){const sy=scY1+k*10,isMajor=k%5===0;svg+='<line x1="'+scX+'" y1="'+sy+'" x2="'+(scX+(isMajor?12:6))+'" y2="'+sy+'" stroke="'+soft+'" stroke-width="'+(isMajor?1.5:0.8)+'"/>';if(isMajor)svg+='<text x="'+(scX+14)+'" y="'+(sy+3)+'" fill="#9fb498" font-size="7">'+k+'</text>';}const eqPtrY=topY+eqExt+60-25;svg+='<line x1="'+(scX-15)+'" y1="'+eqPtrY+'" x2="'+(scX+25)+'" y2="'+eqPtrY+'" stroke="#38bdf8" stroke-width="1" stroke-dasharray="3 2"/><text x="'+(scX-18)+'" y="'+(eqPtrY+3)+'" text-anchor="end" fill="#38bdf8" font-size="7.5">y₀ eq</text>';const bX=470,bY=45,bW=220,bH=220;svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#182824" stroke="'+soft+'" stroke-width="1.5"/><text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#718e79" font-size="9">TIME FOR 20 CYCLES (t₂₀)</text><text x="'+(bX+15)+'" y="'+(bY+52)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+v.raw.toFixed(2)+'</text><text x="'+(bX+105)+'" y="'+(bY+50)+'" fill="'+soft+'" font-size="11">s</text><text x="'+(bX+125)+'" y="'+(bY+50)+'" fill="#9fb498" font-size="8">(±0.05 s)</text><line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#253a34"/><text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#718e79" font-size="9">PERIOD T & PERIOD SQUARED T²</text><text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="16" font-family="monospace">'+T_osc.toFixed(4)+' s</text><text x="'+(bX+125)+'" y="'+(bY+108)+'" fill="'+orange+'" font-size="13" font-family="monospace">T² = '+(T_osc*T_osc).toFixed(4)+' s²</text><line x1="'+(bX+15)+'" y1="'+(bY+125)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+125)+'" stroke="#253a34"/><text x="'+(bX+15)+'" y="'+(bY+144)+'" fill="#718e79" font-size="9">SUSPENDED LOAD MASS (m)</text><text x="'+(bX+15)+'" y="'+(bY+168)+'" fill="'+orange+'" font-size="16" font-family="monospace" font-weight="bold">'+p.input.toFixed(1)+' g</text><text x="'+(bX+110)+'" y="'+(bY+168)+'" fill="#9fb498" font-size="9">('+(p.input/1000).toFixed(4)+' kg)</text><text x="'+(bX+15)+'" y="'+(bY+184)+'" fill="#9fb498" font-size="8">Spring Wire m_s = 60.0 g · m_eff = 20.0 g</text><line x1="'+(bX+15)+'" y1="'+(bY+195)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+195)+'" stroke="#253a34"/>'+text(bX+15,bY+210,'T² = (4π²/k)·m + (4π²/k)·m_eff ⇔ k = 4π²/S',ink,9)+text(240,22,'Helical Spring Oscillometer & Pointer Bench')+text(240,308,'Rayleigh Spring Self-Mass Theorem: m_eff = 1/3 · m_spring = 20.0 g');}
    else if(cfg.slug==='pendulum-coincidence'){const pivY=48,mPivX=150,tPivX=275,L0_px=160,L_px=100+(p.input-65.0)*2.0,T0=2.0000,T_test=v.period,amp0=0.08,amp1=0.08,th0=amp0*Math.sin(phase*(2*Math.PI/T0)),th1=amp1*Math.sin(phase*(2*Math.PI/T_test)),mBobX=mPivX+L0_px*Math.sin(th0),mBobY=pivY+L0_px*Math.cos(th0),tBobX=tPivX+L_px*Math.sin(th1),tBobY=pivY+L_px*Math.cos(th1),vel0=Math.cos(phase*(2*Math.PI/T0)),vel1=Math.cos(phase*(2*Math.PI/T_test)),isCoinc=(Math.abs(th0)<0.02&&Math.abs(th1)<0.02&&(vel0*vel1>0));svg+='<rect x="30" y="280" width="400" height="14" rx="2" fill="#1b2a26" stroke="'+soft+'" stroke-width="1.5"/><rect x="50" y="270" width="70" height="10" rx="2" fill="#20312d" stroke="'+soft+'" stroke-width="1.5"/><line x1="85" y1="270" x2="85" y2="40" stroke="#1b2a26" stroke-width="10"/><line x1="83" y1="270" x2="83" y2="40" stroke="'+soft+'" stroke-width="2"/><rect x="75" y="42" width="20" height="16" rx="2" fill="#364e46" stroke="'+soft+'" stroke-width="1.5"/><line x1="85" y1="48" x2="330" y2="48" stroke="'+soft+'" stroke-width="6"/>';[mPivX,tPivX].forEach(px=>{svg+='<polygon points="'+(px-8)+',48 '+(px+8)+',48 '+px+',55" fill="'+orange+'"/><circle cx="'+px+'" cy="48" r="3" fill="#1b2a26" stroke="'+soft+'"/>';});svg+='<line x1="'+mPivX+'" y1="48" x2="'+mBobX.toFixed(1)+'" y2="'+mBobY.toFixed(1)+'" stroke="'+soft+'" stroke-width="2"/><circle cx="'+mBobX.toFixed(1)+'" cy="'+mBobY.toFixed(1)+'" r="14" fill="#334155" stroke="'+soft+'" stroke-width="1.5"/><line x1="'+mBobX.toFixed(1)+'" y1="'+(mBobY-10).toFixed(1)+'" x2="'+mBobX.toFixed(1)+'" y2="'+(mBobY+10).toFixed(1)+'" stroke="#fde68a" stroke-width="1.5"/><text x="'+mPivX+'" y="38" text-anchor="middle" fill="#9fb498" font-size="8">MASTER CLOCK (T₀=2.00 s)</text><line x1="'+tPivX+'" y1="48" x2="'+tBobX.toFixed(1)+'" y2="'+tBobY.toFixed(1)+'" stroke="'+ink+'" stroke-width="2"/><circle cx="'+tBobX.toFixed(1)+'" cy="'+tBobY.toFixed(1)+'" r="13" fill="#b45309" stroke="#d97706" stroke-width="2"/><circle cx="'+tBobX.toFixed(1)+'" cy="'+tBobY.toFixed(1)+'" r="4" fill="#fde68a"/><text x="'+tPivX+'" y="38" text-anchor="middle" fill="'+orange+'" font-size="8">TEST PENDULUM (L='+p.input.toFixed(1)+' cm)</text>';const telX=212,telY=195;svg+='<rect x="'+(telX-22)+'" y="'+telY+'" width="44" height="26" rx="4" fill="#182824" stroke="'+(isCoinc?'#22c55e':soft)+'" stroke-width="'+(isCoinc?'2.5':'1.5')+'"/><line x1="'+telX+'" y1="'+(telY-15)+'" x2="'+telX+'" y2="'+(telY+40)+'" stroke="'+(isCoinc?'#22c55e':soft)+'" stroke-dasharray="3 2" stroke-width="1.5"/><line x1="'+(telX-18)+'" y1="'+(telY+13)+'" x2="'+(telX+18)+'" y2="'+(telY+13)+'" stroke="'+(isCoinc?'#22c55e':soft)+'" stroke-width="1.5"/><circle cx="'+telX+'" cy="'+(telY+13)+'" r="4" fill="'+(isCoinc?'#22c55e':'#101c18')+'" stroke="'+(isCoinc?'#fff':soft)+'"/>';if(isCoinc){svg+='<rect x="'+(telX-42)+'" y="'+(telY+45)+'" width="84" height="18" rx="3" fill="#052e16" stroke="#22c55e" stroke-width="1.5"/><text x="'+telX+'" y="'+(telY+58)+'" text-anchor="middle" fill="#4ade80" font-size="8" font-weight="bold">COINCIDENCE!</text>';}else{svg+='<text x="'+telX+'" y="'+(telY+56)+'" text-anchor="middle" fill="#718e79" font-size="7.5">OPTICAL SLIT</text>';}const bX=470,bY=45,bW=220,bH=220;svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#182824" stroke="'+soft+'" stroke-width="1.5"/><text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#718e79" font-size="9">COINCIDENCE INTERVAL (t_c)</text><text x="'+(bX+15)+'" y="'+(bY+52)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+v.raw.toFixed(2)+'</text><text x="'+(bX+110)+'" y="'+(bY+50)+'" fill="'+soft+'" font-size="11">s</text><text x="'+(bX+130)+'" y="'+(bY+50)+'" fill="#9fb498" font-size="8">(N = '+(v.raw/T_test).toFixed(1)+')</text><line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#253a34"/><text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#718e79" font-size="9">DEDUCED HIGH-PRECISION PERIOD</text><text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="16" font-family="monospace">'+T_test.toFixed(5)+' s</text><text x="'+(bX+135)+'" y="'+(bY+108)+'" fill="'+orange+'" font-size="12" font-family="monospace">T²='+(T_test*T_test).toFixed(4)+'</text><line x1="'+(bX+15)+'" y1="'+(bY+125)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+125)+'" stroke="#253a34"/><text x="'+(bX+15)+'" y="'+(bY+144)+'" fill="#718e79" font-size="9">EFFECTIVE LENGTH (L)</text><text x="'+(bX+15)+'" y="'+(bY+168)+'" fill="'+orange+'" font-size="16" font-family="monospace" font-weight="bold">'+p.input.toFixed(1)+' cm</text><text x="'+(bX+115)+'" y="'+(bY+168)+'" fill="#9fb498" font-size="9">('+(p.input/100).toFixed(4)+' m)</text><text x="'+(bX+15)+'" y="'+(bY+184)+'" fill="#9fb498" font-size="8">T₀ = 2.00000 s (Master Invar Clock)</text><line x1="'+(bX+15)+'" y1="'+(bY+195)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+195)+'" stroke="#253a34"/>'+text(bX+15,bY+210,'T = (T₀·t_c)/(t_c + T₀) ⇔ g = 4π² / S',ink,9)+text(240,22,'Borda-Laplace Pendulum Coincidence Bench')+text(240,308,'Temporal Vernier: Δf = 1/t_c · Precision Gravimetry g = 9.807 m s⁻²');}
    else if(cfg.slug==='torsion-pendulum'){const wX=220,topY=50,L_px=75+(p.input-40.0)*1.7,T_osc=v.period,maxTwist=0.28,twist=maxTwist*Math.cos(phase*(2*Math.PI/T_osc)),discY=topY+L_px,discRx=85,discRy=20,discH=14;svg+='<rect x="30" y="280" width="400" height="14" rx="2" fill="#1b2a26" stroke="'+soft+'" stroke-width="1.5"/><rect x="50" y="270" width="70" height="10" rx="2" fill="#20312d" stroke="'+soft+'" stroke-width="1.5"/><line x1="85" y1="270" x2="85" y2="40" stroke="#1b2a26" stroke-width="10"/><line x1="83" y1="270" x2="83" y2="40" stroke="'+soft+'" stroke-width="2"/><rect x="75" y="40" width="20" height="16" rx="2" fill="#364e46" stroke="'+soft+'" stroke-width="1.5"/><line x1="85" y1="46" x2="235" y2="46" stroke="'+soft+'" stroke-width="6"/><rect x="'+(wX-8)+'" y="46" width="16" height="14" rx="2" fill="#475569" stroke="'+ink+'" stroke-width="1.5"/><line x1="'+(wX-10)+'" y1="52" x2="'+(wX+10)+'" y2="52" stroke="'+orange+'" stroke-width="1"/><rect x="'+(wX-105)+'" y="35" width="210" height="240" rx="6" fill="#182824" opacity="0.3" stroke="'+soft+'" stroke-width="1" stroke-dasharray="4 2"/><text x="'+(wX-95)+'" y="270" fill="#718e79" font-size="7.5">DRAUGHT SHIELD</text><line x1="'+wX+'" y1="60" x2="'+wX+'" y2="'+discY+'" stroke="'+ink+'" stroke-width="2.5"/>';for(let i=0;i<5;i++){const wy=65+i*((discY-70)/5),off=Math.sin(twist+i*1.2)*2.5;svg+='<line x1="'+(wX-1.5+off)+'" y1="'+wy+'" x2="'+(wX+1.5-off)+'" y2="'+(wy+8)+'" stroke="'+orange+'" stroke-width="1" opacity="0.75"/>';}svg+='<rect x="'+(wX-7)+'" y="'+(discY-6)+'" width="14" height="12" rx="2" fill="#475569" stroke="'+ink+'" stroke-width="1.5"/><path d="M '+(wX-discRx)+' '+discY+' A '+discRx+' '+discRy+' 0 0 0 '+(wX+discRx)+' '+discY+' V '+(discY+discH)+' A '+discRx+' '+discRy+' 0 0 1 '+(wX-discRx)+' '+(discY+discH)+' Z" fill="#b45309" stroke="#d97706" stroke-width="1.5"/><ellipse cx="'+wX+'" cy="'+discY+'" rx="'+discRx+'" ry="'+discRy+'" fill="#d97706" stroke="#fde68a" stroke-width="1.5"/>';for(let a=0;a<4;a++){const spokeRad=twist+(a*Math.PI/2),sx=wX+(discRx-6)*Math.cos(spokeRad),sy=discY+(discRy-3)*Math.sin(spokeRad);svg+='<line x1="'+wX+'" y1="'+discY+'" x2="'+sx.toFixed(1)+'" y2="'+sy.toFixed(1)+'" stroke="#78350f" stroke-width="1.5"/><circle cx="'+sx.toFixed(1)+'" cy="'+sy.toFixed(1)+'" r="2" fill="#fde68a"/>';}svg+='<circle cx="'+wX+'" cy="'+discY+'" r="5" fill="#475569" stroke="'+ink+'" stroke-width="1"/>';const ptrRad=twist,pxEnd=wX+(discRx+16)*Math.cos(ptrRad),pyEnd=discY+(discRy+4)*Math.sin(ptrRad);svg+='<line x1="'+wX+'" y1="'+discY+'" x2="'+pxEnd.toFixed(1)+'" y2="'+pyEnd.toFixed(1)+'" stroke="'+orange+'" stroke-width="2"/><polygon points="'+pxEnd.toFixed(1)+','+pyEnd.toFixed(1)+' '+(pxEnd-Math.cos(ptrRad)*6+Math.sin(ptrRad)*3).toFixed(1)+','+(pyEnd-Math.sin(ptrRad)*6-Math.cos(ptrRad)*3).toFixed(1)+' '+(pxEnd-Math.cos(ptrRad)*6-Math.sin(ptrRad)*3).toFixed(1)+','+(pyEnd-Math.sin(ptrRad)*6+Math.cos(ptrRad)*3).toFixed(1)+'" fill="'+orange+'"/>';const eqX=wX+(discRx+16);svg+='<line x1="'+eqX+'" y1="'+(discY-12)+'" x2="'+eqX+'" y2="'+(discY+16)+'" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="3 2"/><text x="'+(eqX+4)+'" y="'+(discY+4)+'" fill="#38bdf8" font-size="7.5">0° eq</text><line x1="'+(wX+30)+'" y1="60" x2="'+(wX+30)+'" y2="'+discY+'" stroke="'+soft+'" stroke-width="1" stroke-dasharray="2 2"/><line x1="'+(wX+25)+'" y1="60" x2="'+(wX+35)+'" y2="60" stroke="'+soft+'" stroke-width="1"/><line x1="'+(wX+25)+'" y1="'+discY+'" x2="'+(wX+35)+'" y2="'+discY+'" stroke="'+soft+'" stroke-width="1"/><text x="'+(wX+40)+'" y="'+((60+discY)/2)+'" fill="'+soft+'" font-size="8">L = '+p.input.toFixed(1)+' cm</text>';const bX=470,bY=45,bW=220,bH=220;svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#182824" stroke="'+soft+'" stroke-width="1.5"/><text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#718e79" font-size="9">TIME FOR 20 OSCILLATIONS (t₂₀)</text><text x="'+(bX+15)+'" y="'+(bY+52)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+v.raw.toFixed(2)+'</text><text x="'+(bX+105)+'" y="'+(bY+50)+'" fill="'+soft+'" font-size="11">s</text><text x="'+(bX+125)+'" y="'+(bY+50)+'" fill="#9fb498" font-size="8">(±0.05 s)</text><line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#253a34"/><text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#718e79" font-size="9">PERIOD T & PERIOD SQUARED T²</text><text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="16" font-family="monospace">'+T_osc.toFixed(4)+' s</text><text x="'+(bX+125)+'" y="'+(bY+108)+'" fill="'+orange+'" font-size="13" font-family="monospace">T² = '+(T_osc*T_osc).toFixed(4)+' s²</text><line x1="'+(bX+15)+'" y1="'+(bY+125)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+125)+'" stroke="#253a34"/><text x="'+(bX+15)+'" y="'+(bY+144)+'" fill="#718e79" font-size="9">ACTIVE WIRE LENGTH (L)</text><text x="'+(bX+15)+'" y="'+(bY+168)+'" fill="'+orange+'" font-size="16" font-family="monospace" font-weight="bold">'+p.input.toFixed(1)+' cm</text><text x="'+(bX+115)+'" y="'+(bY+168)+'" fill="#9fb498" font-size="9">('+(p.input/100).toFixed(4)+' m)</text><text x="'+(bX+15)+'" y="'+(bY+184)+'" fill="#9fb498" font-size="8">Steel d = 1.200 mm · I = 0.0100 kg m²</text><line x1="'+(bX+15)+'" y1="'+(bY+195)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+195)+'" stroke="#253a34"/>'+text(bX+15,bY+210,'T² = [8π I / (η r⁴)] · L ⇔ η = 8π I / (S · r⁴)',ink,9)+text(240,22,'Coulomb Torsion Pendulum Apparatus')+text(240,308,'Modulus of Rigidity: τ = −κ θ · Fourth-Power Radius Law r⁴ · η = 78.50 GPa');}
+   else if(cfg.slug==='resonance-air-column'){
+    const tX=200,topY=65,tubeW=32,tubeH=210;
+    const L1_cm=v.raw;
+    const waterY=topY+(L1_cm/45.0)*160.0;
+    const fHz=p.input;
+    const prongW=0.35*Math.cos(phase*(2*Math.PI*Math.min(30,fHz/15)));
+    const forkY=topY-32;
+    svg+='<rect x="30" y="280" width="400" height="14" rx="2" fill="#1b2a26" stroke="'+soft+'" stroke-width="1.5"/><line x1="80" y1="280" x2="80" y2="35" stroke="#1b2a26" stroke-width="10"/><line x1="78" y1="280" x2="78" y2="35" stroke="'+soft+'" stroke-width="2"/><rect x="70" y="80" width="135" height="8" rx="2" fill="#364e46" stroke="'+soft+'" stroke-width="1"/><rect x="70" y="210" width="135" height="8" rx="2" fill="#364e46" stroke="'+soft+'" stroke-width="1"/><rect x="'+(tX-tubeW/2)+'" y="'+topY+'" width="'+tubeW+'" height="'+tubeH+'" rx="3" fill="#13231e" stroke="#60a5fa" stroke-width="2" opacity="0.85"/><rect x="'+(tX-tubeW/2+2)+'" y="'+waterY+'" width="'+(tubeW-4)+'" height="'+(topY+tubeH-waterY)+'" fill="#0284c7" opacity="0.6"/>';
+    const ripple=Math.sin(phase*12)*1.2;
+    svg+='<ellipse cx="'+tX+'" cy="'+(waterY+ripple)+'" rx="'+(tubeW/2-2)+'" ry="4" fill="#38bdf8" stroke="#bae6fd" stroke-width="1"/>';
+    for(let g=0;g<=20;g++){
+      const gy=topY+g*(tubeH/20),isMajor=(g%5===0);
+      svg+='<line x1="'+(tX+tubeW/2)+'" y1="'+gy+'" x2="'+(tX+tubeW/2+(isMajor?8:4))+'" y2="'+gy+'" stroke="'+soft+'" stroke-width="'+(isMajor?1.5:1)+'"/>';
+      if(isMajor)svg+='<text x="'+(tX+tubeW/2+12)+'" y="'+(gy+3)+'" fill="'+soft+'" font-size="7">'+(g*2)+'</text>';
+    }
+    svg+='<rect x="'+(tX-tubeW/2-3)+'" y="'+(waterY-3)+'" width="'+(tubeW+6)+'" height="6" rx="2" fill="#ef4444" stroke="#fca5a5" stroke-width="1"/><text x="'+(tX-tubeW/2-6)+'" y="'+(waterY+2)+'" text-anchor="end" fill="#ef4444" font-size="8">L₁ marker</text>';
+    const resX=340,resY=waterY-20,resW=38,resH=70;
+    svg+='<line x1="375" y1="280" x2="375" y2="35" stroke="#1b2a26" stroke-width="8"/><line x1="373" y1="280" x2="373" y2="35" stroke="'+soft+'" stroke-width="1.5"/><rect x="365" y="'+(resY+15)+'" width="20" height="10" rx="2" fill="#364e46" stroke="'+soft+'" stroke-width="1"/><rect x="'+resX+'" y="'+resY+'" width="'+resW+'" height="'+resH+'" rx="4" fill="#164e63" stroke="#38bdf8" stroke-width="1.5"/><rect x="'+(resX+2)+'" y="'+(resY+15)+'" width="'+(resW-4)+'" height="'+(resH-17)+'" fill="#0284c7" opacity="0.6"/><text x="'+(resX+resW/2)+'" y="'+(resY+40)+'" text-anchor="middle" fill="#bae6fd" font-size="7.5">Reservoir</text>';
+    const tubeBottom=topY+tubeH;
+    svg+='<path d="M '+(resX+resW/2)+' '+(resY+resH)+' C '+(resX+resW/2)+' 275, '+tX+' 275, '+tX+' '+tubeBottom+'" fill="none" stroke="#78350f" stroke-width="6" stroke-linecap="round"/><path d="M '+(resX+resW/2)+' '+(resY+resH)+' C '+(resX+resW/2)+' 275, '+tX+' 275, '+tX+' '+tubeBottom+'" fill="none" stroke="#92400e" stroke-width="3" stroke-linecap="round"/>';
+    svg+='<line x1="'+tX+'" y1="'+(forkY-15)+'" x2="'+tX+'" y2="'+forkY+'" stroke="'+soft+'" stroke-width="4"/><path d="M '+(tX-10+prongW*4)+' '+(forkY-28)+' V '+forkY+' H '+(tX+10-prongW*4)+' V '+(forkY-28)+'" fill="none" stroke="#e2e8f0" stroke-width="3" stroke-linecap="round"/><rect x="'+(tX-3)+'" y="'+forkY+'" width="6" height="12" rx="1" fill="#94a3b8"/><text x="'+tX+'" y="'+(forkY-33)+'" text-anchor="middle" fill="'+orange+'" font-size="8.5" font-weight="bold">'+fHz.toFixed(1)+' Hz</text>';
+    for(let a=1;a<=3;a++){
+      const arcR=a*7+((phase*18)%10),arcY=topY-8+arcR;
+      if(arcY<topY+25)svg+='<path d="M '+(tX-arcR*.75)+' '+arcY+' Q '+tX+' '+(arcY+arcR*.4)+' '+(tX+arcR*.75)+' '+arcY+'" fill="none" stroke="'+orange+'" stroke-width="1.2" opacity="'+(1-a*0.25)+'"/>';
+    }
+    const antinodeY=topY-6;
+    let waveL=[],waveR=[];
+    for(let w=0;w<=20;w++){
+      const nw=w/20,wy=antinodeY+nw*(waterY-antinodeY),ampl=Math.cos((Math.PI/2)*nw)*Math.cos(phase*12)*(tubeW/2-4);
+      waveL.push((tX-ampl).toFixed(1)+','+wy.toFixed(1));waveR.push((tX+ampl).toFixed(1)+','+wy.toFixed(1));
+    }
+    svg+='<polyline points="'+waveL.join(' ')+'" fill="none" stroke="'+ink+'" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.75"/><polyline points="'+waveR.join(' ')+'" fill="none" stroke="'+ink+'" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.75"/>';
+    svg+='<line x1="'+(tX-tubeW/2-10)+'" y1="'+topY+'" x2="'+(tX-tubeW/2-10)+'" y2="'+antinodeY+'" stroke="'+orange+'" stroke-width="1"/><text x="'+(tX-tubeW/2-14)+'" y="'+((topY+antinodeY)/2+3)+'" text-anchor="end" fill="'+orange+'" font-size="7">c≈0.98cm</text>';
+    svg+='<line x1="'+(tX-tubeW/2-10)+'" y1="'+topY+'" x2="'+(tX-tubeW/2-10)+'" y2="'+waterY+'" stroke="'+soft+'" stroke-width="1"/><line x1="'+(tX-tubeW/2-14)+'" y1="'+topY+'" x2="'+(tX-tubeW/2-6)+'" y2="'+topY+'" stroke="'+soft+'" stroke-width="1"/><line x1="'+(tX-tubeW/2-14)+'" y1="'+waterY+'" x2="'+(tX-tubeW/2-6)+'" y2="'+waterY+'" stroke="'+soft+'" stroke-width="1"/><text x="'+(tX-tubeW/2-14)+'" y="'+((topY+waterY)/2+3)+'" text-anchor="end" fill="'+soft+'" font-size="8">L₁='+L1_cm.toFixed(1)+'cm</text>';
+    const bX=470,bY=45,bW=220,bH=220,lambda_m=4.0*(L1_cm+0.98)/100.0,v_est=fHz*lambda_m;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#182824" stroke="'+soft+'" stroke-width="1.5"/><text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#718e79" font-size="9">TUNING FORK FREQUENCY (f)</text><text x="'+(bX+15)+'" y="'+(bY+52)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+fHz.toFixed(1)+'</text><text x="'+(bX+105)+'" y="'+(bY+50)+'" fill="'+soft+'" font-size="11">Hz</text><text x="'+(bX+130)+'" y="'+(bY+50)+'" fill="#9fb498" font-size="8">(Middle Scale)</text><line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#253a34"/><text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#718e79" font-size="9">FIRST RESONANCE LENGTH (L₁)</text><text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="18" font-family="monospace">'+L1_cm.toFixed(2)+' cm</text><text x="'+(bX+130)+'" y="'+(bY+108)+'" fill="#9fb498" font-size="8.5">(±0.05 cm)</text><line x1="'+(bX+15)+'" y1="'+(bY+125)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+125)+'" stroke="#253a34"/><text x="'+(bX+15)+'" y="'+(bY+144)+'" fill="#718e79" font-size="9">WAVELENGTH λ & SOUND VELOCITY v</text><text x="'+(bX+15)+'" y="'+(bY+168)+'" fill="'+orange+'" font-size="15" font-family="monospace" font-weight="bold">'+v_est.toFixed(1)+' m s⁻¹</text><text x="'+(bX+135)+'" y="'+(bY+168)+'" fill="#9fb498" font-size="9">(λ='+(lambda_m*100).toFixed(1)+' cm)</text><text x="'+(bX+15)+'" y="'+(bY+184)+'" fill="#9fb498" font-size="8">c = 0.6133 r = 0.98 cm · T = 20.0 °C</text><line x1="'+(bX+15)+'" y1="'+(bY+195)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+195)+'" stroke="#253a34"/>'+text(bX+15,bY+210,'L₁ = (v/4)(1/f) − c ⇔ v = 4m · c = −b',ink,9)+text(240,22,'Resonance Tube Apparatus with Water Reservoir')+text(240,308,'Speed of Sound in Air: v = 343.2 m s⁻¹ · Rayleigh End Correction c = 0.6133 r');
+  }
+
    $('apparatusDiagram').innerHTML=svg;}
 let last=0;function animate(t){if(!paused&&t-last>70){draw(t);last=t;}requestAnimationFrame(animate);}requestAnimationFrame(animate);update();renderResults();
