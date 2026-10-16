@@ -61,11 +61,7 @@ function drawComparativeSim(t,p,v,phase,ink,soft,orange){
   const isFaraday=['faradays-law-electrolysis'].includes(cfg.slug);
   const isElecHeat=['electrical-equivalent-heat'].includes(cfg.slug);
   const isPotentiometer=['potentiometer-emf-comparison'].includes(cfg.slug);
-  const isFaraday=['faradays-law-electrolysis'].includes(cfg.slug);
-  const isTempR=['temperature-resistance'].includes(cfg.slug);
-  const isInternalR=['internal-resistance'].includes(cfg.slug);
-  const isFieldMapping=['electric-fields'].includes(cfg.slug);
-  const isMagMoments=['magnetic-moments'].includes(cfg.slug);
+  const isSpectra=['emission-spectra-spectroscopy'].includes(cfg.slug);
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
   const text=(x,y,str,color='#9fb498',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
@@ -554,7 +550,124 @@ function drawComparativeSim(t,p,v,phase,ink,soft,orange){
       svg+='<text x="'+(bX+34)+'" y="'+(rowY+15)+'" fill="#9fb498" font-size="8.5">'+s.eq+' · '+s.ratio+'</text>';
       if(idx<2)svg+='<line x1="'+(bX+20)+'" y1="'+(rowY+24)+'" x2="'+(bX+bW-20)+'" y2="'+(rowY+24)+'" stroke="#253a34" stroke-dasharray="2 2"/>';
     });
-    svg+=text(360,305,'Faraday's 2nd Law: m₁ / m₂ = (M₁ / n₁) / (M₂ / n₂) · Faraday Constant F = e N_A = 96485.3 C mol⁻¹',soft,10);
+    svg+=text(360,305,"Faraday's 2nd Law: m₁ / m₂ = (M₁ / n₁) / (M₂ / n₂) · Faraday Constant F = e N_A = 96485.3 C mol⁻¹",soft,10);
+  }
+  else if(isElecHeat){
+    const gX=60,gY=55,gW=340,gH=210;
+    svg+='<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#14221e" stroke="'+soft+'" stroke-width="1.5" rx="4"/>';
+    svg+=text(gX+gW/2,gY-15,'CALORIMETRIC HEATING CURVES (25.0 W CONTINUOUS)', '#e2ecd7',11);
+    const fluids=[
+      {name:'Distilled Water (c = 4.186 J g⁻¹ K⁻¹)',col:ink,rate:'dT/dt = 0.0964 °C/s',barW:0.45,desc:'High specific heat capacity reference · Strong hydrogen bond network'},
+      {name:'Pure Ethanol (c = 2.440 J g⁻¹ K⁻¹)',col:orange,rate:'dT/dt = 0.1654 °C/s',barW:0.75,desc:'Medium specific heat organic alcohol · 1.7× faster heating than water'},
+      {name:'Mineral Oil (c = 1.900 J g⁻¹ K⁻¹)',col:'#38bdf8',rate:'dT/dt = 0.2124 °C/s',barW:0.95,desc:'Low specific heat hydrocarbon fluid · 2.2× rapid temperature rise'}
+    ];
+    fluids.forEach((item,idx)=>{
+      const rowY=gY+35+idx*55;
+      svg+='<text x="'+(gX+18)+'" y="'+(rowY-8)+'" fill="'+item.col+'" font-size="10" font-weight="bold">'+item.name+'</text>';
+      svg+='<text x="'+(gX+gW-18)+'" y="'+(rowY-8)+'" text-anchor="end" fill="'+item.col+'" font-size="10" font-family="monospace">'+item.rate+'</text>';
+      svg+='<rect x="'+(gX+18)+'" y="'+rowY+'" width="'+(gW-36)+'" height="14" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+      const bW=(gW-36)*item.barW;
+      svg+='<rect x="'+(gX+18)+'" y="'+rowY+'" width="'+bW.toFixed(1)+'" height="14" rx="3" fill="'+item.col+'"/>';
+      const pulseX=gX+18+((phase*(1.8+idx*0.6))%1)*(gW-36);
+      svg+='<circle cx="'+pulseX.toFixed(1)+'" cy="'+(rowY+7)+'" r="4.5" fill="#fde68a" stroke="#fff" stroke-width="1"/>';
+      svg+='<text x="'+(gX+22)+'" y="'+(rowY+26)+'" fill="#9fb498" font-size="8">'+item.desc+'</text>';
+    });
+    const bX=425,bY=55,bW=265,bH=210;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'MECHANICAL EQUIVALENCE THEOREM','#718e79',9.5);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+    const heatStats=[
+      {name:'Electrical Work: W = V · I · t',val:'dW/dt = 25.00 J s⁻¹',col:ink},
+      {name:'Thermal Absorption: Q = C_sys · ΔT',val:'dQ/dt = 5.972 cal s⁻¹',col:orange},
+      {name:'Mechanical Equivalent J = W / Q',val:'J = 4.1860 J cal⁻¹',col:'#38bdf8'}
+    ];
+    heatStats.forEach((s,idx)=>{
+      const rowY=bY+52+idx*46;
+      svg+='<circle cx="'+(bX+22)+'" cy="'+(rowY-4)+'" r="4.5" fill="'+s.col+'"/>';
+      svg+='<text x="'+(bX+34)+'" y="'+rowY+'" fill="'+s.col+'" font-size="10.5" font-weight="bold">'+s.name+'</text>';
+      svg+='<text x="'+(bX+34)+'" y="'+(rowY+15)+'" fill="#9fb498" font-size="8.5">'+s.val+'</text>';
+      if(idx<2)svg+='<line x1="'+(bX+20)+'" y1="'+(rowY+24)+'" x2="'+(bX+bW-20)+'" y2="'+(rowY+24)+'" stroke="#253a34" stroke-dasharray="2 2"/>';
+    });
+    svg+=text(360,305,"First Law of Thermodynamics: ∮ dW = J ∮ dQ · J = 4.1860 J cal⁻¹ (Absolute Equivalence)",soft,10);
+  }
+  else if(isPotentiometer){
+    const gX=60,gY=55,gW=340,gH=210;
+    svg+='<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#14221e" stroke="'+soft+'" stroke-width="1.5" rx="4"/>';
+    svg+=text(gX+gW/2,gY-15,'ELECTROCHEMICAL CELL EMF BENCHMARK (k = 0.02000 V/cm)','#e2ecd7',11);
+    const cells=[
+      {name:'Weston Cadmium Standard (ℰ = 1.0183 V)',col:ink,ell:'ℓ = 50.92 cm',barW:0.509,desc:'Saturated cadmium sulfate primary metrology standard · Low temp drift'},
+      {name:'Daniell Porous Pot Cell (ℰ = 1.0800 V)',col:orange,ell:'ℓ = 54.00 cm',barW:0.540,desc:'Copper-Zinc redox equilibrium: Zn + Cu²⁺ ⟶ Zn²⁺ + Cu (Classic 1836)'},
+      {name:'Leclanché Carbon-Zinc Dry Cell (ℰ = 1.4500 V)',col:'#38bdf8',ell:'ℓ = 72.50 cm',barW:0.725,desc:'Manganese dioxide depolarizer · University laboratory workhorse cell'}
+    ];
+    cells.forEach((item,idx)=>{
+      const rowY=gY+35+idx*55;
+      svg+='<text x="'+(gX+18)+'" y="'+(rowY-8)+'" fill="'+item.col+'" font-size="10" font-weight="bold">'+item.name+'</text>';
+      svg+='<text x="'+(gX+gW-18)+'" y="'+(rowY-8)+'" text-anchor="end" fill="'+item.col+'" font-size="10" font-family="monospace">'+item.ell+'</text>';
+      svg+='<rect x="'+(gX+18)+'" y="'+rowY+'" width="'+(gW-36)+'" height="14" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+      const bW=(gW-36)*item.barW;
+      svg+='<rect x="'+(gX+18)+'" y="'+rowY+'" width="'+bW.toFixed(1)+'" height="14" rx="3" fill="'+item.col+'"/>';
+      const pulseX=gX+18+((phase*(1.5+idx*0.5))%1)*(gW-36);
+      svg+='<circle cx="'+pulseX.toFixed(1)+'" cy="'+(rowY+7)+'" r="4.5" fill="#fde68a" stroke="#fff" stroke-width="1"/>';
+      svg+='<text x="'+(gX+22)+'" y="'+(rowY+26)+'" fill="#9fb498" font-size="8">'+item.desc+'</text>';
+    });
+    const bX=425,bY=55,bW=265,bH=210;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'POTENTIOMETER NULL COMPARISON','#718e79',9.5);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+    const potStats=[
+      {name:'Driver Cell Potential: ℰ_driver = 2.000 V',val:'Wire length L = 100.0 cm',col:ink},
+      {name:'Linear Gradient: k = ℰ / L',val:'k = 0.02000 V cm⁻¹ (2.000 V m⁻¹)',col:orange},
+      {name:'EMF Ratio: ℰ₁ / ℰ₂ = ℓ₁ / ℓ₂',val:'Independent of wire diameter & internal r',col:'#38bdf8'}
+    ];
+    potStats.forEach((s,idx)=>{
+      const rowY=bY+52+idx*46;
+      svg+='<circle cx="'+(bX+22)+'" cy="'+(rowY-4)+'" r="4.5" fill="'+s.col+'"/>';
+      svg+='<text x="'+(bX+34)+'" y="'+rowY+'" fill="'+s.col+'" font-size="10.5" font-weight="bold">'+s.name+'</text>';
+      svg+='<text x="'+(bX+34)+'" y="'+(rowY+15)+'" fill="#9fb498" font-size="8.5">'+s.val+'</text>';
+      if(idx<2)svg+='<line x1="'+(bX+20)+'" y1="'+(rowY+24)+'" x2="'+(bX+bW-20)+'" y2="'+(rowY+24)+'" stroke="#253a34" stroke-dasharray="2 2"/>';
+    });
+    svg+=text(360,305,"Poggendorff Null Method: ℰ_x = k · ℓ_x ⟹ Infinite effective input resistance eliminates internal drop I·r",soft,10);
+  }
+  else if(isSpectra){
+    const gX=60,gY=55,gW=340,gH=210;
+    svg+='<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#091014" stroke="'+soft+'" stroke-width="1.5" rx="4"/>';
+    svg+=text(gX+gW/2,gY-15,'MULTI-ELEMENT DISCHARGE EMISSION SPECTRA','#e2ecd7',11);
+    const spectra=[
+      {name:'Hydrogen (Balmer Series)',lines:[{wl:656.3,col:'#ef4444'},{wl:486.1,col:'#06b6d4'},{wl:434.0,col:'#6366f1'},{wl:410.2,col:'#8b5cf6'}],desc:'Pure Coulomb single-electron atom · Rydberg fit diff < 0.02%'},
+      {name:'Helium (Neutral He I Arc)',lines:[{wl:706.5,col:'#dc2626'},{wl:667.8,col:'#ea580c'},{wl:587.6,col:'#eab308'},{wl:501.6,col:'#22c55e'},{wl:447.1,col:'#3b82f6'},{wl:388.9,col:'#a855f7'}],desc:'Two electrons · Orthohelium & parahelium singlet/triplet states'},
+      {name:'Sodium (Alkali Metal Vapor)',lines:[{wl:589.0,col:'#facc15'},{wl:589.6,col:'#fde047'},{wl:568.8,col:'#84cc16'},{wl:615.4,col:'#f97316'}],desc:'Single valence electron · Spin-orbit doublet splitting (0.597 nm gap)'},
+      {name:'Mercury (Low-Pressure Arc)',lines:[{wl:579.1,col:'#facc15'},{wl:577.0,col:'#fde047'},{wl:546.1,col:'#10b981'},{wl:435.8,col:'#38bdf8'},{wl:404.7,col:'#818cf8'}],desc:'Heavy Z=80 atom · Relativistic j-j coupling & prominent UV lines'}
+    ];
+    const wlMin=380,wlMax=750;
+    spectra.forEach((s,idx)=>{
+      const rowY=gY+25+idx*46;
+      svg+='<text x="'+(gX+14)+'" y="'+(rowY-4)+'" fill="#e2ecd7" font-size="9" font-weight="bold">'+s.name+'</text>';
+      svg+='<rect x="'+(gX+14)+'" y="'+rowY+'" width="'+(gW-28)+'" height="16" rx="2" fill="#04080c" stroke="#1f2937" stroke-width="1"/>';
+      s.lines.forEach(l=>{
+        const lx=gX+14+((l.wl-wlMin)/(wlMax-wlMin))*(gW-28);
+        svg+='<line x1="'+lx.toFixed(1)+'" y1="'+rowY+'" x2="'+lx.toFixed(1)+'" y2="'+(rowY+16)+'" stroke="'+l.col+'" stroke-width="2.5"/>';
+        svg+='<line x1="'+lx.toFixed(1)+'" y1="'+(rowY-1)+'" x2="'+lx.toFixed(1)+'" y2="'+(rowY+17)+'" stroke="#ffffff" stroke-width="0.8" opacity="0.6"/>';
+      });
+      svg+='<text x="'+(gX+16)+'" y="'+(rowY+25)+'" fill="#9fb498" font-size="7.5">'+s.desc+'</text>';
+    });
+    const bX=425,bY=55,bW=265,bH=210;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'QUANTUM EMISSION FINGERPRINTS','#718e79',9.5);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+    const qStats=[
+      {name:'Hydrogen H (Z = 1)',term:'1s¹ (Pure Coulomb)',scale:'R_H = 10967758 m⁻¹',col:'#ef4444'},
+      {name:'Helium He (Z = 2)',term:'1s² (Screened e⁻-e⁻)',scale:'R_He = 10972227 m⁻¹',col:'#ea580c'},
+      {name:'Sodium Na (Z = 11)',term:'[Ne] 3s¹ (Core Defect δ_s=1.37)',scale:'Doublet Δλ = 0.597 nm',col:'#facc15'},
+      {name:'Mercury Hg (Z = 80)',term:'[Xe] 4f¹⁴ 5d¹⁰ 6s² (Relativistic)',scale:'Ultraviolet λ = 253.7 nm',col:'#38bdf8'}
+    ];
+    qStats.forEach((s,idx)=>{
+      const rowY=bY+48+idx*39;
+      svg+='<circle cx="'+(bX+20)+'" cy="'+(rowY-4)+'" r="4" fill="'+s.col+'"/>';
+      svg+='<text x="'+(bX+30)+'" y="'+rowY+'" fill="'+s.col+'" font-size="10" font-weight="bold">'+s.name+'</text>';
+      svg+='<text x="'+(bX+30)+'" y="'+(rowY+13)+'" fill="#9fb498" font-size="8">'+s.term+' · '+s.scale+'</text>';
+      if(idx<3)svg+='<line x1="'+(bX+18)+'" y1="'+(rowY+20)+'" x2="'+(bX+bW-18)+'" y2="'+(rowY+20)+'" stroke="#253a34" stroke-dasharray="2 2"/>';
+    });
+    svg+=text(360,305,"Kirchhoff's Laws: Every gas radiates bright spectral lines identical to its absorption wavelengths",soft,10);
   }
   else{
     const gX=60,gY=55,gW=340,gH=210;
@@ -1141,7 +1254,7 @@ function drawDynamicSandbox(t,p,v,phase,ink,soft,orange){
     svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+162)+'" text-anchor="middle" fill="#38bdf8" font-size="8.5" font-weight="bold">KIRCHHOFF VOLTAGE LAW LOOP</text>';
     svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+176)+'" text-anchor="middle" fill="#fde68a" font-size="8">∮ E⃗ · dℓ⃗ = ℰ − I · r − I · R_load ≡ 0</text>';
     svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+190)+'" text-anchor="middle" fill="#9fb498" font-size="7.5">Terminal Voltage V = I · R_load = ℰ − I · r</text>';
-    svg+=text(360,305,'Ohm's Law in Closed Circuit: I = ℰ / (R_load + r) · Terminal Voltage: V = ℰ − I · r',soft,10);
+    svg+=text(360,305,"Ohm's Law in Closed Circuit: I = ℰ / (R_load + r) · Terminal Voltage: V = ℰ − I · r",soft,10);
   }
   else if(isTempR){
     const cX=50,cY=50,cW=340,cH=220;
@@ -1190,7 +1303,7 @@ function drawDynamicSandbox(t,p,v,phase,ink,soft,orange){
     svg+='<rect x="'+(bX+25)+'" y="'+(bY+122)+'" width="'+tau_bar+'" height="12" rx="3" fill="'+orange+'"/>';
     // Matthiessen law card
     svg+='<rect x="'+(bX+25)+'" y="'+(bY+145)+'" width="220" height="52" rx="4" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>';
-    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+162)+'" text-anchor="middle" fill="#38bdf8" font-size="8.5" font-weight="bold">MATTHIESSEN'S SUPERPOSITION RULE</text>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+162)+'" text-anchor="middle" fill="#38bdf8" font-size="8.5" font-weight="bold">MATTHIESSEN\'S SUPERPOSITION RULE</text>';
     svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+176)+'" text-anchor="middle" fill="#fde68a" font-size="8">ρ_total(T) = ρ_impurity + ρ_phonon(T) ∝ T</text>';
     svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+190)+'" text-anchor="middle" fill="#9fb498" font-size="7.5">Debye Temperature Θ_D = 343 K (70 °C) for pure copper</text>';
     svg+=text(360,305,'Drude Conductivity: σ = n e² τ / m_e · Scattering Rate: 1/τ ∝ ⟨u²⟩ ∝ T ⟹ R(T) = R₀(1 + α T)',soft,10);
@@ -1382,6 +1495,93 @@ function drawDynamicSandbox(t,p,v,phase,ink,soft,orange){
     svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+176)+'" text-anchor="middle" fill="#fde68a" font-size="8">V_terminal = ℰ − I_G · r_int = ℰ − 0 = ℰ</text>';
     svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+190)+'" text-anchor="middle" fill="#9fb498" font-size="7.5">Zero perturbation of chemical cell equilibrium</text>';
     svg+=text(360,305,"Opposing Potentials: V(ℓ) − ℰ_cell = 0 ⟹ Electron Drift v_d = 0 ⟹ Galvanometer Deflection = 0",soft,10);
+  }
+  else if(isSpectra){
+    const cX=50,cY=50,cW=340,cH=220;
+    svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#080f14" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+    svg+=text(cX+cW/2,cY-15,'BOHR ATOMIC ORBITS & PHOTON TRANSITION (n ⟶ 2)','#e2ecd7',11);
+
+    const n_curr = Math.round(p.input);
+    const centerX = cX + cW/2 - 20;
+    const centerY = cY + cH/2;
+
+    const rScale = [0, 16, 32, 50, 70, 92, 116];
+    for(let k=1; k<=6; k++){
+      const r_k = rScale[k];
+      const isBalmer = (k === 2);
+      const isSelected = (k === n_curr);
+      const strokeCol = isSelected ? '#38bdf8' : isBalmer ? '#10b981' : '#334155';
+      const strokeW = (isSelected || isBalmer) ? 1.8 : 0.8;
+      const strokeDash = isBalmer ? '4 3' : (isSelected ? 'none' : '2 2');
+      svg+='<circle cx="'+centerX+'" cy="'+centerY+'" r="'+r_k+'" fill="none" stroke="'+strokeCol+'" stroke-width="'+strokeW+'" stroke-dasharray="'+strokeDash+'"/>';
+      svg+='<text x="'+(centerX+r_k+2)+'" y="'+(centerY-3)+'" fill="'+(isSelected?'#38bdf8':isBalmer?'#10b981':'#64748b')+'" font-size="7">n='+k+'</text>';
+    }
+
+    svg+='<circle cx="'+centerX+'" cy="'+centerY+'" r="7" fill="#ef4444" stroke="#fca5a5" stroke-width="1.5"/>';
+    svg+='<text x="'+centerX+'" y="'+(centerY+3.5)+'" text-anchor="middle" fill="#ffffff" font-size="8" font-weight="bold">+e</text>';
+
+    const omega = 4.0 / Math.pow(Math.min(6, n_curr), 1.2);
+    const theta = (phase * omega * 2 * Math.PI) % (2 * Math.PI);
+    const eR = rScale[Math.min(6, n_curr)];
+    const eX = centerX + eR * Math.cos(theta);
+    const eY = centerY + eR * Math.sin(theta);
+
+    svg+='<circle cx="'+eX.toFixed(1)+'" cy="'+eY.toFixed(1)+'" r="5" fill="#38bdf8" stroke="#ffffff" stroke-width="1.5"/>';
+    svg+='<circle cx="'+eX.toFixed(1)+'" cy="'+eY.toFixed(1)+'" r="9" fill="none" stroke="#38bdf8" stroke-width="1" opacity="0.6"/>';
+
+    const r2 = rScale[2];
+    const photonAng = -Math.PI / 4;
+    const lineCols = {3:'#ef4444', 4:'#06b6d4', 5:'#6366f1', 6:'#8b5cf6', 7:'#a855f7', 8:'#d946ef'};
+    const pCol = lineCols[n_curr] || '#38bdf8';
+
+    svg+='<line x1="'+(centerX+eR*0.7)+'" y1="'+(centerY-eR*0.7)+'" x2="'+(centerX+r2*0.7)+'" y2="'+(centerY-r2*0.7)+'" stroke="#f59e0b" stroke-width="2" stroke-dasharray="3 3"/>';
+    svg+='<polygon points="'+(centerX+r2*0.7)+','+(centerY-r2*0.7)+' '+(centerX+r2*0.7+4)+','+(centerY-r2*0.7-6)+' '+(centerX+r2*0.7+7)+','+(centerY-r2*0.7-2)+'" fill="#f59e0b"/>';
+
+    const waveProgress = (phase * 1.5) % 1.0;
+    const waveDist = r2 + waveProgress * 80;
+    const waveX = centerX + waveDist * Math.cos(photonAng);
+    const waveY = centerY + waveDist * Math.sin(photonAng);
+    svg+='<circle cx="'+waveX.toFixed(1)+'" cy="'+waveY.toFixed(1)+'" r="4.5" fill="'+pCol+'" stroke="#ffffff" stroke-width="1"/>';
+    svg+='<text x="'+(waveX+8).toFixed(1)+'" y="'+(waveY-6).toFixed(1)+'" fill="'+pCol+'" font-size="8.5" font-weight="bold">γ (hν)</text>';
+
+    const bX=420,bY=50,bW=270,bH=220;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+20,'QUANTIZED ENERGY LEVELS (E_n = -13.6 eV / n²)','#718e79',9);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+30)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+30)+'" stroke="#253a34"/>';
+
+    const eTopY = bY + 45;
+    const eH = 115;
+    const levels = [
+      {n:1, E:-13.60, label:'n=1: −13.60 eV (Ground State / Lyman)'},
+      {n:2, E:-3.40,  label:'n=2: −3.40 eV (Balmer Base Level)'},
+      {n:3, E:-1.51,  label:'n=3: −1.51 eV (Hα transition ΔE = 1.89 eV)'},
+      {n:4, E:-0.85,  label:'n=4: −0.85 eV (Hβ transition ΔE = 2.55 eV)'},
+      {n:5, E:-0.54,  label:'n=5: −0.54 eV (Hγ transition ΔE = 2.86 eV)'},
+      {n:6, E:-0.38,  label:'n=6: −0.38 eV (Hδ transition ΔE = 3.02 eV)'}
+    ];
+
+    levels.forEach(lvl=>{
+      const yLvl = eTopY + (lvl.E / -13.60) * eH;
+      const isSel = (lvl.n === n_curr);
+      const isBase = (lvl.n === 2);
+      const colL = isSel ? '#38bdf8' : isBase ? '#10b981' : '#64748b';
+      svg+='<line x1="'+(bX+25)+'" y1="'+yLvl.toFixed(1)+'" x2="'+(bX+155)+'" y2="'+yLvl.toFixed(1)+'" stroke="'+colL+'" stroke-width="'+(isSel||isBase?2:1)+'"/>';
+      svg+='<text x="'+(bX+160)+'" y="'+(yLvl+3.5).toFixed(1)+'" fill="'+colL+'" font-size="7.5" font-family="monospace">'+(lvl.n===2?'★ n=2':'n='+lvl.n)+' ('+lvl.E.toFixed(2)+' eV)</text>';
+    });
+
+    const yFrom = eTopY + ((-13.6 / (n_curr * n_curr)) / -13.60) * eH;
+    const yTo = eTopY + (-3.40 / -13.60) * eH;
+    svg+='<line x1="'+(bX+90)+'" y1="'+yFrom.toFixed(1)+'" x2="'+(bX+90)+'" y2="'+yTo.toFixed(1)+'" stroke="'+pCol+'" stroke-width="2.5"/>';
+    svg+='<polygon points="'+(bX+90)+','+yTo.toFixed(1)+' '+(bX+86)+','+(yTo-6).toFixed(1)+' '+(bX+94)+','+(yTo-6).toFixed(1)+'" fill="'+pCol+'"/>';
+
+    const dE = 13.6 * (0.25 - 1.0 / (n_curr * n_curr));
+    const h_ev_s = 4.135667696e-15;
+    const c_speed = 299792458;
+    const lambda_calc = (h_ev_s * c_speed / dE) * 1e9;
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+168)+'" width="220" height="42" rx="4" fill="#0f172a" stroke="'+pCol+'" stroke-width="1.5"/>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+182)+'" text-anchor="middle" fill="'+pCol+'" font-size="8" font-weight="bold">PHOTON ENERGY: ΔE = h · ν = '+dE.toFixed(3)+' eV</text>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+196)+'" text-anchor="middle" fill="#fde68a" font-size="7.5">λ = h c / ΔE = '+lambda_calc.toFixed(1)+' nm (Measured: '+p.raw.toFixed(1)+' nm)</text>';
+    svg+=text(360,305,"Bohr Postulate: Angular Momentum L = n ℏ · Photon Emission: ΔE = E_initial − E_final = h ν",soft,10);
   }
   else{
     const cX=50,cY=50,cW=340,cH=220;
@@ -2304,9 +2504,236 @@ function draw(t){
     svg+='<text x="'+(bX+15)+'" y="'+(bY+184)+'" fill="#9fb498" font-size="8">Faraday F = '+F_val.toFixed(0)+' C mol⁻¹ · N_A = 6.022 × 10²³</text>';
     svg+='<line x1="'+(bX+15)+'" y1="'+(bY+195)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+195)+'" stroke="#253a34"/>';
     svg+=text(bX+15,bY+210,'m = Z · Q ⇔ Z = m / (I · t)',ink,9);
-    svg+=text(240,22,'Faraday's Law of Electrolysis (Copper Voltameter)');
-    svg+=text(240,308,'Faraday's 1st Law: m = Z · Q · Faraday Constant: F = M_Cu / (2Z) = 96485.3 C mol⁻¹');
+    svg+=text(240,22,"Faraday's Law of Electrolysis (Copper Voltameter)");
+    svg+=text(240,308,"Faraday's 1st Law: m = Z · Q · Faraday Constant: F = M_Cu / (2Z) = 96485.3 C mol⁻¹");
   }
+  else if(cfg.slug==='electrical-equivalent-heat'){
+    const t_s=p.input;
+    const T_final=v.raw;
+    const P_W=25.00;
+    const W_J=P_W*t_s;
+    const C_sys=259.3;
+    const T0=20.00;
+    const dT=T_final-T0;
+    const Q_cal=C_sys*dT;
+    const J_est=W_J/Q_cal;
+
+    svg+='<rect x="50" y="250" width="390" height="14" rx="2" fill="#1b2a26" stroke="'+soft+'" stroke-width="1.5"/>';
+
+    const jX=70,jY=90,jW=150,jH=150;
+    svg+='<rect x="'+jX+'" y="'+jY+'" width="'+jW+'" height="'+jH+'" rx="8" fill="#1e293b" stroke="'+soft+'" stroke-width="2"/>';
+    svg+='<rect x="'+(jX+12)+'" y="'+(jY+15)+'" width="'+(jW-24)+'" height="'+(jH-22)+'" rx="4" fill="#0f172a" stroke="#94a3b8" stroke-width="1.5"/>';
+    svg+='<rect x="'+(jX+16)+'" y="'+(jY+35)+'" width="'+(jW-32)+'" height="'+(jH-45)+'" rx="2" fill="#0284c7" opacity="0.35"/>';
+    svg+='<line x1="'+(jX+16)+'" y1="'+(jY+35)+'" x2="'+(jX+jW-16)+'" y2="'+(jY+35)+'" stroke="#38bdf8" stroke-width="1.5"/>';
+    svg+='<text x="'+(jX+jW/2)+'" y="'+(jY+28)+'" text-anchor="middle" fill="#7dd3fc" font-size="7.5">250.0 g Distilled Water</text>';
+
+    svg+='<rect x="'+(jX-4)+'" y="'+(jY+10)+'" width="'+(jW+8)+'" height="10" rx="2" fill="#334155" stroke="#64748b" stroke-width="1"/>';
+
+    const coilX=jX+jW/2-15, coilY=jY+95;
+    svg+='<path d="M'+coilX+' '+(jY+20)+' V'+coilY+'" fill="none" stroke="#f59e0b" stroke-width="2"/>';
+    svg+='<path d="M'+(coilX+30)+' '+(jY+20)+' V'+coilY+'" fill="none" stroke="#f59e0b" stroke-width="2"/>';
+    svg+='<path d="M'+coilX+' '+coilY+' C'+(coilX+5)+' '+(coilY+15)+','+(coilX+10)+' '+(coilY-10)+','+(coilX+15)+' '+coilY+' C'+(coilX+20)+' '+(coilY+15)+','+(coilX+25)+' '+(coilY-10)+','+(coilX+30)+' '+coilY+'" fill="none" stroke="#ea580c" stroke-width="3"/>';
+    svg+='<text x="'+(jX+jW/2)+'" y="'+(coilY+28)+'" text-anchor="middle" fill="#fde68a" font-size="7">Nichrome Coil (1.00 Ω)</text>';
+
+    const thX=jX+32;
+    svg+='<rect x="'+(thX-3)+'" y="30" width="6" height="150" rx="3" fill="#1e293b" stroke="'+soft+'" stroke-width="1"/>';
+    const mercH=20+(dT/15.0)*80;
+    svg+='<line x1="'+thX+'" y1="'+(180-mercH)+'" x2="'+thX+'" y2="180" stroke="#ef4444" stroke-width="2"/>';
+    svg+='<circle cx="'+thX+'" cy="180" r="4.5" fill="#ef4444"/>';
+    svg+='<text x="'+thX+'" y="24" text-anchor="middle" fill="'+orange+'" font-size="9" font-weight="bold">'+T_final.toFixed(2)+' °C</text>';
+
+    const stX=jX+jW-32;
+    svg+='<line x1="'+stX+'" y1="45" x2="'+stX+'" y2="'+(jY+jH-25)+'" stroke="#94a3b8" stroke-width="2"/>';
+    svg+='<ellipse cx="'+stX+'" cy="'+(jY+jH-25)+'" rx="12" ry="3" fill="none" stroke="#94a3b8" stroke-width="1.5"/>';
+
+    const psX=250,psY=70,psW=95,psH=80;
+    svg+='<rect x="'+psX+'" y="'+psY+'" width="'+psW+'" height="'+psH+'" rx="4" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>';
+    svg+='<rect x="'+(psX+8)+'" y="'+(psY+8)+'" width="'+(psW-16)+'" height="18" rx="2" fill="#020617"/>';
+    svg+='<text x="'+(psX+psW/2)+'" y="'+(psY+21)+'" text-anchor="middle" fill="#38bdf8" font-size="10" font-family="monospace" font-weight="bold">5.00V · 5.00A</text>';
+    svg+='<text x="'+(psX+psW/2)+'" y="'+(psY+40)+'" text-anchor="middle" fill="#e2ecd7" font-size="7.5" font-weight="bold">P = 25.00 W</text>';
+    svg+='<circle cx="'+(psX+25)+'" cy="'+(psY+62)+'" r="4" fill="#ef4444"/>';
+    svg+='<circle cx="'+(psX+psW-25)+'" cy="'+(psY+62)+'" r="4" fill="#3b82f6"/>';
+
+    const chX=250,chY=165,chW=95,chH=65;
+    svg+='<rect x="'+chX+'" y="'+chY+'" width="'+chW+'" height="'+chH+'" rx="4" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/>';
+    svg+='<rect x="'+(chX+8)+'" y="'+(chY+8)+'" width="'+(chW-16)+'" height="24" rx="2" fill="#020617"/>';
+    const m_min=Math.floor(t_s/60);
+    const s_sec=(t_s%60).toFixed(0).padStart(2,'0');
+    svg+='<text x="'+(chX+chW/2)+'" y="'+(chY+25)+'" text-anchor="middle" fill="#10b981" font-size="14" font-family="monospace" font-weight="bold">'+m_min+':'+s_sec+'</text>';
+    svg+='<text x="'+(chX+chW/2)+'" y="'+(chY+48)+'" text-anchor="middle" fill="#e2ecd7" font-size="7.5" font-weight="bold">Elapsed Heating Time</text>';
+
+    svg+='<line x1="'+(psX+25)+'" y1="'+(psY+62)+'" x2="'+(coilX+30)+'" y2="'+(jY+20)+'" stroke="#ef4444" stroke-width="1.5"/>';
+    svg+='<line x1="'+(psX+psW-25)+'" y1="'+(psY+62)+'" x2="'+coilX+'" y2="'+(jY+20)+'" stroke="#3b82f6" stroke-width="1.5"/>';
+
+    const bX=470,bY=45,bW=220,bH=220;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#182824" stroke="'+soft+'" stroke-width="1.5"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#718e79" font-size="9">ELECTRICAL WORK INPUT (W)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+52)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+W_J.toFixed(0)+'</text>';
+    svg+='<text x="'+(bX+95)+'" y="'+(bY+50)+'" fill="'+soft+'" font-size="11">J</text>';
+    svg+='<text x="'+(bX+120)+'" y="'+(bY+50)+'" fill="#9fb498" font-size="8">(W = V · I · t)</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#718e79" font-size="9">HEAT GENERATED (Q_sys)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="18" font-family="monospace">'+Q_cal.toFixed(1)+' cal</text>';
+    svg+='<text x="'+(bX+125)+'" y="'+(bY+108)+'" fill="#9fb498" font-size="8.5">(ΔT = '+dT.toFixed(2)+' °C)</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+125)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+125)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+144)+'" fill="#718e79" font-size="9">MECHANICAL EQUIVALENT (J)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+168)+'" fill="'+orange+'" font-size="15" font-family="monospace" font-weight="bold">'+J_est.toFixed(4)+'</text>';
+    svg+='<text x="'+(bX+85)+'" y="'+(bY+168)+'" fill="#9fb498" font-size="9">J cal⁻¹ (100.0% match)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+184)+'" fill="#9fb498" font-size="8">Calorimeter Heat Capacity: C_sys = 259.3 cal/°C</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+195)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+195)+'" stroke="#253a34"/>';
+    svg+=text(bX+15,bY+210,'W = J · Q ⇔ J = W / [C_sys (T_f − T₀)]',ink,9);
+    svg+=text(240,22,'Joule Electrical Equivalent of Heat Calorimeter');
+    svg+=text(240,308,'Joule Heating: W = V · I · t = J · C_sys · ΔT · Reference J = 4.1860 J cal⁻¹');
+  }
+  else if(cfg.slug==='potentiometer-emf-comparison'){
+    const E_cell=p.input;
+    const ell_cm=v.raw;
+    const k_grad=0.02000;
+
+    svg+='<rect x="30" y="250" width="410" height="14" rx="2" fill="#1b2a26" stroke="'+soft+'" stroke-width="1.5"/>';
+
+    const pbX=40,pbY=140,pbW=390,pbH=90;
+    svg+='<rect x="'+pbX+'" y="'+pbY+'" width="'+pbW+'" height="'+pbH+'" rx="4" fill="#2d1b0e" stroke="#854d0e" stroke-width="2"/>';
+    svg+='<rect x="'+(pbX+15)+'" y="'+(pbY+15)+'" width="'+(pbW-30)+'" height="22" rx="2" fill="#fde047" opacity="0.85"/>';
+    for(let m=0;m<=10;m++){
+      const tx=pbX+25+m*34;
+      svg+='<line x1="'+tx+'" y1="'+(pbY+15)+'" x2="'+tx+'" y2="'+(pbY+27)+'" stroke="#713f12" stroke-width="1.5"/>';
+      svg+='<text x="'+tx+'" y="'+(pbY+34)+'" text-anchor="middle" fill="#713f12" font-size="7.5" font-weight="bold">'+(m*10)+'</text>';
+    }
+
+    svg+='<rect x="'+(pbX+8)+'" y="'+(pbY+45)+'" width="20" height="30" rx="2" fill="#ca8a04" stroke="#eab308" stroke-width="1"/>';
+    svg+='<rect x="'+(pbX+pbW-28)+'" y="'+(pbY+45)+'" width="20" height="30" rx="2" fill="#ca8a04" stroke="#eab308" stroke-width="1"/>';
+    svg+='<line x1="'+(pbX+20)+'" y1="'+(pbY+60)+'" x2="'+(pbX+pbW-20)+'" y2="'+(pbY+60)+'" stroke="#e2e8f0" stroke-width="2"/>';
+    svg+='<text x="'+(pbX+pbW/2)+'" y="'+(pbY+80)+'" text-anchor="middle" fill="#fef08a" font-size="7.5">Uniform Manganin Wire (100.0 cm · 2.000 V Total Drop)</text>';
+
+    const jockX=pbX+25+(ell_cm/100.0)*340;
+    svg+='<path d="M'+(jockX-6)+' '+(pbY+42)+' H'+(jockX+6)+' L'+jockX+' '+(pbY+60)+' Z" fill="#ef4444" stroke="#fca5a5" stroke-width="1"/>';
+    svg+='<rect x="'+(jockX-3)+'" y="'+(pbY+25)+'" width="6" height="18" rx="1" fill="#475569"/>';
+    svg+='<circle cx="'+jockX+'" cy="'+(pbY+24)+'" r="4.5" fill="#f59e0b"/>';
+    svg+='<text x="'+jockX+'" y="'+(pbY+18)+'" text-anchor="middle" fill="'+orange+'" font-size="8" font-weight="bold">'+ell_cm.toFixed(1)+' cm</text>';
+
+    const drX=50,drY=45,drW=70,drH=60;
+    svg+='<rect x="'+drX+'" y="'+drY+'" width="'+drW+'" height="'+drH+'" rx="4" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>';
+    svg+='<text x="'+(drX+drW/2)+'" y="'+(drY+24)+'" text-anchor="middle" fill="#38bdf8" font-size="9" font-weight="bold">2.000 V</text>';
+    svg+='<text x="'+(drX+drW/2)+'" y="'+(drY+42)+'" text-anchor="middle" fill="#94a3b8" font-size="7">Driver Battery</text>';
+    svg+='<circle cx="'+(drX+16)+'" cy="'+(drY+52)+'" r="3.5" fill="#ef4444"/>';
+    svg+='<circle cx="'+(drX+drW-16)+'" cy="'+(drY+52)+'" r="3.5" fill="#3b82f6"/>';
+
+    const tcX=160,tcY=45,tcW=75,tcH=60;
+    svg+='<rect x="'+tcX+'" y="'+tcY+'" width="'+tcW+'" height="'+tcH+'" rx="4" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/>';
+    svg+='<text x="'+(tcX+tcW/2)+'" y="'+(tcY+24)+'" text-anchor="middle" fill="#10b981" font-size="9" font-weight="bold">ℰ = '+E_cell.toFixed(3)+' V</text>';
+    svg+='<text x="'+(tcX+tcW/2)+'" y="'+(tcY+42)+'" text-anchor="middle" fill="#94a3b8" font-size="7">Test Cell (Unknown)</text>';
+    svg+='<circle cx="'+(tcX+16)+'" cy="'+(tcY+52)+'" r="3.5" fill="#ef4444"/>';
+    svg+='<circle cx="'+(tcX+tcW-16)+'" cy="'+(tcY+52)+'" r="3.5" fill="#3b82f6"/>';
+
+    const gDialX=275,gDialY=45,gDialW=75,gDialH=60;
+    svg+='<rect x="'+gDialX+'" y="'+gDialY+'" width="'+gDialW+'" height="'+gDialH+'" rx="4" fill="#0f172a" stroke="#f59e0b" stroke-width="1.5"/>';
+    svg+='<circle cx="'+(gDialX+gDialW/2)+'" cy="'+(gDialY+26)+'" r="16" fill="#020617" stroke="#334155" stroke-width="1"/>';
+    svg+='<line x1="'+(gDialX+gDialW/2)+'" y1="'+(gDialY+26)+'" x2="'+(gDialX+gDialW/2)+'" y2="'+(gDialY+13)+'" stroke="#10b981" stroke-width="2"/>';
+    svg+='<circle cx="'+(gDialX+gDialW/2)+'" cy="'+(gDialY+26)+'" r="2" fill="#10b981"/>';
+    svg+='<text x="'+(gDialX+gDialW/2)+'" y="'+(gDialY+52)+'" text-anchor="middle" fill="#10b981" font-size="7" font-weight="bold">I_G = 0.000 μA (NULL)</text>';
+
+    svg+='<line x1="'+(drX+16)+'" y1="'+(drY+52)+'" x2="'+(pbX+20)+'" y2="'+(pbY+50)+'" stroke="#ef4444" stroke-width="1.5"/>';
+    svg+='<line x1="'+(drX+drW-16)+'" y1="'+(drY+52)+'" x2="'+(pbX+pbW-20)+'" y2="'+(pbY+50)+'" stroke="#3b82f6" stroke-width="1.5"/>';
+    svg+='<line x1="'+(tcX+16)+'" y1="'+(tcY+52)+'" x2="'+(pbX+20)+'" y2="'+(pbY+50)+'" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="2 2"/>';
+    svg+='<line x1="'+(tcX+tcW-16)+'" y1="'+(tcY+52)+'" x2="'+(gDialX+16)+'" y2="'+(gDialY+52)+'" stroke="#f59e0b" stroke-width="1.5"/>';
+    svg+='<line x1="'+(gDialX+gDialW-16)+'" y1="'+(gDialY+52)+'" x2="'+jockX+'" y2="'+(pbY+24)+'" stroke="#f59e0b" stroke-width="1.5"/>';
+
+    const bX=470,bY=45,bW=220,bH=220;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#182824" stroke="'+soft+'" stroke-width="1.5"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#718e79" font-size="9">CELL ELECTROMOTIVE FORCE (ℰ)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+52)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+E_cell.toFixed(3)+'</text>';
+    svg+='<text x="'+(bX+95)+'" y="'+(bY+50)+'" fill="'+soft+'" font-size="11">V</text>';
+    svg+='<text x="'+(bX+120)+'" y="'+(bY+50)+'" fill="#9fb498" font-size="8">(Open-Circuit EMF)</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#718e79" font-size="9">NULL BALANCING LENGTH (ℓ)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="18" font-family="monospace">'+ell_cm.toFixed(2)+' cm</text>';
+    svg+='<text x="'+(bX+125)+'" y="'+(bY+108)+'" fill="#9fb498" font-size="8.5">(±0.05 cm)</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+125)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+125)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+144)+'" fill="#718e79" font-size="9">POTENTIAL GRADIENT (k)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+168)+'" fill="'+orange+'" font-size="15" font-family="monospace" font-weight="bold">'+k_grad.toFixed(4)+'</text>';
+    svg+='<text x="'+(bX+85)+'" y="'+(bY+168)+'" fill="#9fb498" font-size="9">V cm⁻¹ (2.0000 V m⁻¹)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+184)+'" fill="#9fb498" font-size="8">Potentiometer Sensitivity: 0.05 cm ≡ 1.0 mV</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+195)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+195)+'" stroke="#253a34"/>';
+    svg+=text(bX+15,bY+210,'ℰ = k · ℓ ⇔ ℰ₁ / ℰ₂ = ℓ₁ / ℓ₂',ink,9);
+    svg+=text(240,22,'Precision Slide-Wire Potentiometer Metrology Bench');
+    svg+=text(240,308,'Null Method: ℰ_cell = k · ℓ · Zero Current I_G = 0 Eliminates Internal Drop I · r');
+  }
+  else if(cfg.slug==='emission-spectra-spectroscopy'){
+    const n_val=p.input;
+    const lambda_nm=v.raw;
+    const lineNames={3:'Hα (Ruby-Red)', 4:'Hβ (Cyan)', 5:'Hγ (Blue-Violet)', 6:'Hδ (Deep Violet)', 7:'Hε (Near UV)', 8:'Hζ (Near UV)'};
+    const lineCols={3:'#ef4444', 4:'#06b6d4', 5:'#6366f1', 6:'#8b5cf6', 7:'#a855f7', 8:'#d946ef'};
+    const lineTitle=lineNames[n_val] || ('n = '+n_val);
+    const lineCol=lineCols[n_val] || '#38bdf8';
+    const c_speed=299792458;
+    const nu_THz=(c_speed/(lambda_nm*1e-9))/1e12;
+    const E_eV=(1239.84193/lambda_nm);
+    const x_factor=0.25-1.0/(n_val*n_val);
+    const R_H_meas=(1e9/lambda_nm)/x_factor;
+
+    svg+='<rect x="40" y="250" width="410" height="14" rx="2" fill="#1b2a26" stroke="'+soft+'" stroke-width="1.5"/>';
+
+    const spX=180,spY=175;
+    svg+='<polygon points="'+(spX-45)+',250 '+(spX+45)+',250 '+(spX+20)+',215 '+(spX-20)+',215" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>';
+    svg+='<rect x="'+(spX-12)+'" y="145" width="24" height="70" fill="#334155" stroke="#475569" stroke-width="1"/>';
+    svg+='<circle cx="'+spX+'" cy="'+(spY-30)+'" r="48" fill="#0f172a" stroke="'+soft+'" stroke-width="2"/>';
+    svg+='<circle cx="'+spX+'" cy="'+(spY-30)+'" r="44" fill="none" stroke="#334155" stroke-dasharray="2 3"/>';
+
+    svg+='<rect x="50" y="'+(spY-37)+'" width="95" height="14" rx="2" fill="#334155" stroke="#64748b" stroke-width="1.5"/>';
+    svg+='<rect x="44" y="'+(spY-40)+'" width="8" height="20" rx="1" fill="#475569" stroke="#94a3b8" stroke-width="1"/>';
+    svg+='<text x="95" y="'+(spY-42)+'" text-anchor="middle" fill="#94a3b8" font-size="7">Collimator Tube</text>';
+
+    svg+='<rect x="22" y="'+(spY-52)+'" width="18" height="44" rx="5" fill="#1e1e38" stroke="#818cf8" stroke-width="1.5"/>';
+    svg+='<rect x="28" y="'+(spY-42)+'" width="6" height="24" rx="2" fill="#d946ef" opacity="0.85"/>';
+    svg+='<circle cx="31" cy="'+(spY-30)+'" r="5" fill="#f43f5e" opacity="0.75"/>';
+    svg+='<text x="31" y="'+(spY-58)+'" text-anchor="middle" fill="#f43f5e" font-size="6.5" font-weight="bold">H₂ Tube</text>';
+
+    svg+='<rect x="'+(spX-3)+'" y="'+(spY-52)+'" width="6" height="44" rx="1" fill="#0284c7" stroke="#38bdf8" stroke-width="1.5" opacity="0.8"/>';
+    svg+='<text x="'+spX+'" y="'+(spY-58)+'" text-anchor="middle" fill="#38bdf8" font-size="7" font-weight="bold">Grating (600 lines/mm)</text>';
+
+    const telAngle = 0.28 + (n_val - 3) * 0.08;
+    const telLen = 95;
+    const telEndX = spX + telLen * Math.cos(telAngle);
+    const telEndY = (spY - 30) - telLen * Math.sin(telAngle);
+    svg+='<line x1="'+spX+'" y1="'+(spY-30)+'" x2="'+telEndX.toFixed(1)+'" y2="'+telEndY.toFixed(1)+'" stroke="'+lineCol+'" stroke-width="6" stroke-linecap="round"/>';
+    svg+='<line x1="'+spX+'" y1="'+(spY-30)+'" x2="'+telEndX.toFixed(1)+'" y2="'+telEndY.toFixed(1)+'" stroke="#64748b" stroke-width="10" stroke-linecap="round" opacity="0.4"/>';
+
+    const eyX=345, eyY=115, eyR=42;
+    svg+='<circle cx="'+eyX+'" cy="'+eyY+'" r="'+(eyR+4)+'" fill="#0a0f14" stroke="#475569" stroke-width="2"/>';
+    svg+='<circle cx="'+eyX+'" cy="'+eyY+'" r="'+eyR+'" fill="#020617"/>';
+    svg+='<line x1="'+(eyX-eyR)+'" y1="'+eyY+'" x2="'+(eyX+eyR)+'" y2="'+eyY+'" stroke="#334155" stroke-width="1"/>';
+    svg+='<line x1="'+eyX+'" y1="'+(eyY-eyR)+'" x2="'+eyX+'" y2="'+(eyY+eyR)+'" stroke="#334155" stroke-width="1"/>';
+    svg+='<line x1="'+eyX+'" y1="'+(eyY-eyR+4)+'" x2="'+eyX+'" y2="'+(eyY+eyR-4)+'" stroke="'+lineCol+'" stroke-width="3"/>';
+    svg+='<line x1="'+eyX+'" y1="'+(eyY-eyR+4)+'" x2="'+eyX+'" y2="'+(eyY+eyR-4)+'" stroke="#ffffff" stroke-width="1" opacity="0.8"/>';
+    svg+='<circle cx="'+eyX+'" cy="'+eyY+'" r="2.5" fill="#fde68a"/>';
+    svg+='<text x="'+eyX+'" y="'+(eyY+eyR+14)+'" text-anchor="middle" fill="'+lineCol+'" font-size="8" font-weight="bold">'+lineTitle+'</text>';
+    svg+='<text x="'+eyX+'" y="'+(eyY-eyR-6)+'" text-anchor="middle" fill="#94a3b8" font-size="7">Eyepiece Reticle Field</text>';
+
+    svg+='<rect x="130" y="222" width="100" height="20" rx="3" fill="#0f172a" stroke="'+soft+'" stroke-width="1"/>';
+    svg+='<text x="180" y="235" text-anchor="middle" fill="#38bdf8" font-size="8.5" font-family="monospace">θ = '+(telAngle*180/Math.PI).toFixed(2)+'°</text>';
+
+    const bX=470,bY=45,bW=220,bH=220;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#182824" stroke="'+soft+'" stroke-width="1.5"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#718e79" font-size="9">PRINCIPAL QUANTUM NUMBER (n)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+52)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+n_val+'</text>';
+    svg+='<text x="'+(bX+55)+'" y="'+(bY+50)+'" fill="'+soft+'" font-size="11">⟶ 2</text>';
+    svg+='<text x="'+(bX+95)+'" y="'+(bY+50)+'" fill="'+lineCol+'" font-size="9" font-weight="bold">('+lineTitle+')</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#718e79" font-size="9">SPECTRAL WAVELENGTH (λ)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+lineCol+'" font-size="18" font-family="monospace" font-weight="bold">'+lambda_nm.toFixed(1)+' nm</text>';
+    svg+='<text x="'+(bX+125)+'" y="'+(bY+108)+'" fill="#9fb498" font-size="8.5">('+E_eV.toFixed(3)+' eV)</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+125)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+125)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+144)+'" fill="#718e79" font-size="9">INFERRED RYDBERG CONSTANT (R_H)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+168)+'" fill="'+orange+'" font-size="15" font-family="monospace" font-weight="bold">'+R_H_meas.toFixed(0)+'</text>';
+    svg+='<text x="'+(bX+95)+'" y="'+(bY+168)+'" fill="#9fb498" font-size="9">m⁻¹ (diff < 0.02%)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+184)+'" fill="#9fb498" font-size="8">Optical Frequency ν = '+nu_THz.toFixed(1)+' THz · 1/λ = '+((1e9/lambda_nm).toFixed(0))+' m⁻¹</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+195)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+195)+'" stroke="#253a34"/>';
+    svg+=text(bX+15,bY+210,'1/λ = R_H (1/4 − 1/n²) ⇔ R_H = S',ink,9);
+    svg+=text(240,22,'Transmission Grating Emission Spectrometer');
+    svg+=text(240,308,'Balmer Series: 1/λ = R_H (1/2² − 1/n²) · Rydberg Reference: R_H = 1.0967758 × 10⁷ m⁻¹');
+  }
+
 
 
 
