@@ -38,7 +38,8 @@ def experiment_index(experiments):
    'internal-resistance':'internal resistance electromotive force emf terminal voltage potential difference cell battery decade resistance box voltmeter ammeter maximum power transfer load current short circuit',
    'temperature-resistance':'temperature coefficient resistance rtd copper coil thermometer wheatstone bridge kelvin callendar van dusen drude model electron phonon scattering heating bath ice point',
    'faradays-law-electrolysis':'faraday law electrolysis electrochemical equivalent copper voltameter deposition cathode anode charge coulomb avogadro constant molar mass chemical equivalent',
-    'electrical-equivalent-heat':'electrical equivalent heat joule law heating calorimeter immersion coil water equivalent rumford cooling electric power energy conservation nichrome resistance chronometer'}
+    'electrical-equivalent-heat':'electrical equivalent heat joule law heating calorimeter immersion coil water equivalent rumford cooling electric power energy conservation nichrome resistance chronometer',
+    'potentiometer-emf-comparison':'potentiometer slide wire electromotive force emf weston standard cell null balance galvanometer jockey poggendorff potential gradient volt comparison internal resistance dry cell'}
  for exp in experiments:
   c=configs.get(exp['slug'],{});index.append({'slug':exp['slug'],'title':c.get('title',exp['title']),'subject':'physics','subjectName':'Physics','path':exp['page_path'],'summary':c.get('aim','Determine Planck’s constant from stopping potential and frequency.'),'keywords':' '.join([aliases.get(exp['slug'],''),*[a['name'] for a in c.get('apparatus',[])]])})
  return index

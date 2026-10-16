@@ -60,6 +60,7 @@ function drawComparativeSim(t,p,v,phase,ink,soft,orange){
   const isTempR=['temperature-resistance'].includes(cfg.slug);
   const isFaraday=['faradays-law-electrolysis'].includes(cfg.slug);
   const isElecHeat=['electrical-equivalent-heat'].includes(cfg.slug);
+  const isPotentiometer=['potentiometer-emf-comparison'].includes(cfg.slug);
   const isFaraday=['faradays-law-electrolysis'].includes(cfg.slug);
   const isTempR=['temperature-resistance'].includes(cfg.slug);
   const isInternalR=['internal-resistance'].includes(cfg.slug);
@@ -1326,6 +1327,61 @@ function drawDynamicSandbox(t,p,v,phase,ink,soft,orange){
     svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+176)+'" text-anchor="middle" fill="#fde68a" font-size="8">J = W / Q = 4.1860 J cal⁻¹ (100.0% Equivalence)</text>';
     svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+190)+'" text-anchor="middle" fill="#9fb498" font-size="7.5">Heat Equivalent of Work a = 1 / J = 0.2389 cal J⁻¹</text>';
     svg+=text(360,305,"Microscopic Electron Collisions: dW/dt = I² R ⟹ Inelastic Phonon Production ⟹ dQ/dt = C_sys (dT/dt)",soft,10);
+  }
+  else if(isPotentiometer){
+    const cX=50,cY=50,cW=340,cH=220;
+    svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#101c18" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+    svg+=text(cX+cW/2,cY-15,'POTENTIAL GRADIENT RAMP & GALVANOMETER NULL','#e2ecd7',11);
+
+    // Coordinate grid for V(x) vs x
+    const pX=cX+30,pY=cY+25,pW=cW-50,pH=cH-55;
+    svg+='<line x1="'+pX+'" y1="'+(pY+pH)+'" x2="'+(pX+pW)+'" y2="'+(pY+pH)+'" stroke="'+soft+'" stroke-width="1.2"/>';
+    svg+='<line x1="'+pX+'" y1="'+pY+'" x2="'+pX+'" y2="'+(pY+pH)+'" stroke="'+soft+'" stroke-width="1.2"/>';
+    svg+='<text x="'+(pX+pW/2)+'" y="'+(pY+pH+15)+'" text-anchor="middle" fill="#9fb498" font-size="8">Slide-Wire Position x (0 to 100 cm)</text>';
+    svg+='<text transform="translate('+(pX-12)+','+(pY+pH/2)+') rotate(-90)" text-anchor="middle" fill="#9fb498" font-size="8">Potential V (Volts)</text>';
+
+    // Linear potential ramp V(x) = k * x (from 0 to 2.0 V)
+    svg+='<line x1="'+pX+'" y1="'+(pY+pH)+'" x2="'+(pX+pW)+'" y2="'+pY+'" stroke="'+ink+'" stroke-width="2.5"/>';
+    svg+='<text x="'+(pX+pW-10)+'" y="'+(pY-4)+'" fill="'+ink+'" font-size="7.5" font-weight="bold">V(x) = k · x</text>';
+
+    // Horizontal test cell EMF reference line
+    const E_norm=p.input/2.000;
+    const refY=pY+pH-E_norm*pH;
+    svg+='<line x1="'+pX+'" y1="'+refY.toFixed(1)+'" x2="'+(pX+pW)+'" y2="'+refY.toFixed(1)+'" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3 3"/>';
+    svg+='<text x="'+(pX+pW-25)+'" y="'+(refY-5).toFixed(1)+'" fill="#f59e0b" font-size="7.5" font-weight="bold">ℰ_cell = '+p.input.toFixed(3)+' V</text>';
+
+    // Intersection null point (x_null, refY)
+    const nullX=pX+E_norm*pW;
+    svg+='<circle cx="'+nullX.toFixed(1)+'" cy="'+refY.toFixed(1)+'" r="5" fill="#ef4444" stroke="#fff" stroke-width="1.5"/>';
+    svg+='<line x1="'+nullX.toFixed(1)+'" y1="'+refY.toFixed(1)+'" x2="'+nullX.toFixed(1)+'" y2="'+(pY+pH)+'" stroke="#ef4444" stroke-width="1" stroke-dasharray="2 2"/>';
+    svg+='<text x="'+nullX.toFixed(1)+'" y="'+(pY+pH-6)+'" text-anchor="middle" fill="#fca5a5" font-size="7" font-weight="bold">ℓ_null</text>';
+
+    // Galvanometer needle deflection indicator at top center
+    const galDialX=cX+cW/2,galDialY=cY+35;
+    svg+='<circle cx="'+galDialX+'" cy="'+galDialY+'" r="16" fill="#0f172a" stroke="'+soft+'" stroke-width="1"/>';
+    svg+='<line x1="'+(galDialX-10)+'" y1="'+galDialY+'" x2="'+(galDialX+10)+'" y2="'+galDialY+'" stroke="#334155" stroke-dasharray="2 2"/>';
+    // Pointer resting at exact zero (I_G = 0)
+    svg+='<line x1="'+galDialX+'" y1="'+galDialY+'" x2="'+galDialX+'" y2="'+(galDialY-12)+'" stroke="#10b981" stroke-width="2"/>';
+    svg+='<circle cx="'+galDialX+'" cy="'+galDialY+'" r="2.5" fill="#10b981"/>';
+    svg+='<text x="'+galDialX+'" y="'+(galDialY+22)+'" text-anchor="middle" fill="#10b981" font-size="7" font-weight="bold">I_G = 0.000 μA (NULL)</text>';
+
+    const bX=420,bY=50,bW=270,bH=220;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'INFINITE INPUT IMPEDANCE THEOREM','#718e79',9);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+58)+'" fill="'+ink+'" font-size="9">Wire Potential: V_wire = k · ℓ = '+p.input.toFixed(4)+' V</text>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+65)+'" width="220" height="12" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+65)+'" width="220" height="12" rx="3" fill="'+ink+'"/>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+92)+'" fill="#9fb498" font-size="7.5">Potential gradient k = 2.0000 V m⁻¹ (0.02000 V cm⁻¹)</text>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+115)+'" fill="'+orange+'" font-size="9">Net Galvanometer Branch Field: E_net = 0</text>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+122)+'" width="220" height="12" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+122)+'" width="4" height="12" rx="1" fill="#10b981"/>';
+    // Theorem card
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+145)+'" width="220" height="52" rx="4" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+162)+'" text-anchor="middle" fill="#38bdf8" font-size="8.5" font-weight="bold">ZERO-CURRENT METROLOGY (R_in ⟶ ∞)</text>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+176)+'" text-anchor="middle" fill="#fde68a" font-size="8">V_terminal = ℰ − I_G · r_int = ℰ − 0 = ℰ</text>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+190)+'" text-anchor="middle" fill="#9fb498" font-size="7.5">Zero perturbation of chemical cell equilibrium</text>';
+    svg+=text(360,305,"Opposing Potentials: V(ℓ) − ℰ_cell = 0 ⟹ Electron Drift v_d = 0 ⟹ Galvanometer Deflection = 0",soft,10);
   }
   else{
     const cX=50,cY=50,cW=340,cH=220;
