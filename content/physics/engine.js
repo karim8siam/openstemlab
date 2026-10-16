@@ -57,6 +57,8 @@ function drawComparativeSim(t,p,v,phase,ink,soft,orange){
   const isFieldMapping=['electric-fields'].includes(cfg.slug);
   const isMagMoments=['magnetic-moments'].includes(cfg.slug);
   const isInternalR=['internal-resistance'].includes(cfg.slug);
+  const isTempR=['temperature-resistance'].includes(cfg.slug);
+  const isTempR=['temperature-resistance'].includes(cfg.slug);
   const isInternalR=['internal-resistance'].includes(cfg.slug);
   const isFieldMapping=['electric-fields'].includes(cfg.slug);
   const isMagMoments=['magnetic-moments'].includes(cfg.slug);
@@ -473,6 +475,44 @@ function drawComparativeSim(t,p,v,phase,ink,soft,orange){
       if(idx<2)svg+='<line x1="'+(bX+20)+'" y1="'+(rowY+24)+'" x2="'+(bX+bW-20)+'" y2="'+(rowY+24)+'" stroke="#253a34" stroke-dasharray="2 2"/>';
     });
     svg+=text(360,305,'Terminal Voltage: V = ℰ − I · r · Short-Circuit Current I_sc = ℰ / r · Max Power P_max = ℰ² / (4r)',soft,10);
+  }
+  else if(isTempR){
+    const gX=60,gY=55,gW=340,gH=210;
+    svg+='<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#14221e" stroke="'+soft+'" stroke-width="1.5" rx="4"/>';
+    svg+=text(gX+gW/2,gY-15,'CONDUCTIVE MATERIAL TEMPERATURE SENSITIVITY (α PROFILES)','#e2ecd7',11);
+    const mats=[
+      {mat:'Pure Annealed Copper (PTC)',alpha:'α = +3.93 × 10⁻³ °C⁻¹',r100:'R_100 = 139.3 Ω',col:ink,desc:'Standard metallic conductor · Linear electron-phonon scattering'},
+      {mat:'Manganin Alloy (Zero-TC)',alpha:'α = +0.01 × 10⁻³ °C⁻¹',r100:'R_100 = 100.1 Ω',col:orange,desc:'Solid-solution impurity alloy · Temperature-invariant standard resistor'},
+      {mat:'NTC Semiconductor Thermistor',alpha:'α = −40.0 × 10⁻³ °C⁻¹',r100:'R_100 = 12.5 Ω',col:'#38bdf8',desc:'Exponential thermal carrier generation · Massive negative sensitivity'}
+    ];
+    mats.forEach((m,idx)=>{
+      const rowY=gY+35+idx*55;
+      svg+='<text x="'+(gX+18)+'" y="'+(rowY-8)+'" fill="'+m.col+'" font-size="10" font-weight="bold">'+m.mat+'</text>';
+      svg+='<text x="'+(gX+gW-18)+'" y="'+(rowY-8)+'" text-anchor="end" fill="'+m.col+'" font-size="10" font-family="monospace">'+m.alpha+'</text>';
+      svg+='<rect x="'+(gX+18)+'" y="'+rowY+'" width="'+(gW-36)+'" height="14" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+      const barW=(idx===0?(gW-36)*0.75:idx===1?(gW-36)*0.10:(gW-36)*0.95).toFixed(1);
+      svg+='<rect x="'+(gX+18)+'" y="'+rowY+'" width="'+barW+'" height="14" rx="3" fill="'+m.col+'"/>';
+      const pulseX=gX+18+((phase*(2.0+idx*0.7))%1)*(gW-36);
+      svg+='<circle cx="'+pulseX.toFixed(1)+'" cy="'+(rowY+7)+'" r="4.5" fill="#fde68a" stroke="#fff" stroke-width="1"/>';
+      svg+='<text x="'+(gX+22)+'" y="'+(rowY+26)+'" fill="#9fb498" font-size="8">'+m.desc+' · '+m.r100+'</text>';
+    });
+    const bX=425,bY=55,bW=265,bH=210;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'INFERRED ABSOLUTE ZERO & DRIFT','#718e79',9.5);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+    const matStats=[
+      {name:'Pure Copper (R₀ = 100Ω)',tZero:'T_abs = −254.5 °C',drift:'+0.393 Ω/°C',col:ink},
+      {name:'Platinum PT100 Sensor',tZero:'T_abs = −259.7 °C',drift:'+0.385 Ω/°C',col:orange},
+      {name:'Manganin Standard Resistor',tZero:'T_abs = N/A (Stable)',drift:'±0.001 Ω/°C',col:'#38bdf8'}
+    ];
+    matStats.forEach((s,idx)=>{
+      const rowY=bY+52+idx*46;
+      svg+='<circle cx="'+(bX+22)+'" cy="'+(rowY-4)+'" r="4.5" fill="'+s.col+'"/>';
+      svg+='<text x="'+(bX+34)+'" y="'+rowY+'" fill="'+s.col+'" font-size="11" font-weight="bold">'+s.name+'</text>';
+      svg+='<text x="'+(bX+34)+'" y="'+(rowY+15)+'" fill="#9fb498" font-size="8.5">'+s.tZero+' · '+s.drift+'</text>';
+      if(idx<2)svg+='<line x1="'+(bX+20)+'" y1="'+(rowY+24)+'" x2="'+(bX+bW-20)+'" y2="'+(rowY+24)+'" stroke="#253a34" stroke-dasharray="2 2"/>';
+    });
+    svg+=text(360,305,'Resistance Law: R(T) = R₀(1 + α T) ⇔ α = (1/R₀)(dR/dT) · Inferred Absolute Zero: T_abs = −1 / α',soft,10);
   }
   else{
     const gX=60,gY=55,gW=340,gH=210;
@@ -1060,6 +1100,58 @@ function drawDynamicSandbox(t,p,v,phase,ink,soft,orange){
     svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+176)+'" text-anchor="middle" fill="#fde68a" font-size="8">∮ E⃗ · dℓ⃗ = ℰ − I · r − I · R_load ≡ 0</text>';
     svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+190)+'" text-anchor="middle" fill="#9fb498" font-size="7.5">Terminal Voltage V = I · R_load = ℰ − I · r</text>';
     svg+=text(360,305,'Ohm's Law in Closed Circuit: I = ℰ / (R_load + r) · Terminal Voltage: V = ℰ − I · r',soft,10);
+  }
+  else if(isTempR){
+    const cX=50,cY=50,cW=340,cH=220;
+    svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#101c18" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+    svg+=text(cX+cW/2,cY-15,'MICROSCOPIC ELECTRON-PHONON LATTICE SCATTERING','#e2ecd7',11);
+    
+    // 2D Copper crystal lattice grid with vibrating nuclei
+    const gridCols=6, gridRows=4;
+    const startX=cX+35, startY=cY+35;
+    const stepX=(cW-70)/(gridCols-1), stepY=(cH-70)/(gridRows-1);
+    const vibAmp=2.5+Math.sin(phase*6)*1.5;
+
+    for(let r=0;r<gridRows;r++){
+      for(let c=0;c<gridCols;c++){
+        const baseGx=startX+c*stepX;
+        const baseGy=startY+r*stepY;
+        const offX=Math.sin(phase*8+r*1.7+c*2.3)*vibAmp;
+        const offY=Math.cos(phase*8+r*2.1+c*1.5)*vibAmp;
+        // Thermal vibrational envelope circle
+        svg+='<circle cx="'+baseGx+'" cy="'+baseGy+'" r="'+(vibAmp+4).toFixed(1)+'" fill="#3b82f6" opacity="0.15"/>';
+        // Copper Cu2+ ion core
+        svg+='<circle cx="'+(baseGx+offX).toFixed(1)+'" cy="'+(baseGy+offY).toFixed(1)+'" r="4.5" fill="#f59e0b" stroke="#fff" stroke-width="0.8"/>';
+        svg+='<text x="'+(baseGx+offX).toFixed(1)+'" y="'+(baseGy+offY+2).toFixed(1)+'" text-anchor="middle" fill="#000" font-size="4" font-weight="bold">Cu</text>';
+      }
+    }
+    // Drifting conduction electrons colliding with vibrating ions
+    for(let e=0;e<10;e++){
+      const tNorm=((phase*1.5+e/10)%1);
+      const eX=cX+25+tNorm*(cW-50);
+      const eY=cY+40+Math.sin(tNorm*14+e*3)*22+((e*31)%120);
+      svg+='<circle cx="'+eX.toFixed(1)+'" cy="'+eY.toFixed(1)+'" r="2.5" fill="#38bdf8"/>';
+    }
+    svg+='<text x="'+(cX+cW/2)+'" y="'+(cY+cH-8)+'" text-anchor="middle" fill="#93c5fd" font-size="7.5">Conduction Electron Mean Free Path: λ ∝ 1 / ⟨u²⟩ ∝ 1 / T</text>';
+
+    const bX=420,bY=50,bW=270,bH=220;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'DRUDE-LORENTZ RESISTIVITY DYNAMICS','#718e79',9);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+58)+'" fill="'+ink+'" font-size="9">Lattice Phonon Energy ⟨u²⟩ ∝ k_B T</text>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+65)+'" width="220" height="12" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+65)+'" width="220" height="12" rx="3" fill="'+ink+'"/>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+92)+'" fill="#9fb498" font-size="7.5">Scattering cross-section σ_phonon increases linearly with T</text>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+115)+'" fill="'+orange+'" font-size="9">Mean Collision Time τ = m_e / (n e² ρ)</text>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+122)+'" width="220" height="12" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+    const tau_bar=(130+Math.sin(phase*3)*35).toFixed(1);
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+122)+'" width="'+tau_bar+'" height="12" rx="3" fill="'+orange+'"/>';
+    // Matthiessen law card
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+145)+'" width="220" height="52" rx="4" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+162)+'" text-anchor="middle" fill="#38bdf8" font-size="8.5" font-weight="bold">MATTHIESSEN'S SUPERPOSITION RULE</text>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+176)+'" text-anchor="middle" fill="#fde68a" font-size="8">ρ_total(T) = ρ_impurity + ρ_phonon(T) ∝ T</text>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+190)+'" text-anchor="middle" fill="#9fb498" font-size="7.5">Debye Temperature Θ_D = 343 K (70 °C) for pure copper</text>';
+    svg+=text(360,305,'Drude Conductivity: σ = n e² τ / m_e · Scattering Rate: 1/τ ∝ ⟨u²⟩ ∝ T ⟹ R(T) = R₀(1 + α T)',soft,10);
   }
   else{
     const cX=50,cY=50,cW=340,cH=220;
@@ -1801,6 +1893,100 @@ function draw(t){
     svg+=text(bX+15,bY+210,'V = ℰ − I · r ⇔ r = (ℰ − V) / I',ink,9);
     svg+=text(240,22,'Cell Electromotive Force & Internal Resistance Bench');
     svg+=text(240,308,'Terminal Characteristic: V = ℰ − I · r · Max Power: P_max = ℰ² / (4r) at R_load = r');
+  }
+  else if(cfg.slug==='temperature-resistance'){
+    const T_degC=p.input;
+    const R_meas=v.raw;
+    const R0_ref=100.00;
+    const alpha_val=0.003930;
+    const T_abs=-1.0/alpha_val;
+
+    // Bench table
+    svg+='<rect x="50" y="250" width="390" height="14" rx="2" fill="#1b2a26" stroke="'+soft+'" stroke-width="1.5"/>';
+
+    // Thermostatically Controlled Fluid Bath (insulated glass beaker) at x = 70, y = 90, w = 150, h = 150
+    const btX=70,btY=90,btW=150,btH=150;
+    svg+='<rect x="'+btX+'" y="'+btY+'" width="'+btW+'" height="'+btH+'" rx="8" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>';
+    // Water level inside bath
+    svg+='<rect x="'+(btX+4)+'" y="'+(btY+25)+'" width="'+(btW-8)+'" height="'+(btH-29)+'" rx="4" fill="#0284c7" opacity="0.25"/>';
+    svg+='<line x1="'+(btX+4)+'" y1="'+(btY+25)+'" x2="'+(btX+btW-4)+'" y2="'+(btY+25)+'" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="3 2"/>';
+    svg+='<text x="'+(btX+btW/2)+'" y="'+(btY+20)+'" text-anchor="middle" fill="#7dd3fc" font-size="7.5">Thermostatic Water Bath</text>';
+
+    // Copper Resistance Coil Sheath immersed at center of bath
+    const csX=btX+50,csY=btY+45,csW=20,csH=80;
+    svg+='<rect x="'+csX+'" y="'+csY+'" width="'+csW+'" height="'+csH+'" rx="3" fill="#b45309" stroke="#d97706" stroke-width="1.5"/>';
+    // Internal bifilar winding lines
+    for(let w=1;w<=7;w++){
+      svg+='<line x1="'+(csX+2)+'" y1="'+(csY+w*10)+'" x2="'+(csX+csW-2)+'" y2="'+(csY+w*10)+'" stroke="#fde68a" stroke-width="1"/>';
+    }
+    svg+='<text x="'+(csX+csW/2)+'" y="'+(csY+csH+12)+'" text-anchor="middle" fill="#fde68a" font-size="7" font-weight="bold">Cu Coil</text>';
+
+    // Mercury Thermometer immersed alongside coil
+    const thX=btX+20,thY=btY-35,thW=10,thH=160;
+    svg+='<rect x="'+thX+'" y="'+thY+'" width="'+thW+'" height="'+thH+'" rx="5" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2"/>';
+    // Mercury bulb at bottom
+    svg+='<circle cx="'+(thX+thW/2)+'" cy="'+(thY+thH-5)+'" r="7" fill="#ef4444"/>';
+    // Mercury column height proportional to T_degC
+    const mHeight=20+(T_degC/100.0)*90;
+    svg+='<rect x="'+(thX+3)+'" y="'+(thY+thH-10-mHeight)+'" width="4" height="'+mHeight+'" rx="1" fill="#ef4444"/>';
+    svg+='<text x="'+(thX-6)+'" y="'+(thY+10)+'" text-anchor="end" fill="#ef4444" font-size="8" font-family="monospace" font-weight="bold">'+T_degC.toFixed(1)+'°C</text>';
+
+    // Motorized Stirrer Paddle
+    const stX=btX+110,stY=btY+10;
+    svg+='<line x1="'+stX+'" y1="'+stY+'" x2="'+stX+'" y2="'+(stY+115)+'" stroke="#cbd5e1" stroke-width="2"/>';
+    svg+='<ellipse cx="'+stX+'" cy="'+(stY+115)+'" rx="12" ry="4" fill="#64748b"/>';
+    svg+='<text x="'+stX+'" y="'+(stY-4)+'" text-anchor="middle" fill="#94a3b8" font-size="6.5">Stirrer</text>';
+
+    // Digital 4-Wire Ohmmeter at x = 270, y = 110, w = 120, h = 85
+    const omX=270,omY=110,omW=120,omH=85;
+    svg+='<rect x="'+omX+'" y="'+omY+'" width="'+omW+'" height="'+omH+'" rx="4" fill="#0f172a" stroke="#10b981" stroke-width="2"/>';
+    svg+='<rect x="'+(omX+10)+'" y="'+(omY+10)+'" width="'+(omW-20)+'" height="26" rx="2" fill="#020617"/>';
+    svg+='<text x="'+(omX+omW/2)+'" y="'+(omY+28)+'" text-anchor="middle" fill="#10b981" font-size="16" font-family="monospace" font-weight="bold">'+R_meas.toFixed(2)+' Ω</text>';
+    svg+='<text x="'+(omX+omW/2)+'" y="'+(omY+50)+'" text-anchor="middle" fill="#e2ecd7" font-size="8" font-weight="bold">Digital Kelvin Bridge</text>';
+    svg+='<text x="'+(omX+omW/2)+'" y="'+(omY+64)+'" text-anchor="middle" fill="#94a3b8" font-size="6.5">4-Wire Sensing · I_test ≤ 1 mA</text>';
+    // 4 binding posts (C1, P1, P2, C2)
+    const bpX=[omX+18, omX+42, omX+78, omX+102];
+    bpX.forEach((bx,idx)=>{
+      svg+='<circle cx="'+bx+'" cy="'+(omY+74)+'" r="3.5" fill="'+(idx===0||idx===3?'#ef4444':'#3b82f6')+'"/>';
+    });
+
+    // 4 Kelvin leads connecting Ohmmeter posts to Coil Head
+    svg+='<line x1="'+(csX+4)+'" y1="'+csY+'" x2="'+(csX+4)+'" y2="55" stroke="#ef4444" stroke-width="1.2"/>';
+    svg+='<line x1="'+(csX+4)+'" y1="55" x2="'+bpX[0]+'" y2="55" stroke="#ef4444" stroke-width="1.2"/>';
+    svg+='<line x1="'+bpX[0]+'" y1="55" x2="'+bpX[0]+'" y2="'+(omY+74)+'" stroke="#ef4444" stroke-width="1.2"/>';
+
+    svg+='<line x1="'+(csX+8)+'" y1="'+csY+'" x2="'+(csX+8)+'" y2="65" stroke="#3b82f6" stroke-width="1.2"/>';
+    svg+='<line x1="'+(csX+8)+'" y1="65" x2="'+bpX[1]+'" y2="65" stroke="#3b82f6" stroke-width="1.2"/>';
+    svg+='<line x1="'+bpX[1]+'" y1="65" x2="'+bpX[1]+'" y2="'+(omY+74)+'" stroke="#3b82f6" stroke-width="1.2"/>';
+
+    svg+='<line x1="'+(csX+12)+'" y1="'+csY+'" x2="'+(csX+12)+'" y2="75" stroke="#3b82f6" stroke-width="1.2"/>';
+    svg+='<line x1="'+(csX+12)+'" y1="75" x2="'+bpX[2]+'" y2="75" stroke="#3b82f6" stroke-width="1.2"/>';
+    svg+='<line x1="'+bpX[2]+'" y1="75" x2="'+bpX[2]+'" y2="'+(omY+74)+'" stroke="#3b82f6" stroke-width="1.2"/>';
+
+    svg+='<line x1="'+(csX+16)+'" y1="'+csY+'" x2="'+(csX+16)+'" y2="85" stroke="#ef4444" stroke-width="1.2"/>';
+    svg+='<line x1="'+(csX+16)+'" y1="85" x2="'+bpX[3]+'" y2="85" stroke="#ef4444" stroke-width="1.2"/>';
+    svg+='<line x1="'+bpX[3]+'" y1="85" x2="'+bpX[3]+'" y2="'+(omY+74)+'" stroke="#ef4444" stroke-width="1.2"/>';
+
+    // HUD Card at x=470, y=45, w=220, h=220
+    const bX=470,bY=45,bW=220,bH=220;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#182824" stroke="'+soft+'" stroke-width="1.5"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#718e79" font-size="9">BATH TEMPERATURE (T)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+52)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+T_degC.toFixed(1)+'</text>';
+    svg+='<text x="'+(bX+95)+'" y="'+(bY+50)+'" fill="'+soft+'" font-size="11">°C</text>';
+    svg+='<text x="'+(bX+125)+'" y="'+(bY+50)+'" fill="#9fb498" font-size="8">('+(T_degC+273.15).toFixed(1)+' K)</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#718e79" font-size="9">MEASURED COIL RESISTANCE (R)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="18" font-family="monospace">'+R_meas.toFixed(2)+' Ω</text>';
+    svg+='<text x="'+(bX+125)+'" y="'+(bY+108)+'" fill="#9fb498" font-size="8.5">R₀ = '+R0_ref.toFixed(2)+' Ω</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+125)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+125)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+144)+'" fill="#718e79" font-size="9">TEMPERATURE COEFFICIENT (α)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+168)+'" fill="'+orange+'" font-size="15" font-family="monospace" font-weight="bold">'+(alpha_val*1000.0).toFixed(3)+'</text>';
+    svg+='<text x="'+(bX+75)+'" y="'+(bY+168)+'" fill="#9fb498" font-size="9">× 10⁻³ °C⁻¹ (α = m/b)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+184)+'" fill="#9fb498" font-size="8">Inferred Absolute Zero: T_abs = −b/m = '+T_abs.toFixed(1)+' °C</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+195)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+195)+'" stroke="#253a34"/>';
+    svg+=text(bX+15,bY+210,'R(T) = R₀(1 + α T) ⇔ α = (R − R₀) / (R₀ T)',ink,9);
+    svg+=text(240,22,'Resistance vs. Temperature Measurement Bench');
+    svg+=text(240,308,'Linear Law: R = (R₀ α) T + R₀ · Inferred Absolute Zero: T_abs = −1 / α = −254.5 °C');
   }
 
 
