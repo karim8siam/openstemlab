@@ -32,8 +32,514 @@ $('downloadReadings').onclick=()=>{if(!rows.length)return;const csv=[['experimen
 $('clearReadings').onclick=()=>{if(!clearPending){clearPending=true;$('clearReadings').textContent='Confirm clear';setTimeout(()=>{clearPending=false;$('clearReadings').textContent='Clear notebook';},4000);return;}rows=[];clearPending=false;$('clearReadings').textContent='Clear notebook';persist();message('Notebook cleared.');};
 $('checkEstimate').onclick=()=>{const f=model.fit(rows),answer=+$('studentEstimate').value;if(!f){$('estimateFeedback').textContent='Collect at least three distinct settings first.';return;}if(!$('studentEstimate').value||!Number.isFinite(answer)||answer<=0){$('estimateFeedback').textContent='Enter a positive numerical estimate in '+cfg.resultUnit+'.';return;}const expected=model.estimate(cfg.slug,f).value*cfg.resultScale;$('estimateFeedback').textContent=Math.abs(answer-expected)/expected<.02?'Your calculation agrees with the notebook fit within 2%. Explain your uncertainty separately.':'Recheck units and the gradient/intercept conversion. The fit gives '+fmt(expected,cfg.resultDecimals)+' '+cfg.resultUnit+'.';};
 document.querySelectorAll('[data-quiz]').forEach(b=>b.onclick=()=>{const q=cfg.quiz[+b.dataset.quiz],j=+b.dataset.choice;document.querySelectorAll('[data-quiz="'+b.dataset.quiz+'"]').forEach(x=>x.classList.remove('correct','wrong'));b.classList.add(j===q.correct?'correct':'wrong');$('quizFeedback'+b.dataset.quiz).textContent=(j===q.correct?'Correct. ':'Think it through. ')+q.explanation;});
-function draw(t){const p=params(),v=model.predict(cfg.slug,p.input,p.angle),phase=paused?0:t/1000,ink='#c4d7ae',soft='#718e79',orange='#d7a17b';let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern><filter id="blur"><feGaussianBlur stdDeviation="'+(cfg.slug==='convex-lens'?Math.min(10,Math.abs(p.screen-v.ideal)*.45):0)+'"/></filter></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
- const text=(x,y,str,color='#9fb498',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+let currentSimMode='bench';
+document.querySelectorAll('.sim-mode-btn').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('.sim-mode-btn').forEach(b=>{
+      b.classList.remove('active');
+      b.setAttribute('aria-selected','false');
+    });
+    btn.classList.add('active');
+    btn.setAttribute('aria-selected','true');
+    currentSimMode=btn.dataset.sim;
+    draw(performance.now());
+  };
+});
+
+function drawComparativeSim(t,p,v,phase,ink,soft,orange){
+  const isGas=['boyles-law','charles-law-volume','charles-law-pressure','vapor-pressure','air-humidity'].includes(cfg.slug);
+  const isHeat=['specific-heat-capacity','newtons-cooling','solidification-cooling','latent-heat-vaporization','latent-heat-fusion','thermal-expansion','mechanical-equivalent-heat'].includes(cfg.slug);
+  const isOptics=['convex-lens','glass-slab','diffraction-grating'].includes(cfg.slug);
+  const isElec=['ohms-law','metre-bridge','rc-charging'].includes(cfg.slug);
+  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
+  const text=(x,y,str,color='#9fb498',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+  if(isGas){
+    const gX=60,gY=55,gW=340,gH=210;
+    svg+='<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#14221e" stroke="'+soft+'" stroke-width="1.5" rx="4"/>';
+    svg+=text(gX+gW/2,gY-15,'MULTI-GAS EQUATION OF STATE COMPARISON','#e2ecd7',11);
+    svg+='<line x1="'+(gX+40)+'" y1="'+(gY+gH-30)+'" x2="'+(gX+gW-20)+'" y2="'+(gY+gH-30)+'" stroke="'+soft+'" stroke-width="1.5"/>';
+    svg+='<line x1="'+(gX+40)+'" y1="'+(gY+25)+'" x2="'+(gX+40)+'" y2="'+(gY+gH-30)+'" stroke="'+soft+'" stroke-width="1.5"/>';
+    svg+=text(gX+gW/2,gY+gH-10,'Specific Volume v (m³ / kg)',soft,9);
+    svg+='<text transform="translate('+(gX+16)+','+(gY+gH/2)+') rotate(-90)" text-anchor="middle" fill="'+soft+'" font-size="9">Pressure P (kPa)</text>';
+
+    let pAir=[],pCO2=[],pHe=[];
+    for(let i=0;i<=60;i++){
+      const vol=0.05+i*(0.45/60);
+      const px=gX+45+(i/60)*(gW-75);
+      const yAir=gY+gH-35-Math.min(gH-55,(2.8/vol)*2.2);
+      const yCO2=gY+gH-35-Math.min(gH-55,((2.8/vol)*0.95-(0.364/(vol*vol))*0.04)*2.2);
+      const yHe=gY+gH-35-Math.min(gH-55,(2.8/vol)*1.08*2.2);
+      pAir.push(px.toFixed(1)+','+yAir.toFixed(1));
+      pCO2.push(px.toFixed(1)+','+yCO2.toFixed(1));
+      pHe.push(px.toFixed(1)+','+yHe.toFixed(1));
+    }
+    svg+='<polyline points="'+pAir.join(' ')+'" fill="none" stroke="'+ink+'" stroke-width="2"/>';
+    svg+='<polyline points="'+pCO2.join(' ')+'" fill="none" stroke="'+orange+'" stroke-width="2"/>';
+    svg+='<polyline points="'+pHe.join(' ')+'" fill="none" stroke="#38bdf8" stroke-width="2"/>';
+
+    const currVolNorm=(p.input-cfg.min)/(cfg.max-cfg.min);
+    const curX=gX+45+Math.max(0,Math.min(1,currVolNorm))*(gW-75);
+    svg+='<line x1="'+curX+'" y1="'+(gY+25)+'" x2="'+curX+'" y2="'+(gY+gH-30)+'" stroke="#fde68a" stroke-dasharray="3 3"/>';
+
+    svg+='<rect x="'+(gX+gW-125)+'" y="'+(gY+32)+'" width="115" height="55" rx="3" fill="#182824" stroke="'+soft+'" stroke-width="1"/>';
+    svg+='<line x1="'+(gX+gW-115)+'" y1="'+(gY+44)+'" x2="'+(gX+gW-95)+'" y2="'+(gY+44)+'" stroke="'+ink+'" stroke-width="2"/>';
+    svg+=text(gX+gW-55,gY+47,'Air (Diatomic)',ink,8.5);
+    svg+='<line x1="'+(gX+gW-115)+'" y1="'+(gY+58)+'" x2="'+(gX+gW-95)+'" y2="'+(gY+58)+'" stroke="'+orange+'" stroke-width="2"/>';
+    svg+=text(gX+gW-55,gY+61,'CO₂ (van der Waals)',orange,8.5);
+    svg+='<line x1="'+(gX+gW-115)+'" y1="'+(gY+72)+'" x2="'+(gX+gW-95)+'" y2="'+(gY+72)+'" stroke="#38bdf8" stroke-width="2"/>';
+    svg+=text(gX+gW-55,gY+75,'He (Monatomic)','#38bdf8',8.5);
+
+    const bX=425,bY=55,bW=265,bH=210;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'GAS PROPERTY MATRIX','#718e79',9.5);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+
+    const gases=[
+      {name:'Air (N₂/O₂)',m:'28.97 g/mol',gamma:'1.400',z:'0.999',col:ink},
+      {name:'Carbon Dioxide (CO₂)',m:'44.01 g/mol',gamma:'1.289',z:'0.992',col:orange},
+      {name:'Helium (He)',m:'4.003 g/mol',gamma:'1.667',z:'1.001',col:'#38bdf8'}
+    ];
+    gases.forEach((g,idx)=>{
+      const rowY=bY+52+idx*46;
+      svg+='<circle cx="'+(bX+22)+'" cy="'+(rowY-4)+'" r="4.5" fill="'+g.col+'"/>';
+      svg+='<text x="'+(bX+34)+'" y="'+rowY+'" fill="'+g.col+'" font-size="11" font-weight="bold">'+g.name+'</text>';
+      svg+='<text x="'+(bX+34)+'" y="'+(rowY+15)+'" fill="#9fb498" font-size="8.5">M = '+g.m+' · γ = '+g.gamma+' · Z(P) = '+g.z+'</text>';
+      if(idx<2)svg+='<line x1="'+(bX+20)+'" y1="'+(rowY+24)+'" x2="'+(bX+bW-20)+'" y2="'+(rowY+24)+'" stroke="#253a34" stroke-dasharray="2 2"/>';
+    });
+    svg+=text(360,305,'Comparative Real vs Ideal Gas Thermodynamics · Isothermal Compression & Expansion',soft,10);
+  }
+  else if(isHeat){
+    const gX=60,gY=55,gW=340,gH=210;
+    svg+='<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#14221e" stroke="'+soft+'" stroke-width="1.5" rx="4"/>';
+    svg+=text(gX+gW/2,gY-15,'THERMAL RESPONSE CURVES BY MATERIAL','#e2ecd7',11);
+    svg+='<line x1="'+(gX+40)+'" y1="'+(gY+gH-30)+'" x2="'+(gX+gW-20)+'" y2="'+(gY+gH-30)+'" stroke="'+soft+'" stroke-width="1.5"/>';
+    svg+='<line x1="'+(gX+40)+'" y1="'+(gY+25)+'" x2="'+(gX+40)+'" y2="'+(gY+gH-30)+'" stroke="'+soft+'" stroke-width="1.5"/>';
+    svg+=text(gX+gW/2,gY+gH-10,'Elapsed Time / Input Energy',soft,9);
+    svg+='<text transform="translate('+(gX+16)+','+(gY+gH/2)+') rotate(-90)" text-anchor="middle" fill="'+soft+'" font-size="9">Temperature Rise ΔT (°C)</text>';
+
+    let pCu=[],pAl=[],pFe=[];
+    for(let i=0;i<=60;i++){
+      const frac=i/60;
+      const px=gX+45+frac*(gW-75);
+      const yCu=gY+gH-35-Math.min(gH-55,frac*145);
+      const yFe=gY+gH-35-Math.min(gH-55,frac*115);
+      const yAl=gY+gH-35-Math.min(gH-55,frac*75);
+      pCu.push(px.toFixed(1)+','+yCu.toFixed(1));
+      pFe.push(px.toFixed(1)+','+yFe.toFixed(1));
+      pAl.push(px.toFixed(1)+','+yAl.toFixed(1));
+    }
+    svg+='<polyline points="'+pCu.join(' ')+'" fill="none" stroke="'+orange+'" stroke-width="2"/>';
+    svg+='<polyline points="'+pFe.join(' ')+'" fill="none" stroke="'+ink+'" stroke-width="2"/>';
+    svg+='<polyline points="'+pAl.join(' ')+'" fill="none" stroke="#38bdf8" stroke-width="2"/>';
+
+    const bX=425,bY=55,bW=265,bH=210;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'THERMAL SPECIMEN PROPERTIES','#718e79',9.5);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+
+    const metals=[
+      {name:'Copper (Cu)',c:'385 J kg⁻¹ K⁻¹',alpha:'16.8 × 10⁻⁶ K⁻¹',col:orange},
+      {name:'Iron / Steel (Fe)',c:'450 J kg⁻¹ K⁻¹',alpha:'11.8 × 10⁻⁶ K⁻¹',col:ink},
+      {name:'Aluminum (Al)',c:'900 J kg⁻¹ K⁻¹',alpha:'23.1 × 10⁻⁶ K⁻¹',col:'#38bdf8'}
+    ];
+    metals.forEach((m,idx)=>{
+      const rowY=bY+52+idx*46;
+      svg+='<circle cx="'+(bX+22)+'" cy="'+(rowY-4)+'" r="4.5" fill="'+m.col+'"/>';
+      svg+='<text x="'+(bX+34)+'" y="'+rowY+'" fill="'+m.col+'" font-size="11" font-weight="bold">'+m.name+'</text>';
+      svg+='<text x="'+(bX+34)+'" y="'+(rowY+15)+'" fill="#9fb498" font-size="8.5">c = '+m.c+' · α = '+m.alpha+'</text>';
+      if(idx<2)svg+='<line x1="'+(bX+20)+'" y1="'+(rowY+24)+'" x2="'+(bX+bW-20)+'" y2="'+(rowY+24)+'" stroke="#253a34" stroke-dasharray="2 2"/>';
+    });
+    svg+=text(360,305,'Thermal Properties: Calorimetry, Heat Transfer, and Phase Transition Dynamics',soft,10);
+  }
+  else if(isOptics){
+    const gX=60,gY=55,gW=340,gH=210;
+    svg+='<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#14221e" stroke="'+soft+'" stroke-width="1.5" rx="4"/>';
+    svg+=text(gX+gW/2,gY-15,'SNELL\'S REFRACTION & DISPERSION RAYS','#e2ecd7',11);
+
+    const midX=gX+170;
+    svg+='<line x1="'+midX+'" y1="'+gY+'" x2="'+midX+'" y2="'+(gY+gH)+'" stroke="'+soft+'" stroke-width="2"/>';
+    svg+=text(midX-60,gY+25,'Air (n = 1.00)',soft,9);
+    svg+=text(midX+60,gY+25,'Medium',soft,9);
+    svg+='<line x1="'+(gX+20)+'" y1="'+(gY+gH/2)+'" x2="'+(gX+gW-20)+'" y2="'+(gY+gH/2)+'" stroke="'+soft+'" stroke-dasharray="3 3"/>';
+
+    const incY=gY+gH/2-70;
+    svg+='<line x1="'+(midX-70)+'" y1="'+incY+'" x2="'+midX+'" y2="'+(gY+gH/2)+'" stroke="#fde68a" stroke-width="2.5"/>';
+    svg+=text(midX-45,incY+30,'θ₁ = 45°','#fde68a',9);
+
+    const rCrown=27.7*Math.PI/180,rFlint=25.2*Math.PI/180,rDia=17.0*Math.PI/180;
+    const len=120;
+    svg+='<line x1="'+midX+'" y1="'+(gY+gH/2)+'" x2="'+(midX+len*Math.cos(rCrown))+'" y2="'+(gY+gH/2+len*Math.sin(rCrown))+'" stroke="'+ink+'" stroke-width="2"/>';
+    svg+='<line x1="'+midX+'" y1="'+(gY+gH/2)+'" x2="'+(midX+len*Math.cos(rFlint))+'" y2="'+(gY+gH/2+len*Math.sin(rFlint))+'" stroke="'+orange+'" stroke-width="2"/>';
+    svg+='<line x1="'+midX+'" y1="'+(gY+gH/2)+'" x2="'+(midX+len*Math.cos(rDia))+'" y2="'+(gY+gH/2+len*Math.sin(rDia))+'" stroke="#38bdf8" stroke-width="2"/>';
+
+    const bX=425,bY=55,bW=265,bH=210;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'OPTICAL MEDIA CHARACTERISTICS','#718e79',9.5);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+
+    const media=[
+      {name:'Crown Glass (BK7)',n:'1.5168',cA:'41.2°',col:ink},
+      {name:'Dense Flint (SF11)',n:'1.6644',cA:'36.9°',col:orange},
+      {name:'Natural Diamond',n:'2.4175',cA:'24.4°',col:'#38bdf8'}
+    ];
+    media.forEach((m,idx)=>{
+      const rowY=bY+52+idx*46;
+      svg+='<circle cx="'+(bX+22)+'" cy="'+(rowY-4)+'" r="4.5" fill="'+m.col+'"/>';
+      svg+='<text x="'+(bX+34)+'" y="'+rowY+'" fill="'+m.col+'" font-size="11" font-weight="bold">'+m.name+'</text>';
+      svg+='<text x="'+(bX+34)+'" y="'+(rowY+15)+'" fill="#9fb498" font-size="8.5">n = '+m.n+' · Critical θ_c = '+m.cA+'</text>';
+      if(idx<2)svg+='<line x1="'+(bX+20)+'" y1="'+(rowY+24)+'" x2="'+(bX+bW-20)+'" y2="'+(rowY+24)+'" stroke="#253a34" stroke-dasharray="2 2"/>';
+    });
+    svg+=text(360,305,'Snell\'s Law of Refraction: n₁ sin(θ₁) = n₂ sin(θ₂) · Total Internal Reflection',soft,10);
+  }
+  else if(isElec){
+    const gX=60,gY=55,gW=340,gH=210;
+    svg+='<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#14221e" stroke="'+soft+'" stroke-width="1.5" rx="4"/>';
+    svg+=text(gX+gW/2,gY-15,'V-I CHARACTERISTIC CURVES (OHMIC VS NON-OHMIC)','#e2ecd7',11);
+    svg+='<line x1="'+(gX+40)+'" y1="'+(gY+gH-30)+'" x2="'+(gX+gW-20)+'" y2="'+(gY+gH-30)+'" stroke="'+soft+'" stroke-width="1.5"/>';
+    svg+='<line x1="'+(gX+40)+'" y1="'+(gY+25)+'" x2="'+(gX+40)+'" y2="'+(gY+gH-30)+'" stroke="'+soft+'" stroke-width="1.5"/>';
+    svg+=text(gX+gW/2,gY+gH-10,'Voltage V (Volts)',soft,9);
+    svg+='<text transform="translate('+(gX+16)+','+(gY+gH/2)+') rotate(-90)" text-anchor="middle" fill="'+soft+'" font-size="9">Current I (mA)</text>';
+
+    let pRes=[],pLamp=[],pDiode=[];
+    for(let i=0;i<=60;i++){
+      const vVal=(i/60)*10;
+      const px=gX+45+(i/60)*(gW-75);
+      const yRes=gY+gH-35-Math.min(gH-55,(vVal/10)*120);
+      const yLamp=gY+gH-35-Math.min(gH-55,Math.pow(vVal/10,0.65)*140);
+      const iDiode=vVal<6?0:Math.exp((vVal-6)*0.7)*4;
+      const yDiode=gY+gH-35-Math.min(gH-55,iDiode);
+      pRes.push(px.toFixed(1)+','+yRes.toFixed(1));
+      pLamp.push(px.toFixed(1)+','+yLamp.toFixed(1));
+      pDiode.push(px.toFixed(1)+','+yDiode.toFixed(1));
+    }
+    svg+='<polyline points="'+pRes.join(' ')+'" fill="none" stroke="'+ink+'" stroke-width="2"/>';
+    svg+='<polyline points="'+pLamp.join(' ')+'" fill="none" stroke="'+orange+'" stroke-width="2"/>';
+    svg+='<polyline points="'+pDiode.join(' ')+'" fill="none" stroke="#38bdf8" stroke-width="2"/>';
+
+    const bX=425,bY=55,bW=265,bH=210;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'CONDUCTION BEHAVIOR','#718e79',9.5);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+
+    const elecs=[
+      {name:'Ohmic Resistor',r:'Constant R = 100 Ω',col:ink},
+      {name:'Tungsten Lamp',r:'R(T) increases with heat',col:orange},
+      {name:'Silicon PN Diode',r:'Forward threshold V_th ≈ 0.7V',col:'#38bdf8'}
+    ];
+    elecs.forEach((m,idx)=>{
+      const rowY=bY+52+idx*46;
+      svg+='<circle cx="'+(bX+22)+'" cy="'+(rowY-4)+'" r="4.5" fill="'+m.col+'"/>';
+      svg+='<text x="'+(bX+34)+'" y="'+rowY+'" fill="'+m.col+'" font-size="11" font-weight="bold">'+m.name+'</text>';
+      svg+='<text x="'+(bX+34)+'" y="'+(rowY+15)+'" fill="#9fb498" font-size="8.5">'+m.r+'</text>';
+      if(idx<2)svg+='<line x1="'+(bX+20)+'" y1="'+(rowY+24)+'" x2="'+(bX+bW-20)+'" y2="'+(rowY+24)+'" stroke="#253a34" stroke-dasharray="2 2"/>';
+    });
+    svg+=text(360,305,'Electrical Transport: Constant vs Temperature-Dependent Dynamic Resistance',soft,10);
+  }
+  else{
+    const gX=60,gY=55,gW=340,gH=210;
+    svg+='<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#14221e" stroke="'+soft+'" stroke-width="1.5" rx="4"/>';
+    svg+=text(gX+gW/2,gY-15,'DYNAMIC OSCILLATIONS ACROSS CELESTIAL BODIES','#e2ecd7',11);
+
+    const worlds=[
+      {name:'Earth',g:9.807,col:ink,x:gX+65},
+      {name:'Moon',g:1.625,col:orange,x:gX+170},
+      {name:'Mars',g:3.721,col:'#38bdf8',x:gX+275}
+    ];
+
+    worlds.forEach(w=>{
+      const period=2*Math.PI*Math.sqrt(1.0/w.g);
+      const angle=0.35*Math.cos(phase*(2*Math.PI/period));
+      const len=90;
+      const bXPos=w.x+len*Math.sin(angle);
+      const bYPos=gY+45+len*Math.cos(angle);
+
+      svg+='<line x1="'+(w.x-25)+'" y1="'+(gY+45)+'" x2="'+(w.x+25)+'" y2="'+(gY+45)+'" stroke="'+soft+'" stroke-width="2"/>';
+      svg+='<circle cx="'+w.x+'" cy="'+(gY+45)+'" r="3" fill="'+soft+'"/>';
+      svg+='<line x1="'+w.x+'" y1="'+(gY+45)+'" x2="'+bXPos+'" y2="'+bYPos+'" stroke="'+w.col+'" stroke-width="1.5"/>';
+      svg+='<circle cx="'+bXPos+'" cy="'+bYPos+'" r="10" fill="'+w.col+'"/>';
+      svg+=text(w.x,gY+175,w.name,w.col,10);
+      svg+=text(w.x,gY+190,'g = '+w.g.toFixed(2)+' m/s²','#9fb498',8.5);
+      svg+=text(w.x,gY+202,'T = '+period.toFixed(2)+' s','#9fb498',8.5);
+    });
+
+    const bX=425,bY=55,bW=265,bH=210;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'GRAVITATIONAL FIELD DYNAMICS','#718e79',9.5);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+
+    const stats=[
+      {name:'Earth Surface',g:'9.807 m s⁻²',tRatio:'1.000 × T₀',col:ink},
+      {name:'Lunar Surface',g:'1.625 m s⁻²',tRatio:'2.456 × T₀',col:orange},
+      {name:'Martian Surface',g:'3.721 m s⁻²',tRatio:'1.623 × T₀',col:'#38bdf8'}
+    ];
+    stats.forEach((s,idx)=>{
+      const rowY=bY+52+idx*46;
+      svg+='<circle cx="'+(bX+22)+'" cy="'+(rowY-4)+'" r="4.5" fill="'+s.col+'"/>';
+      svg+='<text x="'+(bX+34)+'" y="'+rowY+'" fill="'+s.col+'" font-size="11" font-weight="bold">'+s.name+'</text>';
+      svg+='<text x="'+(bX+34)+'" y="'+(rowY+15)+'" fill="#9fb498" font-size="8.5">g = '+s.g+' · T = '+s.tRatio+'</text>';
+      if(idx<2)svg+='<line x1="'+(bX+20)+'" y1="'+(rowY+24)+'" x2="'+(bX+bW-20)+'" y2="'+(rowY+24)+'" stroke="#253a34" stroke-dasharray="2 2"/>';
+    });
+    svg+=text(360,305,'Gravitational Scaling Law: Period T ∝ 1 / √g · Frequency f ∝ √g',soft,10);
+  }
+
+  $('apparatusDiagram').innerHTML=svg;
+}
+
+function drawDynamicSandbox(t,p,v,phase,ink,soft,orange){
+  const isGas=['boyles-law','charles-law-volume','charles-law-pressure','vapor-pressure','air-humidity'].includes(cfg.slug);
+  const isHeat=['specific-heat-capacity','newtons-cooling','solidification-cooling','latent-heat-vaporization','latent-heat-fusion','thermal-expansion','mechanical-equivalent-heat'].includes(cfg.slug);
+  const isOptics=['convex-lens','glass-slab','diffraction-grating'].includes(cfg.slug);
+  const isElec=['ohms-law','metre-bridge','rc-charging'].includes(cfg.slug);
+  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
+  const text=(x,y,str,color='#9fb498',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+  if(isGas){
+    const cX=50,cY=50,cW=340,cH=220;
+    svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#101c18" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+    svg+=text(cX+cW/2,cY-15,'2D KINETIC GAS MOLECULAR SIMULATION (N = 36 MOLECULES)','#e2ecd7',11);
+
+    const tempK=p.input>100?p.input:p.input+273.15;
+    const vScale=Math.sqrt(Math.max(200,Math.min(600,tempK)))*0.08;
+
+    for(let i=0;i<36;i++){
+      const seedX=(i*37)%cW;
+      const seedY=(i*73)%cH;
+      const angle=(i*1.618)*2*Math.PI;
+      const speed=vScale*(0.6+((i*19)%10)*0.08);
+      const curX=cX+15+Math.abs((seedX+Math.cos(angle)*phase*speed*40)%(cW-30));
+      const curY=cY+15+Math.abs((seedY+Math.sin(angle)*phase*speed*40)%(cH-30));
+      const col=(i%3===0)?orange:(i%3===1)?ink:'#38bdf8';
+      svg+='<circle cx="'+curX.toFixed(1)+'" cy="'+curY.toFixed(1)+'" r="4.5" fill="'+col+'"/>';
+      svg+='<line x1="'+curX.toFixed(1)+'" y1="'+curY.toFixed(1)+'" x2="'+(curX+Math.cos(angle)*speed*12).toFixed(1)+'" y2="'+(curY+Math.sin(angle)*speed*12).toFixed(1)+'" stroke="'+col+'" stroke-width="1.2" opacity="0.6"/>';
+    }
+
+    const bX=420,bY=50,bW=270,bH=220;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'MAXWELL-BOLTZMANN VELOCITY SPECTRUM','#718e79',9);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+
+    const mX=bX+25,mY=bY+115,mW=bW-50,mH=65;
+    svg+='<line x1="'+mX+'" y1="'+mY+'" x2="'+(mX+mW)+'" y2="'+mY+'" stroke="'+soft+'" stroke-width="1"/>';
+    svg+='<line x1="'+mX+'" y1="'+(mY-mH)+'" x2="'+mX+'" y2="'+mY+'" stroke="'+soft+'" stroke-width="1"/>';
+    let mbPoints=[];
+    const peakPos=mW*0.35*(vScale/1.8);
+    for(let j=0;j<=40;j++){
+      const u=j/40;
+      const xPt=mX+u*mW;
+      const yVal=(u/0.35)*Math.exp(1-u/0.35);
+      const yPt=mY-Math.min(mH,yVal*(mH*0.85));
+      mbPoints.push(xPt.toFixed(1)+','+yPt.toFixed(1));
+    }
+    svg+='<polyline points="'+mbPoints.join(' ')+'" fill="none" stroke="'+orange+'" stroke-width="2"/>';
+    svg+='<circle cx="'+(mX+peakPos).toFixed(1)+'" cy="'+(mY-mH*0.85).toFixed(1)+'" r="4" fill="#fde68a"/>';
+    svg+=text(mX+peakPos,mY-mH*0.85-8,'v_rms','#fde68a',8);
+
+    const vRmsEst=Math.round(vScale*240);
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+142)+'" fill="'+soft+'" font-size="8.5">RMS MOLECULAR SPEED (v_rms):</text>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+162)+'" fill="'+orange+'" font-size="16" font-family="monospace" font-weight="bold">'+vRmsEst+' m s⁻¹</text>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+184)+'" fill="'+soft+'" font-size="8.5">MEAN KINETIC ENERGY ⟨E_k⟩:</text>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+202)+'" fill="'+ink+'" font-size="14" font-family="monospace">'+(3/2*1.38e-23*tempK*1e21).toFixed(2)+' × 10⁻²¹ J</text>';
+
+    svg+=text(360,305,'Microscopic Kinetic Theory: P = (1/3) ρ ⟨v²⟩ · Thermal Equipartition ⟨E_k⟩ = (3/2) k_B T',soft,10);
+  }
+  else if(isHeat){
+    const cX=50,cY=50,cW=340,cH=220;
+    svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#101c18" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+    svg+=text(cX+cW/2,cY-15,'ATOMIC LATTICE THERMAL PHONON VIBRATIONS','#e2ecd7',11);
+
+    const tempK=p.input>100?p.input:p.input+273.15;
+    const vibAmp=Math.min(12,Math.sqrt(tempK/50.0)*1.8);
+
+    for(let r=0;r<4;r++){
+      for(let c=0;c<6;c++){
+        const baseX=cX+45+c*50;
+        const baseY=cY+40+r*45;
+        const vibX=vibAmp*Math.sin(phase*12+r*1.2+c*0.9);
+        const vibY=vibAmp*Math.cos(phase*10+r*0.8+c*1.4);
+        const ax=baseX+vibX;
+        const ay=baseY+vibY;
+
+        if(c<5){
+          const nextAx=cX+45+(c+1)*50+vibAmp*Math.sin(phase*12+r*1.2+(c+1)*0.9);
+          const nextAy=baseY+vibAmp*Math.cos(phase*10+r*0.8+(c+1)*1.4);
+          svg+='<line x1="'+ax.toFixed(1)+'" y1="'+ay.toFixed(1)+'" x2="'+nextAx.toFixed(1)+'" y2="'+nextAy.toFixed(1)+'" stroke="'+soft+'" stroke-width="1.2" stroke-dasharray="2 2"/>';
+        }
+        if(r<3){
+          const downAx=baseX+vibAmp*Math.sin(phase*12+(r+1)*1.2+c*0.9);
+          const downAy=cY+40+(r+1)*45+vibAmp*Math.cos(phase*10+(r+1)*0.8+c*1.4);
+          svg+='<line x1="'+ax.toFixed(1)+'" y1="'+ay.toFixed(1)+'" x2="'+downAx.toFixed(1)+'" y2="'+downAy.toFixed(1)+'" stroke="'+soft+'" stroke-width="1.2" stroke-dasharray="2 2"/>';
+        }
+        svg+='<circle cx="'+ax.toFixed(1)+'" cy="'+ay.toFixed(1)+'" r="7" fill="'+orange+'" stroke="#fde68a" stroke-width="1.5"/>';
+      }
+    }
+
+    const bX=420,bY=50,bW=270,bH=220;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'PHONON DENSITY & LATTICE ENTHALPY','#718e79',9);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+60)+'" fill="'+soft+'" font-size="8.5">LATTICE TEMPERATURE:</text>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+80)+'" fill="'+orange+'" font-size="17" font-family="monospace" font-weight="bold">'+tempK.toFixed(1)+' K</text>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+108)+'" fill="'+soft+'" font-size="8.5">MEAN ROOT DISPLACEMENT ⟨u²⟩¹/²:</text>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+128)+'" fill="'+ink+'" font-size="14" font-family="monospace">'+(vibAmp*0.08).toFixed(3)+' Å (Angstroms)</text>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+156)+'" fill="'+soft+'" font-size="8.5">DEBYE PHONON CUTOFF FREQUENCY:</text>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+176)+'" fill="#38bdf8" font-size="14" font-family="monospace">ω_D ≈ 4.82 × 10¹³ rad s⁻¹</text>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+202)+'" fill="#9fb498" font-size="8.5">Dulong-Petit Limit: C_v → 3 R ≈ 24.9 J mol⁻¹ K⁻¹</text>';
+
+    svg+=text(360,305,'Solid-State Thermodynamics: Harmonic Interatomic Potentials & Phonon Scattering',soft,10);
+  }
+  else if(isOptics){
+    const cX=50,cY=50,cW=340,cH=220;
+    svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#101c18" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+    svg+=text(cX+cW/2,cY-15,'HUYGENS-FRESNEL WAVEFRONT PROPAGATION','#e2ecd7',11);
+
+    const slitX=cX+70,slitY=cY+cH/2;
+    svg+='<line x1="'+slitX+'" y1="'+cY+'" x2="'+slitX+'" y2="'+(slitY-20)+'" stroke="'+soft+'" stroke-width="4"/>';
+    svg+='<line x1="'+slitX+'" y1="'+(slitY+20)+'" x2="'+slitX+'" y2="'+(cY+cH)+'" stroke="'+soft+'" stroke-width="4"/>';
+    svg+=text(slitX-30,slitY+4,'Aperture',soft,8.5);
+
+    for(let w=0;w<7;w++){
+      const radius=((phase*40+w*32)%220)+10;
+      svg+='<circle cx="'+slitX+'" cy="'+slitY+'" r="'+radius.toFixed(1)+'" fill="none" stroke="#38bdf8" stroke-width="1.8" opacity="'+(1.0-radius/230).toFixed(2)+'"/>';
+    }
+
+    const bX=420,bY=50,bW=270,bH=220;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'DIFFRACTION INTENSITY PATTERN I(θ)','#718e79',9);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+
+    const mX=bX+25,mY=bY+130,mW=bW-50,mH=75;
+    svg+='<line x1="'+mX+'" y1="'+mY+'" x2="'+(mX+mW)+'" y2="'+mY+'" stroke="'+soft+'" stroke-width="1"/>';
+    svg+='<line x1="'+(mX+mW/2)+'" y1="'+(mY-mH)+'" x2="'+(mX+mW/2)+'" y2="'+mY+'" stroke="'+soft+'" stroke-width="1" stroke-dasharray="2 2"/>';
+
+    let diffPoints=[];
+    for(let k=0;k<=60;k++){
+      const theta=(k-30)/10.0;
+      const xPt=mX+(k/60)*mW;
+      const sinc=theta===0?1:Math.sin(theta)/theta;
+      const intensity=sinc*sinc;
+      const yPt=mY-intensity*(mH*0.9);
+      diffPoints.push(xPt.toFixed(1)+','+yPt.toFixed(1));
+    }
+    svg+='<polyline points="'+diffPoints.join(' ')+'" fill="none" stroke="'+orange+'" stroke-width="2"/>';
+
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+165)+'" fill="'+soft+'" font-size="8.5">CENTRAL MAXIMUM (m = 0):</text>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+185)+'" fill="'+orange+'" font-size="14" font-family="monospace">I₀ = 100% Relative Intensity</text>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+205)+'" fill="#9fb498" font-size="8.5">First Minimum: a sin(θ) = λ ⇔ θ₁ = ±1.22 λ/D</text>';
+
+    svg+=text(360,305,'Physical Wave Optics: Phase Coherence, Secondary Wavelets, and Diffraction Envelopes',soft,10);
+  }
+  else if(isElec){
+    const cX=50,cY=50,cW=340,cH=220;
+    svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#101c18" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+    svg+=text(cX+cW/2,cY-15,'MICROSCOPIC ELECTRON DRIFT IN COPPER LATTICE','#e2ecd7',11);
+
+    for(let r=0;r<4;r++){
+      for(let c=0;c<7;c++){
+        const ix=cX+30+c*48;
+        const iy=cY+35+r*50;
+        svg+='<circle cx="'+ix+'" cy="'+iy+'" r="10" fill="#20362f" stroke="'+soft+'" stroke-width="1.5"/>';
+        svg+=text(ix,iy+3,'+Cu',soft,7.5);
+      }
+    }
+
+    const driftSpeed=(p.input/(cfg.max||10))*25+10;
+    for(let e=0;e<20;e++){
+      const eSeedX=(e*53)%cW;
+      const eSeedY=(e*47)%(cH-40);
+      const curX=cX+((eSeedX+phase*driftSpeed*2)%(cW-20));
+      const curY=cY+20+eSeedY+Math.sin(phase*8+e)*6;
+      svg+='<circle cx="'+curX.toFixed(1)+'" cy="'+curY.toFixed(1)+'" r="3" fill="#38bdf8"/>';
+    }
+
+    const bX=420,bY=50,bW=270,bH=220;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'DRUDE MODEL ELECTRON TRANSPORT','#718e79',9);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+
+    const driftVel_um=(driftSpeed*1.5).toFixed(1);
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+60)+'" fill="'+soft+'" font-size="8.5">ELECTRON DRIFT SPEED (v_d):</text>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+80)+'" fill="'+orange+'" font-size="17" font-family="monospace" font-weight="bold">'+driftVel_um+' μm s⁻¹</text>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+108)+'" fill="'+soft+'" font-size="8.5">CONDUCTION ELECTRON DENSITY (n):</text>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+128)+'" fill="'+ink+'" font-size="14" font-family="monospace">8.49 × 10²⁸ m⁻³ (Copper)</text>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+156)+'" fill="'+soft+'" font-size="8.5">MEAN FREE COLLISION TIME (τ):</text>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+176)+'" fill="#38bdf8" font-size="14" font-family="monospace">τ ≈ 2.47 × 10⁻¹⁴ s</text>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+202)+'" fill="#9fb498" font-size="8.5">Microscopic Ohm\'s Law: J = σ E = n e v_d</text>';
+
+    svg+=text(360,305,'Solid-State Conduction: Electronic Scattering, Mobility μ = eτ/m, and Joule Dissipation',soft,10);
+  }
+  else{
+    const cX=50,cY=50,cW=340,cH=220;
+    svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#101c18" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+    svg+=text(cX+cW/2,cY-15,'DYNAMIC VECTOR OSCILLOSCOPE (v⃗, a⃗, F⃗_net)','#e2ecd7',11);
+
+    const omega=3.5;
+    const oscDisp=Math.cos(phase*omega);
+    const oscVel=-Math.sin(phase*omega);
+    const oscAcc=-Math.cos(phase*omega);
+
+    const midX=cX+cW/2;
+    const bodyX=midX+oscDisp*95;
+    const bodyY=cY+cH/2;
+
+    svg+='<line x1="'+midX+'" y1="'+(bodyY-45)+'" x2="'+midX+'" y2="'+(bodyY+45)+'" stroke="'+soft+'" stroke-dasharray="3 3"/>';
+    svg+=text(midX,bodyY+58,'Equilibrium x = 0',soft,8);
+
+    svg+='<line x1="'+(cX+20)+'" y1="'+bodyY+'" x2="'+bodyX+'" y2="'+bodyY+'" stroke="'+soft+'" stroke-width="2.5"/>';
+    svg+='<circle cx="'+bodyX.toFixed(1)+'" cy="'+bodyY+'" r="16" fill="'+orange+'" stroke="#fde68a" stroke-width="2"/>';
+
+    const vLen=oscVel*45;
+    svg+='<line x1="'+bodyX.toFixed(1)+'" y1="'+(bodyY-22)+'" x2="'+(bodyX+vLen).toFixed(1)+'" y2="'+(bodyY-22)+'" stroke="'+ink+'" stroke-width="2.5"/>';
+    svg+='<polygon points="'+(bodyX+vLen).toFixed(1)+','+(bodyY-22)+' '+(bodyX+vLen-Math.sign(vLen||1)*6).toFixed(1)+','+(bodyY-25)+' '+(bodyX+vLen-Math.sign(vLen||1)*6).toFixed(1)+','+(bodyY-19)+'" fill="'+ink+'"/>';
+    svg+=text(bodyX+vLen/2,bodyY-28,'v⃗',ink,9);
+
+    const aLen=oscAcc*40;
+    svg+='<line x1="'+bodyX.toFixed(1)+'" y1="'+(bodyY+24)+'" x2="'+(bodyX+aLen).toFixed(1)+'" y2="'+(bodyY+24)+'" stroke="#38bdf8" stroke-width="2"/>';
+    svg+='<polygon points="'+(bodyX+aLen).toFixed(1)+','+(bodyY+24)+' '+(bodyX+aLen-Math.sign(aLen||1)*5).toFixed(1)+','+(bodyY+21)+' '+(bodyX+aLen-Math.sign(aLen||1)*5).toFixed(1)+','+(bodyY+27)+'" fill="#38bdf8"/>';
+    svg+=text(bodyX+aLen/2,bodyY+36,'a⃗','#38bdf8',9);
+
+    const bX=420,bY=50,bW=270,bH=220;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'LIVE MECHANICAL ENERGY CONSERVATION','#718e79',9);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+
+    const Ek=oscVel*oscVel;
+    const Ep=oscDisp*oscDisp;
+
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+58)+'" fill="'+ink+'" font-size="9">Kinetic Energy E_k = 1/2 m v²</text>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+65)+'" width="220" height="12" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+65)+'" width="'+(Ek*220).toFixed(1)+'" height="12" rx="3" fill="'+ink+'"/>';
+
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+100)+'" fill="'+orange+'" font-size="9">Potential Energy E_p = 1/2 k x²</text>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+107)+'" width="220" height="12" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+107)+'" width="'+(Ep*220).toFixed(1)+'" height="12" rx="3" fill="'+orange+'"/>';
+
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+142)+'" fill="#fde68a" font-size="9">Total Mechanical Energy E_tot = E_k + E_p</text>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+149)+'" width="220" height="14" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+149)+'" width="220" height="14" rx="3" fill="#fde68a"/>';
+
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+185)+'" fill="#9fb498" font-size="8.5">Conservation Law: dE_total / dt = 0 (Conservative Field)</text>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+202)+'" fill="'+soft+'" font-size="8">Phase Ellipse: (x/x₀)² + (v/v₀)² = 1 (Constant Area)</text>';
+
+    svg+=text(360,305,'Harmonic Oscillations: Vector Calculus F⃗ = m a⃗ = −∇V · Symplectic Phase Space Conservation',soft,10);
+  }
+
+  $('apparatusDiagram').innerHTML=svg;
+}
+
+function draw(t){
+  const p=params(),v=model.predict(cfg.slug,p.input,p.angle),phase=paused?0:t/1000,ink='#c4d7ae',soft='#718e79',orange='#d7a17b';
+  if(currentSimMode==='compare'){
+    drawComparativeSim(t,p,v,phase,ink,soft,orange);
+    return;
+  }
+  if(currentSimMode==='sandbox'){
+    drawDynamicSandbox(t,p,v,phase,ink,soft,orange);
+    return;
+  }
+  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern><filter id="blur"><feGaussianBlur stdDeviation="'+(cfg.slug==='convex-lens'?Math.min(10,Math.abs(p.screen-v.ideal)*.45):0)+'"/></filter></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
+  const text=(x,y,str,color='#9fb498',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
  if(cfg.slug==='simple-pendulum'){const len=115+p.input*85,a=p.angle*Math.PI/180*Math.cos(phase*2*Math.PI/v.period),x=350+len*Math.sin(a),y=55+len*Math.cos(a);svg+='<path d="M260 43H440M350 43V55" stroke="'+soft+'" stroke-width="5"/><line x1="350" y1="55" x2="'+x+'" y2="'+y+'" stroke="'+ink+'" stroke-width="2"/><circle cx="'+x+'" cy="'+y+'" r="17" fill="'+ink+'"/><path d="M490 55V'+(55+len)+'M483 55h14M483 '+(55+len)+'h14" stroke="'+soft+'"/>'+text(530,140,'L = '+p.input.toFixed(2)+' m')+text(350,302,'Length is measured from pivot to bob centre.');}
  else if(cfg.slug==='bifilar-suspension'){const len=100+p.input*90,yaw=p.angle*Math.PI/180*Math.cos(phase*2*Math.PI/v.period),rx=110*Math.cos(yaw),ry=65*Math.sin(yaw),cy=65+len;svg+='<path d="M180 48H530" stroke="'+soft+'" stroke-width="5"/><line x1="245" y1="50" x2="'+(355-rx)+'" y2="'+(cy-ry)+'" stroke="'+ink+'" stroke-width="2"/><line x1="465" y1="50" x2="'+(355+rx)+'" y2="'+(cy+ry)+'" stroke="'+ink+'" stroke-width="2"/><line x1="'+(355-rx*1.6)+'" y1="'+(cy-ry*1.6)+'" x2="'+(355+rx*1.6)+'" y2="'+(cy+ry*1.6)+'" stroke="'+orange+'" stroke-width="13" stroke-linecap="round"/>'+text(355,33,'Full string separation d = 0.20 m')+text(570,150,'L = '+p.input.toFixed(2)+' m')+text(355,305,'Top-oblique schematic · small yaw about the centre');}
  else if(cfg.slug==='young-modulus'){const bottom=210+p.input*2.2;svg+='<path d="M250 40H450" stroke="'+soft+'" stroke-width="6"/><path d="M350 43V'+bottom+'" stroke="'+ink+'" stroke-width="3"/><rect x="320" y="'+bottom+'" width="60" height="28" rx="4" fill="'+orange+'"/><path d="M455 210H530M455 '+bottom+'H530M500 210V'+bottom+'" stroke="'+soft+'" stroke-dasharray="4 4"/>'+text(580,240,'Extension enlarged')+text(350,300,'Incremental load F = '+p.input.toFixed(1)+' N')+text(170,135,'L₀ = 2.00 m')+text(170,160,'d = 0.50 mm');}

@@ -56,11 +56,31 @@ for old,new in [('/theory/','/physics/photoelectric-effect/theory/'),('/sample-l
  target=out/old.strip('/')/'index.html';target.parent.mkdir(parents=True,exist_ok=True)
  target.write_text('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex,follow"><link rel="canonical" href="'+base+new+'"><meta http-equiv="refresh" content="0;url='+new+'"><title>Lesson moved | Open STEM Lab</title></head><body><a href="'+new+'">Continue to the lesson</a></body></html>')
 ns='http://www.sitemaps.org/schemas/sitemap/0.9';ET.register_namespace('',ns);urlset=ET.Element('{'+ns+'}urlset')
+seen_paths=set()
 for path in [p[0] for p in pages]+physics_urls+catalog_urls:
- url=ET.SubElement(urlset,'{'+ns+'}url');ET.SubElement(url,'{'+ns+'}loc').text=base+path
+ if path in seen_paths:continue
+ seen_paths.add(path)
+ url=ET.SubElement(urlset,'{'+ns+'}url')
+ ET.SubElement(url,'{'+ns+'}loc').text=base+path
+ ET.SubElement(url,'{'+ns+'}lastmod').text='2026-10-17'
+ if path in ['/','/experiments/']:
+  ET.SubElement(url,'{'+ns+'}changefreq').text='daily'
+  ET.SubElement(url,'{'+ns+'}priority').text='1.0'
+ elif path.startswith('/subjects/'):
+  ET.SubElement(url,'{'+ns+'}changefreq').text='weekly'
+  ET.SubElement(url,'{'+ns+'}priority').text='0.9'
+ elif path.endswith('/theory/'):
+  ET.SubElement(url,'{'+ns+'}changefreq').text='weekly'
+  ET.SubElement(url,'{'+ns+'}priority').text='0.8'
+ elif path.endswith('/report/'):
+  ET.SubElement(url,'{'+ns+'}changefreq').text='monthly'
+  ET.SubElement(url,'{'+ns+'}priority').text='0.7'
+ else:
+  ET.SubElement(url,'{'+ns+'}changefreq').text='weekly'
+  ET.SubElement(url,'{'+ns+'}priority').text='0.9'
 ET.ElementTree(urlset).write(out/'sitemap.xml',encoding='utf-8',xml_declaration=True)
 (out/'robots.txt').write_text('User-agent: *\nAllow: /\n\nSitemap: '+base+'/sitemap.xml\n')
-print(('Production' if args.production else 'Local noindex')+' build: '+str(out)+'; '+str(len(pages)+len(physics_urls)+len(catalog_urls))+' sitemap URLs for '+base)
+print(('Production' if args.production else 'Local noindex')+' build: '+str(out)+'; '+str(len(seen_paths))+' sitemap URLs for '+base)
 
 from package_public_source import package_public_source
 package_public_source(out)
