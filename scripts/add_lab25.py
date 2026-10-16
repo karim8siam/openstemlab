@@ -1,0 +1,235 @@
+import json, sqlite3
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+
+exp25 = {
+    'number': 25,
+    'slug': 'newtons-cooling',
+    'title': "Verification of Newton's Law of Cooling and Determination of the Cooling Constant",
+    'shortTitle': "Newton's Law of Cooling",
+    'aim': "Investigate the rate of loss of heat by radiation and convection for a body cooling in a constant-temperature enclosure, verifying Newton's law of cooling for small temperature differences, and determining the cooling constant k from the linear logarithmic temperature excess decay.",
+    'target': 'k',
+    'targetName': 'Cooling rate constant k',
+    'inputLabel': 'Elapsed cooling time t',
+    'shortInput': 'Time t',
+    'inputUnit': 'min',
+    'inputDecimals': 1,
+    'rawLabel': 'Water temperature T',
+    'rawUnit': '°C',
+    'rawDecimals': 2,
+    'xAxis': 'Elapsed cooling time t (min)',
+    'yAxis': 'Logarithmic temperature excess ln[(T_i − T_0) / (T − T_0)]',
+    'xScale': 1.0,
+    'yScale': 1.0,
+    'gradientUnit': 'min⁻¹',
+    'resultUnit': 'min⁻¹',
+    'resultScale': 1.0,
+    'resultDecimals': 4,
+    'min': 1.0,
+    'max': 15.0,
+    'step': 0.5,
+    'initial': 6.0,
+    'samples': [2.0, 4.0, 6.0, 8.0, 10.0],
+    'emptyX': [0.0, 15.0],
+    'emptyY': [0.0, 1.5],
+    'timed': False,
+    'angle': False,
+    'published': True,
+    'measureLabel': 'Record water temperature T at elapsed cooling time t',
+    'fitEquation': 'ln[(T_i − T_0) / (T − T_0)] = k · t ⇔ Y = k · X ⇔ k = S',
+    'intro': "The quantitative formulation of how a heated body sheds thermal energy to its surroundings was first articulated by Sir Isaac Newton in his 1701 treatise Scala Graduum Caloris. Newton posited that whenever the temperature excess between a warm body and its ambient enclosure remains moderate (typically less than 30°C to 40°C), the instantaneous rate of heat loss dQ/dt is directly proportional to the temperature difference (T − T_0). Because the sensible heat content of an incompressible fluid or solid relates to its temperature through the heat capacity C_sys via dQ = C_sys dT, Newton's cooling law manifests as a first-order linear differential equation: dT/dt = −k (T − T_0), where k is the characteristic cooling constant of the system. While heat dissipation in ambient air is a complex composite of blackbody radiation governed by the Stefan-Boltzmann T⁴ law and buoyant natural convection governed by fluid boundary layers, the binomial Taylor expansion of Stefan's law reveals that for small fractional temperature excesses, radiative emission linearizes identically into Newton's proportional format. Integrating this governing rate equation yields an exponential decay of temperature excess θ(t) = T(t) − T_0 = θ_0 exp(−k t). Taking the natural logarithm transforms the nonlinear thermal decay into a linear relationship ln[θ_0 / θ(t)] = k t, allowing the cooling constant k (and the thermal time constant τ = 1/k) to be precisely evaluated from the gradient of an ordinary least-squares fit across serial time observations.",
+    'settings': [
+        'Initial hot water temperature T_i = 80.0 °C; initial temperature excess θ_0 = T_i − T_0 = 60.0 °C.',
+        'Constant temperature water jacket bath T_0 = 20.0 °C maintained by large thermal mass circulation.',
+        'Polished copper calorimeter containing 100.0 g pure water; aggregate system thermal capacity C_sys = 456.8 J K⁻¹.',
+        'Reference Newton cooling constant k = 0.0960 min⁻¹ (thermal cooling time constant τ = 1/k = 10.42 min = 625.0 s).'
+    ],
+    'apparatus': [
+        {
+            'name': 'Double-Walled Water-Jacketed Cooling Enclosure',
+            'purpose': 'A heavy cylindrical double-walled copper vessel containing a large thermal reservoir of circulating cold water maintained at a steady ambient temperature T_0 = 20.0 °C, establishing an isothermal, draft-free boundary condition surrounding the radiating test calorimeter.'
+        },
+        {
+            'name': 'Polished Thin-Walled Copper Calorimeter Vessel with Insulated Lid',
+            'purpose': 'A cylindrical container (mass 75.0 g, volume 120 mL) having a specularly polished outer surface to suppress radiation losses, suspended centrally within the water jacket on cork supports and sealed with a varnished wooden lid featuring apertures for the thermometer and stirrer.'
+        },
+        {
+            'name': 'Calibrated Precision Calorimetric Thermometer (0.05°C Subdivisions)',
+            'purpose': 'A sensitive mercury-in-glass thermometer graduated from 10°C to 90°C in 0.1°C intervals (readable to 0.02°C with a cathetometer), immersed to a fixed depth in the calorimeter water bath to record the transient temperature decay.'
+        },
+        {
+            'name': 'Digital Precision Bench Chronometer and Mechanical Loop Stirrer',
+            'purpose': 'An electronic quartz digital chronometer resolving elapsed time to 0.1 s, paired with a low-thermal-mass brass wire helical stirrer designed to produce gentle vertical circulation without introducing kinetic frictional dissipation.'
+        }
+    ],
+    'procedure': [
+        {
+            'title': 'Jacket Temperature Stabilization and Baseline Verification',
+            'text': 'Fill the annular space of the double-walled enclosure with room-temperature water. Stir the jacket bath thoroughly and record its steady temperature T_0 using a reference thermometer. Confirm that T_0 remains stationary at 20.0 °C throughout the duration of the laboratory session, providing a constant ambient thermal sink.',
+            'why': 'Newton\'s law of cooling assumes an invariant environmental boundary temperature T_0. Any unmodelled drift in the enclosure temperature directly alters the instantaneous driving potential (T − T_0), distorting the apparent exponential decay rate.'
+        },
+        {
+            'title': 'Calorimeter Preparation, Water Tare, and Heating Charge',
+            'text': 'Weigh the clean, dry polished copper calorimeter vessel with its stirrer to ±0.01 g. Add exactly 100.0 g of distilled water preheated in a separate beaker to approximately 85 °C. Mount the calorimeter securely inside the central chamber of the water-jacketed enclosure, seating it firmly upon insulating vulcanized cork pegs to eliminate conductive thermal bridging to the bottom plate.',
+            'why': 'Heating the water prior to introducing it into the vessel ensures that the calorimeter metal and water rapidly reach thermal equilibrium near 80 °C without exposing the enclosure jacket to open flames or heating coils.'
+        },
+        {
+            'title': 'Lid Closure, Thermometer Immersion, and Time Zero Synchronization',
+            'text': 'Place the varnished wooden lid firmly over the calorimeter, insert the calorimetric thermometer through the central rubber grommet so its bulb is submerged in the geometric center of the liquid, and insert the loop stirrer. Stir the hot water gently until the thermometer stabilizes at the target initial temperature T_i = 80.00 °C. Start the digital bench chronometer simultaneously as time t = 0.0 min.',
+            'why': 'Central bulb placement avoids boundary-layer edge effects near the metallic walls, ensuring the thermometer samples the bulk core liquid. Synchronizing timer start with a precise initial temperature sets the exact boundary condition θ_0 = 60.00 °C.'
+        },
+        {
+            'title': 'Periodic Agitation and Serial Temperature Acquisition',
+            'text': 'Maintain continuous, gentle vertical agitation with the loop stirrer at approximately one stroke every two seconds to prevent vertical thermal stratification. At exact half-minute intervals, inspect the thermometer meniscus using an optical magnifier to eliminate parallax, recording the water temperature T at 2.0, 4.0, 6.0, 8.0, and 10.0 minutes of elapsed time.',
+            'why': 'Because water has a low thermal conductivity (k ≈ 0.6 W m⁻¹ K⁻¹), thermal stratification occurs rapidly in stagnant cooling liquid, creating cold upper layers and hot lower pools. Gentle stirring maintains spatial isothermality without inducing viscous friction heating.'
+        },
+        {
+            'title': 'Logarithmic Temperature Excess Transformation',
+            'text': 'For each recorded observation time t, compute the instantaneous temperature excess θ(t) = T(t) − T_0 above the jacket temperature. Evaluate the logarithmic decay ratio y = ln[θ_0 / θ(t)] = ln[60.00 / (T(t) − 20.00)], where θ_0 = 60.00 °C is the initial temperature excess at t = 0.',
+            'why': 'Transforming the exponential cooling trajectory into natural logarithmic coordinates linearizes the underlying differential equation, mapping elapsed time to a straight line whose slope directly represents the Newton cooling constant k.'
+        },
+        {
+            'title': 'Linear Least-Squares Regression and Parameter Estimation',
+            'text': 'Plot the logarithmic temperature excess y against elapsed cooling time t (min). Perform an ordinary least-squares linear regression to extract the slope m, standard error, and coefficient of determination R². Confirm that the gradient m equals the system cooling constant k = 0.0960 min⁻¹, and compute the thermal time constant τ = 1/k.',
+            'why': 'Linear regression over multiple serial points distributes instrument reading uncertainty across the full cooling arc, suppressing random parallax errors and rigorously testing the validity of the first-order cooling hypothesis through the goodness-of-fit statistic R².'
+        }
+    ],
+    'topics': [
+        {
+            'title': "Newton's Empirical Law of Cooling: Formulation and Physical Regime",
+            'text': "In 1701, Sir Isaac Newton published his landmark thermal treatise Scala Graduum Caloris ('Scale of the Degrees of Heat') in the Philosophical Transactions of the Royal Society. Newton sought an objective method to calibrate high-temperature thermometers beyond the boiling point of water by observing the rate at which glowing iron ingots cooled in an air stream. He observed that the quantity of heat lost by a body in a given small increment of time is proportional to the difference between the temperature of the body and that of the surrounding medium: dQ/dt = −h_eff A (T − T_0), where h_eff is the effective overall heat transfer coefficient, A is the surface area of the body, and T_0 is the ambient enclosure temperature. Substituting the caloric relation dQ = m c dT (where m is the mass and c is the specific heat capacity), the governing rate equation becomes dT/dt = −[h_eff A / (m c)] (T − T_0) = −k (T − T_0). The proportionality factor k, termed the cooling constant, depends intrinsically on the geometric shape and surface area of the vessel, the surface emissivity, the heat capacity of the contents, and the velocity of convective currents. Newton's formulation is an empirical approximation that holds with remarkable precision for moderate temperature differences (typically θ = T − T_0 < 30°C to 40°C), where nonlinear radiative and turbulent convective terms can be legitimately linearized.",
+            'formula': '\\frac{dT}{dt} = -k (T - T_0) \\quad \\text{where } k = \\frac{h_{\\text{eff}} A}{m c}',
+            'question': "Under what physical conditions does Newton's law of cooling provide an accurate description of thermal dissipation?",
+            'answer': "Newton's law of cooling is valid when the temperature excess (T − T_0) between the cooling body and its surroundings is relatively small (typically less than 30°C to 40°C), heat loss occurs in a constant-temperature enclosure free from forced drafts, and natural convection currents remain laminar while radiative emission can be linearized."
+        },
+        {
+            'title': 'Radiative Heat Loss and Stefan-Boltzmann Linearization',
+            'text': "Thermal radiation from any physical surface is fundamentally governed by the Stefan-Boltzmann law, established empirically by Jožef Stefan in 1879 and derived thermodynamically by Ludwig Boltzmann in 1884. The net radiative power P_rad exchanged between a body of surface area A, absolute temperature T (in kelvins), and surface emissivity ε, situated inside an isothermal enclosure at absolute temperature T_0, is given by P_rad = ε σ A (T⁴ − T_0⁴), where σ = 5.670374 × 10⁻⁸ W m⁻² K⁻⁴ is the Stefan-Boltzmann constant. Although this fourth-power dependence appears starkly non-linear, it can be factored algebraically: T⁴ − T_0⁴ = (T − T_0)(T + T_0)(T² + T_0²). When the temperature excess ΔT = T − T_0 is small compared to the absolute temperature T_0 (such that ΔT / T_0 ≪ 1), we approximate T ≈ T_0, yielding (T + T_0) ≈ 2 T_0 and (T² + T_0²) ≈ 2 T_0². Consequently, the factor (T⁴ − T_0⁴) simplifies to 4 T_0³ (T − T_0). The radiative power loss becomes P_rad ≈ [4 ε σ A T_0³] (T − T_0) = h_rad A (T − T_0), where h_rad = 4 ε σ T_0³ is the linearized radiative heat transfer coefficient. At room temperature (T_0 = 293.15 K), h_rad evaluates to approximately 5.7 ε W m⁻² K⁻¹. Thus, thermal radiation adheres strictly to Newton's linear proportionality at modest temperature excesses.",
+            'formula': 'T^4 - T_0^4 \\approx 4 T_0^3 (T - T_0) \\implies P_{\\text{rad}} \\approx 4 \\varepsilon \\sigma A T_0^3 (T - T_0)',
+            'question': "How does the Stefan-Boltzmann fourth-power radiation law reduce to Newton's linear cooling law?",
+            'answer': "By factoring (T⁴ − T_0⁴) = (T − T_0)(T + T_0)(T² + T_0²) and expanding in powers of (T − T_0)/T_0, for small temperature differences (T ≈ T_0) the last two terms approach 2T_0 and 2T_0² respectively, giving T⁴ − T_0⁴ ≈ 4 T_0³ (T − T_0). Net radiative loss is therefore directly proportional to (T − T_0)."
+        },
+        {
+            'title': 'Natural Convection and Boundary Layer Transport',
+            'text': "In addition to radiation, a cooling body immersed in air or a fluid transfers thermal energy through natural (free) convection. As heat conducts from the outer calorimeter wall into the adjacent fluid layer, the fluid warms, expands, and undergoes a localized decrease in mass density. Under the buoyant influence of gravity, the warmer, lighter fluid ascends along the vertical boundaries of the vessel, while cooler, denser fluid descends to take its place, establishing a recirculating convective boundary layer. The rate of convective heat transfer is conventionally modeled through Nusselt numbers and Rayleigh numbers: q_conv = h_conv A (T − T_0)^n. For laminar free convection over vertical cylinders, boundary-layer theory reveals that the exponent n is approximately 5/4 = 1.25, rather than exactly 1.0. However, over moderate temperature spans of 10°C to 30°C, the variation of (T − T_0)^0.25 is sufficiently modest that an effective, averaged convective coefficient h_conv can be defined. Combining linearized radiation and natural convection yields the composite heat transfer coefficient h_eff = h_rad + h_conv. Suppressing turbulent air drafts by enclosing the calorimeter in a stagnant double-walled jacket ensures that the convective boundary layer remains steady, laminar, and highly reproducible.",
+            'formula': 'q_{\\text{conv}} = h_{\\text{conv}} A (T - T_0)^{1.25} \\approx \\bar{h}_{\\text{conv}} A (T - T_0)',
+            'question': 'Why is the rate of heat loss by natural convection slightly superlinear with temperature difference?',
+            'answer': 'In natural convection, the buoyant driving force that accelerates the fluid is itself proportional to the temperature difference (T − T_0). Higher temperature excesses simultaneously increase both the thermal gradient and the convective circulation velocity, producing an empirical power law of approximately (T − T_0)^1.25.'
+        },
+        {
+            'title': 'Differential Formulation and Exponential Temperature Decay',
+            'text': "The mathematical foundation of cooling kinetics rests upon the separation of variables in the linear differential equation dT/dt = −k (T − T_0). Defining the temperature excess θ(t) = T(t) − T_0 and differentiating yields dθ/dt = dT/dt, since the enclosure temperature T_0 is constant. The differential equation simplifies to dθ/dt = −k θ, or equivalently dθ / θ = −k dt. Integrating both sides from t = 0 (where θ = θ_0 = T_i − T_0) to elapsed time t yields ln(θ / θ_0) = −k t, which exponentiates to the classical exponential decay law: θ(t) = θ_0 exp(−k t). The temperature of the cooling body as a function of time is therefore T(t) = T_0 + (T_i − T_0) exp(−k t). The characteristic thermal time constant of the system is defined as τ = 1/k. Physically, τ represents the time required for the temperature excess to decrease to 1/e (approximately 36.787%) of its initial value θ_0. For our experimental calorimeter system with k = 0.0960 min⁻¹, the thermal time constant is τ = 10.42 min (625.0 s). Half-life decay time occurs at t_half = τ ln(2) = 0.69315 / 0.0960 ≈ 7.22 min.",
+            'formula': '\\theta(t) = \\theta_0 e^{-k t} \\iff \\ln\\left(\\frac{\\theta_0}{\\theta(t)}\\right) = k t \\quad \\text{where } \\tau = \\frac{1}{k}',
+            'question': 'What is the physical significance of the thermal time constant τ = 1/k in cooling phenomena?',
+            'answer': 'The thermal time constant τ represents the time required for the temperature excess above ambient to decay to 1/e (approx. 36.8%) of its initial value. It characterizes the thermal inertia of the system: systems with larger heat capacities or smaller surface areas exhibit larger time constants and cool more slowly.'
+        },
+        {
+            'title': 'The Method of Cooling for Comparative Specific Heat Determinations',
+            'text': "Newton's cooling law provides an elegant historical method—extensively utilized by Dulong, Petit, and Regnault—to determine the specific heat capacity of an unknown liquid without requiring direct heat addition or mechanical mixing. Consider two identical calorimeter vessels possessing identical outer geometries, surface finishes, and surface areas A, suspended within the same isothermal water jacket. One vessel is filled with a mass m_w of water (specific heat c_w), while the second is filled with an equal volume of test liquid of mass m_L (unknown specific heat c_L). Because the radiating surfaces and enclosure temperatures are identical, both vessels lose heat at the identical absolute rate dQ/dt when passing through the same temperature range from T_a to T_b. The total heat lost by the water vessel during time interval Δt_w is ΔQ = (m_w c_w + W_cal) (T_a − T_b), while for the test liquid during interval Δt_L it is ΔQ = (m_L c_L + W_cal) (T_a − T_b). Dividing the two heat loss expressions gives (m_w c_w + W_cal) / Δt_w = (m_L c_L + W_cal) / Δt_L. Solving directly yields the specific heat c_L = [(m_w c_w + W_cal)(Δt_L / Δt_w) − W_cal] / m_L. This comparative method eliminates absolute power calibrations by converting thermal metrology into precision timing measurements.",
+            'formula': '\\frac{m_w c_w + W_{\\text{cal}}}{\\Delta t_w} = \\frac{m_L c_L + W_{\\text{cal}}}{\\Delta t_L} \\implies c_L = \\frac{(m_w c_w + W_{\\text{cal}})\\frac{\\Delta t_L}{\\Delta t_w} - W_{\\text{cal}}}{m_L}',
+            'question': 'How does the method of cooling allow the specific heat of a liquid to be determined by measuring cooling times?',
+            'answer': 'Because two identical vessels with identical surface finishes lose heat at the same rate when at the same temperature, the heat lost over a given temperature interval is directly proportional to the time required to cool through that interval. Equating the heat loss rates allows the unknown specific heat to be found from the ratio of cooling times.'
+        },
+        {
+            'title': 'Surface Emissivity, Polishing, and Enclosure Geometry',
+            'text': "The cooling constant k is strongly modulated by the optical surface state of the radiating vessel. According to Kirchhoff's law of thermal radiation, for an arbitrary body in thermodynamic equilibrium with radiation, the monochromatic emissivity ε(λ, T) equals the absorptivity α(λ, T). A dull, soot-blackened copper vessel exhibits an emissivity close to unity (ε ≈ 0.95 to 0.98), functioning nearly as an ideal blackbody radiator. In contrast, a freshly polished, specular copper surface exhibits an emissivity of ε ≈ 0.03 to 0.05 in the infrared spectrum (wavelengths 8 μm to 14 μm corresponding to thermal emission at 300 K to 350 K). Consequently, a blackened calorimeter loses thermal radiation at a rate roughly twenty to thirty times greater than an identically shaped polished vessel, resulting in a substantially higher cooling constant k_black ≫ k_polished. In our laboratory configuration, maintaining a polished exterior minimizes radiation, isolating conductive and convective transport across the stagnant annular air gap. Furthermore, the enclosure geometry—characterized by a large ratio of jacket volume to calorimeter volume—ensures that radiated photons are absorbed by the jacket without significantly raising the sink temperature T_0.",
+            'formula': 'P_{\\text{rad}} = \\varepsilon \\sigma A (T^4 - T_0^4) \\implies k_{\\text{black}} > k_{\\text{polished}} \\quad (\\varepsilon_{\\text{black}} \\approx 0.95, \\, \\varepsilon_{\\text{polished}} \\approx 0.04)',
+            'question': 'Why does a blackened calorimeter cool significantly faster than an otherwise identical polished calorimeter?',
+            'answer': 'A blackened surface possesses an emissivity close to unity (ε ≈ 0.95), radiating thermal energy nearly as an ideal blackbody. A polished copper surface reflects infrared radiation internally, exhibiting a low emissivity (ε ≈ 0.04). The radiative heat loss rate is proportional to emissivity, making the blackened vessel cool much faster.'
+        },
+        {
+            'title': 'Thermometer Lag, Emergent Stem Corrections, and Non-Isothermal Gradients',
+            'text': "Experimental verification of Newton's cooling law requires meticulous attention to thermometric errors. Three primary sources of experimental distortion must be controlled: thermometer thermal lag, emergent stem exposure, and internal fluid stratification. Because mercury-in-glass thermometer bulbs possess finite mass and thermal resistance, the recorded temperature lags the true bath temperature by a time constant τ_therm = m_bulb c_glass / (h_therm A_bulb). In a smoothly cooling bath, this produces an apparent time shift without altering the logarithmic slope k. However, if the thermometer is partially immersed, the mercury in the emergent stem residing above the calorimeter lid is cooler than the liquid bath, causing the indicated reading to fall below the true temperature. The emergent stem correction ΔT_stem = 0.00016 N (T − t_s) must be applied when high absolute accuracy is required. Most crucially, because water has a relatively low thermal conductivity, failure to stir continuously results in cold boundary layers hugging the container walls while the core remains warm, producing spurious non-exponential cooling trajectories. Gentle, periodic mechanical stirring guarantees spatial isothermality throughout the cooling cycle.",
+            'formula': '\\Delta T_{\\text{stem}} = 0.00016 \\cdot N \\cdot (T - t_s) \\quad \\text{and} \\quad \\tau_{\\text{therm}} = \\frac{m_{\\text{bulb}} c_{\\text{glass}}}{h_{\\text{therm}} A_{\\text{bulb}}}',
+            'question': 'Why is periodic mechanical stirring critical when measuring the cooling curve of water?',
+            'answer': 'Water has low thermal conductivity, so without stirring, heat conducts slowly from the interior to the walls. Cooler water accumulates near the walls and surface, creating steep internal temperature gradients. Stirring enforces spatial isothermality, ensuring the thermometer accurately reflects the uniform bulk temperature of the cooling liquid.'
+        }
+    ],
+    'precautions': [
+        'Keep the water jacket filled with a large volume of water and confirm that its temperature T_0 remains constant within ±0.1 °C throughout the observation period.',
+        'Stir the water bath gently and continuously with the helical stirrer before each reading to prevent vertical thermal stratification without causing splashing.',
+        'Ensure the outer surface of the calorimeter is cleanly polished and dry before immersion in the jacket to maintain a stable, uniform surface emissivity.',
+        'Read the thermometer with an optical magnifier aligned horizontally with the meniscus to eliminate parallax errors.'
+    ],
+    'quiz': [
+        {
+            'question': "According to Newton's law of cooling, how does the rate of cooling depend on the temperature difference between a body and its surroundings?",
+            'options': [
+                'It is directly proportional to the temperature difference (T − T_0).',
+                'It is proportional to the square of the temperature difference (T − T_0)²',
+                'It is proportional to the fourth power of absolute temperature T⁴.',
+                'It is inversely proportional to the temperature difference 1/(T − T_0).'
+            ],
+            'correct': 0,
+            'explanation': "Newton's law of cooling states that the rate of heat loss and temperature decrease dT/dt is directly proportional to the temperature excess (T − T_0) above the ambient surroundings: dT/dt = −k (T − T_0)."
+        },
+        {
+            'question': 'When plotting ln[(T_i − T_0) / (T − T_0)] on the vertical axis against elapsed time t on the horizontal axis, what physical quantity is represented by the slope?',
+            'options': [
+                'The Newton cooling rate constant k of the system (min⁻¹ or s⁻¹).',
+                'The specific heat capacity of the cooling liquid.',
+                'The thermal conductivity of the copper calorimeter vessel.',
+                'The ambient temperature T_0 of the water jacket.'
+            ],
+            'correct': 0,
+            'explanation': 'Integrating dT/dt = −k(T − T_0) gives ln[(T_i − T_0)/(T − T_0)] = k · t. Plotting this logarithmic ratio against time yields a straight line with gradient equal to the cooling constant k.'
+        },
+        {
+            'question': 'How does the Stefan-Boltzmann radiation law reconcile with Newton’s linear law of cooling for small temperature differences?',
+            'options': [
+                'Factoring T⁴ − T_0⁴ ≈ 4 T_0³ (T − T_0) for small temperature excesses linearizes the radiative exchange into proportional form.',
+                'Radiation ceases to occur at low temperatures, leaving only linear conduction.',
+                'The Stefan-Boltzmann constant σ becomes zero for small temperature differences.',
+                'Convection exactly cancels the cubic and quadratic terms of radiation.'
+            ],
+            'correct': 0,
+            'explanation': 'The algebraic expansion of T⁴ − T_0⁴ = (T − T_0)(T + T_0)(T² + T_0²) approaches 4 T_0³ (T − T_0) when (T − T_0) ≪ T_0, demonstrating that radiative power loss becomes strictly linear in temperature excess.'
+        },
+        {
+            'question': 'What is the relationship between the cooling rate constant k and the thermal time constant τ?',
+            'options': [
+                'τ = 1 / k',
+                'τ = k · ln(2)',
+                'τ = k²',
+                'τ = exp(−k)'
+            ],
+            'correct': 0,
+            'explanation': 'The thermal time constant τ is defined as the reciprocal of the cooling constant: τ = 1/k. It represents the time required for the temperature excess to decay to 1/e (approx. 36.8%) of its initial value.'
+        }
+    ],
+    'limitations': 'The teaching simulation models heat dissipation under ideal linearized Newton cooling kinetics with constant ambient enclosure temperature T_0 = 20.0 °C and an invariant cooling constant k = 0.0960 min⁻¹. In physical experiments, natural convection exhibits an empirical temperature dependence of (T − T_0)^1.25, Stefan-Boltzmann radiation departs from perfect linearity at larger temperature differences (T > 75 °C), evaporative cooling from the water surface introduces non-radiative enthalpy loss, and ambient jacket temperature drift can alter the effective cooling rate.',
+    'modelExtra': 'The simulation evaluates water temperatures using the exact analytical solution T(t) = T_0 + (T_i − T_0) exp(−k t) with initial water temperature T_i = 80.0 °C, constant jacket temperature T_0 = 20.0 °C, and cooling constant k = 0.0960 min⁻¹ (time constant τ = 10.417 min). Readings are rounded to 0.01 °C to simulate high-precision calorimetric thermometry, and the linear transformation ln[(T_i − T_0) / (T − T_0)] = k t is evaluated using ordinary least-squares regression.'
+}
+
+# 1. Update experiments.json
+exp_path = ROOT / 'content/physics/experiments.json'
+experiments = json.loads(exp_path.read_text())
+existing_idx = next((i for i, e in enumerate(experiments) if e['slug'] == 'newtons-cooling'), None)
+if existing_idx is not None:
+    experiments[existing_idx] = exp25
+else:
+    experiments.append(exp25)
+exp_path.write_text(json.dumps(experiments, indent=2, ensure_ascii=False))
+print(f'experiments.json updated. Total experiments: {len(experiments)}')
+
+# 2. Update catalog.sqlite3
+db_path = ROOT / 'data/catalog.sqlite3'
+db = sqlite3.connect(db_path)
+cur = db.cursor()
+cur.execute('DELETE FROM experiments WHERE slug = ?', ('newtons-cooling',))
+cur.execute('''
+    INSERT INTO experiments (subject_id, slug, title, status, page_path, theory_path, report_path)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+''', (
+    1,
+    'newtons-cooling',
+    "Verification of Newton's law of cooling",
+    'live',
+    '/physics/newtons-cooling/',
+    '/physics/newtons-cooling/theory/',
+    '/physics/newtons-cooling/report/'
+))
+db.commit()
+db.close()
+print('catalog.sqlite3 updated successfully for newtons-cooling.')
