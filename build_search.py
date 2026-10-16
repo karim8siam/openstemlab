@@ -20,7 +20,8 @@ def experiment_index(experiments):
   'thermal-expansion':'thermal linear expansion dilatometer micrometer screw gauge electric contact copper rod steam jacket coefficient alpha elongation dilatation',
   'mechanical-equivalent-heat':'mechanical equivalent heat joule constant friction drum calorimeter callendar rowland mechanical work torque revolution counter thermal energy',
   'boyles-law':'boyle law isothermal ideal gas pressure volume reciprocal volume mercury manometer j tube pv constant compressibility',
-  'charles-law-volume':'charles law gay lussac volume thermal expansion constant pressure gas thermometer dilatometer absolute zero beta coefficient'}
+  'charles-law-volume':'charles law gay lussac volume thermal expansion constant pressure gas thermometer dilatometer absolute zero beta coefficient',
+   'charles-law-pressure':'charles law gay lussac pressure thermal expansion coefficient constant volume air thermometer jolly bulb absolute zero pressure temperature'}
  for exp in experiments:
   c=configs.get(exp['slug'],{});index.append({'slug':exp['slug'],'title':c.get('title',exp['title']),'subject':'physics','subjectName':'Physics','path':exp['page_path'],'summary':c.get('aim','Determine Planck’s constant from stopping potential and frequency.'),'keywords':' '.join([aliases.get(exp['slug'],''),*[a['name'] for a in c.get('apparatus',[])]])})
  return index
