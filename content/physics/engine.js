@@ -59,6 +59,7 @@ function drawComparativeSim(t,p,v,phase,ink,soft,orange){
   const isInternalR=['internal-resistance'].includes(cfg.slug);
   const isTempR=['temperature-resistance'].includes(cfg.slug);
   const isFaraday=['faradays-law-electrolysis'].includes(cfg.slug);
+  const isElecHeat=['electrical-equivalent-heat'].includes(cfg.slug);
   const isFaraday=['faradays-law-electrolysis'].includes(cfg.slug);
   const isTempR=['temperature-resistance'].includes(cfg.slug);
   const isInternalR=['internal-resistance'].includes(cfg.slug);
@@ -1253,6 +1254,78 @@ function drawDynamicSandbox(t,p,v,phase,ink,soft,orange){
     svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+176)+'" text-anchor="middle" fill="#fde68a" font-size="8">F = e · N_A = 96485.3 C mol⁻¹ ⟹ N_A = F / e</text>';
     svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+190)+'" text-anchor="middle" fill="#9fb498" font-size="7.5">N_A ≈ 6.022 × 10²³ mol⁻¹ · Elementary charge e = 1.602 × 10⁻¹⁹ C</text>';
     svg+=text(360,305,'Cathode Reaction: Cu²⁺ + 2e⁻ ⟶ Cu⁰ · Deposition: m = (M_Cu / 2F) I t ⇔ Z = M_Cu / 2F',soft,10);
+  }
+  else if(isElecHeat){
+    const cX=50,cY=50,cW=340,cH=220;
+    svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#101c18" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+    svg+=text(cX+cW/2,cY-15,'MICROSCOPIC JOULE HEATING & PHONON DISSIPATION','#e2ecd7',11);
+
+    // Nichrome wire heating channel (solid matrix)
+    const wireX=cX+20,wireY=cY+25,wireW=80,wireH=170;
+    svg+='<rect x="'+wireX+'" y="'+wireY+'" width="'+wireW+'" height="'+wireH+'" rx="4" fill="#331800" stroke="#f97316" stroke-width="1.5"/>';
+    svg+='<text x="'+(wireX+wireW/2)+'" y="'+(wireY+14)+'" text-anchor="middle" fill="#fdba74" font-size="7.5" font-weight="bold">Nichrome Coil (80/20)</text>';
+
+    // Lattice ions vibrating
+    for(let i=0;i<6;i++){
+      for(let j=0;j<4;j++){
+        const ionX=wireX+14+j*18+Math.sin(phase*12+i+j)*2;
+        const ionY=wireY+32+i*22+Math.cos(phase*12+i+j)*2;
+        svg+='<circle cx="'+ionX.toFixed(1)+'" cy="'+ionY.toFixed(1)+'" r="4" fill="#ea580c" opacity="0.85"/>';
+      }
+    }
+
+    // Accelerating electrons colliding inelastically with lattice
+    for(let k=0;k<5;k++){
+      const eProgress=((phase*2.0+k/5)%1);
+      const eX=wireX+12+((k*19)%56);
+      const eY=wireY+25+eProgress*140;
+      svg+='<circle cx="'+eX.toFixed(1)+'" cy="'+eY.toFixed(1)+'" r="2.5" fill="#38bdf8"/>';
+      if(eProgress>0.7&&k%2===0){
+        // Thermal phonon spark
+        svg+='<path d="M'+(eX-3)+' '+(eY-3)+'L'+(eX+3)+' '+(eY+3)+'M'+(eX+3)+' '+(eY-3)+'L'+(eX-3)+' '+(eY+3)+'" stroke="#fef08a" stroke-width="1"/>';
+      }
+    }
+
+    // Thermal flux arrows crossing sheath into water
+    for(let f=0;f<4;f++){
+      const arrY=wireY+40+f*32;
+      const pulseArrow=Math.sin(phase*6+f)*3;
+      svg+='<path d="M'+(wireX+wireW+5)+' '+arrY+' L'+(wireX+wireW+22+pulseArrow)+' '+arrY+'" stroke="#f97316" stroke-width="2"/>';
+    }
+
+    // Water reservoir section
+    const watX=wireX+wireW+28,watY=wireY,watW=cW-wireW-50,watH=wireH;
+    svg+='<rect x="'+watX+'" y="'+watY+'" width="'+watW+'" height="'+watH+'" rx="4" fill="#0369a1" opacity="0.25" stroke="#38bdf8" stroke-width="1"/>';
+    svg+='<text x="'+(watX+watW/2)+'" y="'+(watY+14)+'" text-anchor="middle" fill="#7dd3fc" font-size="7.5" font-weight="bold">Water Molecules (Thermalization)</text>';
+
+    // Agitated water molecules (Brownian motion)
+    for(let m=0;m<12;m++){
+      const molX=watX+15+((m*27)%(watW-30))+Math.sin(phase*8+m)*4;
+      const molY=watY+30+((m*21)%(watH-45))+Math.cos(phase*8+m)*4;
+      svg+='<circle cx="'+molX.toFixed(1)+'" cy="'+molY.toFixed(1)+'" r="4.5" fill="#0284c7" stroke="#bae6fd" stroke-width="0.8"/>';
+      // H atoms
+      svg+='<circle cx="'+(molX-3.5).toFixed(1)+'" cy="'+(molY-3).toFixed(1)+'" r="2" fill="#e2ecd7"/>';
+      svg+='<circle cx="'+(molX+3.5).toFixed(1)+'" cy="'+(molY-3).toFixed(1)+'" r="2" fill="#e2ecd7"/>';
+    }
+
+    const bX=420,bY=50,bW=270,bH=220;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'THERMODYNAMIC ENERGY CONSERVATION','#718e79',9);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+58)+'" fill="'+ink+'" font-size="9">Electrical Work Input: W = V · I · t (J)</text>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+65)+'" width="220" height="12" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+65)+'" width="220" height="12" rx="3" fill="'+ink+'"/>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+92)+'" fill="#9fb498" font-size="7.5">Continuous power P = 25.00 W (10.00 V × 2.500 A)</text>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+115)+'" fill="'+orange+'" font-size="9">Thermal Internal Energy Gain: Q = C_sys ΔT</text>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+122)+'" width="220" height="12" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+    const q_bar=(180+Math.sin(phase*3)*25).toFixed(1);
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+122)+'" width="'+q_bar+'" height="12" rx="3" fill="'+orange+'"/>';
+    // Joule equivalence card
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+145)+'" width="220" height="52" rx="4" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+162)+'" text-anchor="middle" fill="#38bdf8" font-size="8.5" font-weight="bold">CONSERVATION OF ENERGY RATIO</text>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+176)+'" text-anchor="middle" fill="#fde68a" font-size="8">J = W / Q = 4.1860 J cal⁻¹ (100.0% Equivalence)</text>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+190)+'" text-anchor="middle" fill="#9fb498" font-size="7.5">Heat Equivalent of Work a = 1 / J = 0.2389 cal J⁻¹</text>';
+    svg+=text(360,305,"Microscopic Electron Collisions: dW/dt = I² R ⟹ Inelastic Phonon Production ⟹ dQ/dt = C_sys (dT/dt)",soft,10);
   }
   else{
     const cX=50,cY=50,cW=340,cH=220;

@@ -10064,5 +10064,226 @@
       "Rinse the freshly deposited cathode in distilled water, then dip in alcohol and dry with warm air to prevent oxidation into Cu₂O.",
       "Ensure the current density remains within 10 to 20 mA/cm² to avoid hydrogen co-evolution and powdery non-adherent deposits."
     ]
+  },
+  {
+    "number": 50,
+    "slug": "electrical-equivalent-heat",
+    "title": "The Heat Equivalent of Electrical Energy: Joule's Law of Electrical Heating",
+    "shortTitle": "Electrical Equivalent of Heat",
+    "subject": "physics",
+    "aim": "To determine the electrical and mechanical equivalent of heat (Joule's constant J) by electrical calorimeter heating, verify Joule's law of electric power dissipation (W = V I t), and evaluate radiation cooling corrections.",
+    "targetName": "electrical equivalent of heat",
+    "target": "J = 4.1860 J cal⁻¹",
+    "targetSymbol": "J",
+    "resultUnit": "J cal⁻¹",
+    "resultScale": 1.0,
+    "resultDecimals": 4,
+    "reference": 4.186,
+    "xAxis": "Heat absorbed Q (cal)",
+    "yAxis": "Electrical energy W (J)",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "fitEquation": "W = V · I · t = J · Q + b; J = m_slope, a = 1 / J",
+    "gradientUnit": "J cal⁻¹",
+    "inputLabel": "Heating duration t",
+    "inputUnit": "s",
+    "shortInput": "duration",
+    "min": 120.0,
+    "max": 720.0,
+    "step": 30.0,
+    "defaultInput": 360.0,
+    "initial": 360.0,
+    "inputDecimals": 0,
+    "rawLabel": "Calorimeter temperature T",
+    "rawUnit": "°C",
+    "rawDecimals": 2,
+    "angle": false,
+    "timed": true,
+    "published": true,
+    "measureLabel": "Measure calorimeter temperature T",
+    "observationLabel": "Electrical calorimeter runs",
+    "emptyX": "Q (cal)",
+    "emptyY": "W (J)",
+    "samples": [
+      120.0,
+      240.0,
+      360.0,
+      480.0,
+      600.0,
+      720.0
+    ],
+    "apparatus": [
+      {
+        "name": "Precision Electrical Immersion Calorimeter",
+        "purpose": "Provides a double-walled nickel-plated copper vessel with an insulating air jacket, phenolic lid, and internal immersion heating coil (R = 4.00 Ω) submerged in 250.0 g of distilled water with a calibrated water equivalent of 9.3 g (system heat capacity C_sys = 259.3 cal/°C)."
+      },
+      {
+        "name": "Regulated High-Current DC Power Supply",
+        "purpose": "Supplies a stable, low-ripple constant direct voltage (V = 10.00 V) and current (I = 2.500 A) to deliver a steady electrical dissipation power P = 25.00 W throughout each heating interval."
+      },
+      {
+        "name": "Calibrated Digital DC Voltmeter & Ammeter",
+        "purpose": "Monitors the potential difference across the immersion coil (10.00 V ± 0.01 V) and loop current (2.500 A ± 0.002 A) to continuously measure electrical work W = V · I · t with high precision."
+      },
+      {
+        "name": "Fractional-Degree Laboratory Thermometer",
+        "purpose": "Measures water temperature from 15.00 °C to 45.00 °C with 0.02 °C resolution, immersed at the geometric center of the stirred water volume."
+      },
+      {
+        "name": "Continuous Motorized Spiral Stirrer",
+        "purpose": "Circulates the water volume gently and continuously to eliminate localized hot spots around the heating coil without adding appreciable mechanical frictional heat."
+      },
+      {
+        "name": "Digital Laboratory Chronometer / Stopclock",
+        "purpose": "Times the duration of electrical current flow with 0.01 s precision from 120.0 s to 720.0 s for exact energy computation."
+      }
+    ],
+    "settings": [
+      "Distilled water mass: m_w = 250.0 g; specific heat capacity c_w = 1.000 cal/(g °C)",
+      "Calorimeter copper vessel mass: 100.0 g (c_Cu = 0.093 cal/(g °C), water equivalent = 9.3 g)",
+      "Total effective system heat capacity: C_sys = 250.0 + 9.3 = 259.3 cal/°C",
+      "Initial baseline equilibrium temperature: T₀ = 20.00 °C (equal to ambient room temperature)",
+      "Electrical heating power: P = V · I = 10.00 V × 2.500 A = 25.00 W",
+      "Heating durations sampled: t = 120 s to 720 s (2.0 to 12.0 min) in 120 s increments"
+    ],
+    "procedure": [
+      {
+        "title": "Calorimeter Preparation and Water Mass Measurement",
+        "text": "Weigh the clean, dry inner copper calorimeter vessel on a balance, add exactly 250.0 g of distilled water, and re-weigh to verify total mass. Place the inner vessel inside the outer insulating air jacket, seat the phenolic lid, and insert the immersion heating coil, motorized stirrer, and fractional-degree thermometer.",
+        "why": "Accurate initial water mass is required to compute the baseline system heat capacity C_sys = m_w c_w + W_eq."
+      },
+      {
+        "title": "Thermal Equilibrium and Baseline Temperature Verification",
+        "text": "Activate the motorized stirrer at gentle speed and allow the calorimeter system 5 minutes to reach thermal equilibrium with the ambient laboratory. Read and record the initial quiescent temperature T₀ = 20.00 °C on the fractional-degree thermometer.",
+        "why": "Starting from stable ambient room temperature minimizes initial convective heat exchange before electrical energy is introduced."
+      },
+      {
+        "title": "Electrical Circuit Assembly and Wattage Calibration",
+        "text": "Connect the regulated DC power supply in series with the ammeter and immersion heating coil. Connect the digital voltmeter directly across the coil terminal posts (four-wire Kelvin sensing) to exclude lead resistance drops. Energize the supply momentarily to set V = 10.00 V and I = 2.500 A (P = 25.00 W), then open the main switch.",
+        "why": "Kelvin voltage sensing across the coil terminals ensures that only the electrical power dissipated inside the water is integrated into the work calculation."
+      },
+      {
+        "title": "Timed Electrical Heating and Continuous Stirring",
+        "text": "Simultaneously close the power switch and start the digital chronometer. Maintain continuous gentle stirring while monitoring the voltmeter and ammeter to verify constant power delivery. Run the heating for an initial duration of 120.0 s (2.0 min, delivering W = 3000 J), open the switch, and continue stirring until the thermometer reaches its maximum stabilized reading T.",
+        "why": "Stirring after switching off ensures that all thermal energy stored in the heating wire sheath diffuses into the water before reading peak temperature."
+      },
+      {
+        "title": "Sequential Heating Runs Across Increasing Energy Levels",
+        "text": "Repeat the timed heating runs for cumulative durations of 240.0 s (6000 J), 360.0 s (9000 J), 480.0 s (12000 J), 600.0 s (15000 J), and 720.0 s (18000 J), recording the peak stabilized temperature T at each duration. Compute the temperature rise ΔT = T − T₀ and the corresponding heat absorbed Q = C_sys · ΔT in calories.",
+        "why": "Sampling six evenly spaced durations spanning 3000 J to 18000 J provides wide leverage for linear regression analysis."
+      },
+      {
+        "title": "Linear Regression and Joule Constant Extraction",
+        "text": "Plot heat absorbed Q (in calories) on the horizontal axis and electrical energy W = V · I · t (in Joules) on the vertical axis. Compute ordinary least-squares linear regression to determine the slope J = ΔW / ΔQ (in J/cal) and the vertical intercept b. Calculate the heat equivalent of electrical energy a = 1 / J (in cal/J) and compare against standard reference values.",
+        "why": "Linear regression averages out thermometer quantization and minor radiation losses, isolating the pure conversion factor between electrical work and thermal energy."
+      }
+    ],
+    "topics": [
+      {
+        "title": "Joule's Law of Electrical Heating and Energy Conservation",
+        "text": "James Prescott Joule's classic experiments between 1840 and 1843 established that electrical energy is not a separate imponderable caloric fluid, but a quantitative manifestation of universal mechanical energy. Joule's First Law of Electrical Heating states that when a steady direct current I flows through a conductor of resistance R across potential difference V for duration t, the electrical work W delivered by the electric field is completely converted into internal thermal energy at the rate P = dW/dt = V · I = I² R = V² / R. In a resistive medium, conduction electrons accelerated by the electric field collide inelastically with lattice ions (in solids) or polar water molecules (in liquids), dissipating their kinetic energy into randomized thermal vibrations (phonons). By the First Law of Thermodynamics, in an adiabatic system the total mechanical/electrical energy expended W must equal the heat gained Q multiplied by a universal dimensional proportionality constant J: W = J · Q. In SI units, both work and heat are measured in Joules (making the ratio exactly 1.000 J/J), but in historical and engineering units where heat is quantified in calories (the thermal energy required to raise 1 gram of water by 1 °C), J represents the fundamental conversion factor: J ≈ 4.1860 J/cal.",
+        "formula": "W = V \\cdot I \\cdot t = I^2 R \\cdot t = J \\cdot Q = J \\cdot C_{\\text{sys}} \\Delta T, \\quad J \\approx 4.1860 \\; \\text{J cal}^{-1}",
+        "question": "How does Joule's law of electrical heating demonstrate the First Law of Thermodynamics in an electrical calorimeter?",
+        "answer": "The electrical power supply does work on electrons (W = V I t), which is transferred via microscopic collisions into random molecular kinetic energy in the water. Because energy cannot be created or destroyed, the electrical work input W equals the thermal heat gained by the water and vessel (Q = C_sys ΔT), proving that work and heat are interchangeable forms of energy related by J = 4.186 J/cal."
+      },
+      {
+        "title": "Definition of the Calorie and International Thermal Standards",
+        "text": "The calorie was historically defined as the quantity of heat required to raise the temperature of one gram of air-free water by one degree Celsius under standard atmospheric pressure (101.325 kPa). However, because the specific heat capacity of liquid water c_w(T) varies slightly with temperature (exhibiting a minimum of 4.178 J/g °C at 35 °C and rising to 4.218 J/g °C near 0 °C and 100 °C), several precise definitions emerged: (1) The 15 °C calorie (cal₁₅): The heat required to raise 1 g of water from 14.5 °C to 15.5 °C, experimentally measured as 4.1855 J. (2) The Thermochemical Calorie (cal_th): Formally defined by the National Bureau of Standards in 1935 as exactly 4.184 J. (3) The International Steam Table Calorie (cal_IT): Defined by the Fifth International Conference on Properties of Steam (London, 1956) as exactly 4.1868 J (1/860 of an international watt-hour). The value determined in this laboratory (J = 4.1860 J/cal) corresponds to the mean laboratory calorie across the 15 °C to 40 °C working range, directly matching standard NIST thermodynamic tables.",
+        "formula": "1 \\; \\text{cal}_{15} = 4.1855 \\; \\text{J}, \\quad 1 \\; \\text{cal}_{\\text{th}} = 4.1840 \\; \\text{J}, \\quad 1 \\; \\text{cal}_{\\text{IT}} = 4.1868 \\; \\text{J}, \\quad J_{\\text{mean}} = 4.1860 \\; \\text{J cal}^{-1}",
+        "question": "Why is the mechanical/electrical equivalent of heat J not a dimensionless number when heat is expressed in calories?",
+        "answer": "The calorie was defined independently based on the thermal properties of water before heat was recognized as a form of energy. Because work was measured in mechanical units (Joules = N·m = kg·m²/s²) while heat was measured in thermal units (calories), J carries the physical dimension of energy per unit heat (Joules per calorie)."
+      },
+      {
+        "title": "Calorimeter Water Equivalent and Heat Capacity Calibration",
+        "text": "In any quantitative calorimetry experiment, the heat produced by the immersion heater is shared between the liquid water and the surrounding apparatus components in contact with it: the inner copper vessel, the brass heater sheath, the glass thermometer bulb, and the motorized stirrer paddle. The total heat capacity of the system C_sys (in cal/°C) is the sum of these contributions: C_sys = m_w c_w + m_vessel c_Cu + C_accessories. To simplify calculations, physicists define the 'water equivalent' (W_eq) of the calorimeter as the mass of water that would absorb the exact same quantity of heat as the metal vessel and accessories for the same temperature rise: W_eq = (m_vessel c_Cu + C_accessories) / c_w. For our 100.0 g copper vessel (specific heat c_Cu = 0.093 cal/g °C) and immersion accessories, W_eq = 9.3 g of water. Adding this to the 250.0 g of distilled water gives an effective system heat capacity of C_sys = (250.0 + 9.3) × 1.000 = 259.3 cal/°C. Neglecting the water equivalent would cause an immediate systematic underestimation of heat absorbed by 3.6%, distorting the calculated value of J.",
+        "formula": "W_{\\text{eq}} = \\sum m_i \\left(\\frac{c_i}{c_w}\\right) = 9.3 \\; \\text{g}, \\quad C_{\\text{sys}} = (m_w + W_{\\text{eq}}) c_w = 259.3 \\; \\text{cal } ^\\circ\\text{C}^{-1}",
+        "question": "How can the water equivalent W_eq of a calorimeter be determined experimentally without relying on published specific heat tables?",
+        "answer": "By the method of mixtures: pour a known mass of cold water at temperature T₁ into the calorimeter, add a known mass of warm water at temperature T₂, and measure the final equilibrium mixture temperature T_m. Applying heat conservation allows W_eq to be calculated directly from the observed temperatures and masses."
+      },
+      {
+        "title": "Newton's Law of Cooling and Radiation Loss Compensation",
+        "text": "Because the calorimeter vessel operates at a temperature different from the ambient room, heat exchange inevitably occurs across the boundary via thermal conduction, convection, and radiation. According to Newton's Law of Cooling, the rate of heat loss to the surroundings is proportional to the temperature excess over the environment: dQ_loss / dt = k · A · (T − T_ambient). If uncorrected, this heat loss causes the final temperature T to be lower than theoretical, making Q appear too small and inflating the calculated J. To eliminate this systematic error without tedious numerical integration, Count Rumford developed the Method of Equal Temperature Differentials (Rumford compensation). The water is initially cooled so that its starting temperature T₀ is exactly as far below room temperature as its expected final temperature T_f is above room temperature: T_ambient − T₀ = T_f − T_ambient = ΔT / 2. During the first half of the heating run, heat flows from the warmer room into the colder calorimeter; during the second half, heat flows from the hotter calorimeter into the room. Because the heating curve is nearly linear, the two integrated heat exchanges cancel out almost perfectly: ∮ dQ_ambient dt ≈ 0.",
+        "formula": "\\frac{dQ_{\\text{loss}}}{dt} = k(T - T_{\\text{env}}), \\quad \\text{Rumford Condition: } T_{\\text{env}} - T_0 = T_f - T_{\\text{env}} \\implies \\int_0^t \\frac{dQ_{\\text{loss}}}{dt} dt \\approx 0",
+        "question": "If an experimenter starts the heating run with water already at room temperature (20 °C) and heats it to 35 °C, will the resulting estimate of J be too high or too low?",
+        "answer": "The estimate of J will be too high. Because the calorimeter is warmer than the room throughout the entire trial, it continually loses heat to the surroundings. The measured temperature rise ΔT and calculated heat Q will be lower than they should be, and since J = W / Q, dividing the known electrical work W by an artificially small Q yields an inflated value for J."
+      },
+      {
+        "title": "Linear Regression Analysis of Work vs. Heat Absorption",
+        "text": "Plotting total electrical energy W = V · I · t (in Joules) against the heat absorbed Q = C_sys · ΔT (in calories) transforms the data into a standard linear model: W = J · Q + b, where independent variable x = Q (in cal), dependent variable y = W (in J), slope m = J (in J/cal), and intercept b is ideally 0.0 J. Ordinary least-squares regression across six distinct heating durations (120 s to 720 s) averages out thermometer reading quantization (±0.02 °C) and timer switching latency. The slope directly yields the electrical equivalent of heat J_est. The reciprocal of the slope represents the heat equivalent of electrical energy: a = 1 / J (in calories per Joule, a ≈ 0.2389 cal/J), which represents the exact quantity of thermal heat generated by one Joule of electrical work. Furthermore, the vertical intercept b serves as a diagnostic indicator: a positive intercept indicates that a constant amount of electrical energy was consumed in heating the vessel wall before the thermometer began to respond, while a negative intercept reflects initial heat absorbed from the room.",
+        "formula": "J = m_{\\text{slope}} = \\frac{\\sum (Q_i - \\bar{Q})(W_i - \\bar{W})}{\\sum (Q_i - \\bar{Q})^2}, \\quad a = \\frac{1}{J} \\approx 0.23889 \\; \\text{cal J}^{-1}, \\quad b = \\bar{W} - J \\bar{Q}",
+        "question": "What is the physical significance of the inverse slope a = 1 / J in the graph of electrical work versus heat absorbed?",
+        "answer": "The quantity a = 1 / J is the heat equivalent of electrical energy, expressing how many calories of thermal energy are produced by each Joule of electrical work (a = 0.2389 cal/J). Historically, this constant allowed electrical engineers to calculate thermal heating in cables and motors directly from electrical power."
+      },
+      {
+        "title": "Mechanical (Callendar) vs. Electrical Calorimetry Methods",
+        "text": "A comparison between mechanical friction calorimetry (such as the Callendar-Rowland rotating drum method used in Lab 29) and electrical immersion calorimetry highlights major advances in experimental metrology. In mechanical calorimetry, work is performed against mechanical friction: W = 2π r M g N. Mechanical methods suffer from several intractable systematic errors: mechanical wear of the friction belt, audible acoustic noise radiation, air turbulence, and non-uniform frictional heat generation across the drum surface. In contrast, electrical calorimetry eliminates all mechanical moving contacts: electrical power is delivered directly inside the fluid volume by a stationary resistance coil and can be measured with digital voltmeters and ammeters with extraordinary accuracy (< 0.05%). Furthermore, electrical heating allows instantaneous on-off switching, constant power regulation via electronic supplies, and complete immersion of the heating source, ensuring that nearly 100% of the dissipated energy enters the liquid.",
+        "formula": "\\text{Mechanical: } W = 2\\pi r M g N \\pm \\Delta W_{\\text{friction}}, \\qquad \\text{Electrical: } W = \\int_0^t V(t) I(t) dt \\pm 0.05\\%",
+        "question": "Why is electrical heating vastly more accurate and reproducible than mechanical friction for determining Joule’s constant?",
+        "answer": "Electrical work W = V I t can be measured with high-precision digital meters without friction fluctuations or acoustic noise dissipation, and the heating coil is completely submerged inside the water, ensuring that 100% of the dissipated electrical energy enters the liquid without surface losses."
+      },
+      {
+        "title": "Lead Resistance and Stirrer Energy Dissipation Corrections",
+        "text": "In high-precision electrical calorimetry, two subtle sources of systematic error must be accounted for: lead wire resistance and mechanical stirrer power dissipation. (1) Lead Resistance: The connecting wires between the power supply and calorimeter possess finite resistance (R_lead ≈ 0.05 Ω). If voltage is measured at the power supply terminals, the calculated energy includes heat dissipated in the external room wiring. To eliminate this error, voltmeter leads must be connected directly to the calorimeter binding posts (four-terminal Kelvin sensing), ensuring that only the voltage drop across the submerged heater is integrated. (2) Stirrer Dissipation: Mechanical stirring rotates a paddle through viscous water, doing fluid work that is converted by viscous shear into heat: P_stirrer = τ · ω. If stirring is too vigorous (e.g., high-speed motorized blade), stirrer work can add 0.5 to 1.0 mW, inflating the measured temperature rise. By using a low-speed (60 rpm) spiral stirrer and non-conducting shaft, stirrer power is kept strictly below 0.02 mW, which contributes less than 0.005 °C over a 10-minute trial.",
+        "formula": "P_{\\text{measured}} = V_{\\text{terminal}} \\cdot I = P_{\\text{submerged}}, \\quad P_{\\text{stirrer}} = \\tau \\cdot \\omega < 0.02 \\; \\text{mW} \\ll P_{\\text{heater}} = 25000 \\; \\text{mW}",
+        "question": "Why should the voltmeter leads be connected directly to the calorimeter binding posts rather than to the power supply output terminals?",
+        "answer": "Connecting the voltmeter directly to the calorimeter posts ensures that the measured voltage V represents solely the potential drop across the submerged heating coil, excluding any ohmic voltage drops along the high-current power supply leads."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "An electrical immersion heater operating at 10.00 V and 2.500 A is submerged in a calorimeter for 5.00 minutes (300 s). How much electrical energy is delivered to the system?",
+        "options": [
+          "250.0 J",
+          "1500.0 J",
+          "7500.0 J",
+          "15000.0 J"
+        ],
+        "correct": 2,
+        "explanation": "Electrical power is P = V · I = 10.00 V × 2.500 A = 25.00 W. Total electrical energy is W = P · t = 25.00 W × 300 s = 7500.0 J."
+      },
+      {
+        "question": "If 7500.0 J of electrical energy raises the temperature of a calorimeter system (heat capacity C_sys = 259.3 cal/°C) by 6.91 °C, what is the calculated value of Joule’s constant J?",
+        "options": [
+          "1.000 J/cal",
+          "3.142 J/cal",
+          "4.186 J/cal",
+          "9.807 J/cal"
+        ],
+        "correct": 2,
+        "explanation": "Heat absorbed in calories is Q = C_sys · ΔT = 259.3 cal/°C × 6.91 °C = 1791.76 cal. Joule’s constant is J = W / Q = 7500.0 J / 1791.76 cal = 4.1858 J/cal ≈ 4.186 J/cal."
+      },
+      {
+        "question": "In Rumford’s cooling compensation method, how should the initial water temperature T₀ be chosen relative to ambient room temperature T_env?",
+        "options": [
+          "T₀ should be exactly equal to the boiling point of water",
+          "T₀ should be as far below room temperature as the final temperature T_f will be above room temperature",
+          "T₀ should be exactly equal to room temperature",
+          "T₀ should be 10 °C above room temperature"
+        ],
+        "correct": 1,
+        "explanation": "By setting T_env − T₀ = T_f − T_env, heat gained from the room during the first half of the experiment cancels out heat lost to the room during the second half, neutralizing radiation errors."
+      },
+      {
+        "question": "What is the relationship between the mechanical equivalent of heat J (in J/cal) and the heat equivalent of electrical energy a (in cal/J)?",
+        "options": [
+          "a = J²",
+          "a = 1 / J",
+          "a = J / 4.186",
+          "a = 2π J"
+        ],
+        "correct": 1,
+        "explanation": "The two quantities are reciprocals of each other: J represents Joules per calorie (4.1860 J/cal), while a represents calories per Joule (a = 1 / J = 0.2389 cal/J)."
+      }
+    ],
+    "intro": "Joule's law of electrical heating establishes that the electrical energy delivered by a power supply is converted quantitatively into thermal internal energy. In an electrical calorimeter, a submerged heating coil of resistance R carries current I under potential difference V for duration t, dissipating electrical energy W = V · I · t. This energy is absorbed by the surrounding water and calorimeter vessel, raising their temperature by ΔT according to Q = C_sys · ΔT. By measuring the temperature rise across six distinct heating durations and applying linear regression, students determine Joule's constant (J = W / Q), verify the electrical equivalent of heat (J = 4.1860 J/cal), and calculate the heat equivalent of electrical energy (a = 1/J = 0.2389 cal/J).",
+    "limitations": "Calculations assume uniform thermal mixing without fluid stagnation, negligible heat loss to the ambient environment under Rumford radiation compensation, and negligible mechanical energy added by the stirrer.",
+    "modelExtra": "Real calorimeters exhibit small convection losses governed by Newton’s law of cooling (dQ/dt = k(T − T_env)) and slight temperature lag in the thermometer bulb during rapid heating.",
+    "precautions": [
+      "Maintain continuous gentle stirring to ensure uniform water temperature throughout the vessel without adding frictional heat.",
+      "Connect the voltmeter leads directly to the calorimeter binding posts to avoid measuring lead resistance drops.",
+      "Keep the heating coil completely submerged in water at all times to prevent burnout and ensure 100% heat transfer.",
+      "Wait for the thermometer reading to reach its absolute peak after switching off the heater before recording the final temperature.",
+      "Ensure the starting temperature is slightly below room temperature so that ambient heat gain cancels post-heating cooling loss."
+    ]
   }
 ]
