@@ -53,6 +53,7 @@ function drawComparativeSim(t,p,v,phase,ink,soft,orange){
   const isElec=['ohms-law','metre-bridge','rc-charging'].includes(cfg.slug);
   const isSound=['resonance-air-column','modes-air-column','vibration-strings-sonometer','interference-sound-waves'].includes(cfg.slug);
   const isElectrostatic=['electrostatics'].includes(cfg.slug);
+  const isMagnetic=['magnetic-fields'].includes(cfg.slug);
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
   const text=(x,y,str,color='#9fb498',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
@@ -314,6 +315,45 @@ function drawComparativeSim(t,p,v,phase,ink,soft,orange){
     });
     svg+=text(360,305,'Coulomb Law in Matter: F = (1 / 4πε₀κ) (q₁q₂ / r²) · Polarization P⃗ = ε₀(κ − 1)E⃗',soft,10);
   }
+  else if(isMagnetic){
+    const gX=60,gY=55,gW=340,gH=210;
+    svg+='<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#14221e" stroke="'+soft+'" stroke-width="1.5" rx="4"/>';
+    svg+=text(gX+gW/2,gY-15,'GEOMAGNETIC LATITUDE & COMPONENT DECOMPOSITION (B_H, B_V, I_d)','#e2ecd7',11);
+    const stations=[
+      {loc:'Magnetic Equator (0° Lat)',bh:'39.0 μT',bv:'0.0 μT',dip:'0.0°',kVal:'124.1 mA',col:ink,desc:'Pure horizontal field · Maximal galvanometer torque'},
+      {loc:'Mid-Latitude Lab (45° Lat)',bh:'35.0 μT',bv:'42.0 μT',dip:'50.2°',kVal:'111.4 mA',col:orange,desc:'Standard reference station · Moderate dip angle'},
+      {loc:'High Sub-Polar (70° Lat)',bh:'14.0 μT',bv:'52.0 μT',dip:'74.9°',kVal:'44.6 mA',col:'#38bdf8',desc:'Steep vertical dip · Compressed reduction factor'}
+    ];
+    stations.forEach((st,idx)=>{
+      const rowY=gY+35+idx*55;
+      svg+='<text x="'+(gX+18)+'" y="'+(rowY-8)+'" fill="'+st.col+'" font-size="10" font-weight="bold">'+st.loc+'</text>';
+      svg+='<text x="'+(gX+gW-18)+'" y="'+(rowY-8)+'" text-anchor="end" fill="'+st.col+'" font-size="10" font-family="monospace">B_H = '+st.bh+' (Dip '+st.dip+')</text>';
+      svg+='<rect x="'+(gX+18)+'" y="'+rowY+'" width="'+(gW-36)+'" height="14" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+      const bhNum=parseFloat(st.bh);
+      const barW=((bhNum/45.0)*(gW-36)).toFixed(1);
+      svg+='<rect x="'+(gX+18)+'" y="'+rowY+'" width="'+barW+'" height="14" rx="3" fill="'+st.col+'"/>';
+      const pulseX=gX+18+((phase*(bhNum/20.0))%1)*(gW-36);
+      svg+='<circle cx="'+pulseX.toFixed(1)+'" cy="'+(rowY+7)+'" r="4.5" fill="#fde68a" stroke="#fff" stroke-width="1"/>';
+      svg+='<text x="'+(gX+22)+'" y="'+(rowY+26)+'" fill="#9fb498" font-size="8">'+st.desc+' · K = '+st.kVal+'</text>';
+    });
+    const bX=425,bY=55,bW=265,bH=210;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'MAGNETIC INCLINATION & TOTAL FIELD B','#718e79',9.5);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+    const geoStats=[
+      {zone:'Equatorial Zone',tot:'B = 39.0 μT',tanDip:'tan I_d = 0.00',col:ink},
+      {zone:'Mid-Latitude Zone',tot:'B = 54.7 μT',tanDip:'tan I_d = 1.20',col:orange},
+      {zone:'Polar Circle Zone',tot:'B = 53.8 μT',tanDip:'tan I_d = 3.71',col:'#38bdf8'}
+    ];
+    geoStats.forEach((s,idx)=>{
+      const rowY=bY+52+idx*46;
+      svg+='<circle cx="'+(bX+22)+'" cy="'+(rowY-4)+'" r="4.5" fill="'+s.col+'"/>';
+      svg+='<text x="'+(bX+34)+'" y="'+rowY+'" fill="'+s.col+'" font-size="11" font-weight="bold">'+s.zone+'</text>';
+      svg+='<text x="'+(bX+34)+'" y="'+(rowY+15)+'" fill="#9fb498" font-size="8.5">'+s.tot+' · '+s.tanDip+'</text>';
+      if(idx<2)svg+='<line x1="'+(bX+20)+'" y1="'+(rowY+24)+'" x2="'+(bX+bW-20)+'" y2="'+(rowY+24)+'" stroke="#253a34" stroke-dasharray="2 2"/>';
+    });
+    svg+=text(360,305,'Tangent Law: B_coil = B_H tan θ ⇔ I = K tan θ · Reduction Factor K = 2 R B_H / (μ₀ N)',soft,10);
+  }
   else{
     const gX=60,gY=55,gW=340,gH=210;
     svg+='<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#14221e" stroke="'+soft+'" stroke-width="1.5" rx="4"/>';
@@ -371,6 +411,7 @@ function drawDynamicSandbox(t,p,v,phase,ink,soft,orange){
   const isElec=['ohms-law','metre-bridge','rc-charging'].includes(cfg.slug);
   const isSound=['resonance-air-column','modes-air-column','vibration-strings-sonometer','interference-sound-waves'].includes(cfg.slug);
   const isElectrostatic=['electrostatics'].includes(cfg.slug);
+  const isMagnetic=['magnetic-fields'].includes(cfg.slug);
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
   const text=(x,y,str,color='#9fb498',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
@@ -654,6 +695,67 @@ function drawDynamicSandbox(t,p,v,phase,ink,soft,orange){
     svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+168)+'" text-anchor="middle" fill="#fde68a" font-size="8">Internal Cavity: E⃗_inside ≡ 0 (Gauss Law)</text>';
     svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+182)+'" text-anchor="middle" fill="#9fb498" font-size="7.5">100% Net Charge Resides on Outer Surface: σ = ε₀ E_⊥</text>';
     svg+=text(360,305,'Coulomb Vector Superposition: E⃗_net = Σ E⃗_i · Electrostatic Energy Density u_E = ½ ε₀ E²',soft,10);
+  }
+  else if(isMagnetic){
+    const cX=50,cY=50,cW=340,cH=220;
+    svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#101c18" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+    svg+=text(cX+cW/2,cY-15,'2D BIOT-SAVART MAGNETIC FLUX & CIRCULATING VECTOR TRACERS','#e2ecd7',11);
+    const midX=cX+cW/2,midY=cY+cH/2;
+    // Circular coil cross-section: Top conductor (current out of page ⊙) and Bottom conductor (current into page ⊗)
+    const topWireY=cY+35,botWireY=cY+cH-35;
+    // Top wire element
+    svg+='<circle cx="'+midX+'" cy="'+topWireY+'" r="10" fill="#b45309" stroke="#d97706" stroke-width="2"/>';
+    svg+='<circle cx="'+midX+'" cy="'+topWireY+'" r="3" fill="#fff"/>';
+    svg+='<text x="'+(midX+16)+'" y="'+(topWireY+4)+'" fill="#fde68a" font-size="8.5" font-weight="bold">I ⊙ (Out of page)</text>';
+    // Bottom wire element
+    svg+='<circle cx="'+midX+'" cy="'+botWireY+'" r="10" fill="#b45309" stroke="#d97706" stroke-width="2"/>';
+    svg+='<line x1="'+(midX-4)+'" y1="'+(botWireY-4)+'" x2="'+(midX+4)+'" y2="'+(botWireY+4)+'" stroke="#fff" stroke-width="1.8"/>';
+    svg+='<line x1="'+(midX-4)+'" y1="'+(botWireY+4)+'" x2="'+(midX+4)+'" y2="'+(botWireY-4)+'" stroke="#fff" stroke-width="1.8"/>';
+    svg+='<text x="'+(midX+16)+'" y="'+(botWireY+4)+'" fill="#fde68a" font-size="8.5" font-weight="bold">I ⊗ (Into page)</text>';
+    // Concentric and joined magnetic flux contours (ellipses passing through coil center)
+    for(let r=1;r<=4;r++){
+      const rx=25*r+15,ry=18*r+10;
+      svg+='<ellipse cx="'+midX+'" cy="'+midY+'" rx="'+rx+'" ry="'+ry+'" fill="none" stroke="'+ink+'" stroke-width="1.2" opacity="'+(0.8-r*0.12)+'"/>';
+    }
+    // Dynamic circulating tracers along flux loops
+    for(let tr=0;tr<10;tr++){
+      const tNorm=((phase*1.5+tr/10)%1);
+      const tAng=tNorm*2*Math.PI;
+      const tX=midX+Math.cos(tAng)*65;
+      const tY=midY+Math.sin(tAng)*45;
+      svg+='<circle cx="'+tX.toFixed(1)+'" cy="'+tY.toFixed(1)+'" r="2.8" fill="#fde68a" opacity="0.9"/>';
+    }
+    // Center point with axial field vector B_coil pointing right
+    svg+='<circle cx="'+midX+'" cy="'+midY+'" r="4" fill="#ef4444"/>';
+    svg+='<line x1="'+(midX-35)+'" y1="'+midY+'" x2="'+(midX+35)+'" y2="'+midY+'" stroke="#ef4444" stroke-width="2.5"/>';
+    svg+='<path d="M '+(midX+35)+' '+midY+' L '+(midX+27)+' '+(midY-4)+' L '+(midX+27)+' '+(midY+4)+' Z" fill="#ef4444"/>';
+    svg+='<text x="'+(midX+42)+'" y="'+(midY+4)+'" fill="#ef4444" font-size="9" font-weight="bold">B⃗_coil</text>';
+    // Earth field vector B_H pointing up (North)
+    svg+='<line x1="'+midX+'" y1="'+(midY+30)+'" x2="'+midX+'" y2="'+(midY-30)+'" stroke="#22c55e" stroke-width="2.2"/>';
+    svg+='<path d="M '+midX+' '+(midY-30)+' L '+(midX-4)+' '+(midY-22)+' L '+(midX+4)+' '+(midY-22)+' Z" fill="#22c55e"/>';
+    svg+='<text x="'+(midX+8)+'" y="'+(midY-26)+'" fill="#22c55e" font-size="9" font-weight="bold">B⃗_H (North)</text>';
+    // Resultant vector B_res
+    svg+='<line x1="'+midX+'" y1="'+midY+'" x2="'+(midX+32)+'" y2="'+(midY-28)+'" stroke="'+orange+'" stroke-width="2" stroke-dasharray="3 2"/>';
+    svg+='<text x="'+(midX+36)+'" y="'+(midY-30)+'" fill="'+orange+'" font-size="8.5" font-weight="bold">B⃗_res (θ)</text>';
+
+    const bX=420,bY=50,bW=270,bH=220;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'AXIAL FIELD GRADIENT & HELMHOLTZ CONDITION','#718e79',9);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+58)+'" fill="'+ink+'" font-size="9">Central Uniformity Zone (Needle 2ℓ ≪ 2R)</text>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+65)+'" width="220" height="12" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+65)+'" width="216" height="12" rx="3" fill="'+ink+'"/>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+92)+'" fill="#9fb498" font-size="7.5">Field variation &lt; 0.2% within central r ≤ 0.15 R</text>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+115)+'" fill="'+orange+'" font-size="9">Magnetic Energy Density u_B = B² / (2μ₀)</text>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+122)+'" width="220" height="12" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+    const uB_bar=(150+Math.sin(phase*3)*45).toFixed(1);
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+122)+'" width="'+uB_bar+'" height="12" rx="3" fill="'+orange+'"/>';
+    // Helmholtz uniform pairing box
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+145)+'" width="220" height="52" rx="4" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+162)+'" text-anchor="middle" fill="#38bdf8" font-size="8.5" font-weight="bold">HELMHOLTZ COIL UNIFORMITY PAIR</text>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+176)+'" text-anchor="middle" fill="#fde68a" font-size="8">Coil Spacing d = R ⟹ d²B_z / dz² ≡ 0</text>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+190)+'" text-anchor="middle" fill="#9fb498" font-size="7.5">B_Helmholtz = (4/5)^(3/2) · (μ₀ N I / R) ≈ 0.7155 (μ₀ N I / R)</text>';
+    svg+=text(360,305,'Biot-Savart Law: dB⃗ = (μ₀/4π) [I (dℓ⃗ × r̂) / r²] · Central Field B_coil = μ₀ N I / (2R)',soft,10);
   }
   else{
     const cX=50,cY=50,cW=340,cH=220;
@@ -1015,8 +1117,120 @@ function draw(t){
     svg+='<text x="'+(bX+15)+'" y="'+(bY+184)+'" fill="#9fb498" font-size="8">q₁ = q₂ = 20.0 nC · ε₀ = 8.854 × 10⁻¹² F m⁻¹</text>';
     svg+='<line x1="'+(bX+15)+'" y1="'+(bY+195)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+195)+'" stroke="#253a34"/>';
     svg+=text(bX+15,bY+210,'F = k_e q² (1/r²) ⇔ k_e = m / q²',ink,9);
-    svg+=text(240,22,'Coulomb's Torsion Balance Electrostatic Apparatus');
-    svg+=text(240,308,'Coulomb's Law: F = k_e (q₁ q₂ / r²) · Permittivity ε₀ = 8.854 × 10⁻¹² F m⁻¹');
+    svg+=text(240,22,'Coulomb\'s Torsion Balance Electrostatic Apparatus');
+    svg+=text(240,308,'Coulomb\'s Law: F = k_e (q₁ q₂ / r²) · Permittivity ε₀ = 8.854 × 10⁻¹² F m⁻¹');
+  }
+  else if(cfg.slug==='magnetic-fields'){
+    const I_mA=p.input;
+    const theta_deg=v.raw;
+    const tan_theta=v.y;
+    // Bench table
+    svg+='<rect x="50" y="250" width="390" height="14" rx="2" fill="#1b2a26" stroke="'+soft+'" stroke-width="1.5"/>';
+    // Tangent Galvanometer Wooden Base & Leveling Tripod Screws
+    const bseX=110,bseY=230,bseW=190,bseH=20;
+    svg+='<rect x="'+bseX+'" y="'+bseY+'" width="'+bseW+'" height="'+bseH+'" rx="4" fill="#78350f" stroke="#451a03" stroke-width="2"/>';
+    // Brass Leveling Screws
+    svg+='<rect x="125" y="248" width="14" height="6" rx="1" fill="#d97706" stroke="#b45309" stroke-width="1"/>';
+    svg+='<rect x="270" y="248" width="14" height="6" rx="1" fill="#d97706" stroke="#b45309" stroke-width="1"/>';
+    // Vertical Brass Pillar
+    svg+='<rect x="198" y="175" width="14" height="55" rx="2" fill="#d97706" stroke="#b45309" stroke-width="1.5"/>';
+    // Galvanometer Circular Wooden Ring Frame (N = 50 turns copper coil)
+    const coilX=205,coilY=115,coilR=72;
+    svg+='<circle cx="'+coilX+'" cy="'+coilY+'" r="'+coilR+'" fill="none" stroke="#78350f" stroke-width="12"/>';
+    svg+='<circle cx="'+coilX+'" cy="'+coilY+'" r="'+coilR+'" fill="none" stroke="#b45309" stroke-width="8"/>';
+    svg+='<circle cx="'+coilX+'" cy="'+coilY+'" r="'+(coilR+4)+'" fill="none" stroke="#f59e0b" stroke-width="1" stroke-dasharray="2 2"/>';
+    svg+='<circle cx="'+coilX+'" cy="'+coilY+'" r="'+(coilR-4)+'" fill="none" stroke="#f59e0b" stroke-width="1" stroke-dasharray="2 2"/>';
+    svg+='<text x="'+coilX+'" y="32" text-anchor="middle" fill="#fde68a" font-size="8.5" font-weight="bold">50-Turn Vertical Circular Coil (R = 10.0 cm)</text>';
+    // Central Compass Box with Glass Face and Mirror Ring
+    const compR=38;
+    svg+='<circle cx="'+coilX+'" cy="'+coilY+'" r="'+compR+'" fill="#0f172a" stroke="#cbd5e1" stroke-width="2"/>';
+    // Anti-parallax mirror ring
+    svg+='<circle cx="'+coilX+'" cy="'+coilY+'" r="'+(compR-10)+'" fill="none" stroke="#38bdf8" stroke-width="2.5" opacity="0.7"/>';
+    // Protractor degree graduation marks (every 15° and 45°)
+    for(let a=0;a<24;a++){
+      const ang=(a/24)*2*Math.PI;
+      const r1=compR-4,r2=compR-(a%6===0?9:6);
+      const x1=coilX+Math.cos(ang)*r1,y1=coilY+Math.sin(ang)*r1;
+      const x2=coilX+Math.cos(ang)*r2,y2=coilY+Math.sin(ang)*r2;
+      svg+='<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="'+(a%6===0?'#fde68a':'#64748b')+'" stroke-width="'+(a%6===0?1.5:0.8)+'"/>';
+    }
+    // Cardinal labels: N, S, E, W
+    svg+='<text x="'+coilX+'" y="'+(coilY-compR+12)+'" text-anchor="middle" fill="#22c55e" font-size="7" font-weight="bold">N (0°)</text>';
+    svg+='<text x="'+coilX+'" y="'+(coilY+compR-6)+'" text-anchor="middle" fill="#22c55e" font-size="7" font-weight="bold">S (0°)</text>';
+    svg+='<text x="'+(coilX+compR-10)+'" y="'+(coilY+3)+'" text-anchor="middle" fill="#ef4444" font-size="6.5" font-weight="bold">90°</text>';
+    svg+='<text x="'+(coilX-compR+10)+'" y="'+(coilY+3)+'" text-anchor="middle" fill="#ef4444" font-size="6.5" font-weight="bold">90°</text>';
+
+    // Magnetic Needle & Aluminum Pointer Pivot Calculation
+    const theta_rad=(theta_deg*Math.PI)/180.0;
+    // Compass Needle (points along resultant field: theta away from North)
+    const ndlLen=16;
+    const nX1=coilX-Math.sin(theta_rad)*ndlLen,nY1=coilY-Math.cos(theta_rad)*ndlLen;
+    const nX2=coilX+Math.sin(theta_rad)*ndlLen,nY2=coilY+Math.cos(theta_rad)*ndlLen;
+    // Needle body: North tip (red), South tip (blue)
+    svg+='<line x1="'+coilX+'" y1="'+coilY+'" x2="'+nX1.toFixed(1)+'" y2="'+nY1.toFixed(1)+'" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"/>';
+    svg+='<line x1="'+coilX+'" y1="'+coilY+'" x2="'+nX2.toFixed(1)+'" y2="'+nY2.toFixed(1)+'" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/>';
+    // Aluminum Pointer (orthogonal to magnetic needle: length 32px each side)
+    const ptrLen=32;
+    const pX1=coilX-Math.cos(theta_rad)*ptrLen,pY1=coilY+Math.sin(theta_rad)*ptrLen;
+    const pX2=coilX+Math.cos(theta_rad)*ptrLen,pY2=coilY-Math.sin(theta_rad)*ptrLen;
+    svg+='<line x1="'+pX1.toFixed(1)+'" y1="'+pY1.toFixed(1)+'" x2="'+pX2.toFixed(1)+'" y2="'+pY2.toFixed(1)+'" stroke="#f8fafc" stroke-width="1.2"/>';
+    svg+='<circle cx="'+pX1.toFixed(1)+'" cy="'+pY1.toFixed(1)+'" r="1.5" fill="#ef4444"/>';
+    svg+='<circle cx="'+pX2.toFixed(1)+'" cy="'+pY2.toFixed(1)+'" r="1.5" fill="#ef4444"/>';
+    // Central Agate Jewel Pivot
+    svg+='<circle cx="'+coilX+'" cy="'+coilY+'" r="3.5" fill="#d97706" stroke="#fff" stroke-width="1"/>';
+
+    // Deflection readout angle arc
+    svg+='<text x="'+(coilX+compR+12)+'" y="'+(coilY-14)+'" fill="'+orange+'" font-size="9" font-weight="bold">θ = '+theta_deg.toFixed(2)+'°</text>';
+    svg+='<text x="'+(coilX+compR+12)+'" y="'+(coilY-2)+'" fill="'+soft+'" font-size="8">tan θ = '+tan_theta.toFixed(4)+'</text>';
+
+    // Bench Accessories: DC Power Supply & Reversing Pohl Commutator
+    // DC Supply
+    const psX=320,psY=165;
+    svg+='<rect x="'+psX+'" y="'+psY+'" width="48" height="38" rx="3" fill="#1e293b" stroke="'+soft+'" stroke-width="1.2"/>';
+    svg+='<rect x="'+(psX+6)+'" y="'+(psY+6)+'" width="36" height="12" rx="1" fill="#020617"/>';
+    svg+='<text x="'+(psX+24)+'" y="'+(psY+15)+'" text-anchor="middle" fill="#22c55e" font-size="7" font-family="monospace">'+(I_mA*0.042).toFixed(1)+' V</text>';
+    svg+='<circle cx="'+(psX+14)+'" cy="'+(psY+28)+'" r="3" fill="#ef4444"/>';
+    svg+='<circle cx="'+(psX+34)+'" cy="'+(psY+28)+'" r="3" fill="#0f172a" stroke="#64748b" stroke-width="1"/>';
+    svg+='<text x="'+(psX+24)+'" y="'+(psY+48)+'" text-anchor="middle" fill="#9fb498" font-size="7">DC Supply</text>';
+
+    // Pohl Commutator
+    const comX=390,comY=170;
+    svg+='<rect x="'+comX+'" y="'+comY+'" width="38" height="32" rx="3" fill="#78350f" stroke="#451a03" stroke-width="1.5"/>';
+    svg+='<circle cx="'+(comX+9)+'" cy="'+(comY+9)+'" r="2.5" fill="#d97706"/>';
+    svg+='<circle cx="'+(comX+29)+'" cy="'+(comY+9)+'" r="2.5" fill="#d97706"/>';
+    svg+='<circle cx="'+(comX+9)+'" cy="'+(comY+23)+'" r="2.5" fill="#d97706"/>';
+    svg+='<circle cx="'+(comX+29)+'" cy="'+(comY+23)+'" r="2.5" fill="#d97706"/>';
+    // Rocker cross-bars
+    svg+='<line x1="'+(comX+9)+'" y1="'+(comY+9)+'" x2="'+(comX+29)+'" y2="'+(comY+23)+'" stroke="#cbd5e1" stroke-width="1.5"/>';
+    svg+='<text x="'+(comX+19)+'" y="'+(comY+44)+'" text-anchor="middle" fill="#fde68a" font-size="7">Commutator</text>';
+
+    // Connecting wires
+    svg+='<path d="M '+(psX+14)+' '+(psY+31)+' Q '+(psX-15)+' 220 '+(coilX-10)+' 205" fill="none" stroke="#ef4444" stroke-width="1.2"/>';
+    svg+='<path d="M '+(psX+34)+' '+(psY+31)+' Q '+(comX-10)+' 215 '+(comX+9)+' '+(comY+23)+'" fill="none" stroke="#3b82f6" stroke-width="1.2"/>';
+
+    // HUD Card at x=470, y=45, w=220, h=220
+    const bX=470,bY=45,bW=220,bH=220;
+    const G_const=3.14159265e-4;
+    const BH_uT=35.00;
+    const K_mA=111.4;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#182824" stroke="'+soft+'" stroke-width="1.5"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#718e79" font-size="9">COIL DIRECT CURRENT (I)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+52)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+I_mA.toFixed(1)+'</text>';
+    svg+='<text x="'+(bX+105)+'" y="'+(bY+50)+'" fill="'+soft+'" font-size="11">mA</text>';
+    svg+='<text x="'+(bX+130)+'" y="'+(bY+50)+'" fill="#9fb498" font-size="8">(±0.1 mA)</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#718e79" font-size="9">COMPASS DEFLECTION (θ)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="18" font-family="monospace">'+theta_deg.toFixed(2)+'°</text>';
+    svg+='<text x="'+(bX+125)+'" y="'+(bY+108)+'" fill="#9fb498" font-size="8.5">(tan θ = '+tan_theta.toFixed(4)+')</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+125)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+125)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+144)+'" fill="#718e79" font-size="9">EARTH HORIZONTAL FIELD & REDUCTION</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+168)+'" fill="'+orange+'" font-size="15" font-family="monospace" font-weight="bold">'+BH_uT.toFixed(2)+' μT</text>';
+    svg+='<text x="'+(bX+125)+'" y="'+(bY+168)+'" fill="#9fb498" font-size="9">K = '+K_mA.toFixed(1)+' mA</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+184)+'" fill="#9fb498" font-size="8">G = μ₀ N / (2R) = 3.1416 × 10⁻⁴ T A⁻¹ · N = 50</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+195)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+195)+'" stroke="#253a34"/>';
+    svg+=text(bX+15,bY+210,'tan θ = (G / B_H) I ⇔ B_H = G / m',ink,9);
+    svg+=text(240,22,'Stewart & Gee Tangent Galvanometer Bench');
+    svg+=text(240,308,'Tangent Law: B_coil = B_H tan θ · Coil Field: B_coil = μ₀ N I / (2R)');
   }
 
 
