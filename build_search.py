@@ -16,7 +16,8 @@ def experiment_index(experiments):
   'newtons-cooling':'newtons law cooling thermal radiation rate decay temperature heat loss calorimeter water jacket',
   'solidification-cooling':'solidification cooling latent heat fusion salol phase change crystalline amorphous wax melting freezing plateau supercooling',
   'latent-heat-vaporization':'latent heat vaporization steam condensation water trap boiler calorimeter phase change enthalpy heat of transformation',
-  'latent-heat-fusion':'latent heat fusion ice melting calorimeter method mixtures enthalpy water equivalent phase change rumford radiation'}
+  'latent-heat-fusion':'latent heat fusion ice melting calorimeter method mixtures enthalpy water equivalent phase change rumford radiation',
+  'thermal-expansion':'thermal linear expansion dilatometer micrometer screw gauge electric contact copper rod steam jacket coefficient alpha elongation dilatation'}
  for exp in experiments:
   c=configs.get(exp['slug'],{});index.append({'slug':exp['slug'],'title':c.get('title',exp['title']),'subject':'physics','subjectName':'Physics','path':exp['page_path'],'summary':c.get('aim','Determine Planck’s constant from stopping potential and frequency.'),'keywords':' '.join([aliases.get(exp['slug'],''),*[a['name'] for a in c.get('apparatus',[])]])})
  return index
