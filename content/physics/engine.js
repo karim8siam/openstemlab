@@ -56,6 +56,8 @@ function drawComparativeSim(t,p,v,phase,ink,soft,orange){
   const isMagnetic=['magnetic-fields'].includes(cfg.slug);
   const isFieldMapping=['electric-fields'].includes(cfg.slug);
   const isMagMoments=['magnetic-moments'].includes(cfg.slug);
+  const isInternalR=['internal-resistance'].includes(cfg.slug);
+  const isInternalR=['internal-resistance'].includes(cfg.slug);
   const isFieldMapping=['electric-fields'].includes(cfg.slug);
   const isMagMoments=['magnetic-moments'].includes(cfg.slug);
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
@@ -433,6 +435,44 @@ function drawComparativeSim(t,p,v,phase,ink,soft,orange){
       if(idx<2)svg+='<line x1="'+(bX+20)+'" y1="'+(rowY+24)+'" x2="'+(bX+bW-20)+'" y2="'+(rowY+24)+'" stroke="#253a34" stroke-dasharray="2 2"/>';
     });
     svg+=text(360,305,'Gauss Tan-A Dipole Law: B_A = (μ₀/4π) [2Md / (d² − ℓ²)²] ≈ (μ₀/4π) (2M / d³) = B_H tan θ',soft,10);
+  }
+  else if(isInternalR){
+    const gX=60,gY=55,gW=340,gH=210;
+    svg+='<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#14221e" stroke="'+soft+'" stroke-width="1.5" rx="4"/>';
+    svg+=text(gX+gW/2,gY-15,'CELL ELECTROCHEMICAL CHEMISTRY & IMPEDANCE PROFILES','#e2ecd7',11);
+    const cells=[
+      {type:'Fresh Alkaline AA (Zn/MnO₂)',emf:'ℰ = 1.50V',rVal:'r = 0.15 Ω',iSc:'I_sc = 10.0 A',col:ink,desc:'High ionic mobility KOH electrolyte · Negligible voltage drop'},
+      {type:'Leclanché Primary (NH₄Cl)',emf:'ℰ = 1.50V',rVal:'r = 2.50 Ω',iSc:'I_sc = 0.60 A',col:orange,desc:'Standard laboratory cell · Linear ohmic internal loss'},
+      {type:'Aged Carbon-Zinc Cell',emf:'ℰ = 1.30V',rVal:'r = 8.50 Ω',iSc:'I_sc = 0.15 A',col:'#38bdf8',desc:'Depleted electrolyte paste · Severe voltage collapse under load'}
+    ];
+    cells.forEach((c,idx)=>{
+      const rowY=gY+35+idx*55;
+      svg+='<text x="'+(gX+18)+'" y="'+(rowY-8)+'" fill="'+c.col+'" font-size="10" font-weight="bold">'+c.type+'</text>';
+      svg+='<text x="'+(gX+gW-18)+'" y="'+(rowY-8)+'" text-anchor="end" fill="'+c.col+'" font-size="10" font-family="monospace">'+c.rVal+' ('+c.emf+')</text>';
+      svg+='<rect x="'+(gX+18)+'" y="'+rowY+'" width="'+(gW-36)+'" height="14" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+      const barW=(idx===0?(gW-36)*0.15:idx===1?(gW-36)*0.55:(gW-36)*0.95).toFixed(1);
+      svg+='<rect x="'+(gX+18)+'" y="'+rowY+'" width="'+barW+'" height="14" rx="3" fill="'+c.col+'"/>';
+      const pulseX=gX+18+((phase*(2.0+idx*0.7))%1)*(gW-36);
+      svg+='<circle cx="'+pulseX.toFixed(1)+'" cy="'+(rowY+7)+'" r="4.5" fill="#fde68a" stroke="#fff" stroke-width="1"/>';
+      svg+='<text x="'+(gX+22)+'" y="'+(rowY+26)+'" fill="#9fb498" font-size="8">'+c.desc+' · '+c.iSc+'</text>';
+    });
+    const bX=425,bY=55,bW=265,bH=210;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'MAXIMUM POWER & SHORT CIRCUIT','#718e79',9.5);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+    const cellStats=[
+      {name:'Fresh Alkaline AA',pMax:'P_max = 3.75 W',iShort:'I_sc = 10.0 A',col:ink},
+      {name:'Leclanché Cell (r = 2.50Ω)',pMax:'P_max = 225.0 mW',iShort:'I_sc = 0.60 A',col:orange},
+      {name:'Aged Carbon-Zinc',pMax:'P_max = 49.7 mW',iShort:'I_sc = 0.15 A',col:'#38bdf8'}
+    ];
+    cellStats.forEach((s,idx)=>{
+      const rowY=bY+52+idx*46;
+      svg+='<circle cx="'+(bX+22)+'" cy="'+(rowY-4)+'" r="4.5" fill="'+s.col+'"/>';
+      svg+='<text x="'+(bX+34)+'" y="'+rowY+'" fill="'+s.col+'" font-size="11" font-weight="bold">'+s.name+'</text>';
+      svg+='<text x="'+(bX+34)+'" y="'+(rowY+15)+'" fill="#9fb498" font-size="8.5">'+s.pMax+' · '+s.iShort+'</text>';
+      if(idx<2)svg+='<line x1="'+(bX+20)+'" y1="'+(rowY+24)+'" x2="'+(bX+bW-20)+'" y2="'+(rowY+24)+'" stroke="#253a34" stroke-dasharray="2 2"/>';
+    });
+    svg+=text(360,305,'Terminal Voltage: V = ℰ − I · r · Short-Circuit Current I_sc = ℰ / r · Max Power P_max = ℰ² / (4r)',soft,10);
   }
   else{
     const gX=60,gY=55,gW=340,gH=210;
@@ -954,6 +994,72 @@ function drawDynamicSandbox(t,p,v,phase,ink,soft,orange){
     svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+176)+'" text-anchor="middle" fill="#fde68a" font-size="8">B_exact / B_dipole = [1 − (ℓ/d)²]⁻² ≈ 1 + 2(ℓ/d)²</text>';
     svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+190)+'" text-anchor="middle" fill="#9fb498" font-size="7.5">Correction = +1.4% at d = 14 cm (2ℓ = 8.4 cm) · &lt; 0.5% for d &gt; 22 cm</text>';
     svg+=text(360,305,'Gauss End-On Axial Law: B_A = (μ₀/4π) [2Md / (d² − ℓ²)²] = B_H tan θ ⇔ tan θ ∝ 1/d³',soft,10);
+  }
+  else if(isInternalR){
+    const cX=50,cY=50,cW=340,cH=220;
+    svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#101c18" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+    svg+=text(cX+cW/2,cY-15,'CLOSED-LOOP POTENTIAL PROFILE & ION DRIFT DYNAMICS','#e2ecd7',11);
+    
+    // Battery Box at left
+    const batX=cX+20,batY=cY+25,batW=120,batH=165;
+    svg+='<rect x="'+batX+'" y="'+batY+'" width="'+batW+'" height="'+batH+'" rx="5" fill="#0f172a" stroke="#334155" stroke-width="1.5"/>';
+    svg+='<text x="'+(batX+batW/2)+'" y="'+(batY+16)+'" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="bold">PRIMARY CELL (ℰ = 1.50 V)</text>';
+    
+    // Anode (Zn - negative) and Cathode (MnO₂ / Carbon - positive)
+    svg+='<rect x="'+(batX+12)+'" y="'+(batY+30)+'" width="14" height="100" fill="#64748b"/>';
+    svg+='<text x="'+(batX+19)+'" y="'+(batY+142)+'" text-anchor="middle" fill="#93c5fd" font-size="8" font-weight="bold">− (Zn)</text>';
+    svg+='<rect x="'+(batX+batW-26)+'" y="'+(batY+30)+'" width="14" height="100" fill="#d97706"/>';
+    svg+='<text x="'+(batX+batW-19)+'" y="'+(batY+142)+'" text-anchor="middle" fill="#fca5a5" font-size="8" font-weight="bold">+ (C)</text>';
+    
+    // Electrolyte paste & ion drift particles
+    svg+='<rect x="'+(batX+30)+'" y="'+(batY+30)+'" width="'+(batW-60)+'" height="100" fill="#1e293b" opacity="0.6"/>';
+    svg+='<text x="'+(batX+batW/2)+'" y="'+(batY+42)+'" text-anchor="middle" fill="#718e79" font-size="7">Electrolyte Paste</text>';
+    for(let tr=0;tr<8;tr++){
+      const tNorm=((phase*1.2+tr/8)%1);
+      const ionX=batX+32+tNorm*(batW-64);
+      const ionY=batY+55+((tr*23)%65);
+      const isCat=tr%2===0;
+      svg+='<circle cx="'+ionX.toFixed(1)+'" cy="'+ionY.toFixed(1)+'" r="3.5" fill="'+(isCat?'#38bdf8':'#f59e0b')+'"/>';
+      svg+='<text x="'+ionX.toFixed(1)+'" y="'+(ionY+2.5)+'" text-anchor="middle" fill="#000" font-size="5" font-weight="bold">'+(isCat?'+':'−')+'</text>';
+    }
+
+    // Potential step graph inside the loop
+    const pX=cX+165,pY=cY+35,pW=155,pH=145;
+    svg+='<rect x="'+pX+'" y="'+pY+'" width="'+pW+'" height="'+pH+'" fill="#090d16" stroke="'+soft+'" stroke-width="1" rx="4"/>';
+    svg+=text(pX+pW/2,pY+14,'Closed Circuit Potential V(s)','#fde68a',7.5);
+    // Axis lines
+    svg+='<line x1="'+(pX+15)+'" y1="'+(pY+pH-20)+'" x2="'+(pX+pW-10)+'" y2="'+(pY+pH-20)+'" stroke="#334155"/>';
+    svg+='<line x1="'+(pX+15)+'" y1="'+(pY+25)+'" x2="'+(pX+15)+'" y2="'+(pY+pH-20)+'" stroke="#334155"/>';
+    svg+='<text x="'+(pX+12)+'" y="'+(pY+30)+'" text-anchor="end" fill="#cbd5e1" font-size="7">ℰ</text>';
+    svg+='<text x="'+(pX+12)+'" y="'+(pY+55)+'" text-anchor="end" fill="'+orange+'" font-size="7">V</text>';
+    svg+='<text x="'+(pX+12)+'" y="'+(pY+pH-18)+'" text-anchor="end" fill="#cbd5e1" font-size="7">0</text>';
+    
+    // Stepped potential polyline
+    const y0=pY+pH-20, yE=pY+30, yV=pY+55;
+    const x0=pX+15, x1=pX+35, x2=pX+65, x3=pX+120, x4=pX+pW-15;
+    svg+='<polyline points="'+x0+','+y0+' '+x1+','+yE+' '+x2+','+yV+' '+x3+','+yV+' '+x4+','+y0+'" fill="none" stroke="'+ink+'" stroke-width="2"/>';
+    svg+='<text x="'+((x1+x2)/2)+'" y="'+(yE-4)+'" text-anchor="middle" fill="#ef4444" font-size="6.5">−I·r drop</text>';
+    svg+='<text x="'+((x2+x3)/2)+'" y="'+(yV-4)+'" text-anchor="middle" fill="'+orange+'" font-size="6.5">V = ℰ − Ir</text>';
+    svg+='<text x="'+((x3+x4)/2)+'" y="'+(yV+20)+'" text-anchor="middle" fill="#38bdf8" font-size="6.5">−I·R_load</text>';
+
+    const bX=420,bY=50,bW=270,bH=220;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'MAXIMUM POWER TRANSFER DYNAMICS','#718e79',9);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+58)+'" fill="'+ink+'" font-size="9">Matched Condition: R_load = r = 2.50 Ω</text>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+65)+'" width="220" height="12" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+65)+'" width="220" height="12" rx="3" fill="'+ink+'"/>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+92)+'" fill="#9fb498" font-size="7.5">Maximum extractable power P_max = 225.0 mW</text>';
+    svg+='<text x="'+(bX+25)+'"; y="'+(bY+115)+'" fill="'+orange+'" font-size="9">Electrical Transmission Efficiency η = 50.0%</text>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+122)+'" width="220" height="12" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+    const uE_bar=(110+Math.sin(phase*3)*20).toFixed(1);
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+122)+'" width="'+uE_bar+'" height="12" rx="3" fill="'+orange+'"/>';
+    // Circuit matching card
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+145)+'" width="220" height="52" rx="4" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+162)+'" text-anchor="middle" fill="#38bdf8" font-size="8.5" font-weight="bold">KIRCHHOFF VOLTAGE LAW LOOP</text>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+176)+'" text-anchor="middle" fill="#fde68a" font-size="8">∮ E⃗ · dℓ⃗ = ℰ − I · r − I · R_load ≡ 0</text>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+190)+'" text-anchor="middle" fill="#9fb498" font-size="7.5">Terminal Voltage V = I · R_load = ℰ − I · r</text>';
+    svg+=text(360,305,'Ohm's Law in Closed Circuit: I = ℰ / (R_load + r) · Terminal Voltage: V = ℰ − I · r',soft,10);
   }
   else{
     const cX=50,cY=50,cW=340,cH=220;
@@ -1605,6 +1711,96 @@ function draw(t){
     svg+=text(bX+15,bY+210,'tan θ = [(2μ₀/4π) M / B_H] · (1/d³)',ink,9);
     svg+=text(240,22,'Gauss Deflection Magnetometer Bench (Tan-A Position)');
     svg+=text(240,308,'Axial Dipole Field: B_A = (μ₀ / 4π) (2M / d³) · Tangent Law: B_A = B_H tan θ');
+  }
+  else if(cfg.slug==='internal-resistance'){
+    const I_mA=p.input;
+    const I_A=I_mA/1000.0;
+    const V_meas=v.raw;
+    const P_mW=V_meas*I_mA;
+    const r_val=2.500;
+    const E_val=1.500;
+
+    // Bench table
+    svg+='<rect x="50" y="250" width="390" height="14" rx="2" fill="#1b2a26" stroke="'+soft+'" stroke-width="1.5"/>';
+
+    // Primary Cell (Leclanché dry cell) at x = 70, y = 140, w = 75, h = 95
+    const cX=70,cY=140,cW=75,cH=95;
+    svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="4" fill="#1e293b" stroke="#334155" stroke-width="2"/>';
+    svg+='<rect x="'+(cX+6)+'" y="'+(cY+18)+'" width="'+(cW-12)+'" height="'+(cH-24)+'" rx="2" fill="#0f172a"/>';
+    // Battery Terminals (+ brass post, - zinc post)
+    svg+='<rect x="'+(cX+14)+'" y="'+(cY-8)+'" width="10" height="8" rx="2" fill="#ef4444"/>';
+    svg+='<text x="'+(cX+19)+'" y="'+(cY-11)+'" text-anchor="middle" fill="#fca5a5" font-size="7.5" font-weight="bold">+</text>';
+    svg+='<rect x="'+(cX+cW-24)+'" y="'+(cY-8)+'" width="10" height="8" rx="2" fill="#3b82f6"/>';
+    svg+='<text x="'+(cX+cW-19)+'" y="'+(cY-11)+'" text-anchor="middle" fill="#93c5fd" font-size="7.5" font-weight="bold">−</text>';
+    // Cell labels
+    svg+='<text x="'+(cX+cW/2)+'" y="'+(cY+38)+'" text-anchor="middle" fill="'+orange+'" font-size="8.5" font-weight="bold">Primary Cell</text>';
+    svg+='<text x="'+(cX+cW/2)+'" y="'+(cY+52)+'" text-anchor="middle" fill="#cbd5e1" font-size="7.5">ℰ = 1.500 V</text>';
+    svg+='<text x="'+(cX+cW/2)+'" y="'+(cY+66)+'" text-anchor="middle" fill="#94a3b8" font-size="7">r = 2.500 Ω</text>';
+
+    // Precision Decade Resistance Box at x = 180, y = 155, w = 110, h = 80
+    const rbX=180,rbY=155,rbW=110,rbH=80;
+    svg+='<rect x="'+rbX+'" y="'+rbY+'" width="'+rbW+'" height="'+rbH+'" rx="4" fill="#332418" stroke="#5a3d28" stroke-width="2"/>';
+    svg+='<text x="'+(rbX+rbW/2)+'" y="'+(rbY+18)+'" text-anchor="middle" fill="#e2ecd7" font-size="8" font-weight="bold">Decade Resistance</text>';
+    // Resistance dials (x10, x1, x0.1)
+    const dPos=[rbX+25, rbX+55, rbX+85];
+    dPos.forEach((dx,idx)=>{
+      svg+='<circle cx="'+dx+'" cy="'+(rbY+42)+'" r="11" fill="#1b120c" stroke="#8c6239" stroke-width="1.5"/>';
+      svg+='<line x1="'+dx+'" y1="'+(rbY+42)+'" x2="'+(dx+6)+'" y2="'+(rbY+36)+'" stroke="#ef4444" stroke-width="1.5"/>';
+      svg+='<circle cx="'+dx+'" cy="'+(rbY+42)+'" r="3" fill="#d97706"/>';
+      svg+='<text x="'+dx+'" y="'+(rbY+65)+'" text-anchor="middle" fill="#cbd5e1" font-size="6.5">'+(idx===0?'x10':idx===1?'x1':'x0.1')+'</text>';
+    });
+    // Terminals on resistance box
+    svg+='<circle cx="'+(rbX+12)+'" cy="'+(rbY+72)+'" r="3.5" fill="#d97706"/>';
+    svg+='<circle cx="'+(rbX+rbW-12)+'" cy="'+(rbY+72)+'" r="3.5" fill="#d97706"/>';
+
+    // Digital DC Voltmeter at x = 70, y = 50, w = 75, h = 60
+    const vmX=70,vmY=50,vmW=75,vmH=60;
+    svg+='<rect x="'+vmX+'" y="'+vmY+'" width="'+vmW+'" height="'+vmH+'" rx="3" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>';
+    svg+='<rect x="'+(vmX+8)+'" y="'+(vmY+8)+'" width="'+(vmW-16)+'" height="20" rx="2" fill="#020617"/>';
+    svg+='<text x="'+(vmX+vmW/2)+'" y="'+(vmY+22)+'" text-anchor="middle" fill="#38bdf8" font-size="11" font-family="monospace" font-weight="bold">'+V_meas.toFixed(3)+' V</text>';
+    svg+='<text x="'+(vmX+vmW/2)+'" y="'+(vmY+44)+'" text-anchor="middle" fill="#cbd5e1" font-size="7">Digital Voltmeter</text>';
+    svg+='<text x="'+(vmX+vmW/2)+'" y="'+(vmY+54)+'" text-anchor="middle" fill="#94a3b8" font-size="6">(Z_in = 10 MΩ)</text>';
+    // Voltmeter Kelvin leads to cell terminals
+    svg+='<line x1="'+(vmX+18)+'" y1="'+(vmY+vmH)+'" x2="'+(cX+19)+'" y2="'+(cY-8)+'" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="2 2"/>';
+    svg+='<line x1="'+(vmX+vmW-18)+'" y1="'+(vmY+vmH)+'" x2="'+(cX+cW-19)+'" y2="'+(cY-8)+'" stroke="#3b82f6" stroke-width="1.2" stroke-dasharray="2 2"/>';
+
+    // Digital DC Ammeter at x = 320, y = 155, w = 90, h = 80
+    const amX=320,amY=155,amW=90,amH=80;
+    svg+='<rect x="'+amX+'" y="'+amY+'" width="'+amW+'" height="'+amH+'" rx="4" fill="#0f172a" stroke="#f59e0b" stroke-width="2"/>';
+    svg+='<rect x="'+(amX+8)+'" y="'+(amY+12)+'" width="'+(amW-16)+'" height="24" rx="2" fill="#020617"/>';
+    svg+='<text x="'+(amX+amW/2)+'" y="'+(amY+28)+'" text-anchor="middle" fill="#f59e0b" font-size="13" font-family="monospace" font-weight="bold">'+I_mA.toFixed(1)+' mA</text>';
+    svg+='<text x="'+(amX+amW/2)+'" y="'+(amY+52)+'" text-anchor="middle" fill="#e2ecd7" font-size="8" font-weight="bold">Digital Ammeter</text>';
+    svg+='<text x="'+(amX+amW/2)+'" y="'+(amY+65)+'" text-anchor="middle" fill="#94a3b8" font-size="6.5">R_shunt = 0.050 Ω</text>';
+
+    // Closed loop wiring:
+    svg+='<line x1="'+(cX+19)+'" y1="'+(cY-8)+'" x2="'+(cX+19)+'" y2="28" stroke="#ef4444" stroke-width="2"/>';
+    svg+='<line x1="'+(cX+19)+'" y1="28" x2="'+(rbX+12)+'" y2="28" stroke="#ef4444" stroke-width="2"/>';
+    svg+='<line x1="'+(rbX+12)+'" y1="28" x2="'+(rbX+12)+'" y2="'+(rbY+72)+'" stroke="#ef4444" stroke-width="2"/>';
+    svg+='<line x1="'+(rbX+rbW-12)+'" y1="'+(rbY+72)+'" x2="'+(amX+15)+'" y2="'+(rbY+72)+'" stroke="#ef4444" stroke-width="2"/>';
+    svg+='<line x1="'+(amX+amW-15)+'" y1="'+(amY+40)+'" x2="'+(amX+amW-15)+'" y2="240" stroke="#3b82f6" stroke-width="2"/>';
+    svg+='<line x1="'+(amX+amW-15)+'" y1="240" x2="'+(cX+cW-19)+'" y2="240" stroke="#3b82f6" stroke-width="2"/>';
+    svg+='<line x1="'+(cX+cW-19)+'" y1="240" x2="'+(cX+cW-19)+'" y2="'+(cY-8)+'" stroke="#3b82f6" stroke-width="2"/>';
+
+    // HUD Card at x=470, y=45, w=220, h=220
+    const bX=470,bY=45,bW=220,bH=220;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#182824" stroke="'+soft+'" stroke-width="1.5"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#718e79" font-size="9">DISCHARGE CURRENT (I)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+52)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+I_mA.toFixed(1)+'</text>';
+    svg+='<text x="'+(bX+110)+'"; y="'+(bY+50)+'" fill="'+soft+'" font-size="11">mA</text>';
+    svg+='<text x="'+(bX+135)+'" y="'+(bY+50)+'" fill="#9fb498" font-size="8">('+I_A.toFixed(3)+' A)</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#718e79" font-size="9">TERMINAL POTENTIAL DIFFERENCE (V)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="18" font-family="monospace">'+V_meas.toFixed(3)+' V</text>';
+    svg+='<text x="'+(bX+125)+'" y="'+(bY+108)+'" fill="#9fb498" font-size="8.5">P = '+P_mW.toFixed(1)+' mW</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+125)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+125)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+144)+'" fill="#718e79" font-size="9">CELL INTERNAL RESISTANCE & EMF</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+168)+'" fill="'+orange+'" font-size="15" font-family="monospace" font-weight="bold">'+r_val.toFixed(3)+'</text>';
+    svg+='<text x="'+(bX+90)+'" y="'+(bY+168)+'" fill="#9fb498" font-size="9">Ω (r = −m)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+184)+'" fill="#9fb498" font-size="8">ℰ = '+E_val.toFixed(3)+' V (b = ℰ) · I_sc = 600.0 mA</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+195)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+195)+'" stroke="#253a34"/>';
+    svg+=text(bX+15,bY+210,'V = ℰ − I · r ⇔ r = (ℰ − V) / I',ink,9);
+    svg+=text(240,22,'Cell Electromotive Force & Internal Resistance Bench');
+    svg+=text(240,308,'Terminal Characteristic: V = ℰ − I · r · Max Power: P_max = ℰ² / (4r) at R_load = r');
   }
 
 

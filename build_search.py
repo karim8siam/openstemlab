@@ -34,7 +34,8 @@ def experiment_index(experiments):
    'electrostatics':'electrostatics coulomb law electric charge induction gold leaf electroscope faraday ice pail proof plane permittivity electric field torsion balance repulsion dielectric',
    'magnetic-fields':'magnetic fields tangent galvanometer biot savart law circular coil earth horizontal magnetic component reduction factor compass needle dip needle helmholtz commutator pohl deflection',
    'electric-fields':'electric fields equipotential mapping lines potential gradient teledeltos paper conducting sheet parallel plates dipole concentric electrodes laplace equation voltmeter probe',
-   'magnetic-moments':'magnetic moments deflection magnetometer gauss tan-a tan-b end on broadside dipole moment inverse cube law vibration magnetometer oscillation period bar magnet alnico compass needle'}
+   'magnetic-moments':'magnetic moments deflection magnetometer gauss tan-a tan-b end on broadside dipole moment inverse cube law vibration magnetometer oscillation period bar magnet alnico compass needle',
+   'internal-resistance':'internal resistance electromotive force emf terminal voltage potential difference cell battery decade resistance box voltmeter ammeter maximum power transfer load current short circuit'}
  for exp in experiments:
   c=configs.get(exp['slug'],{});index.append({'slug':exp['slug'],'title':c.get('title',exp['title']),'subject':'physics','subjectName':'Physics','path':exp['page_path'],'summary':c.get('aim','Determine Planck’s constant from stopping potential and frequency.'),'keywords':' '.join([aliases.get(exp['slug'],''),*[a['name'] for a in c.get('apparatus',[])]])})
  return index
