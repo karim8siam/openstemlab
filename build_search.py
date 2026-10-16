@@ -27,7 +27,8 @@ def experiment_index(experiments):
    'loaded-spring':'loaded helical spring simple harmonic motion shm oscillation period rayleigh effective mass spring constant stiffness hooke law slotted weights',
    'pendulum-coincidence':'pendulum coincidence method master seconds clock simple harmonic motion gravity g beat frequency cathetometer border vernier time',
    'torsion-pendulum':'torsion pendulum shear modulus rigidity wire twisting inertia disc coulomb cavendish torque rotational harmonic oscillation',
-   'resonance-air-column':'resonance tube air column speed of sound acoustic standing waves water reservoir tuning fork end correction helmholtz wavelength frequency sound velocity node antinode'}
+   'resonance-air-column':'resonance tube air column speed of sound acoustic standing waves water reservoir tuning fork end correction helmholtz wavelength frequency sound velocity node antinode',
+   'modes-air-column':'modes vibration air column open closed organ pipe harmonics overtones siren disk acoustic standing waves dual end correction helmholtz rayleigh sound speed'}
  for exp in experiments:
   c=configs.get(exp['slug'],{});index.append({'slug':exp['slug'],'title':c.get('title',exp['title']),'subject':'physics','subjectName':'Physics','path':exp['page_path'],'summary':c.get('aim','Determine Planck’s constant from stopping potential and frequency.'),'keywords':' '.join([aliases.get(exp['slug'],''),*[a['name'] for a in c.get('apparatus',[])]])})
  return index
