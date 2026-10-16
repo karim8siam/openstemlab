@@ -36,7 +36,8 @@ def experiment_index(experiments):
    'electric-fields':'electric fields equipotential mapping lines potential gradient teledeltos paper conducting sheet parallel plates dipole concentric electrodes laplace equation voltmeter probe',
    'magnetic-moments':'magnetic moments deflection magnetometer gauss tan-a tan-b end on broadside dipole moment inverse cube law vibration magnetometer oscillation period bar magnet alnico compass needle',
    'internal-resistance':'internal resistance electromotive force emf terminal voltage potential difference cell battery decade resistance box voltmeter ammeter maximum power transfer load current short circuit',
-   'temperature-resistance':'temperature coefficient resistance rtd copper coil thermometer wheatstone bridge kelvin callendar van dusen drude model electron phonon scattering heating bath ice point'}
+   'temperature-resistance':'temperature coefficient resistance rtd copper coil thermometer wheatstone bridge kelvin callendar van dusen drude model electron phonon scattering heating bath ice point',
+   'faradays-law-electrolysis':'faraday law electrolysis electrochemical equivalent copper voltameter deposition cathode anode charge coulomb avogadro constant molar mass chemical equivalent'}
  for exp in experiments:
   c=configs.get(exp['slug'],{});index.append({'slug':exp['slug'],'title':c.get('title',exp['title']),'subject':'physics','subjectName':'Physics','path':exp['page_path'],'summary':c.get('aim','Determine Planck’s constant from stopping potential and frequency.'),'keywords':' '.join([aliases.get(exp['slug'],''),*[a['name'] for a in c.get('apparatus',[])]])})
  return index

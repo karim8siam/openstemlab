@@ -58,6 +58,8 @@ function drawComparativeSim(t,p,v,phase,ink,soft,orange){
   const isMagMoments=['magnetic-moments'].includes(cfg.slug);
   const isInternalR=['internal-resistance'].includes(cfg.slug);
   const isTempR=['temperature-resistance'].includes(cfg.slug);
+  const isFaraday=['faradays-law-electrolysis'].includes(cfg.slug);
+  const isFaraday=['faradays-law-electrolysis'].includes(cfg.slug);
   const isTempR=['temperature-resistance'].includes(cfg.slug);
   const isInternalR=['internal-resistance'].includes(cfg.slug);
   const isFieldMapping=['electric-fields'].includes(cfg.slug);
@@ -513,6 +515,44 @@ function drawComparativeSim(t,p,v,phase,ink,soft,orange){
       if(idx<2)svg+='<line x1="'+(bX+20)+'" y1="'+(rowY+24)+'" x2="'+(bX+bW-20)+'" y2="'+(rowY+24)+'" stroke="#253a34" stroke-dasharray="2 2"/>';
     });
     svg+=text(360,305,'Resistance Law: R(T) = R₀(1 + α T) ⇔ α = (1/R₀)(dR/dT) · Inferred Absolute Zero: T_abs = −1 / α',soft,10);
+  }
+  else if(isFaraday){
+    const gX=60,gY=55,gW=340,gH=210;
+    svg+='<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#14221e" stroke="'+soft+'" stroke-width="1.5" rx="4"/>';
+    svg+=text(gX+gW/2,gY-15,'FARADAY 2ND LAW: MASS PER 1000 C CHARGE (M / n F)','#e2ecd7',11);
+    const ions=[
+      {ion:'Silver (Ag⁺, n = 1)',ece:'Z = 1.1180 mg/C',m1k:'m_1000 = 1118.0 mg',col:ink,desc:'Monovalent noble cation · Historical international standard ampere'},
+      {ion:'Copper (Cu²⁺, n = 2)',ece:'Z = 0.3293 mg/C',m1k:'m_1000 = 329.3 mg',col:orange,desc:'Divalent transition cation · University laboratory reference standard'},
+      {ion:'Aluminum (Al³⁺, n = 3)',ece:'Z = 0.0932 mg/C',m1k:'m_1000 = 93.2 mg',col:'#38bdf8',desc:'Trivalent light metal cation · 12× lower mass per Coulomb than silver'}
+    ];
+    ions.forEach((item,idx)=>{
+      const rowY=gY+35+idx*55;
+      svg+='<text x="'+(gX+18)+'" y="'+(rowY-8)+'" fill="'+item.col+'" font-size="10" font-weight="bold">'+item.ion+'</text>';
+      svg+='<text x="'+(gX+gW-18)+'" y="'+(rowY-8)+'" text-anchor="end" fill="'+item.col+'" font-size="10" font-family="monospace">'+item.ece+'</text>';
+      svg+='<rect x="'+(gX+18)+'" y="'+rowY+'" width="'+(gW-36)+'" height="14" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+      const barW=(idx===0?(gW-36)*0.95:idx===1?(gW-36)*0.295:(gW-36)*0.083).toFixed(1);
+      svg+='<rect x="'+(gX+18)+'" y="'+rowY+'" width="'+barW+'" height="14" rx="3" fill="'+item.col+'"/>';
+      const pulseX=gX+18+((phase*(2.0+idx*0.7))%1)*(gW-36);
+      svg+='<circle cx="'+pulseX.toFixed(1)+'" cy="'+(rowY+7)+'" r="4.5" fill="#fde68a" stroke="#fff" stroke-width="1"/>';
+      svg+='<text x="'+(gX+22)+'" y="'+(rowY+26)+'" fill="#9fb498" font-size="8">'+item.desc+' · '+item.m1k+'</text>';
+    });
+    const bX=425,bY=55,bW=265,bH=210;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'CHEMICAL EQUIVALENT WEIGHT RATIOS','#718e79',9.5);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+    const equivStats=[
+      {name:'Silver Ag (M = 107.87, n = 1)',eq:'Eq = 107.87 g/eq',ratio:'Ratio = 3.395 × Cu',col:ink},
+      {name:'Copper Cu (M = 63.55, n = 2)',eq:'Eq = 31.77 g/eq',ratio:'Reference Baseline (1.000)',col:orange},
+      {name:'Aluminum Al (M = 26.98, n = 3)',eq:'Eq = 8.99 g/eq',ratio:'Ratio = 0.283 × Cu',col:'#38bdf8'}
+    ];
+    equivStats.forEach((s,idx)=>{
+      const rowY=bY+52+idx*46;
+      svg+='<circle cx="'+(bX+22)+'" cy="'+(rowY-4)+'" r="4.5" fill="'+s.col+'"/>';
+      svg+='<text x="'+(bX+34)+'" y="'+rowY+'" fill="'+s.col+'" font-size="11" font-weight="bold">'+s.name+'</text>';
+      svg+='<text x="'+(bX+34)+'" y="'+(rowY+15)+'" fill="#9fb498" font-size="8.5">'+s.eq+' · '+s.ratio+'</text>';
+      if(idx<2)svg+='<line x1="'+(bX+20)+'" y1="'+(rowY+24)+'" x2="'+(bX+bW-20)+'" y2="'+(rowY+24)+'" stroke="#253a34" stroke-dasharray="2 2"/>';
+    });
+    svg+=text(360,305,'Faraday's 2nd Law: m₁ / m₂ = (M₁ / n₁) / (M₂ / n₂) · Faraday Constant F = e N_A = 96485.3 C mol⁻¹',soft,10);
   }
   else{
     const gX=60,gY=55,gW=340,gH=210;
@@ -1152,6 +1192,67 @@ function drawDynamicSandbox(t,p,v,phase,ink,soft,orange){
     svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+176)+'" text-anchor="middle" fill="#fde68a" font-size="8">ρ_total(T) = ρ_impurity + ρ_phonon(T) ∝ T</text>';
     svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+190)+'" text-anchor="middle" fill="#9fb498" font-size="7.5">Debye Temperature Θ_D = 343 K (70 °C) for pure copper</text>';
     svg+=text(360,305,'Drude Conductivity: σ = n e² τ / m_e · Scattering Rate: 1/τ ∝ ⟨u²⟩ ∝ T ⟹ R(T) = R₀(1 + α T)',soft,10);
+  }
+  else if(isFaraday){
+    const cX=50,cY=50,cW=340,cH=220;
+    svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#101c18" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+    svg+=text(cX+cW/2,cY-15,'HELMHOLTZ DOUBLE-LAYER & CATHODIC REDUCTION','#e2ecd7',11);
+
+    // Cathode boundary at left (negative electrode)
+    const catX=cX+25, catY=cY+25, catW=18, catH=170;
+    svg+='<rect x="'+catX+'" y="'+catY+'" width="'+catW+'" height="'+catH+'" fill="#64748b" stroke="#94a3b8" stroke-width="1.5"/>';
+    svg+='<text x="'+(catX+catW/2)+'" y="'+(catY+catH-10)+'" text-anchor="middle" fill="#fca5a5" font-size="8" font-weight="bold">− (Cathode)</text>';
+    // Growing salmon-pink copper microcrystalline deposit layer
+    const depW=6+Math.min(12,(phase*2)%14);
+    svg+='<rect x="'+(catX+catW)+'" y="'+catY+'" width="'+depW+'" height="'+catH+'" fill="#b45309" stroke="#d97706" stroke-width="1"/>';
+    
+    // Anode boundary at right (positive electrode)
+    const anoX=cX+cW-40, anoY=cY+25, anoW=18, anoH=170;
+    svg+='<rect x="'+anoX+'" y="'+anoY+'" width="'+anoW+'" height="'+anoH+'" fill="#b45309" stroke="#d97706" stroke-width="1.5"/>';
+    svg+='<text x="'+(anoX+anoW/2)+'" y="'+(anoY+anoH-10)+'" text-anchor="middle" fill="#93c5fd" font-size="8" font-weight="bold">+ (Anode)</text>';
+
+    // Electrolyte solution space between electrodes
+    svg+='<rect x="'+(catX+catW+depW)+'" y="'+catY+'" width="'+(anoX-catX-catW-depW)+'" height="'+catH+'" fill="#0284c7" opacity="0.15"/>';
+    
+    // Hydrated Cu2+ cations drifting from anode toward cathode
+    for(let i=0;i<8;i++){
+      const tNorm=((phase*1.2+i/8)%1);
+      const cuX=anoX-tNorm*(anoX-catX-catW-depW);
+      const cuY=catY+25+((i*29)%120);
+      svg+='<circle cx="'+cuX.toFixed(1)+'" cy="'+cuY.toFixed(1)+'" r="4.5" fill="#38bdf8" stroke="#fff" stroke-width="0.8"/>';
+      svg+='<text x="'+cuX.toFixed(1)+'" y="'+(cuY+2.5)+'" text-anchor="middle" fill="#000" font-size="5" font-weight="bold">Cu²⁺</text>';
+    }
+    // Sulfate SO4^2- anions migrating toward anode
+    for(let j=0;j<5;j++){
+      const tNorm=((phase*0.8+j/5)%1);
+      const soX=catX+catW+depW+tNorm*(anoX-catX-catW-depW);
+      const soY=catY+35+((j*37)%110);
+      svg+='<circle cx="'+soX.toFixed(1)+'" cy="'+soY.toFixed(1)+'" r="4" fill="#f59e0b" opacity="0.75"/>';
+      svg+='<text x="'+soX.toFixed(1)+'" y="'+(soY+2)+'" text-anchor="middle" fill="#000" font-size="4" font-weight="bold">SO₄²⁻</text>';
+    }
+    // 2e- electron capture animation at cathode interface
+    const eY=catY+70+Math.sin(phase*5)*30;
+    svg+='<circle cx="'+(catX+catW+depW-2)+'" cy="'+eY.toFixed(1)+'" r="3" fill="#ef4444"/>';
+    svg+='<text x="'+(catX+catW+depW+18)+'" y="'+eY.toFixed(1)+'" fill="#fde68a" font-size="7" font-weight="bold">Cu²⁺ + 2e⁻ ⟶ Cu⁰</text>';
+
+    const bX=420,bY=50,bW=270,bH=220;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'QUANTIZED ATOMIC DEPOSITION RATE','#718e79',9);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+58)+'" fill="'+ink+'" font-size="9">Mass Deposition Rate dm/dt = Z · I</text>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+65)+'" width="220" height="12" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+65)+'" width="220" height="12" rx="3" fill="'+ink+'"/>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+92)+'" fill="#9fb498" font-size="7.5">Constant rate: 0.3293 mg s⁻¹ at I = 1.000 A</text>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+115)+'" fill="'+orange+'" font-size="9">Atomic Deposition Rate dN/dt = I / (2e)</text>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+122)+'" width="220" height="12" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+    const n_bar=(140+Math.sin(phase*3)*40).toFixed(1);
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+122)+'" width="'+n_bar+'" height="12" rx="3" fill="'+orange+'"/>';
+    // Faraday constant card
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+145)+'" width="220" height="52" rx="4" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+162)+'" text-anchor="middle" fill="#38bdf8" font-size="8.5" font-weight="bold">FARADAY & AVOGADRO RELATION</text>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+176)+'" text-anchor="middle" fill="#fde68a" font-size="8">F = e · N_A = 96485.3 C mol⁻¹ ⟹ N_A = F / e</text>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+190)+'" text-anchor="middle" fill="#9fb498" font-size="7.5">N_A ≈ 6.022 × 10²³ mol⁻¹ · Elementary charge e = 1.602 × 10⁻¹⁹ C</text>';
+    svg+=text(360,305,'Cathode Reaction: Cu²⁺ + 2e⁻ ⟶ Cu⁰ · Deposition: m = (M_Cu / 2F) I t ⇔ Z = M_Cu / 2F',soft,10);
   }
   else{
     const cX=50,cY=50,cW=340,cH=220;
@@ -1987,6 +2088,95 @@ function draw(t){
     svg+=text(bX+15,bY+210,'R(T) = R₀(1 + α T) ⇔ α = (R − R₀) / (R₀ T)',ink,9);
     svg+=text(240,22,'Resistance vs. Temperature Measurement Bench');
     svg+=text(240,308,'Linear Law: R = (R₀ α) T + R₀ · Inferred Absolute Zero: T_abs = −1 / α = −254.5 °C');
+  }
+  else if(cfg.slug==='faradays-law-electrolysis'){
+    const Q_C=p.input;
+    const m_g=v.raw;
+    const m_mg=m_g*1000.0;
+    const I_A=1.000;
+    const t_s=Q_C/I_A;
+    const t_min=t_s/60.0;
+    const Z_val=0.3293;
+    const F_val=96485.3;
+
+    // Bench table
+    svg+='<rect x="50" y="250" width="390" height="14" rx="2" fill="#1b2a26" stroke="'+soft+'" stroke-width="1.5"/>';
+
+    // Copper Voltameter Glass Jar at x = 70, y = 100, w = 140, h = 140
+    const vjX=70,vjY=100,vjW=140,vjH=140;
+    svg+='<rect x="'+vjX+'" y="'+vjY+'" width="'+vjW+'" height="'+vjH+'" rx="6" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>';
+    // Deep blue CuSO4 electrolyte solution
+    svg+='<rect x="'+(vjX+4)+'" y="'+(vjY+20)+'" width="'+(vjW-8)+'" height="'+(vjH-24)+'" rx="3" fill="#0369a1" opacity="0.45"/>';
+    svg+='<line x1="'+(vjX+4)+'" y1="'+(vjY+20)+'" x2="'+(vjX+vjW-4)+'" y2="'+(vjY+20)+'" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="3 2"/>';
+    svg+='<text x="'+(vjX+vjW/2)+'" y="'+(vjY+15)+'" text-anchor="middle" fill="#7dd3fc" font-size="7">Acidified CuSO₄ Solution</text>';
+
+    // Ebonite suspension crossbar
+    svg+='<rect x="'+(vjX-5)+'" y="'+(vjY+22)+'" width="'+(vjW+10)+'" height="8" rx="2" fill="#1e293b" stroke="#475569" stroke-width="1"/>';
+
+    // Outer Anode Plates (two copper plates on sides)
+    const an1X=vjX+22, an2X=vjX+vjW-34, anY=vjY+30, anW=12, anH=85;
+    svg+='<rect x="'+an1X+'" y="'+anY+'" width="'+anW+'" height="'+anH+'" fill="#b45309" stroke="#d97706" stroke-width="1"/>';
+    svg+='<rect x="'+an2X+'" y="'+anY+'" width="'+anW+'" height="'+anH+'" fill="#b45309" stroke="#d97706" stroke-width="1"/>';
+    svg+='<text x="'+(an1X+anW/2)+'" y="'+(anY+anH+12)+'" text-anchor="middle" fill="#fde68a" font-size="6.5">Anode (+)</text>';
+    svg+='<text x="'+(an2X+anW/2)+'" y="'+(anY+anH+12)+'" text-anchor="middle" fill="#fde68a" font-size="6.5">Anode (+)</text>';
+
+    // Central Removable Cathode Plate
+    const catX=vjX+vjW/2-7, catY=vjY+28, catW=14, catH=88;
+    svg+='<rect x="'+catX+'" y="'+catY+'" width="'+catW+'" height="'+catH+'" fill="#64748b" stroke="#94a3b8" stroke-width="1.2"/>';
+    // Salmon-pink copper crystalline deposit growing on cathode
+    const depThick=1.5+(Q_C/3600.0)*3.5;
+    svg+='<rect x="'+(catX-depThick)+'" y="'+(catY+5)+'" width="'+(catW+2*depThick)+'" height="'+(catH-10)+'" rx="1" fill="#ea580c" opacity="0.85"/>';
+    svg+='<text x="'+(catX+catW/2)+'" y="'+(catY+catH+12)+'" text-anchor="middle" fill="#fca5a5" font-size="7" font-weight="bold">Cathode (−)</text>';
+
+    // Regulated DC Power Supply at x = 250, y = 80, w = 85, h = 75
+    const psX=250,psY=80,psW=85,psH=75;
+    svg+='<rect x="'+psX+'" y="'+psY+'" width="'+psW+'" height="'+psH+'" rx="4" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>';
+    svg+='<rect x="'+(psX+8)+'" y="'+(psY+8)+'" width="'+(psW-16)+'" height="20" rx="2" fill="#020617"/>';
+    svg+='<text x="'+(psX+psW/2)+'" y="'+(psY+22)+'" text-anchor="middle" fill="#38bdf8" font-size="11" font-family="monospace" font-weight="bold">1.000 A</text>';
+    svg+='<text x="'+(psX+psW/2)+'" y="'+(psY+44)+'" text-anchor="middle" fill="#e2ecd7" font-size="7" font-weight="bold">DC Current Supply</text>';
+    svg+='<circle cx="'+(psX+22)+'" cy="'+(psY+60)+'" r="4" fill="#ef4444"/>';
+    svg+='<circle cx="'+(psX+psW-22)+'" cy="'+(psY+60)+'" r="4" fill="#3b82f6"/>';
+
+    // Analytical Balance Display Card at x = 250, y = 168, w = 150, h = 72
+    const abX=250,abY=168,abW=150,abH=72;
+    svg+='<rect x="'+abX+'" y="'+abY+'" width="'+abW+'" height="'+abH+'" rx="4" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/>';
+    svg+='<rect x="'+(abX+10)+'" y="'+(abY+10)+'" width="'+(abW-20)+'" height="26" rx="2" fill="#020617"/>';
+    svg+='<text x="'+(abX+abW/2)+'" y="'+(abY+28)+'" text-anchor="middle" fill="#10b981" font-size="16" font-family="monospace" font-weight="bold">+'+m_g.toFixed(4)+' g</text>';
+    svg+='<text x="'+(abX+abW/2)+'" y="'+(abY+50)+'" text-anchor="middle" fill="#e2ecd7" font-size="8" font-weight="bold">Analytical Balance (Δm)</text>';
+    svg+='<text x="'+(abX+abW/2)+'" y="'+(abY+62)+'" text-anchor="middle" fill="#94a3b8" font-size="6.5">Resolution: 0.1 mg · Tare m₀ zeroed</text>';
+
+    // Wiring:
+    // Power Supply (+) to Anodes
+    svg+='<line x1="'+(psX+22)+'" y1="'+(psY+60)+'" x2="'+(psX+22)+'" y2="50" stroke="#ef4444" stroke-width="1.8"/>';
+    svg+='<line x1="'+(psX+22)+'" y1="50" x2="'+(an1X+anW/2)+'" y2="50" stroke="#ef4444" stroke-width="1.8"/>';
+    svg+='<line x1="'+(an1X+anW/2)+'" y1="50" x2="'+(an1X+anW/2)+'" y2="'+anY+'" stroke="#ef4444" stroke-width="1.8"/>';
+    svg+='<line x1="'+(an1X+anW/2)+'" y1="50" x2="'+(an2X+anW/2)+'" y2="50" stroke="#ef4444" stroke-width="1.8"/>';
+    svg+='<line x1="'+(an2X+anW/2)+'" y1="50" x2="'+(an2X+anW/2)+'" y2="'+anY+'" stroke="#ef4444" stroke-width="1.8"/>';
+
+    // Cathode (−) back to Power Supply (−)
+    svg+='<line x1="'+(catX+catW/2)+'" y1="'+catY+'" x2="'+(catX+catW/2)+'" y2="60" stroke="#3b82f6" stroke-width="1.8"/>';
+    svg+='<line x1="'+(catX+catW/2)+'" y1="60" x2="'+(psX+psW-22)+'" y2="60" stroke="#3b82f6" stroke-width="1.8"/>';
+
+    // HUD Card at x=470, y=45, w=220, h=220
+    const bX=470,bY=45,bW=220,bH=220;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#182824" stroke="'+soft+'" stroke-width="1.5"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#718e79" font-size="9">ELECTRIC CHARGE & TIME</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+52)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+Q_C.toFixed(0)+'</text>';
+    svg+='<text x="'+(bX+95)+'" y="'+(bY+50)+'" fill="'+soft+'" font-size="11">C</text>';
+    svg+='<text x="'+(bX+125)+'" y="'+(bY+50)+'" fill="#9fb498" font-size="8">('+t_min.toFixed(1)+' min at 1.0 A)</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#718e79" font-size="9">DEPOSITED COPPER MASS (m)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="18" font-family="monospace">'+m_g.toFixed(4)+' g</text>';
+    svg+='<text x="'+(bX+125)+'" y="'+(bY+108)+'" fill="#9fb498" font-size="8.5">('+m_mg.toFixed(1)+' mg)</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+125)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+125)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+144)+'" fill="#718e79" font-size="9">ELECTROCHEMICAL EQUIVALENT (Z)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+168)+'" fill="'+orange+'" font-size="15" font-family="monospace" font-weight="bold">'+Z_val.toFixed(4)+'</text>';
+    svg+='<text x="'+(bX+85)+'" y="'+(bY+168)+'" fill="#9fb498" font-size="9">mg C⁻¹ (g/C × 1000)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+184)+'" fill="#9fb498" font-size="8">Faraday F = '+F_val.toFixed(0)+' C mol⁻¹ · N_A = 6.022 × 10²³</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+195)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+195)+'" stroke="#253a34"/>';
+    svg+=text(bX+15,bY+210,'m = Z · Q ⇔ Z = m / (I · t)',ink,9);
+    svg+=text(240,22,'Faraday's Law of Electrolysis (Copper Voltameter)');
+    svg+=text(240,308,'Faraday's 1st Law: m = Z · Q · Faraday Constant: F = M_Cu / (2Z) = 96485.3 C mol⁻¹');
   }
 
 
