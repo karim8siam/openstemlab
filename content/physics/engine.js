@@ -54,6 +54,7 @@ function drawComparativeSim(t,p,v,phase,ink,soft,orange){
   const isSound=['resonance-air-column','modes-air-column','vibration-strings-sonometer','interference-sound-waves'].includes(cfg.slug);
   const isElectrostatic=['electrostatics'].includes(cfg.slug);
   const isMagnetic=['magnetic-fields'].includes(cfg.slug);
+  const isFieldMapping=['electric-fields'].includes(cfg.slug);
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
   const text=(x,y,str,color='#9fb498',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
@@ -353,6 +354,44 @@ function drawComparativeSim(t,p,v,phase,ink,soft,orange){
       if(idx<2)svg+='<line x1="'+(bX+20)+'" y1="'+(rowY+24)+'" x2="'+(bX+bW-20)+'" y2="'+(rowY+24)+'" stroke="#253a34" stroke-dasharray="2 2"/>';
     });
     svg+=text(360,305,'Tangent Law: B_coil = B_H tan θ ⇔ I = K tan θ · Reduction Factor K = 2 R B_H / (μ₀ N)',soft,10);
+  }
+  else if(isFieldMapping){
+    const gX=60,gY=55,gW=340,gH=210;
+    svg+='<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#14221e" stroke="'+soft+'" stroke-width="1.5" rx="4"/>';
+    svg+=text(gX+gW/2,gY-15,'ELECTRODE GEOMETRY & POTENTIAL GRADIENT PROFILES (V vs x)','#e2ecd7',11);
+    const geos=[
+      {name:'Parallel Planar Plates',law:'Linear V(x) = E · x',eField:'E = 100.0 V/m (Uniform)',col:ink,desc:'Equidistant parallel planar equipotentials · Zero curvature'},
+      {name:'Coaxial Cylindrical Rings',law:'Logarithmic V(r) ∝ ln(r)',eField:'E(r) ∝ 1/r (Cylindrical)',col:orange,desc:'Concentric circular equipotentials · Crowding near center pin'},
+      {name:'Point Charge Dipole (+ / −)',law:'Dipole V ∝ cos θ / r²',eField:'E ∝ 1/r³ (Dipole axis)',col:'#38bdf8',desc:'Apollonian orthogonal curves · Strong polar field concentration'}
+    ];
+    geos.forEach((g,idx)=>{
+      const rowY=gY+35+idx*55;
+      svg+='<text x="'+(gX+18)+'" y="'+(rowY-8)+'" fill="'+g.col+'" font-size="10" font-weight="bold">'+g.name+'</text>';
+      svg+='<text x="'+(gX+gW-18)+'" y="'+(rowY-8)+'" text-anchor="end" fill="'+g.col+'" font-size="10" font-family="monospace">'+g.eField+'</text>';
+      svg+='<rect x="'+(gX+18)+'" y="'+rowY+'" width="'+(gW-36)+'" height="14" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+      const barW=(idx===0?(gW-36):idx===1?(gW-36)*0.75:(gW-36)*0.55).toFixed(1);
+      svg+='<rect x="'+(gX+18)+'" y="'+rowY+'" width="'+barW+'" height="14" rx="3" fill="'+g.col+'"/>';
+      const pulseX=gX+18+((phase*(2.0+idx*0.8))%1)*(gW-36);
+      svg+='<circle cx="'+pulseX.toFixed(1)+'" cy="'+(rowY+7)+'" r="4.5" fill="#fde68a" stroke="#fff" stroke-width="1"/>';
+      svg+='<text x="'+(gX+22)+'" y="'+(rowY+26)+'" fill="#9fb498" font-size="8">'+g.desc+' · '+g.law+'</text>';
+    });
+    const bX=425,bY=55,bW=265,bH=210;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'SPATIAL LAPLACE POTENTIAL LAWS','#718e79',9.5);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+    const topStats=[
+      {geo:'Parallel Plates (1D)',lap:'d²V/dx² = 0',grad:'E = −dV/dx = const',col:ink},
+      {geo:'Cylinders (2D Polar)',lap:'(1/r) d/dr(r dV/dr) = 0',grad:'E = −(V₀/ln(r₂/r₁)) (1/r)',col:orange},
+      {geo:'Point Dipole (3D Spherical)',lap:'∇²V = 0 (r > 0)',grad:'E_axial = 2k_e p / r³',col:'#38bdf8'}
+    ];
+    topStats.forEach((s,idx)=>{
+      const rowY=bY+52+idx*46;
+      svg+='<circle cx="'+(bX+22)+'" cy="'+(rowY-4)+'" r="4.5" fill="'+s.col+'"/>';
+      svg+='<text x="'+(bX+34)+'" y="'+rowY+'" fill="'+s.col+'" font-size="11" font-weight="bold">'+s.geo+'</text>';
+      svg+='<text x="'+(bX+34)+'" y="'+(rowY+15)+'" fill="#9fb498" font-size="8.5">'+s.lap+' · '+s.grad+'</text>';
+      if(idx<2)svg+='<line x1="'+(bX+20)+'" y1="'+(rowY+24)+'" x2="'+(bX+bW-20)+'" y2="'+(rowY+24)+'" stroke="#253a34" stroke-dasharray="2 2"/>';
+    });
+    svg+=text(360,305,'Orthogonality Law: E⃗ ⊥ Equipotential Surfaces (E⃗ · dℓ⃗ ≡ 0) · Field Density |E| ∝ 1 / Δs',soft,10);
   }
   else{
     const gX=60,gY=55,gW=340,gH=210;
@@ -756,6 +795,61 @@ function drawDynamicSandbox(t,p,v,phase,ink,soft,orange){
     svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+176)+'" text-anchor="middle" fill="#fde68a" font-size="8">Coil Spacing d = R ⟹ d²B_z / dz² ≡ 0</text>';
     svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+190)+'" text-anchor="middle" fill="#9fb498" font-size="7.5">B_Helmholtz = (4/5)^(3/2) · (μ₀ N I / R) ≈ 0.7155 (μ₀ N I / R)</text>';
     svg+=text(360,305,'Biot-Savart Law: dB⃗ = (μ₀/4π) [I (dℓ⃗ × r̂) / r²] · Central Field B_coil = μ₀ N I / (2R)',soft,10);
+  }
+  else if(isFieldMapping){
+    const cX=50,cY=50,cW=340,cH=220;
+    svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#101c18" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+    svg+=text(cX+cW/2,cY-15,'2D VECTOR FIELD GRID & EQUIPOTENTIAL FLOW TRACERS','#e2ecd7',11);
+    // Boundary electrodes: Left ground (0 V), Right positive (+10 V)
+    svg+='<rect x="'+(cX+10)+'" y="'+(cY+15)+'" width="8" height="'+(cH-30)+'" rx="2" fill="#3b82f6"/>';
+    svg+='<text x="'+(cX+14)+'" y="'+(cY+cH-8)+'" text-anchor="middle" fill="#93c5fd" font-size="7.5" font-weight="bold">0V</text>';
+    svg+='<rect x="'+(cX+cW-18)+'" y="'+(cY+15)+'" width="8" height="'+(cH-30)+'" rx="2" fill="#ef4444"/>';
+    svg+='<text x="'+(cX+cW-14)+'" y="'+(cY+cH-8)+'" text-anchor="middle" fill="#fca5a5" font-size="7.5" font-weight="bold">+10V</text>';
+    // Equipotential vertical lines at 2V, 4V, 6V, 8V
+    for(let eq=1;eq<=4;eq++){
+      const eqX=cX+14+eq*((cW-28)/5);
+      svg+='<line x1="'+eqX.toFixed(1)+'" y1="'+(cY+15)+'" x2="'+eqX.toFixed(1)+'" y2="'+(cY+cH-15)+'" stroke="#06b6d4" stroke-width="1.2" stroke-dasharray="3 3" opacity="0.75"/>';
+      svg+='<text x="'+eqX.toFixed(1)+'" y="'+(cY+26)+'" text-anchor="middle" fill="#06b6d4" font-size="7">'+(eq*2)+'V</text>';
+    }
+    // 2D Vector field arrows E pointing from right (+10V) to left (0V)
+    for(let gx=0;gx<5;gx++){
+      for(let gy=0;gy<4;gy++){
+        const vx=cX+45+gx*58;
+        const vy=cY+45+gy*42;
+        svg+='<line x1="'+(vx+12)+'" y1="'+vy+'" x2="'+(vx-12)+'" y2="'+vy+'" stroke="'+ink+'" stroke-width="1.5" opacity="0.6"/>';
+        svg+='<path d="M '+(vx-12)+' '+vy+' L '+(vx-6)+' '+(vy-3)+' L '+(vx-6)+' '+(vy+3)+' Z" fill="'+ink+'" opacity="0.7"/>';
+      }
+    }
+    // Dynamic charge tracers moving along field lines
+    for(let tr=0;tr<8;tr++){
+      const tNorm=((phase*1.2+tr/8)%1);
+      const trX=cX+cW-22-tNorm*(cW-40);
+      const trY=cY+35+((tr*37)%150);
+      svg+='<circle cx="'+trX.toFixed(1)+'" cy="'+trY.toFixed(1)+'" r="2.8" fill="#fde68a" opacity="0.9"/>';
+    }
+    // Orthogonal intersection marker at center
+    const midX=cX+cW/2,midY=cY+cH/2;
+    svg+='<rect x="'+(midX-8)+'" y="'+(midY-8)+'" width="8" height="8" fill="none" stroke="#f59e0b" stroke-width="1.2"/>';
+    svg+='<text x="'+(midX+12)+'" y="'+(midY+4)+'" fill="#f59e0b" font-size="8" font-weight="bold">θ = 90.0° (E⃗ ⊥ Equipotential)</text>';
+
+    const bX=420,bY=50,bW=270,bH=220;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'POTENTIAL GRADIENT & ENERGY DENSITY','#718e79',9);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+58)+'" fill="'+ink+'" font-size="9">Uniform Field Gradient E = −dV/dx</text>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+65)+'" width="220" height="12" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+65)+'" width="220" height="12" rx="3" fill="'+ink+'"/>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+92)+'" fill="#9fb498" font-size="7.5">Constant 100.0 V/m across 10.0 cm gap</text>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+115)+'" fill="'+orange+'" font-size="9">Electrostatic Energy Density u_E = ½ ε₀ E²</text>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+122)+'" width="220" height="12" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+    const uE_bar=(140+Math.sin(phase*3)*40).toFixed(1);
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+122)+'" width="'+uE_bar+'" height="12" rx="3" fill="'+orange+'"/>';
+    // Laplace equation card
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+145)+'" width="220" height="52" rx="4" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+162)+'" text-anchor="middle" fill="#38bdf8" font-size="8.5" font-weight="bold">LAPLACE EQUATION IN CONDUCTOR</text>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+176)+'" text-anchor="middle" fill="#fde68a" font-size="8">∇²V = ∂²V/∂x² + ∂²V/∂y² ≡ 0 (∇ · J⃗ = 0)</text>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+190)+'" text-anchor="middle" fill="#9fb498" font-size="7.5">Unique Solution: Conducting Paper ≡ Vacuum Electrostatics</text>';
+    svg+=text(360,305,'Electrostatic Field: E⃗ = −∇V · Field Strength: E = V₀ / d = 100.00 V m⁻¹',soft,10);
   }
   else{
     const cX=50,cY=50,cW=340,cH=220;
@@ -1231,6 +1325,90 @@ function draw(t){
     svg+=text(bX+15,bY+210,'tan θ = (G / B_H) I ⇔ B_H = G / m',ink,9);
     svg+=text(240,22,'Stewart & Gee Tangent Galvanometer Bench');
     svg+=text(240,308,'Tangent Law: B_coil = B_H tan θ · Coil Field: B_coil = μ₀ N I / (2R)');
+  }
+  else if(cfg.slug==='electric-fields'){
+    const x_cm=p.input;
+    const V_meas=v.raw;
+    // Bench table
+    svg+='<rect x="50" y="250" width="390" height="14" rx="2" fill="#1b2a26" stroke="'+soft+'" stroke-width="1.5"/>';
+    // Teledeltos Mapping Board (wood/acrylic backing)
+    const bdX=70,bdY=45,bdW=320,bdH=195;
+    svg+='<rect x="'+bdX+'" y="'+bdY+'" width="'+bdW+'" height="'+bdH+'" rx="5" fill="#1e293b" stroke="#334155" stroke-width="2"/>';
+    // Carbon-impregnated Teledeltos Paper Sheet
+    const ppX=bdX+15,ppY=bdY+15,ppW=bdW-30,ppH=bdH-30;
+    svg+='<rect x="'+ppX+'" y="'+ppY+'" width="'+ppW+'" height="'+ppH+'" fill="#090d16" stroke="#475569" stroke-width="1.2"/>';
+    // Grid overlay (10mm spacing)
+    for(let gx=0;gx<=10;gx++){
+      const lx=ppX+15+gx*((ppW-30)/10);
+      svg+='<line x1="'+lx.toFixed(1)+'" y1="'+ppY+'" x2="'+lx.toFixed(1)+'" y2="'+(ppY+ppH)+'" stroke="#334155" stroke-width="0.5" stroke-dasharray="1 3"/>';
+    }
+    for(let gy=0;gy<=6;gy++){
+      const ly=ppY+10+gy*((ppH-20)/6);
+      svg+='<line x1="'+ppX+'" y1="'+ly.toFixed(1)+'" x2="'+(ppX+ppW)+'" y2="'+ly.toFixed(1)+'" stroke="#334155" stroke-width="0.5" stroke-dasharray="1 3"/>';
+    }
+    // Left Ground Electrode (x = 0 cm, V = 0.00 V)
+    const el1X=ppX+15;
+    svg+='<rect x="'+(el1X-4)+'" y="'+(ppY+10)+'" width="8" height="'+(ppH-20)+'" rx="1" fill="#d97706" stroke="#b45309" stroke-width="1.5"/>';
+    svg+='<line x1="'+el1X+'" y1="'+(ppY+10)+'" x2="'+el1X+'" y2="'+(ppY+ppH-10)+'" stroke="#cbd5e1" stroke-width="1"/>';
+    svg+='<text x="'+el1X+'" y="'+(ppY+ppH-2)+'" text-anchor="middle" fill="#93c5fd" font-size="7" font-weight="bold">Ground (0V)</text>';
+    // Right Positive Electrode (x = 10 cm, V = 10.00 V)
+    const el2X=ppX+ppW-15;
+    svg+='<rect x="'+(el2X-4)+'" y="'+(ppY+10)+'" width="8" height="'+(ppH-20)+'" rx="1" fill="#d97706" stroke="#b45309" stroke-width="1.5"/>';
+    svg+='<line x1="'+el2X+'" y1="'+(ppY+10)+'" x2="'+el2X+'" y2="'+(ppY+ppH-10)+'" stroke="#cbd5e1" stroke-width="1"/>';
+    svg+='<text x="'+el2X+'" y="'+(ppY+ppH-2)+'" text-anchor="middle" fill="#fca5a5" font-size="7" font-weight="bold">+10.00V</text>';
+    // Equipotential Lines (at 2V, 4V, 6V, 8V)
+    for(let eq=1;eq<=4;eq++){
+      const eqX=el1X+eq*((el2X-el1X)/5);
+      svg+='<line x1="'+eqX.toFixed(1)+'" y1="'+(ppY+10)+'" x2="'+eqX.toFixed(1)+'" y2="'+(ppY+ppH-10)+'" stroke="#06b6d4" stroke-width="1.2" stroke-dasharray="3 2" opacity="0.75"/>';
+      svg+='<text x="'+eqX.toFixed(1)+'" y="'+(ppY+8)+'" text-anchor="middle" fill="#06b6d4" font-size="6.5">'+(eq*2)+'V</text>';
+    }
+    // Current Probe Location at displacement x
+    const probeX_px=el1X+(x_cm/10.0)*(el2X-el1X);
+    const probeY_px=ppY+ppH/2;
+    // Probe stylus
+    svg+='<line x1="'+probeX_px.toFixed(1)+'" y1="'+(probeY_px-38)+'" x2="'+probeX_px.toFixed(1)+'" y2="'+probeY_px+'" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>';
+    svg+='<circle cx="'+probeX_px.toFixed(1)+'" cy="'+probeY_px+'" r="3.5" fill="#ef4444" stroke="#fff" stroke-width="1"/>';
+    svg+='<line x1="'+probeX_px.toFixed(1)+'" y1="'+(probeY_px-38)+'" x2="'+(probeX_px-15)+'" y2="'+(probeY_px-60)+'" stroke="#3b82f6" stroke-width="1.5"/>';
+    svg+='<text x="'+probeX_px.toFixed(1)+'" y="'+(probeY_px-44)+'" text-anchor="middle" fill="#fde68a" font-size="7.5" font-weight="bold">Probe Stylus</text>';
+    // Probe readout badge on sheet
+    svg+='<rect x="'+(probeX_px-22).toFixed(1)+'" y="'+(probeY_px+8)+'" width="44" height="14" rx="2" fill="#020617" stroke="'+orange+'" stroke-width="1"/>';
+    svg+='<text x="'+probeX_px.toFixed(1)+'" y="'+(probeY_px+18)+'" text-anchor="middle" fill="'+orange+'" font-size="7.5" font-family="monospace" font-weight="bold">'+V_meas.toFixed(2)+' V</text>';
+    // Dimension line along central axis
+    svg+='<line x1="'+el1X+'" y1="'+(ppY+ppH+14)+'" x2="'+probeX_px.toFixed(1)+'" y2="'+(ppY+ppH+14)+'" stroke="'+orange+'" stroke-width="1.2"/>';
+    svg+='<line x1="'+el1X+'" y1="'+(ppY+ppH+10)+'" x2="'+el1X+'" y2="'+(ppY+ppH+18)+'" stroke="'+orange+'" stroke-width="1.2"/>';
+    svg+='<line x1="'+probeX_px.toFixed(1)+'" y1="'+(ppY+ppH+10)+'" x2="'+probeX_px.toFixed(1)+'" y2="'+(ppY+ppH+18)+'" stroke="'+orange+'" stroke-width="1.2"/>';
+    svg+='<text x="'+((el1X+probeX_px)/2).toFixed(1)+'" y="'+(ppY+ppH+24)+'" text-anchor="middle" fill="'+orange+'" font-size="8" font-weight="bold">x = '+x_cm.toFixed(1)+' cm</text>';
+
+    // Bench Accessories: DC Power Supply & High-Z Digital Voltmeter
+    const psX=400,psY=165;
+    svg+='<rect x="'+psX+'" y="'+psY+'" width="45" height="36" rx="3" fill="#1e293b" stroke="'+soft+'" stroke-width="1.2"/>';
+    svg+='<rect x="'+(psX+5)+'" y="'+(psY+5)+'" width="35" height="12" rx="1" fill="#020617"/>';
+    svg+='<text x="'+(psX+22)+'" y="'+(psY+14)+'" text-anchor="middle" fill="#ef4444" font-size="6.5" font-family="monospace">10.00 V</text>';
+    svg+='<circle cx="'+(psX+12)+'" cy="'+(psY+26)+'" r="2.5" fill="#ef4444"/>';
+    svg+='<circle cx="'+(psX+32)+'" cy="'+(psY+26)+'" r="2.5" fill="#020617" stroke="#64748b" stroke-width="1"/>';
+    svg+='<text x="'+(psX+22)+'" y="'+(psY+45)+'" text-anchor="middle" fill="#9fb498" font-size="6.5">DC Supply</text>';
+
+    // HUD Card at x=470, y=45, w=220, h=220
+    const bX=470,bY=45,bW=220,bH=220;
+    const E_field=100.00;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#182824" stroke="'+soft+'" stroke-width="1.5"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#718e79" font-size="9">PROBE DISPLACEMENT (x)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+52)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+x_cm.toFixed(1)+'</text>';
+    svg+='<text x="'+(bX+105)+'" y="'+(bY+50)+'" fill="'+soft+'" font-size="11">cm</text>';
+    svg+='<text x="'+(bX+130)+'" y="'+(bY+50)+'" fill="#9fb498" font-size="8">(±0.5 mm)</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#718e79" font-size="9">MEASURED ELECTRIC POTENTIAL (V)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="18" font-family="monospace">'+V_meas.toFixed(2)+' V</text>';
+    svg+='<text x="'+(bX+130)+'" y="'+(bY+108)+'" fill="#9fb498" font-size="8.5">(Z_in = 10 MΩ)</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+125)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+125)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+144)+'" fill="#718e79" font-size="9">POTENTIAL GRADIENT & FIELD STRENGTH</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+168)+'" fill="'+orange+'" font-size="15" font-family="monospace" font-weight="bold">'+E_field.toFixed(2)+'</text>';
+    svg+='<text x="'+(bX+110)+'" y="'+(bY+168)+'" fill="#9fb498" font-size="9">V m⁻¹ (N C⁻¹)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+184)+'" fill="#9fb498" font-size="8">V₀ = 10.00 V · Plate Gap d = 10.00 cm = 0.100 m</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+195)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+195)+'" stroke="#253a34"/>';
+    svg+=text(bX+15,bY+210,'V(x) = E x ⇔ E = −dV/dx = m',ink,9);
+    svg+=text(240,22,'Teledeltos Conducting Paper Equipotential Mapping Bench');
+    svg+=text(240,308,'Electric Field: E⃗ = −∇V · Field Strength: E = V₀ / d = 100.00 V m⁻¹');
   }
 
 
