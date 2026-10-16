@@ -33,7 +33,8 @@ def experiment_index(experiments):
    'interference-sound-waves':'kundt tube standing waves air sound velocity metal rod dust heaps lycopodium cork dust wavelength longitudinal waves resonance rod clamp young modulus specific heat ratio',
    'electrostatics':'electrostatics coulomb law electric charge induction gold leaf electroscope faraday ice pail proof plane permittivity electric field torsion balance repulsion dielectric',
    'magnetic-fields':'magnetic fields tangent galvanometer biot savart law circular coil earth horizontal magnetic component reduction factor compass needle dip needle helmholtz commutator pohl deflection',
-   'electric-fields':'electric fields equipotential mapping lines potential gradient teledeltos paper conducting sheet parallel plates dipole concentric electrodes laplace equation voltmeter probe'}
+   'electric-fields':'electric fields equipotential mapping lines potential gradient teledeltos paper conducting sheet parallel plates dipole concentric electrodes laplace equation voltmeter probe',
+   'magnetic-moments':'magnetic moments deflection magnetometer gauss tan-a tan-b end on broadside dipole moment inverse cube law vibration magnetometer oscillation period bar magnet alnico compass needle'}
  for exp in experiments:
   c=configs.get(exp['slug'],{});index.append({'slug':exp['slug'],'title':c.get('title',exp['title']),'subject':'physics','subjectName':'Physics','path':exp['page_path'],'summary':c.get('aim','Determine Planck’s constant from stopping potential and frequency.'),'keywords':' '.join([aliases.get(exp['slug'],''),*[a['name'] for a in c.get('apparatus',[])]])})
  return index

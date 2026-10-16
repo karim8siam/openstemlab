@@ -55,6 +55,9 @@ function drawComparativeSim(t,p,v,phase,ink,soft,orange){
   const isElectrostatic=['electrostatics'].includes(cfg.slug);
   const isMagnetic=['magnetic-fields'].includes(cfg.slug);
   const isFieldMapping=['electric-fields'].includes(cfg.slug);
+  const isMagMoments=['magnetic-moments'].includes(cfg.slug);
+  const isFieldMapping=['electric-fields'].includes(cfg.slug);
+  const isMagMoments=['magnetic-moments'].includes(cfg.slug);
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
   const text=(x,y,str,color='#9fb498',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
@@ -392,6 +395,44 @@ function drawComparativeSim(t,p,v,phase,ink,soft,orange){
       if(idx<2)svg+='<line x1="'+(bX+20)+'" y1="'+(rowY+24)+'" x2="'+(bX+bW-20)+'" y2="'+(rowY+24)+'" stroke="#253a34" stroke-dasharray="2 2"/>';
     });
     svg+=text(360,305,'Orthogonality Law: E⃗ ⊥ Equipotential Surfaces (E⃗ · dℓ⃗ ≡ 0) · Field Density |E| ∝ 1 / Δs',soft,10);
+  }
+  else if(isMagMoments){
+    const gX=60,gY=55,gW=340,gH=210;
+    svg+='<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#14221e" stroke="'+soft+'" stroke-width="1.5" rx="4"/>';
+    svg+=text(gX+gW/2,gY-15,'MAGNET MATERIAL & ORIENTATION DEFLECTION PROFILES','#e2ecd7',11);
+    const mags=[
+      {mat:'Alnico V (Tan-A End-On)',moment:'M = 0.875 A m²',def:'θ = 40.6° (at d=18cm)',col:ink,desc:'High coercivity cast alloy · Tan-A axial dipole field'},
+      {mat:'Cobalt Steel (Tan-A End-On)',moment:'M = 0.525 A m²',def:'θ = 27.2° (at d=18cm)',col:orange,desc:'Classic quench-hardened magnet · 60% dipole moment'},
+      {mat:'Alnico V (Tan-B Broadside)',moment:'M = 0.875 A m²',def:'θ = 23.3° (at d=18cm)',col:'#38bdf8',desc:'Equatorial broadside orientation · Exactly half field B_B = ½ B_A'}
+    ];
+    mags.forEach((m,idx)=>{
+      const rowY=gY+35+idx*55;
+      svg+='<text x="'+(gX+18)+'" y="'+(rowY-8)+'" fill="'+m.col+'" font-size="10" font-weight="bold">'+m.mat+'</text>';
+      svg+='<text x="'+(gX+gW-18)+'" y="'+(rowY-8)+'" text-anchor="end" fill="'+m.col+'" font-size="10" font-family="monospace">'+m.moment+'</text>';
+      svg+='<rect x="'+(gX+18)+'" y="'+rowY+'" width="'+(gW-36)+'" height="14" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+      const barW=(idx===0?(gW-36):idx===1?(gW-36)*0.60:(gW-36)*0.50).toFixed(1);
+      svg+='<rect x="'+(gX+18)+'" y="'+rowY+'" width="'+barW+'" height="14" rx="3" fill="'+m.col+'"/>';
+      const pulseX=gX+18+((phase*(2.0+idx*0.7))%1)*(gW-36);
+      svg+='<circle cx="'+pulseX.toFixed(1)+'" cy="'+(rowY+7)+'" r="4.5" fill="#fde68a" stroke="#fff" stroke-width="1"/>';
+      svg+='<text x="'+(gX+22)+'" y="'+(rowY+26)+'" fill="#9fb498" font-size="8">'+m.desc+' · '+m.def+'</text>';
+    });
+    const bX=425,bY=55,bW=265,bH=210;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'GAUSS TAN-A VS TAN-B DIPOLES','#718e79',9.5);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+    const topStats=[
+      {pos:'Tan-A (End-On Position)',ratio:'B_A = (μ₀/4π) (2M/d³)',tan:'tan θ_A = 2(μ₀/4π) M / (B_H d³)',col:ink},
+      {pos:'Tan-B (Broadside Position)',ratio:'B_B = (μ₀/4π) (M/d³)',tan:'tan θ_B = (μ₀/4π) M / (B_H d³)',col:orange},
+      {pos:'Gauss Axial Ratio',ratio:'B_A / B_B ≡ 2.000',tan:'tan θ_A / tan θ_B ≡ 2.000',col:'#38bdf8'}
+    ];
+    topStats.forEach((s,idx)=>{
+      const rowY=bY+52+idx*46;
+      svg+='<circle cx="'+(bX+22)+'" cy="'+(rowY-4)+'" r="4.5" fill="'+s.col+'"/>';
+      svg+='<text x="'+(bX+34)+'" y="'+rowY+'" fill="'+s.col+'" font-size="11" font-weight="bold">'+s.pos+'</text>';
+      svg+='<text x="'+(bX+34)+'" y="'+(rowY+15)+'" fill="#9fb498" font-size="8.5">'+s.ratio+' · '+s.tan+'</text>';
+      if(idx<2)svg+='<line x1="'+(bX+20)+'" y1="'+(rowY+24)+'" x2="'+(bX+bW-20)+'" y2="'+(rowY+24)+'" stroke="#253a34" stroke-dasharray="2 2"/>';
+    });
+    svg+=text(360,305,'Gauss Tan-A Dipole Law: B_A = (μ₀/4π) [2Md / (d² − ℓ²)²] ≈ (μ₀/4π) (2M / d³) = B_H tan θ',soft,10);
   }
   else{
     const gX=60,gY=55,gW=340,gH=210;
@@ -850,6 +891,69 @@ function drawDynamicSandbox(t,p,v,phase,ink,soft,orange){
     svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+176)+'" text-anchor="middle" fill="#fde68a" font-size="8">∇²V = ∂²V/∂x² + ∂²V/∂y² ≡ 0 (∇ · J⃗ = 0)</text>';
     svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+190)+'" text-anchor="middle" fill="#9fb498" font-size="7.5">Unique Solution: Conducting Paper ≡ Vacuum Electrostatics</text>';
     svg+=text(360,305,'Electrostatic Field: E⃗ = −∇V · Field Strength: E = V₀ / d = 100.00 V m⁻¹',soft,10);
+  }
+  else if(isMagMoments){
+    const cX=50,cY=50,cW=340,cH=220;
+    svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#101c18" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+    svg+=text(cX+cW/2,cY-15,'2D MAGNETIC DIPOLE FIELD LINES & ROTATING NEEDLE','#e2ecd7',11);
+    
+    // Bar magnet on East axis at right
+    const magX=cX+240,magY=cY+cH/2,magW=70,magH=22;
+    // South half (blue)
+    svg+='<rect x="'+(magX-magW/2)+'" y="'+(magY-magH/2)+'" width="'+(magW/2)+'" height="'+magH+'" rx="2" fill="#3b82f6"/>';
+    svg+='<text x="'+(magX-magW/4)+'" y="'+(magY+5)+'" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold">S</text>';
+    // North half (red)
+    svg+='<rect x="'+magX+'" y="'+(magY-magH/2)+'" width="'+(magW/2)+'" height="'+magH+'" rx="2" fill="#ef4444"/>';
+    svg+='<text x="'+(magX+magW/4)+'" y="'+(magY+5)+'" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold">N</text>';
+    svg+='<rect x="'+(magX-magW/2)+'" y="'+(magY-magH/2)+'" width="'+magW+'" height="'+magH+'" rx="2" fill="none" stroke="#e2e8f0" stroke-width="1"/>';
+    
+    // Compass needle pivot at center (cX + 80, cY + cH/2)
+    const pivX=cX+80,pivY=cY+cH/2;
+    svg+='<circle cx="'+pivX+'" cy="'+pivY+'" r="38" fill="#090d16" stroke="'+soft+'" stroke-width="1.5"/>';
+    svg+='<circle cx="'+pivX+'" cy="'+pivY+'" r="28" fill="none" stroke="#253a34" stroke-width="1" stroke-dasharray="2 3"/>';
+    // Needle at angle theta deflected by dipole field
+    const simTheta=0.68;
+    const nLen=26;
+    const nx1=pivX+nLen*Math.sin(simTheta),ny1=pivY-nLen*Math.cos(simTheta);
+    const nx2=pivX-nLen*Math.sin(simTheta),ny2=pivY+nLen*Math.cos(simTheta);
+    svg+='<line x1="'+pivX+'" y1="'+pivY+'" x2="'+nx1.toFixed(1)+'" y2="'+ny1.toFixed(1)+'" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/>';
+    svg+='<line x1="'+pivX+'" y1="'+pivY+'" x2="'+nx2.toFixed(1)+'" y2="'+ny2.toFixed(1)+'" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>';
+    svg+='<circle cx="'+pivX+'" cy="'+pivY+'" r="3.5" fill="#fde68a" stroke="#fff" stroke-width="1"/>';
+    svg+='<text x="'+(pivX+18)+'" y="'+(pivY-16)+'" fill="#fde68a" font-size="8" font-weight="bold">θ = 39.0°</text>';
+    
+    // Magnetic dipole field loop curves radiating from North to South
+    for(let r=1;r<=3;r++){
+      const rx=r*24,ry=r*16;
+      svg+='<path d="M '+(magX+magW/4)+' '+(magY-magH/2)+' C '+(magX+magW/4+rx)+' '+(magY-magH/2-ry)+', '+(magX-magW/4+rx)+' '+(magY-magH/2-ry)+', '+(magX-magW/4)+' '+(magY-magH/2)+'" fill="none" stroke="'+ink+'" stroke-width="1" opacity="0.5"/>';
+      svg+='<path d="M '+(magX+magW/4)+' '+(magY+magH/2)+' C '+(magX+magW/4+rx)+' '+(magY+magH/2+ry)+', '+(magX-magW/4+rx)+' '+(magY+magH/2+ry)+', '+(magX-magW/4)+' '+(magY+magH/2)+'" fill="none" stroke="'+ink+'" stroke-width="1" opacity="0.5"/>';
+    }
+    // Axial field lines passing through the compass needle pivot
+    svg+='<line x1="'+(cX+20)+'" y1="'+magY+'" x2="'+(magX-magW/2)+'" y2="'+magY+'" stroke="'+orange+'" stroke-width="1.5" stroke-dasharray="3 3"/>';
+    // Dynamic flux particle tracers streaming towards South pole
+    for(let tr=0;tr<6;tr++){
+      const tNorm=((phase*1.2+tr/6)%1);
+      const trX=magX-magW/2-tNorm*120;
+      svg+='<circle cx="'+trX.toFixed(1)+'" cy="'+magY+'" r="2.5" fill="#fde68a" opacity="0.85"/>';
+    }
+
+    const bX=420,bY=50,bW=270,bH=220;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'INVERSE-CUBE DIPOLE FIELD ATTENUATION','#718e79',9);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+58)+'" fill="'+ink+'" font-size="9">Dipole Field Decay B_axial ∝ 1/d³</text>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+65)+'" width="220" height="12" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+65)+'" width="205" height="12" rx="3" fill="'+ink+'"/>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+92)+'" fill="#9fb498" font-size="7.5">Field drops 8× when separation distance doubles (d ⟶ 2d)</text>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+115)+'" fill="'+orange+'" font-size="9">Magnetic Energy Density u_B = B² / (2μ₀)</text>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+122)+'" width="220" height="12" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+    const uB_bar=(145+Math.sin(phase*3)*42).toFixed(1);
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+122)+'" width="'+uB_bar+'" height="12" rx="3" fill="'+orange+'"/>';
+    // Finite length correction card
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+145)+'" width="220" height="52" rx="4" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+162)+'" text-anchor="middle" fill="#38bdf8" font-size="8.5" font-weight="bold">FINITE BAR MAGNET LENGTH CORRECTION</text>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+176)+'" text-anchor="middle" fill="#fde68a" font-size="8">B_exact / B_dipole = [1 − (ℓ/d)²]⁻² ≈ 1 + 2(ℓ/d)²</text>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+190)+'" text-anchor="middle" fill="#9fb498" font-size="7.5">Correction = +1.4% at d = 14 cm (2ℓ = 8.4 cm) · &lt; 0.5% for d &gt; 22 cm</text>';
+    svg+=text(360,305,'Gauss End-On Axial Law: B_A = (μ₀/4π) [2Md / (d² − ℓ²)²] = B_H tan θ ⇔ tan θ ∝ 1/d³',soft,10);
   }
   else{
     const cX=50,cY=50,cW=340,cH=220;
@@ -1409,6 +1513,98 @@ function draw(t){
     svg+=text(bX+15,bY+210,'V(x) = E x ⇔ E = −dV/dx = m',ink,9);
     svg+=text(240,22,'Teledeltos Conducting Paper Equipotential Mapping Bench');
     svg+=text(240,308,'Electric Field: E⃗ = −∇V · Field Strength: E = V₀ / d = 100.00 V m⁻¹');
+  }
+  else if(cfg.slug==='magnetic-moments'){
+    const d_cm=p.input;
+    const theta_deg=v.raw;
+    const tan_theta=Math.tan(theta_deg*Math.PI/180.0);
+    const inv_d3=1.0/Math.pow(d_cm/100.0, 3);
+    const M_val=0.8750;
+    const BH_uT=35.00;
+
+    // Bench table
+    svg+='<rect x="50" y="250" width="390" height="14" rx="2" fill="#1b2a26" stroke="'+soft+'" stroke-width="1.5"/>';
+    // Mahogany Meter Scale Bench (horizontal rule from 0 to 100 cm, center at 245)
+    const ruleX=60,ruleY=195,ruleW=370,ruleH=32;
+    svg+='<rect x="'+ruleX+'" y="'+ruleY+'" width="'+ruleW+'" height="'+ruleH+'" rx="3" fill="#3e2723" stroke="#5d4037" stroke-width="1.5"/>';
+    // Centimeter graduation ticks along meter rule
+    for(let g=0;g<=36;g++){
+      const gx=ruleX+5+g*10;
+      const gh=(g%5===0)?10:5;
+      svg+='<line x1="'+gx+'" y1="'+(ruleY+ruleH)+'" x2="'+gx+'" y2="'+(ruleY+ruleH-gh)+'" stroke="#d7ccc8" stroke-width="'+(g%5===0?'1':'0.5')+'"/>';
+    }
+    svg+='<text x="'+(ruleX+10)+'" y="'+(ruleY+14)+'" fill="#d7ccc8" font-size="7.5" font-family="monospace">WEST ARM</text>';
+    svg+='<text x="'+(ruleX+ruleW-10)+'" y="'+(ruleY+14)+'" text-anchor="end" fill="#d7ccc8" font-size="7.5" font-family="monospace">EAST ARM</text>';
+
+    // Central Compass Box at x = 245, y = 145
+    const cpX=245,cpY=145,cpR=44;
+    // Circular brass casing
+    svg+='<circle cx="'+cpX+'" cy="'+cpY+'" r="'+cpR+'" fill="#292524" stroke="#d97706" stroke-width="2.5"/>';
+    // Glass cover inner ring & anti-parallax mirror strip
+    svg+='<circle cx="'+cpX+'" cy="'+cpY+'" r="'+(cpR-6)+'" fill="#0c0a09" stroke="#78716c" stroke-width="1"/>';
+    svg+='<circle cx="'+cpX+'" cy="'+cpY+'" r="'+(cpR-12)+'" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="2 3"/>';
+    // Quadrant graduation marks (0, 90, 0, 90)
+    svg+='<text x="'+cpX+'" y="'+(cpY-cpR+14)+'" text-anchor="middle" fill="#f8fafc" font-size="6.5" font-weight="bold">0° (N)</text>';
+    svg+='<text x="'+cpX+'" y="'+(cpY+cpR-8)+'" text-anchor="middle" fill="#f8fafc" font-size="6.5" font-weight="bold">0° (S)</text>';
+    svg+='<text x="'+(cpX-cpR+14)+'" y="'+(cpY+3)+'" text-anchor="middle" fill="#f8fafc" font-size="6.5" font-weight="bold">90°</text>';
+    svg+='<text x="'+(cpX+cpR-14)+'" y="'+(cpY+3)+'" text-anchor="middle" fill="#f8fafc" font-size="6.5" font-weight="bold">90°</text>';
+
+    // Rotating pointer at angle theta
+    const rad=theta_deg*Math.PI/180.0;
+    const pLen=32;
+    // Long light aluminum pointer (perpendicular to magnetic needle: 90 deg offset)
+    const apx1=cpX+pLen*Math.sin(rad), apy1=cpY-pLen*Math.cos(rad);
+    const apx2=cpX-pLen*Math.sin(rad), apy2=cpY+pLen*Math.cos(rad);
+    svg+='<line x1="'+apx1.toFixed(1)+'" y1="'+apy1.toFixed(1)+'" x2="'+apx2.toFixed(1)+'" y2="'+apy2.toFixed(1)+'" stroke="#ef4444" stroke-width="1.5"/>';
+    // Short cobalt magnetic needle along magnetic axis
+    const mLen=14;
+    const mpx1=cpX+mLen*Math.cos(rad), mpy1=cpY+mLen*Math.sin(rad);
+    const mpx2=cpX-mLen*Math.cos(rad), mpy2=cpY-mLen*Math.sin(rad);
+    svg+='<line x1="'+mpx1.toFixed(1)+'" y1="'+mpy1.toFixed(1)+'" x2="'+mpx2.toFixed(1)+'" y2="'+mpy2.toFixed(1)+'" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>';
+    // Agate jewel pivot cap
+    svg+='<circle cx="'+cpX+'" cy="'+cpY+'" r="4" fill="#d97706" stroke="#fff" stroke-width="1"/>';
+    svg+='<text x="'+cpX+'" y="'+(cpY+cpR+16)+'" text-anchor="middle" fill="'+orange+'" font-size="8" font-family="monospace" font-weight="bold">θ = '+theta_deg.toFixed(2)+'°</text>';
+
+    // Alnico Bar Magnet on East Arm at distance d_cm
+    const magOffset=75+((d_cm-14.0)/10.0)*60;
+    const mBarX=cpX+magOffset, mBarY=170, mBarW=38, mBarH=16;
+    // Magnet sliding carrier
+    svg+='<rect x="'+(mBarX-mBarW/2-3)+'" y="'+(mBarY-2)+'" width="'+(mBarW+6)+'" height="'+(mBarH+14)+'" rx="2" fill="#475569" stroke="#334155" stroke-width="1"/>';
+    // South pole (blue)
+    svg+='<rect x="'+(mBarX-mBarW/2)+'" y="'+mBarY+'" width="'+(mBarW/2)+'" height="'+mBarH+'" fill="#3b82f6"/>';
+    svg+='<text x="'+(mBarX-mBarW/4)+'" y="'+(mBarY+11)+'" text-anchor="middle" fill="#fff" font-size="7.5" font-weight="bold">S</text>';
+    // North pole (red)
+    svg+='<rect x="'+mBarX+'" y="'+mBarY+'" width="'+(mBarW/2)+'" height="'+mBarH+'" fill="#ef4444"/>';
+    svg+='<text x="'+(mBarX+mBarW/4)+'" y="'+(mBarY+11)+'" text-anchor="middle" fill="#fff" font-size="7.5" font-weight="bold">N</text>';
+    svg+='<rect x="'+(mBarX-mBarW/2)+'" y="'+mBarY+'" width="'+mBarW+'" height="'+mBarH+'" fill="none" stroke="#fff" stroke-width="0.8"/>';
+    svg+='<text x="'+mBarX+'" y="'+(mBarY+mBarH+10)+'" text-anchor="middle" fill="#cbd5e1" font-size="6.5">Alnico Magnet</text>';
+
+    // Dimension line from pivot cpX to magnet center mBarX
+    svg+='<line x1="'+cpX+'" y1="95" x2="'+mBarX+'" y2="95" stroke="'+orange+'" stroke-width="1.2"/>';
+    svg+='<line x1="'+cpX+'" y1="90" x2="'+cpX+'" y2="100" stroke="'+orange+'" stroke-width="1.2"/>';
+    svg+='<line x1="'+mBarX+'" y1="90" x2="'+mBarX+'" y2="100" stroke="'+orange+'" stroke-width="1.2"/>';
+    svg+='<text x="'+((cpX+mBarX)/2)+'" y="88" text-anchor="middle" fill="'+orange+'" font-size="8.5" font-weight="bold">d = '+d_cm.toFixed(1)+' cm</text>';
+
+    // HUD Card at x=470, y=45, w=220, h=220
+    const bX=470,bY=45,bW=220,bH=220;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#182824" stroke="'+soft+'" stroke-width="1.5"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#718e79" font-size="9">MAGNET DISTANCE & INVERSE CUBE</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+52)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+d_cm.toFixed(1)+'</text>';
+    svg+='<text x="'+(bX+105)+'" y="'+(bY+50)+'" fill="'+soft+'" font-size="11">cm</text>';
+    svg+='<text x="'+(bX+130)+'" y="'+(bY+50)+'" fill="#9fb498" font-size="8">1/d³ = '+inv_d3.toFixed(1)+' m⁻³</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#718e79" font-size="9">OBSERVED COMPASS DEFLECTION (θ)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="18" font-family="monospace">'+theta_deg.toFixed(2)+'°</text>';
+    svg+='<text x="'+(bX+125)+'" y="'+(bY+108)+'" fill="#9fb498" font-size="8.5">tan θ = '+tan_theta.toFixed(4)+'</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+125)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+125)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+144)+'" fill="#718e79" font-size="9">MAGNETIC DIPOLE MOMENT & FIELD</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+168)+'" fill="'+orange+'" font-size="15" font-family="monospace" font-weight="bold">'+M_val.toFixed(4)+'</text>';
+    svg+='<text x="'+(bX+110)+'" y="'+(bY+168)+'" fill="#9fb498" font-size="9">A m² (J T⁻¹)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+184)+'" fill="#9fb498" font-size="8">B_H = '+BH_uT.toFixed(2)+' μT · μ₀/(4π) = 1.000 × 10⁻⁷ T m A⁻¹</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+195)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+195)+'" stroke="#253a34"/>';
+    svg+=text(bX+15,bY+210,'tan θ = [(2μ₀/4π) M / B_H] · (1/d³)',ink,9);
+    svg+=text(240,22,'Gauss Deflection Magnetometer Bench (Tan-A Position)');
+    svg+=text(240,308,'Axial Dipole Field: B_A = (μ₀ / 4π) (2M / d³) · Tangent Law: B_A = B_H tan θ');
   }
 
 
