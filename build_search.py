@@ -25,7 +25,8 @@ def experiment_index(experiments):
    'vapor-pressure':'saturated vapor pressure enthalpy vaporization volatile liquid ethanol clausius clapeyron boiling point manometer mercury phase equilibrium temperature',
    'air-humidity':'atmospheric humidity psychrometer hygrometer wet dry bulb depression dew point water vapor relative humidity sprung ferrel regnault',
    'loaded-spring':'loaded helical spring simple harmonic motion shm oscillation period rayleigh effective mass spring constant stiffness hooke law slotted weights',
-   'pendulum-coincidence':'pendulum coincidence method master seconds clock simple harmonic motion gravity g beat frequency cathetometer border vernier time'}
+   'pendulum-coincidence':'pendulum coincidence method master seconds clock simple harmonic motion gravity g beat frequency cathetometer border vernier time',
+   'torsion-pendulum':'torsion pendulum shear modulus rigidity wire twisting inertia disc coulomb cavendish torque rotational harmonic oscillation'}
  for exp in experiments:
   c=configs.get(exp['slug'],{});index.append({'slug':exp['slug'],'title':c.get('title',exp['title']),'subject':'physics','subjectName':'Physics','path':exp['page_path'],'summary':c.get('aim','Determine Planck’s constant from stopping potential and frequency.'),'keywords':' '.join([aliases.get(exp['slug'],''),*[a['name'] for a in c.get('apparatus',[])]])})
  return index
