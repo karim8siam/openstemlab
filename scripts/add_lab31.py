@@ -1,0 +1,245 @@
+import json, sqlite3
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+
+exp31 = {
+    'number': 31,
+    'slug': 'boyles-law',
+    'title': 'Verification of Boyle’s Law and Determination of the Isothermal State Constant for an Ideal Gas',
+    'shortTitle': 'Boyle’s Law',
+    'aim': 'Verify Boyle’s law for a confined sample of dry air at constant room temperature by measuring absolute gas pressure P as a function of volume V using a mercury J-tube manometer, and determine the isothermal Boyle state constant k = P · V via linear regression of absolute pressure P against reciprocal volume 1/V.',
+    'target': 'k',
+    'targetName': 'Boyle isothermal state constant k',
+    'inputLabel': 'Volume V',
+    'shortInput': 'Volume V',
+    'inputUnit': 'cm³',
+    'inputDecimals': 1,
+    'rawLabel': 'Absolute pressure P',
+    'rawUnit': 'kPa',
+    'rawDecimals': 2,
+    'xAxis': 'Reciprocal volume 1/V (L⁻¹)',
+    'yAxis': 'Absolute pressure P (kPa)',
+    'xScale': 0.001,
+    'yScale': 0.001,
+    'gradientUnit': 'J',
+    'resultUnit': 'J',
+    'resultScale': 1.0,
+    'resultDecimals': 4,
+    'min': 15.0,
+    'max': 50.0,
+    'step': 5.0,
+    'initial': 30.0,
+    'samples': [20.0, 25.0, 30.0, 35.0, 40.0],
+    'emptyX': [20.0, 60.0],
+    'emptyY': [60.0, 180.0],
+    'timed': False,
+    'angle': False,
+    'published': True,
+    'measureLabel': 'Measure absolute pressure P (kPa) for confined air volume V (cm³)',
+    'fitEquation': 'P = k / V = k · (1/V) ⇔ Y = k · X ⇔ k = S',
+    'intro': "Boyle's law represents the foundational empirical cornerstone of pneumatic physics and classical thermodynamics, enunciating the fundamental inverse proportionality between the absolute pressure and the volume of a confined mass of gas held at invariant thermodynamic temperature. First published in 1662 by the Anglo-Irish natural philosopher Robert Boyle in his seminal treatise 'New Experiments Physico-Mechanicall, Touching the Spring of the Air, and its Effects'—and independently verified with rigorous mathematical formalism in 1676 by the French physicist Edme Mariotte (whence it is frequently termed Boyle-Mariotte's law)—this governing physical principle dismantled the Aristotelian notion of horror vacui and established gases as elastic fluids composed of particulate entities whose macroscopic mechanical manifestations derive from microscopic momentum exchanges. Under isothermal thermodynamic conditions (T = constant), the mechanical work performed upon a gas during quasi-static compression increases its volumetric energy density: P · V = n R T = k, where n is the molar quantity of gas, R = 8.31446 J mol⁻¹ K⁻¹ is the universal gas constant, and k is the isothermal Boyle state constant (possessing units of joules, equivalent to Pa m³ or N m). In the classical laboratory configuration, a clean, dry air sample is hermetically confined within a calibrated uniform glass bore manometer tube closed at the upper extremity, bounded inferiorly by an adjustable liquid mercury meniscus column. The lower end of the graduated closed tube communicates through heavy-walled flexible rubber or elastomeric tubing with an open leveling tube mounted upon a vertical metric slider. By adjusting the vertical elevation of the open reservoir relative to the closed specimen tube, the experimenter imposes variable hydrostatic mercury head pressures Δh = h_open − h_closed upon the trapped air column. The absolute pressure P exerted upon the gas is established by summing the local barometric atmospheric pressure B (measured with an auxiliary Fortin mercury barometer) and the differential manometer column height: P = B + Δh. By plotting the resulting absolute pressure P against the reciprocal of the gas volume (1/V), the curvilinear hyperbolic Boyle isotherm P(V) is linearized into a strictly origin-intercepting linear relationship y = m x whose gradient m directly delivers the physical state constant k = n R T. High-precision least-squares regression across systematic compression and expansion intervals provides an exemplary verification of ideal gas behavior, elucidating the macroscopic operational envelope within which atmospheric air strictly approximates the thermodynamic ideal gas.",
+    'settings': [
+        'Confined dry air specimen at room temperature T_0 = 20.00 °C (293.15 K) with molar mass M_air = 28.966 g mol⁻¹.',
+        'Calibrated precision closed glass tube with uniform internal cross-sectional bore A = 1.000 cm² and graduated metric volume scale (15.0 to 50.0 cm³).',
+        'Standard ambient barometric atmospheric pressure B = 101.325 kPa (760.0 mmHg = 1.01325 bar).',
+        'High-density triple-distilled liquid mercury manometer fluid (density ρ_Hg = 13,546 kg m⁻³ at 20.00 °C; local gravitational acceleration g = 9.80665 m s⁻²).',
+        'Reference isothermal state constant for nominal charge V_0 = 30.0 cm³ at atmospheric pressure: k = P_0 V_0 = 101,325 Pa × 30.0 × 10⁻⁶ m³ = 3.03975 J.'
+    ],
+    'apparatus': [
+        {
+            'name': 'Calibrated Closed Manometer Tube (Specimen Air Column)',
+            'purpose': 'Hermetically confines the dry air sample of variable volume V over a liquid mercury column, featuring precision linear graduations etched along a bore of uniform internal diameter to permit direct volumetric readings in cm³ (±0.1 cm³).'
+        },
+        {
+            'name': 'Open Movable Leveling Tube and Vertical Slider Carriage',
+            'purpose': 'Provides an adjustable atmospheric mercury column that can be elevated or lowered along a sturdy vertical rack-and-pinion sliding mount to vary the hydrostatic head pressure Δh applied to the trapped gas column.'
+        },
+        {
+            'name': 'Flexible Heavy-Walled Mercury U-Tube Reservoir Hose',
+            'purpose': 'Fluidly interconnects the base of the closed specimen tube with the movable open leveling reservoir, containing triple-distilled mercury while resisting hydrostatic expansion, leakage, and wall distortion under pressure.'
+        },
+        {
+            'name': 'Fortin Precision Laboratory Mercury Barometer',
+            'purpose': 'Measures the prevailing ambient atmospheric pressure B in millimeters of mercury (mmHg) and kilopascals (kPa) with vernier accuracy (±0.1 mmHg) to establish the barometric reference datum for absolute pressure calculations.'
+        },
+        {
+            'name': 'Central Metric Height Scale and Parallax Index',
+            'purpose': 'A rigid brass or steel millimeter scale mounted symmetrically between the two glass tubes, equipped with sliding hairline vernier indices to measure the exact vertical liquid meniscus heights h_closed and h_open without optical parallax.'
+        },
+        {
+            'name': 'Precision Digital Thermometer and Environmental Monitor',
+            'purpose': 'Continuously monitors ambient air and mercury column temperatures to ensure that isothermal conditions (ΔT < 0.2 °C) are strictly preserved throughout the compression and expansion measurement sequence.'
+        }
+    ],
+    'procedure': [
+        {
+            'title': 'Barometer Reading and Ambient Environmental Stabilization',
+            'text': 'Read the prevailing ambient laboratory atmospheric pressure B from the Fortin precision mercury barometer to ±0.1 mmHg, applying standard capillary and brass-scale temperature corrections to establish the exact reference datum B = 101.325 kPa (760.0 mmHg). Record the baseline room temperature T_0 = 20.00 °C.',
+            'why': 'Precise measurement of atmospheric pressure is required because the J-tube manometer measures gauge pressure relative to ambient atmosphere; absolute pressure equals B + Δh.'
+        },
+        {
+            'title': 'Zero Hydrostatic Head Alignment and Baseline Meniscus Parity',
+            'text': 'Adjust the height of the movable open leveling tube until the mercury meniscus in the open tube aligns precisely in the same horizontal plane as the mercury meniscus in the closed specimen tube (h_open = h_closed), establishing a differential hydrostatic head of Δh = 0. Verify that the enclosed air volume corresponds to the nominal baseline volume V_0 = 30.0 cm³.',
+            'why': 'Zeroing the differential head confirms that the trapped gas sample initially resides at pure atmospheric pressure B without any residual hydrostatic compression or dilation.'
+        },
+        {
+            'title': 'Incremental Compression Series and Meniscus Sighting',
+            'text': 'Execute the compression series by systematically raising the open leveling tube above the closed tube along its vertical rack slider, imposing positive hydrostatic mercury heads to compress the air sample to designated volumes of V = 25.0 cm³ and V = 20.0 cm³. Align the sliding vernier index with the apex of each meniscus to eliminate parallax.',
+            'why': 'Systematic compression reduces gas volume and increases hydrostatic head, providing the high-pressure data points (P > B) needed to test the hyperbolic isotherm.'
+        },
+        {
+            'title': 'Thermal Relaxation Dwell Interval for Isothermal Equilibrium',
+            'text': 'Following each vertical adjustment of the leveling tube, pause for a dwell period of at least two to three minutes before recording pressure values. Observe the thermometer immersed in the adjacent thermal buffer to verify that the air column returns to baseline temperature T_0 = 20.00 °C.',
+            'why': 'Compressing the gas performs boundary work that causes transient adiabatic temperature elevation; dwelling allows heat to conduct through the glass walls into ambient air, preserving isothermal conditions.'
+        },
+        {
+            'title': 'Sub-Atmospheric Expansion Series and Differential Head Recording',
+            'text': 'Execute the expansion series by lowering the open leveling tube beneath the closed specimen tube, applying negative hydrostatic heads to expand the confined air column to volumes of V = 35.0 cm³ and V = 40.0 cm³. Record the open tube height h_open and closed tube height h_closed, computing the differential head Δh = h_open − h_closed.',
+            'why': 'Lowering the reservoir explores the rarefied, sub-atmospheric pressure regime (P < B), verifying that Boyle’s inverse law holds symmetrically in expansion as well as compression.'
+        },
+        {
+            'title': 'Reciprocal Linearization and OLS State Constant Determination',
+            'text': 'Compute the absolute pressure P = B + Δh (in pascals and kilopascals) and the reciprocal volume X = 1/V (in m⁻³ and display L⁻¹) for each of the five observation stations. Perform an ordinary least-squares linear regression of P against 1/V, evaluating the slope m = k, the y-intercept b, the statistical standard error, and the coefficient of determination R².',
+            'why': 'Linearization converts the equilateral hyperbola P(V) = k/V into an origin-intercepting straight line y = m x, allowing unbiased determination of the Boyle state constant k = n R T and rapid identification of systematic zero-point offsets.'
+        }
+    ],
+    'precautions': [
+        'Ensure the air enclosed within the closed manometer tube is thoroughly dry, as water vapor condensible at room temperature violates ideal gas behavior by exhibiting non-ideal vapor pressure fluctuations during compression.',
+        'Allow sufficient equilibration time (2 to 3 minutes minimum) following every vertical height adjustment to ensure the gas returns to ambient room temperature, dissipating transient adiabatic heating or cooling.',
+        'Read the mercury meniscus height at the extreme crest of its convex curvature in both tubes, aligning the eye with the sighting index to eliminate optical parallax errors across the millimeter scale.',
+        'Maintain the flexible connecting tubing free from kinking, pinching, or trapped air bubbles, which distort hydrostatic pressure transmission and disrupt leveling column continuity.',
+        'Handle liquid mercury with rigorous environmental hygiene protocols, keeping the apparatus within a deep spill-containment tray and ensuring all tube vents are shielded against accidental droplet splashing.'
+    ],
+    'topics': [
+        {
+            'title': 'Historical Genesis of Pneumatics: From Torricelli’s Vacuum to Boyle’s Spring of the Air',
+            'text': "The conceptual formulation of the mechanical behavior of gases marks the genesis of empirical physics in the seventeenth century, radically overthrowing classical Aristotelian plenism—the doctrine that nature abhors a vacuum ('horror vacui')—and replacing it with a quantitative mechanical paradigm governed by hydrostatic forces. In 1643, Evangelista Torricelli demonstrated that atmospheric air possesses finite weight by inverting a glass tube filled with mercury into a basin, creating a persistent column suspended at approximately 760 mm and establishing the existence of a sustained Torricellian vacuum above the liquid meniscus. Torricelli famously recognized that the liquid column was not drawn upward by the suction of the void, but rather sustained from beneath by the macroscopic weight of the overlying ocean of atmospheric air pressing upon the open cistern. Inspired by Torricelli's breakthrough and Otto von Guericke's subsequent invention of the pneumatic vacuum pump in Magdeburg, Robert Boyle, collaborating with the polymath Robert Hooke at Oxford in 1659, constructed the 'machina Boyleana'—an advanced two-cylinder pneumatic exhaust engine capable of evacuating large glass vessels. In 1662, responding to criticisms from the Jesuit scholar Franciscus Linus (who postulated an invisible tensile cord or 'funiculus' holding up the barometer column), Boyle published his definitive quantitative experiments in an appendix to his 'Defence of the Doctrine Touching the Spring and Weight of the Air'. Utilizing a massive glass J-tube extending over twelve feet along the stairwell of his lodgings, Boyle confined a fixed mass of dry air in the short sealed leg using a mercury column and systematically poured additional mercury into the long open limb. He recorded the progressive reduction in air volume as the mercury head increased, proving that the 'spring of the air'—its elastic repulsive pressure—is precisely inversely proportional to the volume of space into which it is compressed: P ∝ 1/V. Fourteen years later, in 1676, the French abbé and physicist Edme Mariotte independently discovered the identical proportionality while measuring both compressed and rarefied air, explicitly highlighting the imperative requirement that temperature must remain strictly constant throughout the transformation. Consequently, in Francophone literature and European physical convention, the relationship is rightfully designated the Boyle-Mariotte Law, forming the indispensable empirical foundation from which the universal equation of state for ideal gases was subsequently constructed.",
+            'formula': 'P_1 V_1 = P_2 V_2 = \\text{constant} \\quad (T = \\text{constant}) \\quad \\text{and} \\quad B = \\rho_{\\text{Hg}} g h_{\\text{baro}}',
+            'question': 'How did Robert Boyle historically demonstrate the inverse proportionality of gas pressure and volume, and why was the J-tube apparatus essential to his proof?',
+            'answer': 'Boyle utilized a large glass J-tube with the short leg sealed and the long leg open. By trapping a fixed mass of air in the short leg with an initial mercury level, he poured additional mercury into the long leg to exert hydrostatic pressure. He showed that when the total pressure (barometric pressure plus the differential mercury column height) was doubled, the volume of the trapped air was reduced to exactly one-half, proving P ∝ 1/V under isothermal conditions.'
+        },
+        {
+            'title': 'Microscopic Kinetic Derivation: Molecular Momentum Flux and Impact Frequency',
+            'text': "While Boyle's law was discovered empirically as a macroscopic phenomenological relationship, the kinetic theory of gases—developed during the eighteenth and nineteenth centuries by Daniel Bernoulli (1738), Rudolf Clausius (1857), James Clerk Maxwell (1860), and Ludwig Boltzmann (1872)—provides a rigorous microscopic derivation grounded in classical Newtonian mechanics. Consider an ideal gas consisting of N identical, non-interacting point particles of mass m confined within a cubical volume V = L³ along Cartesian coordinates (x, y, z). The particles undergo continuous, random translational motion with velocities v = (v_x, v_y, v_z), colliding elastically with the planar container walls perpendicular to the x-axis. In each specular elastic collision with a boundary wall of area A = L², the normal velocity component v_x reverses sign to −v_x, while tangential components remain unchanged. The momentum transferred to the wall per individual impact is given by Δp = m v_x − (−m v_x) = 2 m v_x. The round-trip transit time between successive collisions of this particle with the same wall is Δt = 2 L / v_x. According to Newton's second law, the average normal force exerted on the wall by this single particle is F_1 = Δp / Δt = (2 m v_x) / (2 L / v_x) = m v_x² / L. Summing the forces exerted across all N independent particles yields the total microscopic force: F_total = (m / L) ∑_{i=1}^N v_{xi}² = (N m / L) ⟨v_x²⟩, where ⟨v_x²⟩ represents the mean-square velocity component along the x-axis. Assuming spatial isotropy of the molecular velocity distribution, there is no preferred direction in space: ⟨v_x²⟩ = ⟨v_y²⟩ = ⟨v_z²⟩ = (1/3) ⟨v²⟩, where ⟨v²⟩ is the total mean-square molecular speed. Substituting this isotropic relationship into the force equation gives F_total = (1/3) (N m / L) ⟨v²⟩. The macroscopic pressure P is the force per unit surface area: P = F_total / A = F_total / L² = (1/3) (N m / L³) ⟨v²⟩ = (1/3) (N m / V) ⟨v²⟩ = (1/3) ρ ⟨v²⟩, where ρ = N m / V is the macroscopic mass density of the gas. Multiplying both sides by the volume V establishes the fundamental Bernoulli kinetic equation of state: P V = (1/3) N m ⟨v²⟩ = (2/3) N [ (1/2) m ⟨v²⟩ ] = (2/3) E_k, where E_k is the total translational kinetic energy of the gas molecules. In kinetic theory, the absolute thermodynamic temperature T is defined strictly through the mean molecular translational kinetic energy: (1/2) m ⟨v²⟩ = (3/2) k_B T, where k_B = 1.380649 × 10⁻²³ J K⁻¹ is the Boltzmann constant. Substituting this thermodynamic definition into the kinetic expression yields P V = (2/3) N [ (3/2) k_B T ] = N k_B T = n R T, where n = N / N_A is the molar quantity and R = N_A k_B is the universal gas constant. When the thermodynamic temperature T is held strictly constant (isothermal condition), the mean molecular speed ⟨v²⟩ remains invariant. Consequently, if the volume V is reduced by a factor of two, the molecular number density n_v = N / V doubles, exactly doubling the collision frequency per unit area of the wall per unit time (Z ∝ n_v ⟨v⟩), thereby doubling the momentum flux and macroscopic pressure P. This establishes Boyle's law directly from first principles of Newtonian mechanics.",
+            'formula': 'P V = \\frac{1}{3} N m \\langle v^2 \\rangle = \\frac{2}{3} N \\left(\\frac{1}{2} m \\langle v^2 \\rangle\\right) = N k_B T = n R T',
+            'question': 'How does kinetic theory explain the increase in pressure when an ideal gas is compressed isothermally to half its initial volume?',
+            'answer': 'At constant temperature, the root-mean-square speed of the gas molecules remains constant. Reducing the volume to one-half doubles the molecular number density (molecules per unit volume). Because molecules travel half the distance between wall collisions, the collision frequency per unit wall area doubles. With momentum transfer per collision unchanged, the total momentum flux per second per unit area doubles, exactly doubling the pressure.'
+        },
+        {
+            'title': 'Thermodynamic Equation of State: Isothermal Compressibility and Work of Expansion',
+            'text': "Within the formal mathematical structure of classical thermodynamics, Boyle's law characterizes the mechanical response of a fluid system undergoing an isothermal process, wherein the temperature state variable T is constrained to an invariant constant value. The fundamental mechanical response function describing how a fluid's volume responds to an applied pressure differential under isothermal conditions is the isothermal compressibility, denoted by κ_T and defined mathematically as: κ_T = − (1 / V) (∂V / ∂P)_T. For an ideal gas adhering to the equation of state P V = n R T, differentiating volume with respect to pressure while holding temperature constant yields: (∂V / ∂P)_T = ∂/∂P (n R T / P)_T = − n R T / P² = − V / P. Substituting this partial derivative into the definition of isothermal compressibility delivers: κ_T = − (1 / V) [ − V / P ] = 1 / P. This profound result demonstrates that for an ideal gas, the isothermal compressibility is simply the reciprocal of the absolute pressure. At high pressures, the gas becomes increasingly stiff and resistant to further volumetric deformation, whereas at low pressures, the compressibility becomes extraordinarily large. The mechanical work performed by or upon the gas during a reversible isothermal expansion or compression from an initial volume V_i to a final volume V_f is determined by integrating the work differential dW = P dV along the isothermal path: W = ∫_{V_i}^{V_f} P dV = ∫_{V_i}^{V_f} (n R T / V) dV = n R T ln(V_f / V_i) = P_i V_i ln(V_f / V_i) = k ln(V_f / V_i). According to the First Law of Thermodynamics (dU = dQ − dW), because the internal energy U of an ideal gas depends solely upon temperature (Joule's law: (∂U/∂V)_T = 0), the change in internal energy during any isothermal transformation of an ideal gas is identically zero: ΔU = 0. Consequently, Q = W = n R T ln(V_f / V_i). During isothermal compression (V_f < V_i), mechanical work W < 0 is performed upon the gas by the surroundings, and an identical quantity of heat Q < 0 must be continuously liberated to the thermal reservoir to prevent any rise in temperature. In laboratory experiments, this thermodynamic constraint necessitates that volumetric adjustments be performed quasi-statically, allowing sufficient thermal relaxation time for latent compression heat to conduct through the glass walls into the surrounding ambient atmosphere.",
+            'formula': '\\kappa_T = -\\frac{1}{V}\\left(\\frac{\\partial V}{\\partial P}\\right)_T = \\frac{1}{P} \\quad \\text{and} \\quad W = \\int_{V_i}^{V_f} P \\, dV = n R T \\ln\\left(\\frac{V_f}{V_i}\\right)',
+            'question': 'What is the isothermal compressibility of an ideal gas, and how is it related to absolute pressure?',
+            'answer': 'The isothermal compressibility is defined as κ_T = −(1/V)(∂V/∂P)_T. For an ideal gas obeying PV = nRT, (∂V/∂P)_T = −nRT/P² = −V/P, which simplifies directly to κ_T = 1/P. Thus, the isothermal compressibility of an ideal gas is exactly equal to the reciprocal of its absolute pressure.'
+        },
+        {
+            'title': 'Manometer Metrology and Hydrostatic Pressure: Head Balancing and Capillarity',
+            'text': "Precision determination of gas pressure in the Boyle's law apparatus relies upon the hydrostatic principles of liquid-column manometry. Consider a continuous, static column of an incompressible fluid of uniform density ρ in a gravitational field g. The fundamental hydrostatic equation governing vertical pressure variation is dP/dz = − ρ g. Integrating this relation between two vertical elevations z_1 and z_2 yields the familiar hydrostatic head equation: P_1 − P_2 = ρ g (z_2 − z_1) = ρ g h. In the J-tube manometer, one limb (the closed specimen tube) contains the confined gas at absolute pressure P, while the opposite limb (the leveling tube) is open to the ambient atmosphere at barometric pressure B. Applying Pascal's principle along a horizontal datum plane of equal fluid depth across the connecting mercury reservoir establishes that the absolute pressure at the mercury meniscus inside the closed tube equals the sum of the atmospheric pressure and the differential hydrostatic head of the liquid column: P = B + ρ_Hg g (h_open − h_closed) = B + ρ_Hg g Δh. When the mercury meniscus in the open tube is higher than in the closed tube (h_open > h_closed), Δh > 0, representing a compressive over-pressure state where P > B. Conversely, when the open tube is lowered beneath the closed tube (h_open < h_closed), Δh < 0, establishing a sub-atmospheric expansion regime where P < B. Because liquid mercury exhibits high surface tension (γ ≈ 0.486 N m⁻¹ at 20 °C) and a contact angle with clean glass exceeding 90° (typically θ ≈ 130° to 140°), it forms a pronounced convex meniscus and experiences capillary depression. According to the Young-Laplace equation, the capillary depression height h_c in a circular cylindrical glass tube of internal radius r is given by: h_c = (2 γ cos θ) / (ρ_Hg g r). If the closed specimen tube and the open leveling tube possess identical internal bore diameters (r_closed = r_open), the capillary depression is identical in both limbs and cancels exactly when computing the differential head Δh = h_open − h_closed. However, if unequal tube diameters are employed, an uncorrected capillary meniscus offset Δh_cap must be incorporated into the pressure calculation to prevent systematic zero-point biasing.",
+            'formula': 'P = B + \\rho_{\\text{Hg}} g (h_{\\text{open}} - h_{\\text{closed}}) = B + \\Delta h_{\\text{mmHg}} \\quad \\text{and} \\quad h_c = \\frac{2 \\gamma \\cos\\theta}{\\rho_{\\text{Hg}} g r}',
+            'question': 'Why does capillary depression occur in a mercury manometer, and how is it prevented from introducing systematic error in Boyle’s law measurements?',
+            'answer': 'Mercury exhibits a contact angle with glass greater than 90° (typically ~135° to 140°), meaning cohesive forces within mercury exceed adhesive forces to glass, resulting in a convex meniscus and capillary depression. When both limbs of the manometer tube have identical internal diameters, the capillary depression height is identical in both tubes and cancels completely when calculating the differential height Δh = h_open − h_closed.'
+        },
+        {
+            'title': 'Real Gas Deviations: The Van der Waals Equation and Compressibility Factor Z',
+            'text': "No real physical gas strictly obeys Boyle's law under all thermodynamic conditions. At elevated pressures or low temperatures near condensation, intermolecular forces and finite molecular volumes produce systematic departures from ideal behavior. In 1873, Johannes Diderik van der Waals introduced two critical empirical corrections to the ideal gas equation of state: (P + a n² / V²) (V − n b) = n R T, where the constant 'a' accounts for long-range attractive van der Waals intermolecular forces (which diminish the kinetic momentum imparted to the boundary walls, effectively reducing measured pressure), and the constant 'b' (the co-volume) accounts for the short-range repulsive finite volume excluded by the hard molecular cores (approximately four times the actual molecular volume). Expanding the van der Waals equation in powers of molar density or pressure yields the Virial Equation of State: Z = P V_m / (R T) = 1 + B_2(T) / V_m + B_3(T) / V_m² + ... = 1 + B'(T) P + C'(T) P² + ..., where Z is the dimensionless compressibility factor (identically equal to 1.0000 for a hypothetical ideal gas), V_m = V / n is the molar volume, and B_2(T) is the second virial coefficient. The temperature at which the second virial coefficient B_2(T) crosses zero is designated the Boyle Temperature, T_B: B_2(T_B) = 0. At the Boyle temperature, the attractive term (which tends to decrease Z below 1) exactly balances the repulsive excluded-volume term (which tends to increase Z above 1) over a wide pressure range, causing real gases to adhere to Boyle's law with extraordinary precision: (∂(P V)/∂P)_{T=T_B} → 0 as P → 0. For atmospheric dry air (primarily N₂ and O₂), the critical temperature is T_c ≈ 132.5 K and the Boyle temperature is T_B ≈ 347 K (74 °C). At standard room temperature (T = 293.15 K = 20.0 °C), the ambient temperature is slightly below T_B, meaning attractive dipole and dispersion interactions slightly dominate over excluded volume at moderate pressures, yielding a compressibility factor of Z ≈ 0.9996 at 1 atm and Z ≈ 0.9993 at 1.5 atm. Over the laboratory operating range of 0.75 to 1.5 atm (75 to 150 kPa), the departure of dry air from ideal Boyle behavior is less than 0.07%, fully justifying the ideal gas approximation within standard educational measurement tolerances.",
+            'formula': '\\left(P + \\frac{a n^2}{V^2}\\right)(V - n b) = n R T \\implies Z = \\frac{P V_m}{R T} = 1 + \\frac{B_2(T)}{V_m} + \\dots \\quad \\text{where } B_2(T_B) = 0',
+            'question': 'What is the Boyle temperature of a gas, and why does a real gas obey Boyle’s law most closely at this specific temperature?',
+            'answer': 'The Boyle temperature T_B is the temperature at which the second virial coefficient B_2(T) vanishes in the equation of state. At this temperature, the effects of intermolecular attractive forces (which lower pressure) and finite molecular excluded volume (which increases pressure) cancel each other out over an extended pressure range, causing the compressibility factor Z to remain virtually flat at 1.000 and the gas to obey Boyle’s law with high precision.'
+        },
+        {
+            'title': 'Graphic Linearization: Reciprocal Transformations and OLS Regression Analysis',
+            'text': "The direct functional relationship between pressure and volume under isothermal conditions is an equilateral hyperbola: P(V) = k / V. Direct non-linear curve fitting of hyperbolic experimental data suffers from several severe metrological disadvantages: non-linear parameter estimation requires iterative numerical algorithms, visual inspection of hyperbola curvature provides poor sensitivity to systematic outliers, and experimental error bars become highly non-uniform across the range. To overcome these limitations, experimental physicists employ graphical linearization techniques. By defining the transformed independent variable X = 1/V (the reciprocal volume, having SI units of m⁻³ or practical units of L⁻¹ = 1000 m⁻³) and the dependent variable Y = P (absolute pressure in Pa or kPa), the non-linear hyperbolic relationship transforms into a classic linear equation passing through the coordinate origin: Y = k · X + 0. An ordinary least-squares (OLS) linear regression model of the form y = m x + b is fitted to n experimental data pairs (x_i, y_i). The optimal slope m and intercept b are determined by minimizing the sum of squared residuals SSE = ∑_{i=1}^n (y_i − m x_i − b)², yielding the standard analytical estimators: m = [ n ∑ x_i y_i − (∑ x_i)(∑ y_i) ] / [ n ∑ x_i² − (∑ x_i)² ], and b = ȳ − m x̄. The estimated slope m corresponds directly to the physical Boyle state constant k = n R T. The sample coefficient of determination R² = 1 − SSE / SST measures the fraction of total variance explained by the linear model, where SST = ∑ (y_i − ȳ)². For high-precision laboratory data, R² should exceed 0.9999. Crucially, the empirical y-intercept b serves as a vital diagnostic tool for experimental validation: if the apparatus is operating without systematic error, b must be statistically indistinguishable from zero within its standard error SE_b = s_e √[ 1/n + x̄² / S_xx ], where s_e² = SSE / (n − 2). A statistically significant positive or negative intercept b indicates persistent experimental artifacts, such as an uncorrected zero-point offset in the closed tube volume scale (e.g. uncalibrated curved meniscus volume at the sealed tip), a constant barometric error, or an uncorrected capillary depression difference.",
+            'formula': 'P = k \\cdot \\left(\\frac{1}{V}\\right) + 0 \\iff y = m x + b \\quad \\text{where } m = k = n R T \\text{ and } b = 0',
+            'question': 'Why is pressure P plotted against reciprocal volume 1/V rather than directly against volume V, and what physical meaning is conveyed by the y-intercept of the regression line?',
+            'answer': 'Plotting P against V produces a non-linear hyperbola, making systematic deviations difficult to detect visually. Plotting P against 1/V linearizes the relationship into a straight line P = k(1/V) whose gradient directly equals the isothermal state constant k. In an ideal experiment, the y-intercept should be zero; a non-zero intercept reveals systematic errors such as an incorrect barometric datum or an uncalibrated dead space at the sealed tip of the tube.'
+        },
+        {
+            'title': 'Modern Industrial and Biomedical Applications: Pneumatics, Respiration, and Diving',
+            'text': "The principles embodied in Boyle's law underpin a vast spectrum of contemporary industrial, technological, and medical systems. In mechanical engineering and manufacturing, pneumatic automation systems utilize compressed air reservoirs operating according to isothermal and adiabatic gas laws to drive linear actuators, robotic grippers, and pneumatic drills with high power-to-weight ratios. In automotive safety, occupant airbag deployment systems rely upon controlled gas generation and rapid volumetric expansion governed by pneumatic state laws. In pulmonary physiology and clinical medicine, the mechanics of mammalian respiration are an immediate manifestation of Boyle's law. During inhalation, diaphragmatic contraction and thoracic expansion increase the internal volume of the pleural and alveolar cavities; according to Boyle's law, this volumetric increase causes the intra-alveolar pressure to drop approximately 1 to 3 mmHg below atmospheric pressure, driving an inward flow of fresh air through the bronchial tree until pressure parity is restored. During exhalation, thoracic relaxation decreases alveolar volume, raising internal pressure above atmospheric and forcing air outward. In underwater diving and hyperbaric medicine, Boyle's law dictates diver safety protocols. As a scuba diver descends underwater, hydrostatic water pressure increases by approximately 100 kPa (1 bar = 760 mmHg) for every 10 meters of depth. At a depth of 30 meters, the ambient absolute pressure is 4 bar (400 kPa); a volume of gas inhaled by the diver is compressed to one-fourth its surface volume. If the diver ascends toward the surface while holding their breath, ambient hydrostatic pressure drops fourfold, causing the air trapped within their lungs to expand fourfold according to Boyle's law (V_f = V_i · P_i / P_f), causing catastrophic pulmonary barotrauma and arterial gas embolism. Consequently, every scuba certification emphasizes the fundamental rule derived directly from Boyle's law: never hold your breath during ascent.",
+            'formula': 'P_{\\text{intra-alveolar}} < P_{\\text{atm}} \\implies \\text{Inhalation} \\quad \\text{and} \\quad V_f = V_i \\cdot \\left(\\frac{P_i}{P_f}\\right) \\quad (\\text{Boyle Barotrauma Risk})',
+            'question': 'How does Boyle’s law govern the mechanics of human inhalation, and why is breath-holding hazardous during scuba diving ascent?',
+            'answer': 'During inhalation, expansion of the chest cavity increases lung volume, which lowers intra-pulmonary pressure below atmospheric pressure according to Boyle’s law, drawing air in. During scuba ascent, ambient hydrostatic pressure decreases rapidly. If a diver holds their breath, the gas trapped in the lungs expands in inverse proportion to the falling ambient pressure; if this excess volume is not vented through exhalation, it over-expands the alveolar tissue, causing severe pulmonary barotrauma.'
+        }
+    ],
+    'quiz': [
+        {
+            'question': 'Under isothermal conditions, if the volume of an ideal gas is halved from 40.0 cm³ to 20.0 cm³, what happens to its absolute pressure?',
+            'options': [
+                'The absolute pressure exactly doubles.',
+                'The absolute pressure is reduced to one-half.',
+                'The absolute pressure increases fourfold.',
+                'The absolute pressure remains constant because temperature is unchanged.'
+            ],
+            'correct': 0,
+            'explanation': 'According to Boyle’s law (P₁V₁ = P₂V₂ at constant T), pressure is inversely proportional to volume. Halving the volume causes the absolute pressure to double: P₂ = P₁ · (V₁ / V₂) = P₁ · (40/20) = 2 P₁.'
+        },
+        {
+            'question': 'In a mercury J-tube manometer open to atmosphere at barometric pressure B, the mercury level in the open tube is 190.0 mm higher than in the closed tube. What is the absolute pressure of the confined gas?',
+            'options': [
+                'P = B + 190.0 mmHg',
+                'P = B − 190.0 mmHg',
+                'P = 190.0 mmHg',
+                'P = B / 190.0 mmHg'
+            ],
+            'correct': 0,
+            'explanation': 'Because the open tube mercury level is higher than the closed tube level, the mercury column exerts a positive hydrostatic head Δh = +190.0 mmHg on the trapped gas, giving an absolute pressure of P = B + Δh.'
+        },
+        {
+            'question': 'When plotting absolute pressure P on the vertical axis against reciprocal volume 1/V on the horizontal axis, what does the gradient of the best-fit line represent?',
+            'options': [
+                'The isothermal Boyle state constant k = n R T (with units of energy, J).',
+                'The universal gas constant R.',
+                'The ambient atmospheric barometric pressure B.',
+                'The isothermal compressibility κ_T of the gas.'
+            ],
+            'correct': 0,
+            'explanation': 'Linearizing Boyle’s law yields P = k · (1/V). Comparing this to y = m x shows that the slope m directly equals the isothermal Boyle state constant k = P · V = n R T, which has SI units of Pa · m³ = J.'
+        },
+        {
+            'question': 'Why must an experimenter wait 2 to 3 minutes after compressing the gas in the manometer before recording the pressure reading?',
+            'options': [
+                'To allow adiabatic compression heat to dissipate through the tube walls, restoring true isothermal conditions.',
+                'To allow the mercury to freeze into solid equilibrium.',
+                'To allow atmospheric pressure to adjust to the new volume setting.',
+                'To allow air molecules to settle to the bottom of the tube under gravity.'
+            ],
+            'correct': 0,
+            'explanation': 'Compressing a gas performs mechanical work on it, causing transient adiabatic heating. A dwell time is necessary for this thermal energy to conduct through the glass walls into the room air, returning the gas to the ambient baseline temperature T_0 so that isothermal conditions are strictly preserved.'
+        }
+    ],
+    'limitations': 'The teaching simulation models an ideal gas under strict isothermal conditions at constant room temperature T_0 = 20.00 °C (293.15 K) and standard barometric pressure B = 101.325 kPa (760.0 mmHg). In physical laboratory practice, barometric pressure drifts over hours as atmospheric weather fronts pass (±0.2 to 0.5 mmHg), capillary depression differences at the mercury-glass menisci introduce minor hydrostatic offsets (±0.2 to 0.4 mm) if tube diameters are not perfectly matched, room temperature fluctuations alter the gas temperature by ±0.2 °C, slight non-uniformity in the bore cross-section of the closed glass tube produces volume scale calibration deviations, and the presence of trace water vapor in non-dehydrated air causes slight departures from ideal gas behavior due to variable saturated vapor pressure contributions.',
+    'modelExtra': 'The simulation evaluates absolute pressure using P = k / V, where the reference state constant is k = P_0 V_0 = 101,325 Pa × 30.0 × 10⁻⁶ m³ = 3.03975 J (confined volume V in cm³, with 1 cm³ = 10⁻⁶ m³). The differential mercury head is computed from Δh = (P − B) / (ρ_Hg g), with ρ_Hg = 13,546 kg m⁻³, g = 9.80665 m s⁻², and standard atmosphere B = 101.325 kPa. The calculated pressure in kPa is rounded to 0.01 kPa to simulate precision digital manometry. Ordinary least-squares regression of P (Pa) against 1/V (m⁻³) across five volume settings (20.0, 25.0, 30.0, 35.0, 40.0 cm³) yields the reported isothermal state constant k and statistical uncertainty.'
+}
+
+# 1. Update experiments.json
+exp_path = ROOT / 'content/physics/experiments.json'
+experiments = json.loads(exp_path.read_text())
+existing_idx = next((i for i, e in enumerate(experiments) if e['slug'] == 'boyles-law'), None)
+if existing_idx is not None:
+    experiments[existing_idx] = exp31
+else:
+    experiments.append(exp31)
+exp_path.write_text(json.dumps(experiments, indent=2, ensure_ascii=False))
+print(f'experiments.json updated. Total experiments: {len(experiments)}')
+
+# 2. Update catalog.sqlite3
+db_path = ROOT / 'data/catalog.sqlite3'
+db = sqlite3.connect(db_path)
+cur = db.cursor()
+cur.execute('DELETE FROM experiments WHERE slug = ?', ('boyles-law',))
+cur.execute('''
+    INSERT INTO experiments (subject_id, slug, title, status, page_path, theory_path, report_path)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+''', (
+    1,
+    'boyles-law',
+    'Verification of Boyle’s Law and Determination of the Isothermal State Constant for an Ideal Gas',
+    'live',
+    '/physics/boyles-law/',
+    '/physics/boyles-law/theory/',
+    '/physics/boyles-law/report/'
+))
+db.commit()
+db.close()
+print('catalog.sqlite3 updated successfully for boyles-law.')
