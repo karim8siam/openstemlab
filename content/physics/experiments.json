@@ -8529,5 +8529,223 @@
     ],
     "limitations": "The analytical model treats the sounding rod as an ideal, infinitely thin elastic bar with strictly one-dimensional longitudinal stress (Pochhammer-Chree radial inertia dispersion neglected), assumes perfectly planar acoustic wavefronts inside the glass tube with zero viscous tube boundary-layer drag (Helmholtz-Kirchhoff wall attenuation), and models the cork disc as a massless acoustic source. In a physical laboratory, small radial Poisson expansion in thick rods slightly alters overtone frequencies, narrow glass bore introduces small acoustic velocity depression (~0.2% to 0.4% from wall friction), and room temperature gradients cause minor sound velocity shifts in air.",
     "modelExtra": ""
+  },
+  {
+    "number": 43,
+    "slug": "electrostatics",
+    "title": "Electrostatics: Coulomb's Law, Electric Induction, and Charge Quantification",
+    "shortTitle": "Electrostatics & Coulomb's Law",
+    "subject": "physics",
+    "aim": "To investigate electrostatic charge production by friction and induction, verify Faraday's ice-pail experiment and charge conservation, measure the electrostatic force between charged spheres as a function of distance using a Coulomb torsion balance, confirm the inverse-square law, and determine Coulomb's constant and the permittivity of free space using linear regression.",
+    "intro": "Electrostatics constitutes the cornerstone of classical electromagnetism, describing the fundamental forces, fields, and potentials produced by stationary electric charges. First quantified systematically by Charles-Augustin de Coulomb in 1785 using his delicate torsion balance, the electrostatic force between two point charges q₁ and q₂ separated by distance r in vacuum obeys the fundamental inverse-square relationship: F = (1 / 4πε₀) (q₁ q₂ / r²) = k_e (q₁ q₂ / r²), where k_e = 1 / (4πε₀) ≈ 8.98755 × 10⁹ N m² C⁻² is Coulomb's constant and ε₀ ≈ 8.85419 × 10⁻¹² F m⁻¹ is the permittivity of free space. Like Newton's law of universal gravitation, Coulomb's law exhibits an inverse-square dependence on distance governed by the geometry of three-dimensional Euclidean space, as formalized by Gauss's flux theorem: ∮ E · dA = Q_enc / ε₀. However, unlike gravity, electrostatic forces are bipolar: charges of like sign repel each other, while charges of opposite sign attract. When two small, identical conducting spheres are charged to equal potentials and placed within a draft-free chamber, the repulsive electrostatic force F deflects a suspended balance beam. By rotating a calibrated torsion head to restore the beam to its initial null position, the applied restoring torque τ = κ θ directly balances the electrostatic torque F · b, yielding an absolute force measurement in the micronewton (μN) regime. Simultaneously, the electrostatic behavior of conductors is governed by Gauss's law: in electrostatic equilibrium, the electric field within the bulk of a conductor is identically zero (E = 0), and all excess charge resides exclusively on the outer surface, as demonstrated by Michael Faraday's historic 1843 ice-pail experiment. Furthermore, the surface charge density σ concentrates at regions of high surface curvature (σ ∝ 1/R), generating intense localized electric fields capable of ionizing ambient air into a luminous corona discharge. By recording the electrostatic force F across various separation distances r, ordinary least-squares regression of F against the geometric variable 1/r² yields a strictly linear plot with slope m = k_e q₁ q₂. From this slope and the known sphere charges, students determine Coulomb's constant k_e and the permittivity of free space ε₀ with remarkable precision, bridging classical electrostatic induction, Faraday shielding, and continuum field theory.",
+    "fitEquation": "F = k_e q_1 q_2 \\left(\\frac{1}{r^2}\\right) \\iff y = m x + b \\iff k_e = \\frac{m}{q^2}, \\quad \\varepsilon_0 = \\frac{1}{4\\pi k_e}",
+    "gradientUnit": "N m²",
+    "target": 8987550000.0,
+    "targetName": "Coulomb constant k_e",
+    "resultUnit": "N m² C⁻²",
+    "resultDecimals": 2,
+    "resultScale": 1,
+    "reference": 8987550000.0,
+    "min": 3.0,
+    "max": 10.0,
+    "step": 0.5,
+    "initial": 5.0,
+    "inputLabel": "Separation distance r",
+    "shortInput": "Distance r",
+    "inputUnit": "cm",
+    "inputDecimals": 1,
+    "rawLabel": "Electrostatic force F",
+    "rawUnit": "μN",
+    "rawDecimals": 2,
+    "angle": false,
+    "timed": true,
+    "published": true,
+    "measureLabel": "Measure electrostatic force F",
+    "observationLabel": "Coulomb torsion balance observations",
+    "xAxis": "Inverse square distance (1 / r²)",
+    "yAxis": "Electrostatic force F",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "emptyX": "1/r² (m⁻²)",
+    "emptyY": "F (N)",
+    "samples": [
+      4.0,
+      5.0,
+      6.0,
+      7.0,
+      8.0,
+      9.0
+    ],
+    "settings": [
+      "Ambient room temperature: T = 20.0 °C; Relative humidity: RH < 25% (Controlled desiccated chamber).",
+      "Reference Coulomb electrostatic constant: k_e = 8.98755 × 10⁹ N m² C⁻² (Permittivity ε₀ = 8.85419 × 10⁻¹² F m⁻¹).",
+      "Conducting spheres: Precision gold-plated brass (radius a = 5.00 mm, mass m_sphere = 0.445 g).",
+      "Sphere electrostatic charge: q₁ = q₂ = 20.00 nC (Regulated contact charging at 3.00 kV DC).",
+      "Torsion balance suspension: Phosphor bronze fiber (torsional constant κ = 1.450 × 10⁻⁸ N m rad⁻¹, lever arm b = 10.0 cm).",
+      "Chamber boundary: Grounded copper wire Faraday mesh shielding (external stray field attenuation > 99.8%)."
+    ],
+    "apparatus": [
+      {
+        "name": "Coulomb Torsion Balance",
+        "purpose": "Precision electrostatic torsion balance housed in a draft-free cylindrical glass chamber with circular degree vernier scale, grounded conductive floor, and low-torsion phosphor bronze suspension fiber."
+      },
+      {
+        "name": "Matched Conducting Spheres",
+        "purpose": "Pair of precision-turned, lightweight gold-plated conducting spheres (radius a = 5.0 mm), one suspended on an insulating dielectric balance arm and the other mounted on a graduated sliding carrier."
+      },
+      {
+        "name": "Regulated High-Voltage DC Source",
+        "purpose": "Continuously variable low-current power supply (0 to 6.0 kV DC, 50 μA current-limited) for depositing calibrated electrostatic charges on the conducting spheres."
+      },
+      {
+        "name": "Precision Proof Plane and Faraday Ice Pail",
+        "purpose": "Polished metallic proof plane disc with amber insulating handle and an insulated nickel-plated Faraday ice pail connected to a digital electrometer for quantitative charge sampling."
+      },
+      {
+        "name": "Gold-Leaf Electroscope",
+        "purpose": "Enclosed glass-windowed electroscope with grounded metal shielding case, calibrated leaf divergence protractor, and high-insulation sulfur bushing."
+      },
+      {
+        "name": "Desiccated Environmental Chamber",
+        "purpose": "Hermetically sealed chamber enclosure with rechargeable silica gel desiccant column to maintain relative humidity below 25%, preventing atmospheric ion leakage."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Chamber Preparation and Environmental Desiccation",
+        "text": "Inspect the torsion balance glass chamber and verify that the internal silica gel desiccant is active. Clean the insulating glass surfaces and quartz suspension rod with anhydrous ethanol, and verify that the relative humidity inside the chamber reads below 25%.",
+        "why": "Water film condensation on insulating surfaces causes rapid electrostatic charge leakage by surface conduction, distorting force measurements."
+      },
+      {
+        "title": "Zero Balance and Torsion Wire Alignment",
+        "text": "Adjust the leveling screws of the balance until the suspended dielectric beam swings freely without touching the chamber walls. Rotate the top torsion head dial until the index hair on the suspended sphere A aligns exactly with the chamber zero mark when both spheres are uncharged.",
+        "why": "Eliminating mechanical zero-offset torque ensures that any angular twist observed during measurement is purely caused by electrostatic Coulomb forces."
+      },
+      {
+        "title": "Regulated Sphere Charging and Charge Verification",
+        "text": "Connect the charging probe to the 3.0 kV regulated DC supply. Touch the probe simultaneously to the suspended sphere A and sliding sphere B while they are in contact, depositing an equal charge of q1 = q2 = 20.0 nC on both spheres. Verify the charge magnitude with the Faraday ice pail and electrometer.",
+        "why": "Simultaneous contact charging of identical conducting spheres ensures strictly equal charge distribution (q1 = q2) by capacitive symmetry."
+      },
+      {
+        "title": "Coulomb Force Measurement vs Separation Distance",
+        "text": "Advance the sliding carrier to position sphere B at a center-to-center separation distance of r = 4.0 cm from sphere A. As electrostatic repulsion deflects sphere A, rotate the torsion head dial until sphere A is restored precisely to its original zero mark. Record the restoring angle theta and calculate the electrostatic force F in micro-newtons.",
+        "why": "The null-deflection restoration method maintains constant geometric orientation and lever arm length b, ensuring that the restoring torque kappa * theta is directly proportional to the Coulomb force F."
+      },
+      {
+        "title": "Systematic Separation Variation",
+        "text": "Repeat the torsion null measurement for six discrete separation distances (r = 4.0, 5.0, 6.0, 7.0, 8.0, and 9.0 cm). For each station, record the separation distance r, the inverse square 1/r^2, and the measured repulsive force F.",
+        "why": "Collecting data across a wide range of separations provides the necessary range of 1/r^2 to rigorously test the inverse-square law via linear regression."
+      },
+      {
+        "title": "Faraday Ice Pail and Charge Distribution Audit",
+        "text": "Using the proof plane, sample the surface charge density from the sphere and transfer it into the Faraday ice pail to confirm zero interior charge and verify that total charge has not decayed significantly during the run.",
+        "why": "Monitoring charge retention throughout the experiment confirms that charge leakage remained negligible and that Gauss's law conditions were maintained."
+      }
+    ],
+    "topics": [
+      {
+        "title": "Fundamental Electric Charges, Triboelectricity, and Electrostatic Induction",
+        "text": "All electrostatic phenomena arise from the microscopic atomic structure of matter, wherein negative electrons surround dense positive atomic nuclei. When two dissimilar insulating materials are brought into intimate microscopic contact, differential chemical electron affinities cause valence electrons to transfer across the interface—a phenomenon known as the triboelectric effect. In accordance with the fundamental law of charge conservation, the net electric charge in an isolated physical system remains strictly constant: charge is never created or destroyed, only transferred. Charges can be transferred between bodies via two distinct mechanisms: conduction and electrostatic induction. Conduction occurs through physical contact between a charged body and a neutral conductor, allowing mobile electrons to flow until electrical potentials equilibrate. In contrast, electrostatic induction redistributes mobile conduction electrons within a neutral conductor under the influence of an external Coulomb electric field without any physical contact. When a negatively charged rod is brought near an insulated neutral conductor, conduction electrons are repelled toward the far surface (free charge), leaving the near surface with a deficiency of electrons (bound positive charge). If the conductor is momentarily connected to Earth (grounded), the repelled free electrons drain into the reservoir of the Earth. Disconnecting the ground connection and subsequently removing the charged inducing rod leaves the conductor with a permanent, uniform net positive charge. Electrostatic induction proves that electrostatic forces act across space via electric fields and provides a contact-free method for charge generation.",
+        "formula": "Q_{\\text{total}} = \\sum q_i = \\text{constant}, \\qquad \\vec{F} = q \\vec{E}, \\qquad \\sigma_{\\text{induced}} = \\varepsilon_0 E_{\\perp}",
+        "question": "Why can an insulated metal sphere be charged positively by induction using a negatively charged ebonite rod, without the rod losing any of its own charge?",
+        "answer": "During induction, the negative rod repels conduction electrons to the far side of the sphere. Grounding drains these free electrons to Earth. When the ground is removed and then the rod is taken away, the sphere is left with a deficiency of electrons (net positive charge). The rod never touches the sphere, so it transfers no charge and loses none of its own."
+      },
+      {
+        "title": "Coulomb's Law, Field Equations, and the Inverse-Square Principle",
+        "text": "The quantitative foundation of electrostatics was established experimentally by Charles-Augustin de Coulomb in 1785. Coulomb formulated that the electrostatic force F acting between two stationary point charges q₁ and q₂ separated by distance r in vacuum is directly proportional to the product of their charges and inversely proportional to the square of the distance between them: F = k_e (q₁ q₂ / r²), where the proportionality constant is Coulomb's constant k_e = 1 / (4πε₀) = 8.98755 × 10⁹ N m² C⁻². The direction of the force is strictly along the line connecting the two charges: repulsive for charges of identical sign (q₁ q₂ > 0) and attractive for charges of opposite sign (q₁ q₂ < 0). In vector notation, the force exerted by charge q₁ on charge q₂ at position r₂ is: F₁₂ = [1 / (4πε₀)] [q₁ q₂ / |r₂ − r₁|²] r̂₁₂. Defining the electric field E as the electrostatic force per unit positive test charge (E = F / q₀), the field of a point charge is E = [1 / (4πε₀)] (q / r²) r̂. The inverse-square dependence on distance (1/r²) is a fundamental consequence of the three-dimensional geometry of space: the surface area of a spherical wavefront expands as 4πr², diluting the conserved flux of the electric field proportionally. Gauss's law, ∮ E · dA = Q_enc / ε₀, formalizes this conservation principle in integral form, while the differential form ∇ · E = ρ / ε₀ constitutes the first of Maxwell's four fundamental equations of electrodynamics.",
+        "formula": "\\vec{F}_{12} = \\frac{1}{4\\pi \\varepsilon_0} \\frac{q_1 q_2}{r^2} \\hat{r}_{12}, \\qquad \\vec{E} = \\frac{1}{4\\pi \\varepsilon_0} \\frac{q}{r^2} \\hat{r}, \\qquad \\oint \\vec{E} \\cdot d\\vec{A} = \\frac{Q_{\\text{enc}}}{\\varepsilon_0}",
+        "question": "How does the electrostatic force between two point charges change if both the charges and the distance between them are doubled?",
+        "answer": "From Coulomb's law F = k_e (q₁ q₂ / r²), doubling both charges quadruples the numerator (2 × 2 = 4), while doubling the distance quadruples the denominator (2² = 4). The factor of 4 cancels (4/4 = 1), leaving the electrostatic force completely unchanged."
+      },
+      {
+        "title": "Coulomb's Torsion Balance Metrology and Finite-Size Corrections",
+        "text": "Because electrostatic forces between laboratory-scale charges (nanocoulombs) are exceptionally small (micro-newtons to milli-newtons), standard gravitational balance scales are inadequate. Coulomb overcame this measurement barrier by inventing the torsion balance. A thin, resilient vertical wire of length L_wire, radius r_wire, and shear modulus η suspends a light insulating rod carrying a charged conducting sphere of radius a at one end and a counterweight at the other. When a second identical charged sphere is placed nearby, electrostatic repulsion deflects the beam through an angle θ. By Hooke's law in torsion, twisting the suspension fiber by angle θ produces an elastic restoring torque: τ = κ θ, where κ = (π η r_wire⁴) / (2 L_wire) is the torsional constant of the fiber. In the null-restoration method, the experimenter rotates the top torsion head by angle θ until the suspended sphere returns exactly to its initial position. The restoring torque then balances the electrostatic torque: κ θ = F · b, where b is the moment arm from the suspension axis to the sphere center, directly yielding F = (κ / b) θ. In physical experiments, conducting spheres are not ideal mathematical point charges. When two conducting spheres of radius a are brought to separation r, mutual electrostatic induction redistributes surface charges toward the opposing poles. Lord Kelvin solved this boundary-value problem using the method of electrical images, deriving the series correction: F = F_point [1 − 4(a/r)³ + ...]. For spheres of radius a = 5.0 mm at distances r ≥ 40.0 mm, (a/r) ≤ 0.125, keeping finite-size departures below 0.7%.",
+        "formula": "\\tau = \\kappa \\theta = F \\cdot b \\implies F = \\frac{\\kappa}{b} \\theta, \\qquad F_{\\text{real}} \\approx F_{\\text{point}} \\left[ 1 - 4\\left(\\frac{a}{r}\\right)^3 \\right]",
+        "question": "Why is Coulomb's torsion balance vastly more sensitive for measuring minute electrostatic forces than a conventional spring balance?",
+        "answer": "A thin torsion fiber provides an extremely small mechanical restoring torque per unit twist angle (τ = κ θ, with κ ~ 10⁻⁸ N m/rad), allowing electrostatic forces in the micronewton (μN) regime to produce large, easily readable angular deflections of several degrees."
+      },
+      {
+        "title": "Faraday's Ice-Pail Experiment, Electrostatic Shielding, and Gauss's Law",
+        "text": "In 1843, Michael Faraday conducted his renowned ice-pail experiment to elucidate the spatial distribution of electric charge and electrostatic shielding. An insulated hollow metal pail was connected to a sensitive gold-leaf electroscope. When a positively charged brass sphere suspended by a silk insulating thread was lowered into the interior of the pail without touching the walls, the electroscope leaves immediately diverged, indicating an induced charge. The positive charge on the sphere induced an equal and opposite negative charge (−Q) on the inner wall of the pail, and an equal positive charge (+Q) on the outer wall and electroscope leaves. When the sphere was moved around inside the pail, the electroscope divergence remained completely invariant, demonstrating that the external field depends only on total enclosed charge. When the sphere touched the inner bottom of the pail, the electroscope leaves did not move at all, and upon withdrawing the sphere, it was found to be completely discharged! All electric charge had migrated to the outer surface of the pail. Applying Gauss's law ∮ E · dA = Q_enc / ε₀ explains this fundamental result: inside the bulk metal of the pail, the electric field is strictly zero (E = 0). A Gaussian surface drawn within the metal enclosing the interior cavity must have zero net flux, proving that the charge on the inner wall is exactly equal and opposite to the charge on the sphere. When contact occurs, the inner charge is neutralized, and 100% of the charge resides on the outer surface. This phenomenon creates an electrostatic shield (Faraday cage), ensuring that interior electronic instruments are completely protected from external electrostatic fields.",
+        "formula": "\\oint_{\\text{cavity}} \\vec{E} \\cdot d\\vec{A} = 0 \\implies Q_{\\text{inner}} = -Q_{\\text{sphere}}, \\qquad Q_{\\text{outer}} = +Q_{\\text{sphere}}, \\qquad \\vec{E}_{\\text{interior}} = 0",
+        "question": "In Faraday's ice-pail experiment, why is no charge found on the inner surface of the metal pail after the charged sphere touches the inside?",
+        "answer": "By Gauss's law, like charges repel each other to the outermost boundary of a conductor to reach electrostatic equilibrium (minimum potential energy). When the sphere touches the interior wall, it becomes part of the interior cavity; all mobile charge flows instantly to the pail's outer surface, leaving the interior cavity with zero net charge and zero electric field."
+      },
+      {
+        "title": "Surface Charge Distribution, Electric Field at a Conductor, and Corona Discharge",
+        "text": "For a conductor in electrostatic equilibrium, mobile charges arrange themselves so that the tangential component of the electric field at the surface vanishes: E_parallel = 0. Consequently, the entire conducting body is an equipotential volume (V = constant). The electric field just outside the conducting surface is strictly normal to the surface, with a magnitude determined by Coulomb's boundary condition: E_perp = σ / ε₀, where σ is the local surface charge density. Using a proof plane—a small metallic disc on an insulating handle—experimentalists can sample the charge density σ at various points on charged conductors of different geometries. On a spherical conductor, symmetry enforces uniform charge distribution. However, on an irregular or pear-shaped conductor, surface charge density varies inversely with the local radius of curvature: σ ∝ 1 / R_curvature. At sharp points, edges, or needle tips where the radius of curvature approaches zero (R → 0), the surface charge density and electric field reach colossal values, easily exceeding the dielectric breakdown strength of dry air (E_breakdown ≈ 3.0 × 10⁶ V/m = 30 kV/cm). When this threshold is crossed, the intense field accelerates ambient electrons, initiating Townsend avalanche ionization. Gas molecules are dissociated into glowing plasma (corona discharge), generating positive ions that are violently repelled from the tip. This stream of accelerated ions creates a detectable aerodynamic draft known as 'electric wind', capable of blowing out candle flames or spinning reaction pinwheels.",
+        "formula": "\\vec{E}_{\\text{surface}} = \\frac{\\sigma}{\\varepsilon_0} \\hat{n}, \\qquad \\sigma \\propto \\frac{1}{R_{\\text{curvature}}}, \\qquad E_{\\text{breakdown}} \\approx 3.0 \\times 10^6 \\text{ V m}^{-1}",
+        "question": "Why does electrostatic charge concentrate at sharp points and edges rather than distributing uniformly over an irregularly shaped conductor?",
+        "answer": "On an equipotential conducting surface, the electric field is inversely proportional to the local radius of curvature (E ∝ 1/R). At sharp points (where R → 0), the surface charge density σ = ε₀ E becomes enormous to maintain uniform potential throughout the body."
+      },
+      {
+        "title": "Linear Regression Formulation and OLS Parameter Isolation",
+        "text": "To determine Coulomb's constant k_e and the permittivity of free space ε₀ without relying on isolated, error-prone single measurements, experimentalists record the repulsive force F across a systematic series of separation distances r (e.g. 4.0 to 9.0 cm). From Coulomb's inverse-square law F = k_e q₁ q₂ (1/r²), defining x = 1/r² (in m⁻²) as the independent variable and y = F (in N) as the dependent variable transforms the non-linear physical law into the canonical linear regression model: y = m x + b. Here, the regression slope m represents the product of Coulomb's constant and the sphere charges: m = k_e q₁ q₂. For identical sphere charges (q₁ = q₂ = q), the slope becomes m = k_e q². Inverting this relationship isolates Coulomb's constant directly: k_e = m / q². Furthermore, the permittivity of free space is obtained from k_e = 1 / (4πε₀) as: ε₀ = 1 / (4π k_e) = q² / (4π m). The regression intercept b provides an indispensable experimental diagnostic: theoretically b = 0, so any statistically significant non-zero intercept detects zero-offset fiber twist, residual stray charges on the chamber walls, or unmodelled image charge forces. Ordinary least-squares (OLS) regression minimizes the sum of squared force residuals, averaging out random torsion sighting errors and providing rigorous standard error evaluations for both slope and intercept.",
+        "formula": "F = m \\left(\\frac{1}{r^2}\\right) + b \\implies m = k_e q^2 \\iff k_e = \\frac{m}{q^2}, \\qquad \\varepsilon_0 = \\frac{1}{4\\pi k_e} = \\frac{q^2}{4\\pi m}",
+        "question": "When plotting electrostatic force F on the vertical axis against 1/r² on the horizontal axis, what does the regression slope m represent?",
+        "answer": "The slope m = F / (1/r²) equals the electrostatic force constant product: m = k_e q₁ q₂ = (q₁ q₂) / (4πε₀). Dividing the slope by the known product of the charges q² directly yields Coulomb's constant k_e = m / q²."
+      },
+      {
+        "title": "Dielectric Polarization, Relative Permittivity (κ), and Modern Applications",
+        "text": "When an insulating material (dielectric) is introduced into an electrostatic field, the charges within its atoms and molecules cannot move freely like conduction electrons. Instead, the external field induces microscopic dielectric polarization: positive atomic nuclei are displaced slightly in the direction of the field, while negative electron clouds shift in the opposite direction, forming microscopic electric dipoles. In polar dielectrics (such as water molecules), permanent dipoles undergo partial rotational alignment. The macroscopic alignment of these microscopic dipoles is quantified by the polarization vector P = ε₀ (κ − 1) E, where κ = ε_r is the dimensionless relative permittivity (dielectric constant). This internal polarization produces bound surface charges (σ_p = P · n̂) that generate an internal depolarizing field opposing the applied field. Consequently, the net electric field inside the dielectric is reduced by a factor of κ: E = E₀ / κ, and the electrostatic force between charges embedded in the dielectric is attenuated: F = (1 / 4πε₀κ) (q₁ q₂ / r²). In vacuum or dry air, κ ≈ 1.0006; in glass, κ ≈ 5 to 10; and in pure water, κ ≈ 80.1. Modern electrostatics exploits these principles in industrial electrostatic precipitators that capture 99.9% of particulate soot from power plant exhausts, xerographic laser printing and photocopying using photoconductive selenium drums, electrostatic powder coating of automobile chassis, capacitive touchscreen sensors, and Kelvin probe force microscopy (KPFM) profiling work functions at atomic resolution.",
+        "formula": "\\vec{P} = \\varepsilon_0 (\\kappa - 1) \\vec{E}, \\qquad \\vec{E} = \\frac{\\vec{E}_0}{\\kappa}, \\qquad F_{\\text{dielectric}} = \\frac{1}{4\\pi \\varepsilon_0 \\kappa} \\frac{q_1 q_2}{r^2} = \\frac{F_{\\text{vacuum}}}{\\kappa}",
+        "question": "If two charges are submerged in pure water (dielectric constant κ = 80) at the same separation distance, how does the electrostatic force between them compare to their force in air?",
+        "answer": "The force in water is reduced by a factor of 80: F_water = F_air / κ = F_air / 80. Molecular water dipoles orient themselves around the charges, producing a strong polarization screening field that counteracts the original Coulomb field."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "According to Coulomb's law, if the separation distance between two charged conducting spheres is reduced to one-third of its original value, the electrostatic repulsive force becomes:",
+        "options": [
+          "9 times greater",
+          "3 times greater",
+          "One-third of the original force",
+          "27 times greater"
+        ],
+        "correct": 0,
+        "explanation": "Coulomb's force is inversely proportional to the square of distance: F ∝ 1/r². Reducing r by a factor of 3 increases F by a factor of 1 / (1/3)² = 9."
+      },
+      {
+        "question": "In Faraday's ice-pail experiment, touching a charged sphere to the inner surface of an insulated hollow metal container causes:",
+        "options": [
+          "All charge to transfer entirely to the outer surface of the container",
+          "Equal division of charge between the sphere and the inner container wall",
+          "The container to lose all electrical charge to the atmosphere",
+          "The electric field inside the hollow container to increase significantly"
+        ],
+        "correct": 0,
+        "explanation": "Under electrostatic equilibrium, excess charge on a conductor resides exclusively on its outer surface. Touching the inside makes the sphere part of the cavity; all charge migrates to the outer surface, leaving the inside with zero charge and zero electric field."
+      },
+      {
+        "question": "If the regression slope of electrostatic force F plotted against 1/r² is m = 3.595 × 10⁻⁶ N m², and each sphere carries a charge of 20.0 nC, what is the value of Coulomb's constant k_e?",
+        "options": [
+          "8.988 × 10⁹ N m² C⁻²",
+          "4.494 × 10⁹ N m² C⁻²",
+          "1.798 × 10¹⁰ N m² C⁻²",
+          "8.854 × 10⁻¹² N m² C⁻²"
+        ],
+        "correct": 0,
+        "explanation": "Using k_e = m / q² = (3.595 × 10⁻⁶) / (20.0 × 10⁻⁹)² = (3.595 × 10⁻⁶) / (4.00 × 10⁻¹⁶) = 8.9875 × 10⁹ N m² C⁻²."
+      },
+      {
+        "question": "What happens when an uncharged, insulated conductor is grounded while under the influence of an adjacent positive electric charge?",
+        "options": [
+          "Electrons flow from Earth onto the conductor, neutralizing the free positive charge",
+          "Positive charge flows from the conductor into Earth, leaving it neutral",
+          "The bound negative charge escapes into Earth",
+          "The conductor acquires a net positive charge equal to the inducing body"
+        ],
+        "correct": 0,
+        "explanation": "The positive inducing body attracts negative conduction electrons to the near side (bound charge) and repels positive charge to the far side (free charge). Grounding allows electrons from Earth to flow in and neutralize the free charge. When ground is disconnected, a net negative charge remains."
+      }
+    ],
+    "precautions": [
+      "Ground all outer metallic shielding cases and observer wrist straps before operating the balance to prevent stray electrostatic induction from clothing or body capacitance.",
+      "Never breathe directly toward the open balance chamber, as moisture in exhaled breath instantly compromises the high-insulation quartz surfaces.",
+      "Ensure the separation distance r is always at least 4 times the sphere radius (r >= 4a) to keep finite-size multipole induction corrections below 0.7%.",
+      "Approach the null reading position slowly to avoid setting the suspended torsion beam into persistent rotational swinging."
+    ],
+    "limitations": "The analytical model treats the conducting spheres as mathematical point charges in an infinite, unbounded vacuum, neglecting electrostatic image charges induced in the chamber walls, minor finite-size multipole surface charge redistribution (Lord Kelvin image correction ~0.3% at r = 4 cm), and residual atmospheric ion leakage (~0.1 nC/min). In a physical laboratory, slight fiber mechanical hysteresis (zero drift after large twists), minute convective air currents inside the glass chamber, and environmental humidity fluctuations introduce small experimental scatter.",
+    "modelExtra": ""
   }
 ]

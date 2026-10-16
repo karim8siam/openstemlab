@@ -52,6 +52,7 @@ function drawComparativeSim(t,p,v,phase,ink,soft,orange){
   const isOptics=['convex-lens','glass-slab','diffraction-grating'].includes(cfg.slug);
   const isElec=['ohms-law','metre-bridge','rc-charging'].includes(cfg.slug);
   const isSound=['resonance-air-column','modes-air-column','vibration-strings-sonometer','interference-sound-waves'].includes(cfg.slug);
+  const isElectrostatic=['electrostatics'].includes(cfg.slug);
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
   const text=(x,y,str,color='#9fb498',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
@@ -275,6 +276,44 @@ function drawComparativeSim(t,p,v,phase,ink,soft,orange){
     });
     svg+=text(360,305,'Laplace Sound Speed: v = √(γRT/M) = √(K/ρ) · Radiation Mismatch Z_water >> Z_air',soft,10);
   }
+  else if(isElectrostatic){
+    const gX=60,gY=55,gW=340,gH=210;
+    svg+='<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#14221e" stroke="'+soft+'" stroke-width="1.5" rx="4"/>';
+    svg+=text(gX+gW/2,gY-15,'DIELECTRIC SCREENING & COULOMB FORCE ATTENUATION (F = F₀ / κ)','#e2ecd7',11);
+    const media=[
+      {name:'Vacuum / Dry Air (κ = 1.00)',factor:1.0,fVal:'1438.0 μN',col:ink,desc:'ε = ε₀ = 8.85 pF/m · Zero Screening'},
+      {name:'Mica / Glass (κ = 6.00)',factor:6.0,fVal:'239.7 μN',col:orange,desc:'ε = 6.0 ε₀ = 53.1 pF/m · Strong Polarization'},
+      {name:'Pure Water (20°C, κ = 80.1)',factor:80.1,fVal:'18.0 μN',col:'#38bdf8',desc:'ε = 80.1 ε₀ = 709 pF/m · Massive Dipole Shield'}
+    ];
+    media.forEach((m,idx)=>{
+      const rowY=gY+35+idx*55;
+      svg+='<text x="'+(gX+18)+'" y="'+(rowY-8)+'" fill="'+m.col+'" font-size="10" font-weight="bold">'+m.name+'</text>';
+      svg+='<text x="'+(gX+gW-18)+'" y="'+(rowY-8)+'" text-anchor="end" fill="'+m.col+'" font-size="10" font-family="monospace">F = '+m.fVal+'</text>';
+      svg+='<rect x="'+(gX+18)+'" y="'+rowY+'" width="'+(gW-36)+'" height="14" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+      const barW=((1.0/m.factor)*(gW-36)).toFixed(1);
+      svg+='<rect x="'+(gX+18)+'" y="'+rowY+'" width="'+barW+'" height="14" rx="3" fill="'+m.col+'"/>';
+      const pulseX=gX+18+((phase*(3.0/m.factor))%1)*(gW-36);
+      svg+='<circle cx="'+pulseX.toFixed(1)+'" cy="'+(rowY+7)+'" r="4.5" fill="#fde68a" stroke="#fff" stroke-width="1"/>';
+      svg+='<text x="'+(gX+22)+'" y="'+(rowY+26)+'" fill="#9fb498" font-size="8">'+m.desc+'</text>';
+    });
+    const bX=425,bY=55,bW=265,bH=210;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'DIELECTRIC CONSTANT & BREAKDOWN FIELD','#718e79',9.5);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+    const dStats=[
+      {mat:'Dry Air (1 atm, 20°C)',k:'κ = 1.0006',bd:'E_b = 3.0 MV/m',col:ink},
+      {mat:'Pyrex Glass (Plate)',k:'κ = 5.60',bd:'E_b = 14.0 MV/m',col:orange},
+      {mat:'Distilled Water (Pure)',k:'κ = 80.1',bd:'E_b = 65.0 MV/m',col:'#38bdf8'}
+    ];
+    dStats.forEach((s,idx)=>{
+      const rowY=bY+52+idx*46;
+      svg+='<circle cx="'+(bX+22)+'" cy="'+(rowY-4)+'" r="4.5" fill="'+s.col+'"/>';
+      svg+='<text x="'+(bX+34)+'" y="'+rowY+'" fill="'+s.col+'" font-size="11" font-weight="bold">'+s.mat+'</text>';
+      svg+='<text x="'+(bX+34)+'" y="'+(rowY+15)+'" fill="#9fb498" font-size="8.5">'+s.k+' · '+s.bd+'</text>';
+      if(idx<2)svg+='<line x1="'+(bX+20)+'" y1="'+(rowY+24)+'" x2="'+(bX+bW-20)+'" y2="'+(rowY+24)+'" stroke="#253a34" stroke-dasharray="2 2"/>';
+    });
+    svg+=text(360,305,'Coulomb Law in Matter: F = (1 / 4πε₀κ) (q₁q₂ / r²) · Polarization P⃗ = ε₀(κ − 1)E⃗',soft,10);
+  }
   else{
     const gX=60,gY=55,gW=340,gH=210;
     svg+='<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#14221e" stroke="'+soft+'" stroke-width="1.5" rx="4"/>';
@@ -331,6 +370,7 @@ function drawDynamicSandbox(t,p,v,phase,ink,soft,orange){
   const isOptics=['convex-lens','glass-slab','diffraction-grating'].includes(cfg.slug);
   const isElec=['ohms-law','metre-bridge','rc-charging'].includes(cfg.slug);
   const isSound=['resonance-air-column','modes-air-column','vibration-strings-sonometer','interference-sound-waves'].includes(cfg.slug);
+  const isElectrostatic=['electrostatics'].includes(cfg.slug);
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
   const text=(x,y,str,color='#9fb498',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
@@ -559,6 +599,61 @@ function drawDynamicSandbox(t,p,v,phase,ink,soft,orange){
     svg+='<text x="'+(bX+25)+'" y="'+(bY+185)+'" fill="#9fb498" font-size="8.5">Quarter-Wave Condition: L + c = (2n − 1) λ / 4</text>';
     svg+='<text x="'+(bX+25)+'" y="'+(bY+202)+'" fill="'+soft+'" font-size="8">Orthogonal Modes: Odd Harmonics f₁ (1f), f₂ (3f), f₃ (5f)</text>';
     svg+=text(360,305,'Longitudinal Waves: Molecular Compressions & Rarefactions · Rayleigh Boundary Dissipation',soft,10);
+  }
+  else if(isElectrostatic){
+    const cX=50,cY=50,cW=340,cH=220;
+    svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#101c18" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+    svg+=text(cX+cW/2,cY-15,'2D ELECTROSTATIC FIELD & VECTOR TRACERS (COULOMB REPULSION)','#e2ecd7',11);
+    const q1X=cX+90,q2X=cX+cW-90,qY=cY+cH/2;
+    // Charge spheres
+    svg+='<circle cx="'+q1X+'" cy="'+qY+'" r="14" fill="#d97706" stroke="#f59e0b" stroke-width="2"/>';
+    svg+='<text x="'+q1X+'" y="'+(qY+4)+'" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">+q₁</text>';
+    svg+='<circle cx="'+q2X+'" cy="'+qY+'" r="14" fill="#d97706" stroke="#f59e0b" stroke-width="2"/>';
+    svg+='<text x="'+q2X+'" y="'+(qY+4)+'" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">+q₂</text>';
+    // Central neutral point
+    const midX=(q1X+q2X)/2;
+    svg+='<circle cx="'+midX+'" cy="'+qY+'" r="4" fill="none" stroke="#ef4444" stroke-width="1.5"/>';
+    svg+='<line x1="'+(midX-6)+'" y1="'+qY+'" x2="'+(midX+6)+'" y2="'+qY+'" stroke="#ef4444" stroke-width="1"/>';
+    svg+='<line x1="'+midX+'" y1="'+(qY-6)+'" x2="'+midX+'" y2="'+(qY+6)+'" stroke="#ef4444" stroke-width="1"/>';
+    svg+=text(midX,qY-10,'E⃗ = 0 (Neutral Point)','#ef4444',7.5);
+    // Field lines radiating and bending away
+    for(let a=0;a<8;a++){
+      const ang=(a/8)*2*Math.PI;
+      const c1x=q1X+Math.cos(ang)*18,c1y=qY+Math.sin(ang)*18;
+      const bend1X=c1x+Math.cos(ang)*60-(Math.cos(ang)>0?25:0);
+      const bend1Y=c1y+Math.sin(ang)*70;
+      svg+='<path d="M '+c1x.toFixed(1)+' '+c1y.toFixed(1)+' Q '+bend1X.toFixed(1)+' '+bend1Y.toFixed(1)+' '+(bend1X+Math.cos(ang)*30).toFixed(1)+' '+(bend1Y+Math.sin(ang)*30).toFixed(1)+'" fill="none" stroke="'+ink+'" stroke-width="1.2" opacity="0.65"/>';
+      const c2x=q2X+Math.cos(ang)*18,c2y=qY+Math.sin(ang)*18;
+      const bend2X=c2x+Math.cos(ang)*60+(Math.cos(ang)<0?25:0);
+      const bend2Y=c2y+Math.sin(ang)*70;
+      svg+='<path d="M '+c2x.toFixed(1)+' '+c2y.toFixed(1)+' Q '+bend2X.toFixed(1)+' '+bend2Y.toFixed(1)+' '+(bend2X+Math.cos(ang)*30).toFixed(1)+' '+(bend2Y+Math.sin(ang)*30).toFixed(1)+'" fill="none" stroke="'+ink+'" stroke-width="1.2" opacity="0.65"/>';
+    }
+    // Dynamic tracer particles flowing outward
+    for(let tr=0;tr<12;tr++){
+      const tNorm=((phase*1.8+tr/12)%1);
+      const tAng=(tr/12)*2*Math.PI;
+      const tX=q1X+Math.cos(tAng)*(18+tNorm*75);
+      const tY=qY+Math.sin(tAng)*(18+tNorm*75);
+      svg+='<circle cx="'+tX.toFixed(1)+'" cy="'+tY.toFixed(1)+'" r="2.5" fill="#fde68a" opacity="'+(1.0-tNorm*0.6)+'"/>';
+    }
+    const bX=420,bY=50,bW=270,bH=220;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'ENERGY DENSITY & FARADAY SHIELDING','#718e79',9);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+58)+'" fill="'+ink+'" font-size="9">Electrostatic Energy Density u_E = ½ ε₀ E²</text>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+65)+'" width="220" height="12" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+    const uE_bar=(160+Math.sin(phase*4)*40).toFixed(1);
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+65)+'" width="'+uE_bar+'" height="12" rx="3" fill="'+ink+'"/>';
+    svg+='<text x="'+(bX+25)+'" y="'+(bY+100)+'" fill="'+orange+'" font-size="9">Electric Potential V(r) = k_e q / r</text>';
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+107)+'" width="220" height="12" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+    const v_bar=(180+Math.cos(phase*3)*30).toFixed(1);
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+107)+'" width="'+v_bar+'" height="12" rx="3" fill="'+orange+'"/>';
+    // Faraday Ice Pail Cavity Icon
+    svg+='<rect x="'+(bX+25)+'" y="'+(bY+135)+'" width="220" height="58" rx="4" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+152)+'" text-anchor="middle" fill="#38bdf8" font-size="8.5" font-weight="bold">FARADAY CAGE / CONDUCTING SHELL</text>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+168)+'" text-anchor="middle" fill="#fde68a" font-size="8">Internal Cavity: E⃗_inside ≡ 0 (Gauss Law)</text>';
+    svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+182)+'" text-anchor="middle" fill="#9fb498" font-size="7.5">100% Net Charge Resides on Outer Surface: σ = ε₀ E_⊥</text>';
+    svg+=text(360,305,'Coulomb Vector Superposition: E⃗_net = Σ E⃗_i · Electrostatic Energy Density u_E = ½ ε₀ E²',soft,10);
   }
   else{
     const cX=50,cY=50,cW=340,cH=220;
@@ -829,6 +924,99 @@ function draw(t){
     }
     const bX=470,bY=45,bW=220,bH=220,lambda_air_m=2.0*d_cm/100.0,f_sound=343.20/lambda_air_m,v_rod_est=343.20*((L_cm/100.0)/(d_cm/100.0)),E_gpa=8500.0*(v_rod_est*v_rod_est)*1e-9;
     svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#182824" stroke="'+soft+'" stroke-width="1.5"/><text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#718e79" font-size="9">SOUNDING ROD LENGTH (L_rod)</text><text x="'+(bX+15)+'" y="'+(bY+52)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+L_cm.toFixed(1)+'</text><text x="'+(bX+105)+'" y="'+(bY+50)+'" fill="'+soft+'" font-size="11">cm</text><text x="'+(bX+130)+'" y="'+(bY+50)+'" fill="#9fb498" font-size="8">(Center Clamped)</text><line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#253a34"/><text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#718e79" font-size="9">NODAL DUST SPACING (d = λ_air / 2)</text><text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="18" font-family="monospace">'+d_cm.toFixed(2)+' cm</text><text x="'+(bX+130)+'" y="'+(bY+108)+'" fill="#9fb498" font-size="8.5">(±0.05 cm)</text><line x1="'+(bX+15)+'" y1="'+(bY+125)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+125)+'" stroke="#253a34"/><text x="'+(bX+15)+'" y="'+(bY+144)+'" fill="#718e79" font-size="9">ROD SOUND SPEED & YOUNG MODULUS</text><text x="'+(bX+15)+'" y="'+(bY+168)+'" fill="'+orange+'" font-size="15" font-family="monospace" font-weight="bold">'+v_rod_est.toFixed(1)+' m s⁻¹</text><text x="'+(bX+130)+'" y="'+(bY+168)+'" fill="#9fb498" font-size="9">E='+E_gpa.toFixed(1)+' GPa</text><text x="'+(bX+15)+'" y="'+(bY+184)+'" fill="#9fb498" font-size="8">f = '+f_sound.toFixed(1)+' Hz · v_air = 343.2 m/s · ρ = 8500 kg/m³</text><line x1="'+(bX+15)+'" y1="'+(bY+195)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+195)+'" stroke="#253a34"/>'+text(bX+15,bY+210,'d = (v_air / v_rod) L ⇔ v_rod = v_air / m',ink,9)+text(240,22,'Kundt\'s Tube Acoustic Standing Wave Apparatus')+text(240,308,'Standing Waves in Air: d = λ_air / 2 · Rod Sound Speed: v_rod = 3500.0 m s⁻¹');
+  }
+   else if(cfg.slug==='electrostatics'){
+    const r_cm=p.input;
+    const F_uN=v.raw;
+    // Grounded base table
+    svg+='<rect x="50" y="250" width="390" height="14" rx="2" fill="#1b2a26" stroke="'+soft+'" stroke-width="1.5"/>';
+    // Cylindrical glass chamber of torsion balance
+    const chX=70,chY=95,chW=235,chH=155;
+    svg+='<rect x="'+chX+'" y="'+chY+'" width="'+chW+'" height="'+chH+'" rx="8" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5" opacity="0.85"/>';
+    svg+='<line x1="'+chX+'" y1="'+(chY+4)+'" x2="'+(chX+chW)+'" y2="'+(chY+4)+'" stroke="#bae6fd" stroke-width="0.8" opacity="0.5"/>';
+    // Central vertical glass suspension tube
+    svg+='<rect x="180" y="32" width="16" height="65" rx="2" fill="#1e293b" stroke="#38bdf8" stroke-width="1"/>';
+    // Top torsion head
+    svg+='<rect x="172" y="16" width="32" height="16" rx="3" fill="#d97706" stroke="#b45309" stroke-width="1.5"/>';
+    svg+='<circle cx="188" cy="24" r="5" fill="#fde68a" stroke="#d97706" stroke-width="1"/>';
+    svg+='<line x1="188" y1="24" x2="198" y2="20" stroke="#b91c1c" stroke-width="1.5"/>';
+    svg+='<text x="188" y="12" text-anchor="middle" fill="#fde68a" font-size="7" font-weight="bold">Torsion Head (θ)</text>';
+    // Torsion fiber
+    svg+='<line x1="188" y1="32" x2="188" y2="165" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="3 1"/>';
+    // Horizontal insulating balance beam (length 110 px)
+    const beamY=165;
+    svg+='<rect x="133" y="'+(beamY-2)+'" width="110" height="4" rx="1.5" fill="#f8fafc" stroke="#94a3b8" stroke-width="1"/>';
+    // Sphere A (suspended on left end of beam)
+    const spAX=133;
+    svg+='<circle cx="'+spAX+'" cy="'+beamY+'" r="9" fill="#d97706" stroke="#f59e0b" stroke-width="1.5"/>';
+    svg+='<text x="'+spAX+'" y="'+(beamY+3.5)+'" text-anchor="middle" fill="#fff" font-size="7.5" font-weight="bold">+q₁</text>';
+    svg+='<text x="'+spAX+'" y="'+(beamY-12)+'" text-anchor="middle" fill="#fde68a" font-size="7">Sphere A</text>';
+    // Counterweight and damping vane on right end
+    svg+='<rect x="238" y="'+(beamY-7)+'" width="10" height="14" rx="2" fill="#475569" stroke="#94a3b8" stroke-width="1"/>';
+    // Sliding carrier entering from left
+    const r_px=22.0+(r_cm-3.0)*8.5;
+    const spBX=spAX-r_px;
+    svg+='<line x1="50" y1="'+beamY+'" x2="'+(spBX-2)+'" y2="'+beamY+'" stroke="#cbd5e1" stroke-width="2.5"/>';
+    svg+='<circle cx="'+spBX.toFixed(1)+'" cy="'+beamY+'" r="9" fill="#d97706" stroke="#f59e0b" stroke-width="1.5"/>';
+    svg+='<text x="'+spBX.toFixed(1)+'" y="'+(beamY+3.5)+'" text-anchor="middle" fill="#fff" font-size="7.5" font-weight="bold">+q₂</text>';
+    svg+='<text x="'+spBX.toFixed(1)+'" y="'+(beamY-12)+'" text-anchor="middle" fill="#fde68a" font-size="7">Sphere B</text>';
+    // Carrier vernier guide on bench
+    svg+='<rect x="45" y="244" width="60" height="6" rx="1" fill="#475569"/>';
+    // Repulsive vector arrows on spheres
+    const fVecLen=Math.min(28,Math.max(8,(F_uN/120.0)));
+    // Force on A pointing right
+    svg+='<path d="M '+(spAX+11)+' '+beamY+' L '+(spAX+11+fVecLen).toFixed(1)+' '+beamY+' M '+(spAX+7+fVecLen).toFixed(1)+' '+(beamY-3)+' L '+(spAX+11+fVecLen).toFixed(1)+' '+beamY+' L '+(spAX+7+fVecLen).toFixed(1)+' '+(beamY+3)+'" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>';
+    svg+='<text x="'+(spAX+14+fVecLen).toFixed(1)+'" y="'+(beamY-5)+'" fill="#ef4444" font-size="7" font-weight="bold">F⃗_e</text>';
+    // Force on B pointing left
+    svg+='<path d="M '+(spBX-11).toFixed(1)+' '+beamY+' L '+(spBX-11-fVecLen).toFixed(1)+' '+beamY+' M '+(spBX-7-fVecLen).toFixed(1)+' '+(beamY-3)+' L '+(spBX-11-fVecLen).toFixed(1)+' '+beamY+' L '+(spBX-7-fVecLen).toFixed(1)+' '+(beamY+3)+'" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>';
+    svg+='<text x="'+(spBX-14-fVecLen).toFixed(1)+'" y="'+(beamY-5)+'" text-anchor="end" fill="#ef4444" font-size="7" font-weight="bold">F⃗_e</text>';
+    // Distance dimension line
+    svg+='<line x1="'+spBX.toFixed(1)+'" y1="'+(beamY+22)+'" x2="'+spAX+'" y2="'+(beamY+22)+'" stroke="'+orange+'" stroke-width="1.2"/>';
+    svg+='<line x1="'+spBX.toFixed(1)+'" y1="'+(beamY+18)+'" x2="'+spBX.toFixed(1)+'" y2="'+(beamY+26)+'" stroke="'+orange+'" stroke-width="1.2"/>';
+    svg+='<line x1="'+spAX+'" y1="'+(beamY+18)+'" x2="'+spAX+'" y2="'+(beamY+26)+'" stroke="'+orange+'" stroke-width="1.2"/>';
+    svg+='<text x="'+((spBX+spAX)/2).toFixed(1)+'" y="'+(beamY+34)+'" text-anchor="middle" fill="'+orange+'" font-size="8.5" font-weight="bold">r = '+r_cm.toFixed(1)+' cm</text>';
+    // Degree graduation ring inside chamber
+    for(let deg=0;deg<=20;deg++){
+      const gx=chX+15+deg*((chW-30)/20);
+      svg+='<line x1="'+gx+'" y1="'+(chY+chH-10)+'" x2="'+gx+'" y2="'+(chY+chH-(deg%5===0?18:14))+'" stroke="'+soft+'" stroke-width="'+(deg%5===0?1.2:0.8)+'"/>';
+    }
+    // Side Bench Accessories: Gold-Leaf Electroscope & Proof Plane
+    const elX=350,elY=175;
+    svg+='<rect x="'+(elX-18)+'" y="'+elY+'" width="36" height="50" rx="4" fill="#0f172a" stroke="#cbd5e1" stroke-width="1.2"/>';
+    svg+='<line x1="'+elX+'" y1="'+(elY-12)+'" x2="'+elX+'" y2="'+(elY+18)+'" stroke="#d97706" stroke-width="2"/>';
+    svg+='<circle cx="'+elX+'" cy="'+(elY-14)+'" r="10" fill="#d97706" stroke="#b45309" stroke-width="1"/>';
+    // Divergent gold leaves
+    svg+='<line x1="'+elX+'" y1="'+(elY+18)+'" x2="'+(elX-8)+'" y2="'+(elY+38)+'" stroke="#fde68a" stroke-width="1.8"/>';
+    svg+='<line x1="'+elX+'" y1="'+(elY+18)+'" x2="'+(elX+8)+'" y2="'+(elY+38)+'" stroke="#fde68a" stroke-width="1.8"/>';
+    svg+='<text x="'+elX+'" y="'+(elY+62)+'" text-anchor="middle" fill="#fde68a" font-size="7">Electroscope</text>';
+    // Proof plane
+    const prX=415,prY=185;
+    svg+='<line x1="'+prX+'" y1="'+(prY+30)+'" x2="'+prX+'" y2="'+prY+'" stroke="#78350f" stroke-width="2.5"/>';
+    svg+='<circle cx="'+prX+'" cy="'+(prY-4)+'" r="6" fill="#94a3b8" stroke="#cbd5e1" stroke-width="1"/>';
+    svg+='<text x="'+prX+'" y="'+(prY+45)+'" text-anchor="middle" fill="#94a3b8" font-size="7">Proof Plane</text>';
+    // HUD Card at x=470, y=45, w=220, h=220
+    const bX=470,bY=45,bW=220,bH=220;
+    const inv_r2_m2=1.0/Math.pow(r_cm/100.0,2);
+    const k_est=8.98755e9;
+    const eps0_est=1.0/(4.0*Math.PI*k_est);
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#182824" stroke="'+soft+'" stroke-width="1.5"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#718e79" font-size="9">SEPARATION DISTANCE (r)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+52)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+r_cm.toFixed(1)+'</text>';
+    svg+='<text x="'+(bX+105)+'" y="'+(bY+50)+'" fill="'+soft+'" font-size="11">cm</text>';
+    svg+='<text x="'+(bX+130)+'" y="'+(bY+50)+'" fill="#9fb498" font-size="8">(Center-to-Center)</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#718e79" font-size="9">COULOMB REPULSIVE FORCE (F)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="18" font-family="monospace">'+F_uN.toFixed(2)+' μN</text>';
+    svg+='<text x="'+(bX+130)+'" y="'+(bY+108)+'" fill="#9fb498" font-size="8.5">(1/r² = '+inv_r2_m2.toFixed(1)+' m⁻²)</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+125)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+125)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+144)+'" fill="#718e79" font-size="9">COULOMB CONSTANT & PERMITTIVITY</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+168)+'" fill="'+orange+'" font-size="15" font-family="monospace" font-weight="bold">8.988 × 10⁹</text>';
+    svg+='<text x="'+(bX+130)+'" y="'+(bY+168)+'" fill="#9fb498" font-size="9">N m² C⁻²</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+184)+'" fill="#9fb498" font-size="8">q₁ = q₂ = 20.0 nC · ε₀ = 8.854 × 10⁻¹² F m⁻¹</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+195)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+195)+'" stroke="#253a34"/>';
+    svg+=text(bX+15,bY+210,'F = k_e q² (1/r²) ⇔ k_e = m / q²',ink,9);
+    svg+=text(240,22,'Coulomb's Torsion Balance Electrostatic Apparatus');
+    svg+=text(240,308,'Coulomb's Law: F = k_e (q₁ q₂ / r²) · Permittivity ε₀ = 8.854 × 10⁻¹² F m⁻¹');
   }
 
 
