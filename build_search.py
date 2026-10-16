@@ -1,0 +1,30 @@
+"""Public experiment directory and reusable department-aware search."""
+import json,html
+from pathlib import Path
+ROOT=Path(__file__).resolve().parent
+E=lambda s:html.escape(str(s),quote=True)
+def experiment_index(experiments):
+ configs={c['slug']:c for c in json.loads((ROOT/'content/physics/experiments.json').read_text())}
+ index=[]
+ aliases={'simple-pendulum':'gravity g oscillation bob string time period','bifilar-suspension':'rotation inertia rod oscillation strings','young-modulus':'youngs modulus elasticity stress strain wire stretching','stokes-viscosity':'stokes law fluid liquid sphere terminal velocity','convex-lens':'optics focal length lens image uv method','photoelectric-effect':'photon light planck constant stopping potential work function','ohms-law':'ohm ohms law current voltage resistor resistance circuit ammeter voltmeter','metre-bridge':'meter metre wheatstone bridge null galvanometer unknown resistance','rc-charging':'capacitor capacitance resistor rc charge time constant exponential','glass-slab':'refraction refractive index apparent real depth glass microscope','diffraction-grating':'diffraction interference grating spectrum wavelength laser light'}
+ for exp in experiments:
+  c=configs.get(exp['slug'],{});index.append({'slug':exp['slug'],'title':c.get('title',exp['title']),'subject':'physics','subjectName':'Physics','path':exp['page_path'],'summary':c.get('aim','Determine Planck’s constant from stopping potential and frequency.'),'keywords':' '.join([aliases.get(exp['slug'],''),*[a['name'] for a in c.get('apparatus',[])]])})
+ return index
+
+def search_section(index,subjects,scope='all',heading='Find an experiment',prefix='labs'):
+ options='<option value="all"'+(' selected' if scope=='all' else '')+'>All departments</option>'+''.join('<option value="'+E(s['slug'])+'"'+(' selected' if s['slug']==scope else '')+'>'+E(s['name'])+'</option>' for s in subjects)
+ cards=''
+ for lab in index:
+  hidden=scope!='all' and lab['subject']!=scope
+  terms=' '.join(['laboratory lab experiment simulation',lab['title'],lab['subjectName'],lab['summary'],lab['keywords']])
+  cards+='<article class="experiment-result" data-lab-card data-subject="'+lab['subject']+'" data-search="'+E(terms)+'"'+(' hidden' if hidden else '')+'><span class="eyebrow">'+lab['subjectName']+' · AVAILABLE NOW</span><h3><a href="'+lab['path']+'">'+E(lab['title'])+' ↗</a></h3><p>'+E(lab['summary'])+'</p><div class="experiment-result-links"><a href="'+lab['path']+'">Simulation</a><a href="'+lab['path']+'theory/">Theory</a><a href="'+lab['path']+'report/">Example report</a></div></article>'
+ count=sum(scope=='all' or x['subject']==scope for x in index)
+ return '<section class="experiment-search" data-lab-search id="'+prefix+'"><div class="catalog-heading"><div><span class="eyebrow">SEARCH THE OPEN LAB</span><h2>'+E(heading)+'</h2></div><a class="back-link" href="/experiments/">Browse every experiment ↗</a></div><p class="section-intro">Search by experiment, topic or apparatus. Choose a department, or search across all departments. Only completed lessons appear here.</p><div class="experiment-search-controls"><div><label for="'+prefix+'-query">Search experiments</label><input id="'+prefix+'-query" data-lab-query type="search" placeholder="Try pendulum, resistance, lens or microscope…" autocomplete="off"></div><div><label for="'+prefix+'-scope">Department</label><select id="'+prefix+'-scope" data-lab-scope>'+options+'</select></div><button class="filter" data-lab-clear type="button">Clear search</button></div><p class="lab-result-count" data-lab-count role="status" aria-live="polite">'+str(count)+' experiments</p><div class="experiment-results">'+cards+'</div><div class="catalog-empty" data-lab-empty'+(' hidden' if count else '')+'><h3>No completed experiments match this search.</h3><p>Try fewer words or search all departments. Other collections are still being prepared.</p><button class="primary" data-lab-all type="button">Search all departments</button></div><noscript><p>Live filtering requires JavaScript. Use the lesson links above or browse <a href="/experiments/">all experiments</a>.</p></noscript></section>'
+
+def build_directory(out,base,production,index,subjects,head,header,footer):
+ target=out/'experiments';target.mkdir(exist_ok=True)
+ text=head('/experiments/','Physics & STEM Experiments: Search the Virtual Lab | Open STEM Lab','Find completed university lab experiments by department, topic or apparatus, with simulations, theory, methods and worked reports.',base,production)+'<body><div class="wrap">'+header()+'<main><section class="subject-hero"><span class="eyebrow">THE EXPERIMENT LIBRARY</span><h1>Search the laboratory.</h1><p>Find a practical you are studying, explore its theory, and collect your own virtual observations.</p></section>'+search_section(index,subjects,heading='What would you like to investigate?')+'</main>'+footer()+'</div><script src="/lab-search.js"></script></body></html>'
+ (target/'index.html').write_text(text)
+ (out/'experiments.json').write_text(json.dumps(index,ensure_ascii=False))
+ (out/'lab-search.js').write_text((ROOT/'content/lab-search.js').read_text())
+ return '/experiments/'

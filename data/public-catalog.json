@@ -1,0 +1,236 @@
+[
+  {
+    "slug": "physics",
+    "name": "Physics",
+    "category": "Natural sciences",
+    "practical_type": "hands-on",
+    "display_mode": "Bench lab",
+    "example_topics_json": "[\"Photoelectric effect and stopping potential\", \"Optical interference and diffraction\", \"Electrical measurements and circuits\", \"Oscillations and material properties\"]",
+    "content_status": "live"
+  },
+  {
+    "slug": "earth-space-sciences",
+    "name": "Earth & Space Sciences",
+    "category": "Natural sciences",
+    "practical_type": "mixed",
+    "display_mode": "Field & data",
+    "example_topics_json": "[\"Mineral and rock identification\", \"Plate motion and earthquake data\", \"Topographic maps and geological structures\", \"Photometry and telescope observations\"]",
+    "content_status": "planned"
+  },
+  {
+    "slug": "chemistry",
+    "name": "Chemistry",
+    "category": "Natural sciences",
+    "practical_type": "hands-on",
+    "display_mode": "Wet lab",
+    "example_topics_json": "[\"Acid–base titration and buffers\", \"Calorimetry and enthalpy changes\", \"Reaction kinetics\", \"Spectrophotometry and electrochemical cells\"]",
+    "content_status": "planned"
+  },
+  {
+    "slug": "mechanical-engineering",
+    "name": "Mechanical Engineering",
+    "category": "Engineering",
+    "practical_type": "mixed",
+    "display_mode": "Engineering lab",
+    "example_topics_json": "[\"Stress and strain measurement\", \"Free and forced vibration\", \"Heat-transfer measurement\", \"Fluid-flow measurement\"]",
+    "content_status": "planned"
+  },
+  {
+    "slug": "electrical-electronics-engineering",
+    "name": "Electrical & Electronics Engineering",
+    "category": "Engineering",
+    "practical_type": "mixed",
+    "display_mode": "Engineering lab",
+    "example_topics_json": "[\"Operational amplifier measurements\", \"Diode current-voltage characteristics\", \"Rectifiers and regulators\", \"MOSFET and BJT characterization\"]",
+    "content_status": "planned"
+  },
+  {
+    "slug": "civil-engineering",
+    "name": "Civil Engineering",
+    "category": "Engineering",
+    "practical_type": "mixed",
+    "display_mode": "Engineering lab",
+    "example_topics_json": "[\"Concrete slump and compressive-strength tests\", \"Aggregate sieve analysis\", \"Steel tensile testing\", \"Soil compaction and permeability\"]",
+    "content_status": "planned"
+  },
+  {
+    "slug": "chemical-process-engineering",
+    "name": "Chemical & Process Engineering",
+    "category": "Engineering",
+    "practical_type": "mixed",
+    "display_mode": "Engineering lab",
+    "example_topics_json": "[\"Venturi flow and Bernoulli balance\", \"Pump performance curve\", \"Forced-convection heat transfer\", \"Transient fin-temperature measurement\"]",
+    "content_status": "planned"
+  },
+  {
+    "slug": "textile-engineering",
+    "name": "Textile Engineering",
+    "category": "Engineering",
+    "practical_type": "hands-on",
+    "display_mode": "Engineering lab",
+    "example_topics_json": "[\"Yarn tensile strength\", \"Yarn twist and linear density\", \"Fabric air permeability\", \"Colour-fastness testing\"]",
+    "content_status": "planned"
+  },
+  {
+    "slug": "electronics-communication",
+    "name": "Electronics & Communication",
+    "category": "Engineering",
+    "practical_type": "mixed",
+    "display_mode": "Engineering lab",
+    "example_topics_json": "[\"Amplitude modulation and demodulation\", \"Frequency-domain signal measurement\", \"Digital modulation simulation\", \"Communication bandwidth investigation\"]",
+    "content_status": "planned"
+  },
+  {
+    "slug": "aerospace-aeronautical-engineering",
+    "name": "Aerospace & Aeronautical Engineering",
+    "category": "Engineering",
+    "practical_type": "mixed",
+    "display_mode": "Engineering lab",
+    "example_topics_json": "[\"Wind-tunnel calibration\", \"Airfoil lift and drag measurements\", \"Surface-pressure distribution\", \"Flow visualization\"]",
+    "content_status": "planned"
+  },
+  {
+    "slug": "biomedical-engineering",
+    "name": "Biomedical Engineering",
+    "category": "Engineering",
+    "practical_type": "mixed",
+    "display_mode": "Engineering lab",
+    "example_topics_json": "[\"Thermistor Wheatstone-bridge thermometer\", \"Force-sensor calibration\", \"Heart-rate signal measurement\", \"Respiratory-rate measurement\"]",
+    "content_status": "planned"
+  },
+  {
+    "slug": "agricultural-engineering",
+    "name": "Agricultural Engineering",
+    "category": "Engineering",
+    "practical_type": "mixed",
+    "display_mode": "Engineering lab",
+    "example_topics_json": "[\"Grain moisture-content measurement\", \"Drying-curve determination\", \"Grain-cleaner performance\", \"Size-reduction particle analysis\"]",
+    "content_status": "planned"
+  },
+  {
+    "slug": "marine-ocean-sciences",
+    "name": "Marine & Ocean Sciences",
+    "category": "Natural sciences",
+    "practical_type": "mixed",
+    "display_mode": "Field & lab",
+    "example_topics_json": "[\"Seawater salinity analysis\", \"Water-mass identification\", \"Wave and beach-erosion investigation\", \"Plankton and productivity analysis\"]",
+    "content_status": "planned"
+  },
+  {
+    "slug": "agriculture-forestry",
+    "name": "Agriculture & Forestry",
+    "category": "Life & health",
+    "practical_type": "mixed",
+    "display_mode": "Field & lab",
+    "example_topics_json": "[\"Seed germination and establishment trial\", \"Soil-moisture measurement\", \"Irrigation comparison trial\", \"Forest nursery seed-treatment trial\"]",
+    "content_status": "planned"
+  },
+  {
+    "slug": "biological-sciences",
+    "name": "Biological Sciences",
+    "category": "Life & health",
+    "practical_type": "Wet laboratory, microscopy and experimental biology",
+    "display_mode": "Wet lab",
+    "example_topics_json": "[\"Microscope calibration and cell observation\", \"Enzyme activity versus conditions\", \"Osmosis and membrane transport\", \"Mitosis and meiosis observations\"]",
+    "content_status": "planned"
+  },
+  {
+    "slug": "basic-medical-sciences",
+    "name": "Basic Medical Sciences",
+    "category": "Life & health",
+    "practical_type": "Anatomy and physiology laboratory; experimental and observational exercises",
+    "display_mode": "Preclinical lab",
+    "example_topics_json": "[\"Microscopy and tissue identification\", \"Reflex-response observations\", \"Respiratory-volume interpretation\", \"Cardiovascular physiological measurements\"]",
+    "content_status": "planned"
+  },
+  {
+    "slug": "dentistry-oral-health",
+    "name": "Dentistry & Oral Health",
+    "category": "Life & health",
+    "practical_type": "Dental materials laboratory and preclinical technical simulation",
+    "display_mode": "Materials lab",
+    "example_topics_json": "[\"Gypsum setting and mixing variables\", \"Impression-material dimensional change\", \"Mechanical properties of restorative materials\", \"Polymerisation and material behaviour\"]",
+    "content_status": "planned"
+  },
+  {
+    "slug": "pharmacy-pharmaceutical-sciences",
+    "name": "Pharmacy & Pharmaceutical Sciences",
+    "category": "Life & health",
+    "practical_type": "Pharmaceutical analytical and formulation laboratories",
+    "display_mode": "Wet lab",
+    "example_topics_json": "[\"Assay and calibration calculations\", \"Spectrophotometric concentration measurement\", \"Chromatographic separation interpretation\", \"Analytical accuracy and precision\"]",
+    "content_status": "planned"
+  },
+  {
+    "slug": "veterinary-medicine",
+    "name": "Veterinary Medicine",
+    "category": "Life & health",
+    "practical_type": "Veterinary diagnostic laboratory and clinical skills",
+    "display_mode": "Diagnostic lab",
+    "example_topics_json": "[\"Virtual blood-film observation\", \"Urinalysis result interpretation\", \"Laboratory quality-control calculations\", \"Microscopic parasite identification\"]",
+    "content_status": "planned"
+  },
+  {
+    "slug": "food-nutrition",
+    "name": "Food & Nutrition",
+    "category": "Life & health",
+    "practical_type": "Food analysis and nutritional composition laboratory",
+    "display_mode": "Food analysis",
+    "example_topics_json": "[\"Moisture-content determination\", \"Vitamin C analysis\", \"Protein and fat content measurement\", \"Titratable acidity and calibration\"]",
+    "content_status": "planned"
+  },
+  {
+    "slug": "mathematics",
+    "name": "Mathematics",
+    "category": "Data & computation",
+    "practical_type": "Computational mathematics",
+    "display_mode": "Computational",
+    "example_topics_json": "[\"Root-finding convergence\", \"Numerical integration error\", \"Solving linear systems\", \"Interpolation accuracy\"]",
+    "content_status": "planned"
+  },
+  {
+    "slug": "computer-science",
+    "name": "Computer Science",
+    "category": "Data & computation",
+    "practical_type": "Programming and computational experiments",
+    "display_mode": "Computational",
+    "example_topics_json": "[\"Sorting algorithm timing\", \"Recursion exploration\", \"Stack and queue operations\", \"Program testing and debugging\"]",
+    "content_status": "planned"
+  },
+  {
+    "slug": "statistics-probability",
+    "name": "Statistics & Probability",
+    "category": "Data & computation",
+    "practical_type": "Data analysis and simulation",
+    "display_mode": "Data lab",
+    "example_topics_json": "[\"Sampling distributions\", \"Confidence-interval coverage\", \"Randomization tests\", \"Regression diagnostics\"]",
+    "content_status": "planned"
+  },
+  {
+    "slug": "psychology",
+    "name": "Psychology",
+    "category": "Human & field sciences",
+    "practical_type": "Behavioral experiments",
+    "display_mode": "Behavioral lab",
+    "example_topics_json": "[\"Choice reaction time\", \"Stroop interference\", \"Memory recall\", \"Visual perception thresholds\"]",
+    "content_status": "planned"
+  },
+  {
+    "slug": "geography",
+    "name": "Geography",
+    "category": "Human & field sciences",
+    "practical_type": "Field and spatial investigations",
+    "display_mode": "Field & data",
+    "example_topics_json": "[\"Spatial sampling design\", \"Land-use observation\", \"Traffic-count comparison\", \"Geographic survey analysis\"]",
+    "content_status": "planned"
+  },
+  {
+    "slug": "archaeology",
+    "name": "Archaeology",
+    "category": "Human & field sciences",
+    "practical_type": "Field and artifact analysis",
+    "display_mode": "Field & lab",
+    "example_topics_json": "[\"Site-grid mapping\", \"Stratigraphic sequence\", \"Sampling strategy comparison\", \"Artifact recording\"]",
+    "content_status": "planned"
+  }
+]

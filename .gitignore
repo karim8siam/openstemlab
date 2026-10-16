@@ -1,0 +1,22 @@
+# Local/private planning data and SQLite databases
+/data/*
+!/data/public-catalog.json
+/create_catalog_db.py
+/package_outputs.py
+
+# Generated previews, production output and downloadable archives
+/dist/
+/release/
+/outputs/
+*.zip
+
+# Local hosting identity, credentials, environment and caches
+/.openai/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+__pycache__/
+*.py[cod]
+.DS_Store
