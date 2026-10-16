@@ -1,0 +1,245 @@
+import json, sqlite3
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+
+exp32 = {
+    'number': 32,
+    'slug': 'charles-law-volume',
+    'title': 'Determination of the Thermal Expansion Coefficient of a Gas at Constant Pressure (Charles’ Law)',
+    'shortTitle': 'Charles’ Law (Volume Expansion)',
+    'aim': 'Determine the thermal coefficient of volume expansion of dry air at constant atmospheric pressure (β) by measuring the expansion volume V of a bulb-confined air sample across temperatures from 0.0 °C to 80.0 °C using a constant-pressure air dilatometer with a mercury leveling reservoir, and extrapolate to determine the absolute zero of temperature.',
+    'target': 'β',
+    'targetName': 'Volume expansion coefficient β',
+    'inputLabel': 'Bath temperature t',
+    'shortInput': 'Temperature t',
+    'inputUnit': '°C',
+    'inputDecimals': 1,
+    'rawLabel': 'Confined volume V',
+    'rawUnit': 'cm³',
+    'rawDecimals': 2,
+    'xAxis': 'Temperature t (°C)',
+    'yAxis': 'Volume V (cm³)',
+    'xScale': 1.0,
+    'yScale': 1000000.0,
+    'gradientUnit': 'm³ K⁻¹',
+    'resultUnit': 'K⁻¹',
+    'resultScale': 1.0,
+    'resultDecimals': 6,
+    'min': 0.0,
+    'max': 80.0,
+    'step': 5.0,
+    'initial': 20.0,
+    'samples': [0.0, 20.0, 40.0, 60.0, 80.0],
+    'emptyX': [-20.0, 100.0],
+    'emptyY': [90.0, 140.0],
+    'timed': False,
+    'angle': False,
+    'published': True,
+    'measureLabel': 'Measure equilibrium air volume V (cm³) at bath temperature t (°C)',
+    'fitEquation': 'V_t = V_0 (1 + β t) = V_0 + (V_0 β) · t ⇔ Y = m X + b ⇔ β = m / V_0 = m / b',
+    'intro': "Charles' law—frequently designated the law of Charles and Gay-Lussac or Gay-Lussac's law of isobaric expansion—constitutes one of the foundational empirical Pillars of classical pneumatics and thermodynamic science, enunciating that under constant absolute pressure, the volume of a confined mass of an ideal gas expands linearly with increasing thermodynamic temperature. While preliminary qualitative observations were recorded in 1699 and 1702 by Guillaume Amontons, the quantitative relationship was experimentally formulated in unpublished work around 1787 by the French aeronautical pioneer and physicist Jacques Alexandre César Charles, who demonstrated that equal volumes of hydrogen, oxygen, nitrogen, and carbon dioxide undergo identical volumetric expansion when warmed from the freezing point to the boiling point of water. In 1802, the brilliant French chemist and physicist Joseph Louis Gay-Lussac published the definitive quantitative treatise establishing that all common atmospheric gases exhibit a universal isobaric volume expansion coefficient of approximately 1/267 (later refined by Henri Victor Regnault in 1842 to the modern standard value of 1/273.15 K⁻¹ ≈ 0.003661 K⁻¹). The mathematical formulation of isobaric dilatation relative to the ice-point volume V_0 at 0 °C is expressed as V_t = V_0 (1 + β t), where t is the Celsius temperature, V_0 is the initial volume occupied by the gas at 0.00 °C, and β is the thermal volume expansion coefficient at constant pressure. In the classical laboratory constant-pressure air thermometer (or dilatometer), a dry air sample is enclosed within a spherical glass bulb of calibrated volume V_0 completely submerged within a stirred, variable-temperature liquid bath. The bulb neck communicates via an unheated capillary tube with a precision graduated glass manometer limb and an adjustable liquid mercury leveling reservoir. By systematically shifting the vertical elevation of the leveling reservoir after every temperature station so that the mercury menisci in both limbs stand at exactly equal horizontal elevations, the internal gas pressure is held strictly invariant at prevailing ambient atmospheric pressure (P = B). Plotting the measured gas volume V_t against Celsius temperature t produces an exceptionally straight line whose slope m = V_0 β and y-intercept b = V_0 directly yield the thermal expansion coefficient β = m / b. Crucially, extrapolating the linear regression line leftward to the point of theoretical vanishing volume (V_t → 0) determines the absolute zero of temperature: T_0 = −1 / β ≈ −273.15 °C, establishing the fundamental physical concept of the absolute thermodynamic Kelvin temperature scale.",
+    'settings': [
+        'Confined dry air specimen of nominal volume V_0 = 100.00 cm³ (1.000 × 10⁻⁴ m³) at the ice point (0.00 °C = 273.15 K).',
+        'Constant ambient atmospheric barometric pressure P = B = 101.325 kPa (760.0 mmHg) verified by Fortin laboratory barometer.',
+        'Heavy-walled borosilicate glass bulb (T₁) with volumetric expansion coefficient α_v = 9.9 × 10⁻⁶ K⁻¹ immersed in stirred water bath.',
+        'High-density triple-distilled liquid mercury leveling reservoir maintaining zero hydrostatic head (h_open = h_closed) across all temperature stations.',
+        'Accepted standard isobaric expansion coefficient for an ideal gas: β_ref = 1 / 273.15 K⁻¹ = 0.00366099 K⁻¹ (3.6610 × 10⁻³ K⁻¹).'
+    ],
+    'apparatus': [
+        {
+            'name': 'Calibrated Borosilicate Glass Air Bulb (Specimen Vessel T₁)',
+            'purpose': 'Hermetically encloses the nominal 100.00 cm³ dry air sample within a spherical thin-walled glass chamber designed for high thermal conductance and uniform immersion within the variable-temperature liquid heating bath.'
+        },
+        {
+            'name': 'Thermostated Liquid Bath with Submersible Heating Element and Stirrer',
+            'purpose': 'Provides a stable, uniform temperature enclosure around the specimen bulb, equipped with a mechanical motor-driven paddle stirrer to eliminate thermal stratification and an electric heater to control temperatures from 0.0 °C to 80.0 °C.'
+        },
+        {
+            'name': 'Precision Graduated Gas Dilatometer Tube (Manometer Limb T₂)',
+            'purpose': 'A uniform-bore precision glass tube with metric millimeter graduations etched along its stem, receiving the gas expanding out of the bulb to measure volumetric dilatation ΔV to ±0.05 cm³.'
+        },
+        {
+            'name': 'Adjustable Mercury Leveling Reservoir and Vertical Rack Slider',
+            'purpose': 'An open glass mercury reservoir mounted upon a smooth vertical rack-and-pinion sliding carriage, elevated or lowered by the operator to match the mercury level in tube T₂ so that gas pressure remains strictly isobaric at barometric pressure P = B.'
+        },
+        {
+            'name': 'Precision Digital Immersion Thermometer (RTD Sensor)',
+            'purpose': 'Monitors the uniform water bath temperature directly adjacent to the glass bulb with a resolution of ±0.05 °C, ensuring thermal equilibrium between the bath fluid and enclosed air.'
+        },
+        {
+            'name': 'Flexible Heavy-Duty Elastomeric Interconnecting U-Tube',
+            'purpose': 'Connects the bottom of the graduated measuring tube to the movable leveling reservoir, securely containing triple-distilled liquid mercury without kinking or volume compliance under hydrostatic head changes.'
+        }
+    ],
+    'procedure': [
+        {
+            'title': 'Ice-Point Baseline Calibration and Initial Volume Zeroing',
+            'text': 'Fill the thermal bath with finely shaved pure distilled ice and water, ensuring the glass bulb T₁ is completely submerged up to the index mark on the capillary stem. Vigorously agitate the slurry for several minutes until the thermometer reads 0.00 °C. Adjust the movable leveling reservoir until the mercury meniscus in the open tube aligns precisely with the meniscus in the graduated tube T₂ (isobaric condition, Δh = 0). Record the initial ice-point volume V_0 = 100.00 cm³.',
+            'why': 'Establishing an accurate ice-point volume V_0 at 0.00 °C under true atmospheric pressure provides the reference baseline from which all subsequent fractional thermal expansion coefficients β = ΔV / (V_0 · t) are evaluated.'
+        },
+        {
+            'title': 'Incremental Water Bath Heating and Mechanical Agitation',
+            'text': 'Replace the ice slurry with distilled water and energize the bath heater, setting the thermal controller to warm the bath to the first elevated target temperature of 20.0 °C. Maintain continuous mechanical stirring to prevent vertical convection currents or thermal boundary layers around the glass bulb.',
+            'why': 'Active stirring eliminates spatial temperature gradients throughout the water volume, ensuring that the enclosed air column attains the identical temperature indicated by the immersed thermometer.'
+        },
+        {
+            'title': 'Thermal Relaxation Dwell Interval for Conductive Equilibrium',
+            'text': 'Upon reaching each target temperature station (20.0 °C, 40.0 °C, 60.0 °C, 80.0 °C), reduce heater power and maintain a dwell time of at least three to four minutes. Confirm that the thermometer reading remains steady within ±0.05 °C and the expanding mercury meniscus in tube T₂ has ceased downward movement.',
+            'why': 'Because gases possess low volumetric heat capacity and glass has finite thermal conductivity, sufficient dwell time is mandatory to achieve complete thermal equilibrium between the water bath, glass envelope, and enclosed air mass.'
+        },
+        {
+            'title': 'Isobaric Meniscus Leveling Alignment',
+            'text': 'Gently manipulate the rack-and-pinion thumb drive on the movable reservoir slider to lower the open mercury tube until its liquid meniscus matches the exact horizontal elevation of the meniscus in graduated tube T₂. Sight across the horizontal level index with an optical magnifier to verify zero differential height (Δh = h_open − h_closed = 0).',
+            'why': 'As gas expands upon heating, it pushes the mercury downward in tube T₂; lowering the leveling reservoir restores atmospheric pressure parity (P = B), guaranteeing strictly isobaric thermodynamic expansion.'
+        },
+        {
+            'title': 'Volumetric Reading and Parallax-Free Scale Acquisition',
+            'text': 'Read the total gas volume V_t on the graduated scale of tube T₂ at the crest of the convex mercury meniscus, recording the volume to the nearest 0.05 cm³. Subtract the initial ice-point volume V_0 to compute the net thermal expansion volume ΔV = V_t − V_0.',
+            'why': 'Reading at the apex of the convex mercury meniscus with a horizontal sight line eliminates optical parallax and ensures consistent volumetric measurement across all thermal stations.'
+        },
+        {
+            'title': 'Linear Regression Analysis and Absolute Zero Extrapolation',
+            'text': 'Compile the data table of volume V (in cm³ and SI units of m³) versus temperature t (in °C). Perform an ordinary least-squares linear regression fitting V = m · t + b, compute the isobaric volume expansion coefficient β = m / b, evaluate its statistical standard error, and project the regression line to V = 0 to determine the experimental absolute zero T_0 = −b / m.',
+            'why': 'Linear regression provides an unbiased mathematical fit across the entire temperature trajectory, isolating the physical slope m = V_0 β from random meniscus reading scatter and yielding an empirical determination of absolute zero.'
+        }
+    ],
+    'precautions': [
+        'Ensure the air charged into the glass bulb is thoroughly dry and desiccated, as the presence of condensed water vapor will vaporize at elevated temperatures, superimposing non-linear vapor pressure increases upon the ideal gas expansion.',
+        'Keep the water bath vigorously and continuously stirred at all times, as unagitated liquid baths develop substantial vertical thermal stratification where the surface can be several degrees warmer than the base.',
+        'Always re-level the mercury columns before recording the volume reading at each temperature station, as failure to eliminate differential hydrostatic head Δh introduces unwanted pressure variations that violate isobaric constraints.',
+        'Ensure the unheated capillary stem connecting the bulb to the measuring tube is of minimal bore diameter, minimizing the unheated dead-space volume of gas that remains outside the thermal bath.',
+        'Handle the glass bulb and mercury apparatus with care, avoiding rapid thermal shocks that could crack the thin glass envelope or dislodge the flexible mercury tubing connections.'
+    ],
+    'topics': [
+        {
+            'title': 'Historical Genesis of Gas Thermometry: Amontons, Charles, and Gay-Lussac',
+            'text': "The understanding of the thermal expansion of elastic fluids evolved over more than a century of intensive physical and chemical investigation, fundamentally transforming seventeenth-century qualitative concepts of 'warmth' into the rigorous quantitative science of thermodynamics. In 1699 and 1702, the French inventor and natural philosopher Guillaume Amontons, working on improved thermometric devices and air engines, observed that air confined within a constant-volume vessel increased in pressure by roughly uniform increments when heated from ambient cold to boiling water, estimating that a cold limit existed where pressure would vanish. However, Amontons's experiments were largely qualitative and lacked standard temperature scales. In 1787, the French physicist and pioneering balloonist Jacques Alexandre César Charles conducted a series of elegant experiments in Paris. Charles, who had piloted the world's first hydrogen-filled gas balloon in December 1783, was acutely interested in how different gas lift envelopes behaved under solar heating and atmospheric altitude changes. Confining equal volumes of five different gases—hydrogen, oxygen, nitrogen, carbon dioxide, and atmospheric air—over mercury in identical glass tubes, Charles heated them simultaneously from 0 °C to 100 °C and discovered that all five expanded by the identical volumetric fraction. Because Charles was an experimentalist who did not publish his quantitative data in formal academic memoirs, the relationship remained largely known only through verbal accounts among Parisian savants. In 1802, Joseph Louis Gay-Lussac, working at the École Polytechnique, published his classic paper 'Recherches sur la dilatation des gaz et des vapeurs', independently confirming Charles's discovery with meticulous quantitative rigor. Using a dry-bulb dilatometer with sulfuric acid and mercury drying tubes, Gay-Lussac demonstrated that the fractional volume expansion between 0 °C and 100 °C was identical for all permanent gases, reporting a value of 1/267 per degree Celsius (3.75 × 10⁻³ °C⁻¹). Gay-Lussac graciously credited Charles's earlier unpublished work, which led to the historical naming of Charles' law in English-speaking nations, while French scientific literature frequently honors Gay-Lussac's law. In 1842, the French chemist Henri Victor Regnault, employing monumental high-precision manometric apparatus with large-volume brass and glass reservoirs, refined the coefficient to the universally accepted standard value of β = 1 / 273.15 K⁻¹ = 0.003661 K⁻¹, cementing the constant-pressure air thermometer as the primary metrological standard for absolute temperature measurement.",
+            'formula': '\\frac{V_1}{T_1} = \\frac{V_2}{T_2} \\quad (P = \\text{constant}) \\quad \\text{and} \\quad V_t = V_0 (1 + \\beta t) \\quad \\text{where } \\beta \\approx \\frac{1}{273.15} \\text{ K}^{-1}',
+            'question': 'How did Jacques Charles and Joseph Louis Gay-Lussac historically demonstrate that the thermal expansion of gases is universal across different chemical species?',
+            'answer': 'Charles and Gay-Lussac confined equal volumes of different dry gases (air, hydrogen, oxygen, nitrogen, and carbon dioxide) over mercury under constant atmospheric pressure. When heated through identical temperature ranges (from 0 °C to 100 °C), all gases expanded by the identical fractional amount (~36.6% of their initial volume), demonstrating that the thermal volume expansion coefficient β is an invariant universal property of the gaseous state.'
+        },
+        {
+            'title': 'Thermodynamic Formulation: Isobaric Volumetric Dilatometry and Ideal Gas Limiting Laws',
+            'text': "Within the formal mathematical framework of classical thermodynamics, Charles' law describes the macroscopic trajectory of a homogeneous single-phase system undergoing a reversible isobaric process (dP = 0). The fundamental thermodynamic response function characterizing volumetric change with temperature under isobaric constraints is the isobaric thermal expansivity (or cubic expansion coefficient), denoted by β (or α_p) and defined mathematically as: β = (1 / V) (∂V / ∂T)_P. For an ideal gas adhering to the Clapeyron equation of state P V = n R T, where n is the molar quantity, R is the universal gas constant (8.31446 J mol⁻¹ K⁻¹), and T is the absolute thermodynamic temperature in kelvins, we evaluate the partial derivative of volume with respect to temperature at constant pressure: (∂V / ∂T)_P = ∂/∂T (n R T / P)_P = n R / P = V / T. Substituting this result directly into the defining equation for isobaric expansivity delivers: β = (1 / V) [ V / T ] = 1 / T. This profound thermodynamic identity establishes that for an ideal gas, the isobaric thermal expansion coefficient is not an arbitrary material constant, but is identically equal to the reciprocal of the absolute thermodynamic temperature. At the ice point (T_0 = 273.15 K = 0.00 °C), the expansion coefficient evaluates precisely to: β_0 = 1 / 273.15 K⁻¹ ≈ 0.00366099 K⁻¹. When expressed in terms of Celsius temperature t relative to the reference volume V_0 at 0 °C, the linear equation of state assumes the familiar form: V_t = V_0 (1 + β_0 t) = V_0 + (V_0 β_0) t. The thermodynamic work performed by the expanding gas during an isobaric transition from initial state (P, V_i, T_i) to final state (P, V_f, T_f) is evaluated by integrating the boundary work differential: W = ∫_{V_i}^{V_f} P dV = P (V_f − V_i) = P ΔV. According to the ideal gas law, P ΔV = n R ΔT = n R (T_f − T_i). The heat absorbed by the gas during this isobaric expansion is given by Q = n C_{p,m} ΔT, where C_{p,m} is the molar heat capacity at constant pressure. By applying Mayer's relation (C_{p,m} − C_{v,m} = R) and the First Law of Thermodynamics (ΔU = Q − W), we find: ΔU = n C_{p,m} ΔT − n R ΔT = n (C_{p,m} − R) ΔT = n C_{v,m} ΔT. Thus, during isobaric thermal expansion, a fraction (C_{v,m} / C_{p,m} = 1 / γ) of the absorbed heat increases the internal thermal energy of the gas, while the remaining fraction (R / C_{p,m} = 1 − 1/γ) is converted directly into mechanical expansion work against the surrounding atmospheric pressure.",
+            'formula': '\\beta = \\frac{1}{V}\\left(\\frac{\\partial V}{\\partial T}\\right)_P = \\frac{1}{T} \\implies W = P \\Delta V = n R \\Delta T \\quad \\text{and} \\quad Q = n C_{p,m} \\Delta T',
+            'question': 'Why is the isobaric thermal expansion coefficient β of an ideal gas equal to 1/T, and what is its value at 0 °C?',
+            'answer': 'Differentiating the ideal gas equation V = nRT/P with respect to T at constant P gives (∂V/∂T)_P = nR/P = V/T. Substituting this into the definition β = (1/V)(∂V/∂T)_P yields β = 1/T. At 0 °C (273.15 K), β = 1 / 273.15 K⁻¹ ≈ 0.003661 K⁻¹.'
+        },
+        {
+            'title': 'Microscopic Kinetic Theory: Thermal Kinetic Energy and Isobaric Volume Adjustment',
+            'text': "The kinetic theory of gases provides an intuitive, mechanically rigorous microscopic foundation for Charles' law, bridging macroscopic thermodynamic observations with molecular momentum dynamics. In kinetic theory, a gas comprises a vast ensemble of N molecules, each of mass m, in perpetual, chaotic translational motion. As derived from Newton's laws of motion for elastic boundary collisions, the macroscopic pressure exerted on the container walls is: P = (1/3) (N m / V) ⟨v²⟩ = (2/3) (N / V) ⟨E_k⟩, where ⟨v²⟩ is the mean-square molecular speed and ⟨E_k⟩ = (1/2) m ⟨v²⟩ is the mean translational kinetic energy per molecule. According to the kinetic definition of absolute temperature, the mean molecular kinetic energy is directly proportional to the thermodynamic temperature T: ⟨E_k⟩ = (3/2) k_B T, where k_B = 1.380649 × 10⁻²³ J K⁻¹ is the Boltzmann constant. Substituting this kinetic definition into the pressure expression yields: P = (2/3) (N / V) [ (3/2) k_B T ] = (N k_B T) / V. Now, consider the physical sequence of events when the gas is heated under constant atmospheric pressure. As thermal energy conducts across the container walls into the gas, the root-mean-square molecular speed increases: v_{rms} = √(3 k_B T / m) ∝ √T. If the volume were constrained to remain fixed, the higher molecular speeds would cause molecules to collide more frequently with the walls and transfer greater momentum per impact, causing pressure P to rise in proportion to T. However, in the Charles' law dilatometer, the gas is bounded by a movable liquid mercury meniscus open to the atmosphere. When the internal molecular pressure momentarily exceeds the external barometric pressure B, an unbalanced net force acts across the meniscus boundary: F_{net} = (P − B) A > 0. This force accelerates the mercury column outward, expanding the volume V of the gas chamber. As volume increases, the molecular number density n_v = N / V decreases in exact inverse proportion to V. The reduction in molecular number density reduces the impact frequency per unit wall area until the total momentum transferred to the wall per second per unit area exactly re-balances the external atmospheric pressure B. Setting P = B = constant requires: V = (N k_B / B) · T ∝ T. Thus, isobaric volume expansion is the direct mechanical consequence of the system continuously adjusting its boundary volume so that the falling molecular number density exactly compensates for the rising molecular speed, keeping the momentum flux per unit wall area invariant.",
+            'formula': 'P = \\frac{2}{3}\\frac{N}{V}\\langle E_k \\rangle = \\frac{N k_B T}{V} = B \\implies V = \\left(\\frac{N k_B}{B}\\right) T \\propto T',
+            'question': 'How does kinetic theory explain why a gas must expand when heated at constant pressure?',
+            'answer': 'Heating increases the mean kinetic energy and velocity of the molecules, which would increase the wall impact frequency and momentum transfer, raising pressure. To maintain constant pressure equal to the external atmosphere, the gas expands; this lowers the molecular number density (molecules per unit volume) until the collision rate decreases by just enough to keep the total momentum flux per unit wall area constant.'
+        },
+        {
+            'title': 'Dilatometer Metrology: Capillary Dead-Space Correction and Glass Envelope Dilatation',
+            'text': "Achieving high experimental accuracy in constant-pressure air dilatometry requires meticulous physical corrections for two fundamental apparatus systematic artifacts: the unheated capillary dead-space stem volume and the thermal expansion of the glass bulb envelope. In the actual experimental apparatus, the air sample is partitioned into two distinct geometric zones: a primary volume V_bulb completely immersed within the heating bath at temperature t (°C), and a secondary dead-space volume V_stem residing inside the connecting capillary tube and the upper portion of graduated tube T₂, which remains at the ambient room temperature t_room. Because the gas mass within the unheated stem is cooler than the gas inside the bath bulb, its molecular density is higher, causing an apparent reduction in the measured thermal expansion volume. If V_0 is the total volume at 0 °C and v_s is the dead-space capillary volume at room temperature T_r = 273.15 + t_room, the total molar quantity of gas n is conserved: n = P V_bulb / (R T) + P v_s / (R T_r) = constant. By differentiating this conservation equation, one derives the dead-space correction factor: had the entire mass of gas been maintained at bath temperature t, the true expansion volume ΔV_{true} would exceed the observed volume change ΔV_{obs} according to the first-order relation: ΔV_{true} = ΔV_{obs} [ 1 + (v_s / V_0) (T / T_r) ]. For a well-designed capillary stem where v_s / V_0 < 0.01 (less than 1%), this correction accounts for an adjustment of approximately 0.5% to 1.2% in the evaluated expansion coefficient. The second physical systematic correction arises from the thermal expansion of the glass container itself. When heated, the borosilicate glass bulb expands cubically according to its volumetric thermal expansion coefficient: V_{bulb}(t) = V_{bulb,0} (1 + α_v t), where α_v = 3 α_L ≈ 3 × (3.3 × 10⁻⁶ K⁻¹) ≈ 9.9 × 10⁻⁶ K⁻¹. Because the glass envelope expands, the apparent volume expansion of the gas measured by the displaced mercury meniscus is slightly smaller than the true gas expansion. The true expansion coefficient β_{true} is related to the apparent coefficient β_{app} by the additive relation: β_{true} = β_{app} + α_v(glass). Because the thermal expansion coefficient of dry air (β ≈ 3661 × 10⁻⁶ K⁻¹) is roughly 370 times larger than that of borosilicate glass (α_v ≈ 9.9 × 10⁻⁶ K⁻¹), glass expansion contributes a modest systematic offset of approximately 0.27%, which must nonetheless be accounted for in precision metrological determinations.",
+            'formula': '\\beta_{\\text{true}} = \\beta_{\\text{app}} + \\alpha_v(\\text{glass}) \\quad \\text{and} \\quad \\Delta V_{\\text{true}} \\approx \\Delta V_{\\text{obs}} \\left[ 1 + \\frac{v_s}{V_0}\\left(\\frac{T}{T_r}\\right) \\right]',
+            'question': 'Why does the unheated capillary stem introduce systematic error in Charles’ law measurements, and how does thermal expansion of the glass bulb affect the result?',
+            'answer': 'The capillary stem resides outside the bath at cooler room temperature, so the gas within it is denser and expands less than the gas inside the bulb, making the observed volume expansion slightly too small. Furthermore, as the glass bulb heats up, its internal capacity expands by α_v(glass) ≈ 10 × 10⁻⁶ K⁻¹, causing the apparent expansion coefficient of the gas to be slightly lower than its true value: β_true = β_app + α_v(glass).'
+        },
+        {
+            'title': 'Extrapolation to Absolute Zero: Asymptotic Vanishing of Volume and the Kelvin Scale',
+            'text': "One of the most profound conceptual outcomes of Charles' law is the empirical discovery and quantitative definition of the absolute zero of temperature. The linear equation governing the isobaric volume of an ideal gas as a function of Celsius temperature is V_t = V_0 (1 + β t) = V_0 + (V_0 β) t. If this linear relationship is plotted on Cartesian axes with temperature t on the horizontal abscissa and volume V_t on the vertical ordinate, the resulting line has a positive slope m = V_0 β and a vertical y-intercept b = V_0 at t = 0 °C. Projecting this line backward to lower temperatures, there exists a unique temperature at which the theoretical volume of the gas extrapolates to zero: V_t = 0. Setting the linear equation to zero yields: V_0 (1 + β t_0) = 0 ⟹ 1 + β t_0 = 0 ⟹ t_0 = −1 / β. Substituting the experimentally determined expansion coefficient β ≈ 0.003661 K⁻¹ delivers: t_0 = −1 / 0.003661 °C ≈ −273.15 °C. In 1848, the Scottish physicist William Thomson (Lord Kelvin), drawing upon Sadi Carnot's thermodynamic cycle and the empirical behavior of gas dilatometers, recognized that this point represents not merely an arbitrary zero of volumetric extrapolation, but an absolute thermodynamic lower boundary below which no physical system can be cooled. At this absolute zero, all classical molecular translational kinetic energy vanishes (⟨E_k⟩ = (3/2) k_B T → 0), molecules become mutually static (subject only to quantum zero-point fluctuations governed by the Heisenberg uncertainty principle), and the pressure and volume of a hypothetical non-condensing gas asymptotically approach zero. Lord Kelvin established the absolute thermodynamic temperature scale by shifting the origin of the temperature axis to this absolute zero point: T (K) = t (°C) + 273.15. In terms of absolute Kelvin temperature T, Charles' law simplifies into its ultimate, sublime mathematical form: V / T = constant = n R / P. The volume of an ideal gas is directly proportional to its absolute temperature on the Kelvin scale.",
+            'formula': 'V_t = 0 \\implies 1 + \\beta t_0 = 0 \\implies t_0 = -\\frac{1}{\\beta} = -273.15 \\, ^\\circ\\text{C} \\quad \\text{and} \\quad T(\\text{K}) = t(\\,^\\circ\\text{C}) + 273.15',
+            'question': 'How is the absolute zero of temperature determined from the Charles’ law experimental graph, and what is its physical significance?',
+            'answer': 'By plotting volume V on the y-axis against Celsius temperature t on the x-axis and extrapolating the linear regression line to V = 0, the horizontal intercept gives t_0 = −b / m = −1 / β ≈ −273.15 °C. Physically, absolute zero represents the lowest conceivable temperature where classical molecular translational motion ceases and the internal thermal energy of an ideal gas reaches its theoretical minimum.'
+        },
+        {
+            'title': 'Real Gas Departures from Isobaric Linearity: Intermolecular Forces and Condensation',
+            'text': "While the ideal gas model predicts that the isobaric volume-temperature trajectory is an unbroken straight line extending down to V = 0 at −273.15 °C, all real physical gases exhibit systematic departures from ideal linearity due to finite molecular volume and intermolecular potential energies. These departures are formalized through the Van der Waals equation of state: (P + a / V_m²) (V_m − b) = R T, where V_m = V / n is the molar volume, 'a' represents the attractive dipole-dipole and London dispersion forces, and 'b' represents the excluded volume of the hard molecular cores. At constant atmospheric pressure P, solving for temperature yields: T = (P + a / V_m²) (V_m − b) / R. At elevated temperatures and moderate pressures, real gases adhere closely to Charles' law because the kinetic energy of the molecules far exceeds the shallow attractive potential well (k_B T ≫ ε_{LJ}), and the molar volume is thousands of times larger than the excluded co-volume (V_m ≫ b). However, as temperature is decreased toward cryogenic levels, the mean molecular kinetic energy drops, allowing attractive forces (represented by the 'a' parameter) to draw molecules together, causing the real gas volume to contract more rapidly than predicted by ideal linearity (the compressibility factor Z = P V_m / (R T) drops below 1.0). Eventually, at the condensation boiling point (for oxygen at 90.2 K, nitrogen at 77.4 K, and helium at 4.2 K), the gas undergoes a first-order phase transition into a liquid, characterized by a discontinuous collapse in volume by a factor of roughly 800:1. In the liquid and solid states, strong Pauli repulsive forces between overlapping electron shells prevent further volumetric contraction, rendering the substance virtually incompressible with a finite, non-zero density at 0 K. For dry atmospheric air at standard pressure between 0 °C and 80 °C, the compressibility factor varies only between Z = 0.9996 and Z = 1.0002, demonstrating that departures from Charles' law in this laboratory temperature regime are less than 0.05%, fully validating the linear ideal gas approximation.",
+            'formula': 'Z = \\frac{P V_m}{R T} = 1 + \\left( b - \\frac{a}{R T} \\right) \\frac{1}{V_m} + \\dots \\quad \\text{and} \\quad \\lim_{T \\to T_b} V_{\\text{gas}} \\to V_{\\text{liquid}} \\ne 0',
+            'question': 'Why do real gases deviate from Charles’ law at very low temperatures, and why does their volume not actually vanish at absolute zero?',
+            'answer': 'At low temperatures, molecular kinetic energy decreases, and attractive intermolecular van der Waals forces draw molecules together, causing volume to shrink faster than predicted by the ideal gas law. Before reaching absolute zero, all real gases condense into liquids and freeze into solids. In condensed phases, the finite size of the molecules (excluded volume b) and electron shell repulsion prevent volume from ever reaching zero.'
+        },
+        {
+            'title': 'Modern Industrial and Cryogenic Applications: Gas Thermometry and Stirling Cycles',
+            'text': "The principles embodied in Charles' law and isobaric gas thermometry constitute essential operational foundations across modern industrial thermodynamics, cryogenic engineering, and power generation. In metrology, the Constant-Pressure Gas Thermometer (CPGT) serves as one of the primary defining standard instruments for realizing the International Temperature Scale (ITS-90) over cryogenic and intermediate temperature domains. Using high-purity helium-4 gas, primary standards laboratories calibrate industrial platinum resistance thermometers (PRTs) and secondary sensors by measuring fractional gas volume displacement with laser interferometry. In aerospace and aviation, aircraft pitot-static instrumentation, barometric altimeters, and air data computers continuously execute real-time Charles' law corrections to convert sensed air density and stagnation temperatures into True Airspeed (TAS) and calibrated pressure altitude. In renewable energy and thermodynamic power cycles, the Stirling Engine and the Ericsson Cycle utilize cyclic isobaric and isothermal expansion and compression of confined hydrogen or helium working fluids to convert solar thermal or industrial waste heat into mechanical shaft power. During the regenerative isobaric heating phase of the Stirling cycle, the working gas expands through a porous matrix regenerator according to Charles' law, driving a displacer piston and delivering positive net mechanical work per thermodynamic cycle. Furthermore, in commercial air liquefaction and industrial gas separation (the Claude and Linde processes), the initial cooling of air relies upon compression followed by isobaric heat rejection through counter-flow heat exchangers operating strictly in accordance with Charles' volumetric enthalpy equations.",
+            'formula': '\\eta_{\\text{Carnot}} = 1 - \\frac{T_C}{T_H} \\quad \\text{and} \\quad W_{\\text{isobaric}} = \\oint P \\, dV = P (V_{\\text{hot}} - \\text{V}_{\\text{cold}})',
+            'question': 'How is Charles’ law applied in primary temperature metrology and the thermodynamic operation of Stirling engines?',
+            'answer': 'In metrology, constant-pressure helium gas thermometers serve as primary standards for establishing the thermodynamic temperature scale ITS-90. In Stirling and Ericsson thermodynamic engines, working gas shuttles through a regenerator where isobaric heating causes volumetric expansion governed by Charles’ law, driving power pistons to generate mechanical work from thermal energy.'
+        }
+    ],
+    'quiz': [
+        {
+            'question': 'Under constant atmospheric pressure, if a confined ideal gas sample is heated from 0.0 °C (273.15 K) to 273.15 °C (546.30 K), what happens to its volume?',
+            'options': [
+                'The volume exactly doubles.',
+                'The volume increases by a factor of 273.15.',
+                'The volume remains unchanged because pressure is constant.',
+                'The volume increases by 50%.'
+            ],
+            'correct': 0,
+            'explanation': 'According to Charles’ law, volume is directly proportional to absolute temperature in kelvins: V₂ = V₁ · (T₂ / T₁). Doubling the absolute temperature from 273.15 K to 546.30 K causes the gas volume to exactly double.'
+        },
+        {
+            'question': 'What is the theoretical value of the isobaric thermal volume expansion coefficient β for an ideal gas at 0.00 °C?',
+            'options': [
+                'β = 1 / 273.15 K⁻¹ ≈ 0.003661 K⁻¹',
+                'β = 273.15 K⁻¹',
+                'β = 1.000 K⁻¹',
+                'β = 1 / 100 K⁻¹ = 0.0100 K⁻¹'
+            ],
+            'correct': 0,
+            'explanation': 'Differentiating V = nRT/P at constant P gives β = (1/V)(∂V/∂T)_P = 1/T. At 0 °C (273.15 K), β = 1 / 273.15 K⁻¹ ≈ 0.003661 K⁻¹ (or 3.661 × 10⁻³ K⁻¹).'
+        },
+        {
+            'question': 'When plotting gas volume V on the vertical axis against Celsius temperature t on the horizontal axis, how is the absolute zero of temperature determined?',
+            'options': [
+                'By extrapolating the straight line to V = 0, where the x-intercept equals −b / m = −1 / β.',
+                'By reading the y-intercept where t = 0 °C.',
+                'By calculating the slope of the line divided by atmospheric pressure.',
+                'By finding the temperature where the line reaches its maximum volume.'
+            ],
+            'correct': 0,
+            'explanation': 'The linear relationship is V = m t + b. Setting volume V = 0 gives m t₀ + b = 0, which yields the horizontal intercept t₀ = −b / m = −1 / β ≈ −273.15 °C, corresponding to absolute zero.'
+        },
+        {
+            'question': 'Why must the mercury leveling reservoir be readjusted after heating the gas bulb to a new temperature station in the dilatometer?',
+            'options': [
+                'To bring the mercury menisci in both tubes to equal horizontal levels, ensuring the gas remains at constant atmospheric pressure.',
+                'To prevent the mercury from boiling at elevated bath temperatures.',
+                'To increase the hydrostatic pressure so that gas volume remains constant.',
+                'To force the heated air out of the bulb into the room.'
+            ],
+            'correct': 0,
+            'explanation': 'Thermal expansion pushes the mercury meniscus down in the measuring tube. Lowering the leveling reservoir until both mercury menisci stand at the same level eliminates differential hydrostatic head (Δh = 0), ensuring the gas pressure remains strictly constant at atmospheric pressure P = B.'
+        }
+    ],
+    'limitations': 'The teaching simulation models an ideal gas under isobaric conditions at constant atmospheric pressure B = 101.325 kPa (760.0 mmHg) and initial bulb volume V_0 = 100.00 cm³ at 0.00 °C. In physical laboratory experiments, temperature non-uniformity across the heated water bath introduces minor temperature measurement offsets (±0.2 °C), thermal response latency in the thermometer sensor causes reading delays during heating, capillary stem volume exclusion (a small fraction of the gas column in the capillary stem remains outside the bath at room temperature, ~0.8%), meniscus leveling parallax error across the graduated tube (±0.05 cm³), atmospheric barometric drift over the heating run (±0.2 mmHg), and slight thermal expansion of the borosilicate glass bulb envelope (borosilicate volume expansion α_v ≈ 9.9 × 10⁻⁶ K⁻¹) contribute experimental uncertainty.',
+    'modelExtra': 'The simulation evaluates confined gas volume using V_t = V_0 (1 + β_ref · t), where V_0 = 100.00 cm³ is the ice-point volume, β_ref = 1 / 273.15 K⁻¹ is the ideal gas volume expansion coefficient, and t is the bath temperature in °C. The volume in cm³ is rounded to 0.01 cm³ to simulate precision burette dilatometry. Ordinary least-squares regression of volume V (m³) against temperature t (°C) across five temperature stations (0.0, 20.0, 40.0, 60.0, 80.0 °C) yields the reported thermal volume expansion coefficient β = m / b and extrapolated absolute zero T_0 = −b / m.'
+}
+
+# 1. Update experiments.json
+exp_path = ROOT / 'content/physics/experiments.json'
+experiments = json.loads(exp_path.read_text())
+existing_idx = next((i for i, e in enumerate(experiments) if e['slug'] == 'charles-law-volume'), None)
+if existing_idx is not None:
+    experiments[existing_idx] = exp32
+else:
+    experiments.append(exp32)
+exp_path.write_text(json.dumps(experiments, indent=2, ensure_ascii=False))
+print(f'experiments.json updated. Total experiments: {len(experiments)}')
+
+# 2. Update catalog.sqlite3
+db_path = ROOT / 'data/catalog.sqlite3'
+db = sqlite3.connect(db_path)
+cur = db.cursor()
+cur.execute('DELETE FROM experiments WHERE slug = ?', ('charles-law-volume',))
+cur.execute('''
+    INSERT INTO experiments (subject_id, slug, title, status, page_path, theory_path, report_path)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+''', (
+    1,
+    'charles-law-volume',
+    'Determination of the Thermal Expansion Coefficient of a Gas at Constant Pressure (Charles’ Law)',
+    'live',
+    '/physics/charles-law-volume/',
+    '/physics/charles-law-volume/theory/',
+    '/physics/charles-law-volume/report/'
+))
+db.commit()
+db.close()
+print('catalog.sqlite3 updated successfully for charles-law-volume.')
