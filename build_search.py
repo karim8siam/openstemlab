@@ -29,7 +29,8 @@ def experiment_index(experiments):
    'torsion-pendulum':'torsion pendulum shear modulus rigidity wire twisting inertia disc coulomb cavendish torque rotational harmonic oscillation',
    'resonance-air-column':'resonance tube air column speed of sound acoustic standing waves water reservoir tuning fork end correction helmholtz wavelength frequency sound velocity node antinode',
    'modes-air-column':'modes vibration air column open closed organ pipe harmonics overtones siren disk acoustic standing waves dual end correction helmholtz rayleigh sound speed',
-   'vibration-strings-sonometer':'sonometer vibration strings mersenne laws transverse wave velocity tension linear mass density soundboard paper rider tuning fork beats unison'}
+   'vibration-strings-sonometer':'sonometer vibration strings mersenne laws transverse wave velocity tension linear mass density soundboard paper rider tuning fork beats unison',
+   'interference-sound-waves':'kundt tube standing waves air sound velocity metal rod dust heaps lycopodium cork dust wavelength longitudinal waves resonance rod clamp young modulus specific heat ratio'}
  for exp in experiments:
   c=configs.get(exp['slug'],{});index.append({'slug':exp['slug'],'title':c.get('title',exp['title']),'subject':'physics','subjectName':'Physics','path':exp['page_path'],'summary':c.get('aim','Determine Planck’s constant from stopping potential and frequency.'),'keywords':' '.join([aliases.get(exp['slug'],''),*[a['name'] for a in c.get('apparatus',[])]])})
  return index

@@ -775,6 +775,61 @@ function draw(t){
     const bX=470,bY=45,bW=220,bH=220,lambda_m=2.0*L_cm/100.0,v_est=fHz*lambda_m,mu_est=29.41995/(v_est*v_est);
     svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#182824" stroke="'+soft+'" stroke-width="1.5"/><text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#718e79" font-size="9">TUNING FORK FREQUENCY (f)</text><text x="'+(bX+15)+'" y="'+(bY+52)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+fHz.toFixed(1)+'</text><text x="'+(bX+105)+'" y="'+(bY+50)+'" fill="'+soft+'" font-size="11">Hz</text><text x="'+(bX+130)+'" y="'+(bY+50)+'" fill="#9fb498" font-size="8">(Middle Scale)</text><line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#253a34"/><text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#718e79" font-size="9">RESONANT SEGMENT LENGTH (L)</text><text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="18" font-family="monospace">'+L_cm.toFixed(2)+' cm</text><text x="'+(bX+130)+'" y="'+(bY+108)+'" fill="#9fb498" font-size="8.5">(±0.05 cm)</text><line x1="'+(bX+15)+'" y1="'+(bY+125)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+125)+'" stroke="#253a34"/><text x="'+(bX+15)+'" y="'+(bY+144)+'" fill="#718e79" font-size="9">WAVE SPEED v & LINEAR DENSITY μ</text><text x="'+(bX+15)+'" y="'+(bY+168)+'" fill="'+orange+'" font-size="15" font-family="monospace" font-weight="bold">'+v_est.toFixed(1)+' m s⁻¹</text><text x="'+(bX+130)+'" y="'+(bY+168)+'" fill="#9fb498" font-size="9">μ='+(mu_est*1000).toFixed(3)+' g/m</text><text x="'+(bX+15)+'" y="'+(bY+184)+'" fill="#9fb498" font-size="8">T = M g = 29.42 N (M = 3.0 kg) · d = 0.50 mm</text><line x1="'+(bX+15)+'" y1="'+(bY+195)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+195)+'" stroke="#253a34"/>'+text(bX+15,bY+210,'L = (v/2)(1/f) ⇔ v = 2m · μ = T / (4m²)',ink,9)+text(240,22,'Sonometer Soundboard Apparatus')+text(240,308,'Mersenne\'s Laws: f = (1/2L)√(T/μ) · Transverse Wave Speed v = 138.2 m s⁻¹');
   }
+   else if(cfg.slug==='interference-sound-waves'){
+    const L_cm=p.input;
+    const d_cm=v.raw;
+    const clampX=115,clampY=150;
+    const rodL_px=110.0+(L_cm-80.0)*1.6;
+    const rodLeftX=clampX-rodL_px/2.0;
+    const rodRightX=clampX+rodL_px/2.0;
+    const rodY=clampY-4,rodH=8;
+    svg+='<rect x="85" y="240" width="60" height="15" rx="3" fill="#1e293b" stroke="'+soft+'" stroke-width="1.5"/><rect x="110" y="170" width="10" height="70" fill="#334155" stroke="'+soft+'" stroke-width="1"/><rect x="105" y="138" width="20" height="32" rx="2" fill="#475569" stroke="#94a3b8" stroke-width="1.5"/><circle cx="115" cy="154" r="3" fill="#f59e0b"/><text x="115" y="132" text-anchor="middle" fill="#f59e0b" font-size="7.5" font-weight="bold">Center Clamp (Node)</text><rect x="'+rodLeftX.toFixed(1)+'" y="'+rodY+'" width="'+(clampX-rodLeftX).toFixed(1)+'" height="'+rodH+'" rx="2" fill="#d97706" stroke="#b45309" stroke-width="1"/><rect x="'+clampX+'" y="'+rodY+'" width="'+(rodRightX-clampX).toFixed(1)+'" height="'+rodH+'" rx="2" fill="#d97706" stroke="#b45309" stroke-width="1"/>';
+    const discX=rodRightX,discVib=Math.cos(phase*18)*2.5;
+    svg+='<rect x="'+(discX-2+discVib).toFixed(1)+'" y="'+(rodY-6)+'" width="6" height="20" rx="1.5" fill="#78350f" stroke="#b45309" stroke-width="1.2"/><text x="'+discX.toFixed(1)+'" y="'+(rodY-10)+'" text-anchor="middle" fill="#fde68a" font-size="7">Cork Disc</text>';
+    let rodWaveTop=[],rodWaveBot=[];
+    for(let w=0;w<=20;w++){
+      const nw=w/20.0,wx=rodLeftX+nw*rodL_px,disp=Math.sin((nw-0.5)*Math.PI)*Math.cos(phase*18)*5.0;
+      rodWaveTop.push(wx.toFixed(1)+','+(rodY-2-disp).toFixed(1));rodWaveBot.push(wx.toFixed(1)+','+(rodY+rodH+2+disp).toFixed(1));
+    }
+    svg+='<polyline points="'+rodWaveTop.join(' ')+'" fill="none" stroke="'+orange+'" stroke-width="1.2" stroke-dasharray="2 2"/><polyline points="'+rodWaveBot.join(' ')+'" fill="none" stroke="'+orange+'" stroke-width="1.2" stroke-dasharray="2 2"/><line x1="'+rodLeftX.toFixed(1)+'" y1="'+(rodY+22)+'" x2="'+rodRightX.toFixed(1)+'" y2="'+(rodY+22)+'" stroke="'+soft+'" stroke-width="1.2"/><line x1="'+rodLeftX.toFixed(1)+'" y1="'+(rodY+17)+'" x2="'+rodLeftX.toFixed(1)+'" y2="'+(rodY+27)+'" stroke="'+soft+'" stroke-width="1.2"/><line x1="'+rodRightX.toFixed(1)+'" y1="'+(rodY+17)+'" x2="'+rodRightX.toFixed(1)+'" y2="'+(rodY+27)+'" stroke="'+soft+'" stroke-width="1.2"/><text x="'+((rodLeftX+rodRightX)/2).toFixed(1)+'" y="'+(rodY+34)+'" text-anchor="middle" fill="'+soft+'" font-size="8.5" font-weight="bold">L_rod = '+L_cm.toFixed(1)+' cm</text>';
+    const clothX=clampX-rodL_px*0.3;
+    svg+='<rect x="'+(clothX-8)+'" y="'+(rodY-8)+'" width="16" height="24" rx="3" fill="#b91c1c" stroke="#fca5a5" stroke-width="1" opacity="0.85"/><path d="M '+(clothX-14)+' '+(rodY+4)+' L '+(clothX-22)+' '+(rodY+4)+' M '+(clothX-18)+' '+(rodY+1)+' L '+(clothX-22)+' '+(rodY+4)+' L '+(clothX-18)+' '+(rodY+7)+'" stroke="#fca5a5" stroke-width="1.5" stroke-linecap="round"/><text x="'+clothX+'" y="'+(rodY-11)+'" text-anchor="middle" fill="#fca5a5" font-size="6.5">Rosin Stroke</text>';
+    const tubeX=discX-10,tubeW=450-tubeX,tubeY=clampY-18,tubeH=36;
+    svg+='<polygon points="'+(tubeX+40)+',240 '+(tubeX+50)+',180 '+(tubeX+60)+',240" fill="#20312d" stroke="'+soft+'" stroke-width="1.2"/><polygon points="'+(tubeX+tubeW-40)+',240 '+(tubeX+tubeW-30)+',180 '+(tubeX+tubeW-20)+',240" fill="#20312d" stroke="'+soft+'" stroke-width="1.2"/><rect x="'+tubeX+'" y="'+tubeY+'" width="'+tubeW+'" height="'+tubeH+'" rx="3" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5" opacity="0.85"/><line x1="'+tubeX+'" y1="'+(tubeY+3)+'" x2="'+(tubeX+tubeW)+'" y2="'+(tubeY+3)+'" stroke="#bae6fd" stroke-width="0.8" opacity="0.6"/>';
+    const pistonX=tubeX+tubeW-12;
+    svg+='<rect x="'+pistonX+'" y="'+(tubeY+2)+'" width="8" height="'+(tubeH-4)+'" rx="1" fill="#475569" stroke="#94a3b8" stroke-width="1.2"/><line x1="'+(pistonX+8)+'" y1="'+(tubeY+tubeH/2)+'" x2="'+(pistonX+32)+'" y2="'+(tubeY+tubeH/2)+'" stroke="#cbd5e1" stroke-width="3"/><rect x="'+(pistonX+30)+'" y="'+(tubeY+tubeH/2-8)+'" width="4" height="16" rx="1" fill="#94a3b8"/><text x="'+(pistonX+16)+'" y="'+(tubeY-6)+'" text-anchor="middle" fill="#94a3b8" font-size="7">Tuning Piston</text>';
+    const d_px=18.0+(d_cm-7.84)*3.5,startHeapX=tubeX+22,numHeaps=Math.floor((pistonX-startHeapX-10)/d_px);
+    let waveAir=[];
+    for(let px_i=0;px_i<=60;px_i++){
+      const curX=startHeapX+(px_i/60.0)*(numHeaps*d_px),normX=(curX-startHeapX)/d_px,uAir=Math.sin(Math.PI*normX)*Math.cos(phase*18)*9.0;
+      waveAir.push(curX.toFixed(1)+','+(tubeY+tubeH/2-uAir).toFixed(1));
+    }
+    svg+='<polyline points="'+waveAir.join(' ')+'" fill="none" stroke="'+ink+'" stroke-width="1.5" stroke-dasharray="2 2"/>';
+    for(let h=0;h<=numHeaps;h++){
+      const hX=startHeapX+h*d_px;
+      if(hX<pistonX-10){
+        svg+='<polygon points="'+(hX-5)+','+(tubeY+tubeH-2)+' '+hX+','+(tubeY+tubeH-9)+' '+(hX+5)+','+(tubeY+tubeH-2)+'" fill="#fde68a" stroke="#d97706" stroke-width="0.8"/><circle cx="'+hX+'" cy="'+(tubeY+tubeH-2)+'" r="1" fill="#d97706"/>';
+        if(h<numHeaps){
+          const antiX=hX+d_px/2.0;
+          for(let s=-2;s<=2;s++){
+            const stX=antiX+s*2.5,agitate=Math.abs(Math.sin(phase*18+s))*4.0;
+            svg+='<line x1="'+stX.toFixed(1)+'" y1="'+(tubeY+tubeH-2)+'" x2="'+stX.toFixed(1)+'" y2="'+(tubeY+tubeH-4-agitate).toFixed(1)+'" stroke="#cbd5e1" stroke-width="1" stroke-linecap="round"/>';
+          }
+        }
+      }
+    }
+    if(numHeaps>=1){
+      const h1=startHeapX,h2=startHeapX+d_px;
+      svg+='<line x1="'+h1+'" y1="'+(tubeY+tubeH+12)+'" x2="'+h2.toFixed(1)+'" y2="'+(tubeY+tubeH+12)+'" stroke="'+orange+'" stroke-width="1.2"/><line x1="'+h1+'" y1="'+(tubeY+tubeH+8)+'" x2="'+h1+'" y2="'+(tubeY+tubeH+16)+'" stroke="'+orange+'" stroke-width="1.2"/><line x1="'+h2.toFixed(1)+'" y1="'+(tubeY+tubeH+8)+'" x2="'+h2.toFixed(1)+'" y2="'+(tubeY+tubeH+16)+'" stroke="'+orange+'" stroke-width="1.2"/><text x="'+((h1+h2)/2).toFixed(1)+'" y="'+(tubeY+tubeH+24)+'" text-anchor="middle" fill="'+orange+'" font-size="8" font-weight="bold">d = '+d_cm.toFixed(2)+' cm (λ_air/2)</text>';
+    }
+    svg+='<rect x="'+tubeX+'" y="240" width="'+tubeW+'" height="10" rx="2" fill="#1b2a26" stroke="'+soft+'" stroke-width="1"/>';
+    for(let g=0;g<=16;g++){
+      const gx=tubeX+10+g*((tubeW-20)/16),isMaj=(g%4===0);
+      svg+='<line x1="'+gx.toFixed(1)+'" y1="240" x2="'+gx.toFixed(1)+'" y2="'+(240+(isMaj?6:3))+'" stroke="'+soft+'" stroke-width="'+(isMaj?1.2:0.8)+'"/>';
+    }
+    const bX=470,bY=45,bW=220,bH=220,lambda_air_m=2.0*d_cm/100.0,f_sound=343.20/lambda_air_m,v_rod_est=343.20*((L_cm/100.0)/(d_cm/100.0)),E_gpa=8500.0*(v_rod_est*v_rod_est)*1e-9;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#182824" stroke="'+soft+'" stroke-width="1.5"/><text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#718e79" font-size="9">SOUNDING ROD LENGTH (L_rod)</text><text x="'+(bX+15)+'" y="'+(bY+52)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+L_cm.toFixed(1)+'</text><text x="'+(bX+105)+'" y="'+(bY+50)+'" fill="'+soft+'" font-size="11">cm</text><text x="'+(bX+130)+'" y="'+(bY+50)+'" fill="#9fb498" font-size="8">(Center Clamped)</text><line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#253a34"/><text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#718e79" font-size="9">NODAL DUST SPACING (d = λ_air / 2)</text><text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="18" font-family="monospace">'+d_cm.toFixed(2)+' cm</text><text x="'+(bX+130)+'" y="'+(bY+108)+'" fill="#9fb498" font-size="8.5">(±0.05 cm)</text><line x1="'+(bX+15)+'" y1="'+(bY+125)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+125)+'" stroke="#253a34"/><text x="'+(bX+15)+'" y="'+(bY+144)+'" fill="#718e79" font-size="9">ROD SOUND SPEED & YOUNG MODULUS</text><text x="'+(bX+15)+'" y="'+(bY+168)+'" fill="'+orange+'" font-size="15" font-family="monospace" font-weight="bold">'+v_rod_est.toFixed(1)+' m s⁻¹</text><text x="'+(bX+130)+'" y="'+(bY+168)+'" fill="#9fb498" font-size="9">E='+E_gpa.toFixed(1)+' GPa</text><text x="'+(bX+15)+'" y="'+(bY+184)+'" fill="#9fb498" font-size="8">f = '+f_sound.toFixed(1)+' Hz · v_air = 343.2 m/s · ρ = 8500 kg/m³</text><line x1="'+(bX+15)+'" y1="'+(bY+195)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+195)+'" stroke="#253a34"/>'+text(bX+15,bY+210,'d = (v_air / v_rod) L ⇔ v_rod = v_air / m',ink,9)+text(240,22,'Kundt\'s Tube Acoustic Standing Wave Apparatus')+text(240,308,'Standing Waves in Air: d = λ_air / 2 · Rod Sound Speed: v_rod = 3500.0 m s⁻¹');
+  }
 
 
 

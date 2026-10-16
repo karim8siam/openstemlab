@@ -8311,5 +8311,223 @@
       "Position the paper rider at the exact geometric midpoint between bridges (the fundamental antinode) to ensure maximum sympathetic sensitivity."
     ],
     "limitations": "The teaching model assumes an ideally flexible, infinitely thin wire with zero bending stiffness, negligible damping, and perfectly rigid bridge knife-edges. In a physical laboratory, small wire flexural rigidity (stiffness inharmonicity) slightly elevates higher overtone frequencies, minor bridge compliance adds small effective length offsets, and auditory beat detection threshold introduces slight visual/auditory setting scatter."
+  },
+  {
+    "number": 42,
+    "slug": "interference-sound-waves",
+    "title": "Interference of Waves: Kundt's Tube, Standing Waves in Air, and Sound Velocity in Solids and Gases",
+    "shortTitle": "Kundt's Tube Standing Waves",
+    "subject": "physics",
+    "aim": "To investigate acoustic wave interference and stationary wave formation in an air column using Kundt's tube, observe powder striations at displacement nodes and antinodes, determine the velocity of longitudinal sound waves in a solid metal rod and dry air, and calculate the dynamic Young's modulus of the rod using linear regression.",
+    "intro": "When two coherent longitudinal acoustic waves of identical frequency and amplitude propagate in opposite directions along a bounded gaseous column, their linear superposition establishes an acoustic standing (stationary) wave. In Kundt's tube apparatus, invented in 1866, longitudinal sound waves are excited inside a long glass tube by the periodic vibrations of a solid metal rod clamped firmly at its center. One free end of the rod is fitted with a light cork disc that projects into the mouth of the tube, while the far end of the tube is terminated by an adjustable acoustic reflector piston. Stroking the protruding half of the rod with a resined cloth generates intense longitudinal standing waves in the metal bar, producing a displacement node at the rigid center clamp and displacement antinodes at both free ends. Consequently, the fundamental wavelength in the rod is twice its length: λ_rod = 2 L_rod, vibrating at natural frequency f = v_rod / (2 L_rod). As the cork disc oscillates back and forth at this exact frequency, it launches longitudinal compression waves down the air column. When the reflector piston is adjusted so that the tube's effective acoustic length is an integral multiple of half-wavelengths, multiple reflections constructively interfere to form a stationary wave pattern in the air. Lightweight lycopodium powder or fine cork dust distributed along the bottom of the tube acts as an aerodynamic indicator: at displacement antinodes, acoustic particle velocity reaches violent maxima, blowing the particles into agitated transverse striations; at displacement nodes, the acoustic particle velocity is zero, allowing dust particles to come to rest and accumulate into sharp, quiet nodal heaps. The distance d between consecutive dust heaps represents exactly one-half of the acoustic wavelength in air: d = λ_air / 2. Because the air column is driven synchronously at the rod's frequency (f_air = f_rod), equating frequencies yields the fundamental Kundt velocity ratio: v_rod / v_air = λ_rod / λ_air = (2 L_rod) / (2 d) = L_rod / d, or d = (v_air / v_rod) L_rod. By measuring the dust node spacing d across various rod lengths L_rod, ordinary least-squares regression yields the velocity ratio v_air / v_rod as the slope m. With the speed of sound in air known from Laplace's thermodynamic formula v_air = √(γ R T / M) (343.20 m/s at 20.0 °C), the longitudinal wave propagation speed in the solid metal rod is determined as v_rod = v_air / m. Furthermore, knowing the material density ρ_rod allows direct calculation of the dynamic Young's modulus E = ρ_rod v_rod² without relying on static mechanical deformation.",
+    "fitEquation": "d = \\left(\\frac{v_{\\text{air}}}{v_{\\text{rod}}}\\right) L_{\\text{rod}} \\iff y = m x + b \\iff v_{\\text{rod}} = \\frac{v_{\\text{air}}}{m}, \\quad E = \\rho_{\\text{rod}} v_{\\text{rod}}^2",
+    "gradientUnit": "m m⁻¹",
+    "target": 3500.0,
+    "targetName": "Sound velocity in brass rod",
+    "resultUnit": "m s⁻¹",
+    "resultDecimals": 1,
+    "resultScale": 1,
+    "reference": 3500.0,
+    "min": 60.0,
+    "max": 160.0,
+    "step": 5.0,
+    "initial": 100.0,
+    "inputLabel": "Sounding rod length L_rod",
+    "shortInput": "Rod length L",
+    "inputUnit": "cm",
+    "inputDecimals": 1,
+    "rawLabel": "Nodal dust heap spacing d",
+    "rawUnit": "cm",
+    "rawDecimals": 2,
+    "angle": false,
+    "timed": true,
+    "published": true,
+    "measureLabel": "Measure nodal dust spacing d",
+    "observationLabel": "Kundt's tube acoustic standing wave observations",
+    "xAxis": "Sounding rod length L_rod",
+    "yAxis": "Dust node spacing d",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "emptyX": "L_rod (m)",
+    "emptyY": "d (m)",
+    "samples": [
+      80.0,
+      90.0,
+      100.0,
+      110.0,
+      120.0,
+      130.0
+    ],
+    "settings": [
+      "Ambient room temperature: T = 20.0 °C (Speed of sound in dry air: v_air = 343.20 m s⁻¹).",
+      "Reference longitudinal wave velocity in brass rod: v_rod = 3500.0 m s⁻¹ (Dynamic Young's modulus E ≈ 104.1 GPa).",
+      "Sounding rod material: High-tensile solid brass (diameter d_rod = 12.7 mm, density ρ = 8500 kg m⁻³).",
+      "Acoustic resonance tube: Borosilicate glass (length = 1.50 m, internal bore = 32.0 mm).",
+      "Coupling disc clearance: Radial air gap = 1.5 mm (frictionless acoustic transmission).",
+      "Acoustic indicator powder: Dehydrated lycopodium spore powder (particle diameter ≈ 30 μm)."
+    ],
+    "apparatus": [
+      {
+        "name": "Kundt's Acoustic Resonance Tube",
+        "purpose": "Heavy-wall precision borosilicate glass tube (1.5 m length, 32 mm internal diameter) equipped with metric scale graduations, gas inlet/outlet stopcocks, and vibration-isolated cradle mounts."
+      },
+      {
+        "name": "Adjustable Acoustic Reflector Piston",
+        "purpose": "Tightly fitting rubber-edged reflector piston mounted on an extended steel control rod, allowing continuous acoustic air column length tuning to exact standing wave resonance."
+      },
+      {
+        "name": "Standard Brass Sounding Rod",
+        "purpose": "Precision-turned solid brass rod (12.7 mm diameter, selectable lengths from 80 cm to 130 cm) clamped at its geometric center, fitted with a lightweight cork coupling disc at one end."
+      },
+      {
+        "name": "Center-Clamping Vise Stand",
+        "purpose": "Massive cast-iron bench vise with vulcanized leather clamp jaws designed to firmly grip the rod at its exact nodal center without damping longitudinal vibrations."
+      },
+      {
+        "name": "Lycopodium Powder / Fine Cork Dust",
+        "purpose": "Dehydrated, uniform microscopic spores (clubmoss) providing high fluidic mobility to form sharp, well-defined nodal heap striations under acoustic excitation."
+      },
+      {
+        "name": "Excitation Cloth and Rosin",
+        "purpose": "Coarse woolen or leather cloth impregnated with powdered rosin to stroke the free half of the metal rod and excite strong longitudinal vibrations."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Apparatus Inspection and Powder Distribution",
+        "text": "Thoroughly dry the interior of the Kundt's glass tube using a dry flannel swab. Distribute a light, uniform track of dry lycopodium powder or fine cork dust along the entire bottom length of the horizontal tube by gently rocking and tapping the tube cradle.",
+        "why": "Moisture causes the powder to clump and adhere to the glass walls, destroying the delicate aerodynamic sensitivity needed to resolve acoustic node boundaries."
+      },
+      {
+        "title": "Rod Centering and Midpoint Clamping",
+        "text": "Measure the total length of the brass rod L_rod with a steel meter rule. Mark the exact geometric center (L_rod / 2) with a fine pencil line, and clamp the rod firmly in the heavy vise jaws at this exact midpoint, ensuring the cork disc enters the tube mouth without touching the glass walls.",
+        "why": "The fundamental longitudinal mode requires a displacement node at the exact center; clamping off-center damps the fundamental oscillation and excites dissonant higher overtones."
+      },
+      {
+        "title": "Piston Alignment and Tube Coupling",
+        "text": "Insert the adjustable reflector piston into the far end of the glass tube. Position the tube so that the vibrating cork disc on the rod penetrates approximately 1 to 2 cm into the near end, ensuring an airtight but frictionless acoustic coupling.",
+        "why": "Direct mechanical rubbing between the cork disc and glass wall dissipates acoustic energy, produces severe damping, and risks glass fracture."
+      },
+      {
+        "title": "Longitudinal Excitation and Standing Wave Tuning",
+        "text": "Grip the free protruding end of the brass rod with the rosin-dusted leather cloth. Pull firmly along the axis of the rod toward the free tip with a steady, decisive stroke to emit a piercing, clear musical note. Simultaneously adjust the position of the far reflector piston until the powder inside the tube violently agitates and settles into sharp, well-defined transverse striations.",
+        "why": "Standing waves only form when the air column length matches an integral number of acoustic half-wavelengths, establishing constructive interference and maximum acoustic pressure amplitude."
+      },
+      {
+        "title": "Nodal Spacing Measurement and Averaging",
+        "text": "Using the tube's graduated metric scale, record the exact positions of five consecutive well-defined dust heaps (displacement nodes). Calculate the distance between successive heaps and compute the mean nodal spacing d = λ_air / 2.",
+        "why": "Measuring across multiple consecutive heaps averages out local powder drift and visual apex reading errors, yielding high precision in wavelength determination."
+      },
+      {
+        "title": "Length Variation and Systematic Data Acquisition",
+        "text": "Repeat the excitation, piston tuning, and nodal distance recording for six distinct calibrated rod lengths (80.0, 90.0, 100.0, 110.0, 120.0, and 130.0 cm). Tabulate rod length L_rod against dust node spacing d for subsequent linear regression.",
+        "why": "Systematically varying rod length provides the necessary data range to perform linear regression, isolating the sound velocity ratio v_air / v_rod from any zero-offset artifacts."
+      }
+    ],
+    "topics": [
+      {
+        "title": "Acoustic Wave Interference and Longitudinal Standing Waves",
+        "text": "When two identical longitudinal acoustic waves propagate in opposite directions within a confined tube, their linear superposition produces an acoustic standing wave. Let the two counter-propagating acoustic pressure perturbations be represented by p₁(x, t) = P₀ sin(kx − ωt) and p₂(x, t) = P₀ sin(kx + ωt). Applying trigonometric product-to-sum identities, the resultant acoustic pressure field is p(x, t) = p₁ + p₂ = 2 P₀ sin(kx) cos(ωt). Simultaneously, the acoustic particle displacement ξ(x, t) follows the spatial gradient of pressure: ξ(x, t) = 2 ξ₀ cos(kx) sin(ωt), where ξ₀ = P₀ / (ρ₀ v ω). Crucially, acoustic displacement and acoustic pressure are in space-time quadrature (a quarter-wave spatial phase shift of π/2 radians). At locations where kx = nπ (x = n λ/2), the displacement amplitude reaches a maximum (2 ξ₀), defining displacement antinodes where particle velocity u = ∂ξ/∂t swings violently. At these same positions, sin(kx) = 0, meaning acoustic pressure variations vanish (pressure nodes). Conversely, where kx = (2n + 1)π/2 (x = (2n + 1) λ/4), particle displacement is strictly zero (displacement nodes), while acoustic pressure fluctuations reach their peak amplitude (2 P₀, pressure antinodes). At the rigid reflector piston, the solid boundary enforces zero particle displacement (u = 0, displacement node) and complete acoustic reflection with zero phase shift in pressure.",
+        "formula": "p(x, t) = 2 P_0 \\sin(kx) \\cos(\\omega t), \\qquad \\xi(x, t) = 2 \\xi_0 \\cos(kx) \\sin(\\omega t), \\qquad u = \\frac{\\partial \\xi}{\\partial t}",
+        "question": "In a Kundt's tube, do the dust heaps form at displacement nodes or displacement antinodes, and why?",
+        "answer": "Dust heaps accumulate at displacement nodes. At displacement nodes, acoustic particle velocity is zero, so dust particles remain undisturbed and settle quietly. In contrast, at displacement antinodes, acoustic particle velocity is maximal, generating violent air agitation and radiation pressure that sweep the dust away into striations."
+      },
+      {
+        "title": "Longitudinal Elastic Vibrations in Clamped Solid Rods",
+        "text": "Longitudinal wave propagation through a solid elastic rod of uniform cross-section A, density ρ, and Young's modulus E is governed by the 1D wave equation: ∂²u/∂t² = v_rod² (∂²u/∂x²), where the phase velocity is given by v_rod = √(E / ρ). In Kundt's experiment, the rod is clamped rigidly at its exact midpoint (x = 0), leaving both ends (x = −L_rod/2 and x = +L_rod/2) entirely free. The rigid clamp enforces a zero-displacement boundary condition at the center: u(0, t) = 0 (displacement node). At the free ends, the longitudinal mechanical stress must vanish: σ = E (∂u/∂x) = 0, which requires the spatial derivative to vanish, creating displacement antinodes (strain nodes). The spatial mode function for anti-symmetric displacement is u_n(x) = C sin(k_n x). Enforcing the free-end condition cos(k_n L_rod / 2) = 0 yields k_n L_rod / 2 = (2n − 1) π / 2, or k_n = (2n − 1) π / L_rod for n = 1, 2, 3, ... For the fundamental longitudinal mode (n = 1), k₁ = π / L_rod, which corresponds to an acoustic wavelength of λ_rod = 2π / k₁ = 2 L_rod. Thus, the rod vibrates in half-wave resonance with its fundamental natural frequency given by f₁ = v_rod / λ_rod = v_rod / (2 L_rod). Clamping exactly at the center suppresses all even harmonics and supports only odd harmonic overtones f_n = (2n − 1) f₁.",
+        "formula": "v_{\\text{rod}} = \\sqrt{\\frac{E}{\\rho}}, \\qquad \\lambda_{\\text{rod}} = 2 L_{\\text{rod}}, \\qquad f_1 = \\frac{v_{\\text{rod}}}{2 L_{\\text{rod}}} = \\frac{1}{2 L_{\\text{rod}}} \\sqrt{\\frac{E}{\\rho}}",
+        "question": "Why must the metal rod in Kundt's tube be clamped at its exact center rather than at one-quarter of its length to produce the fundamental tone?",
+        "answer": "The fundamental longitudinal standing wave in a free-free bar has a single displacement node at the exact midpoint (x = L/2) and displacement antinodes at both free ends (λ = 2L). Clamping at the exact midpoint enforces this displacement node without damping the fundamental mode. Clamping at L/4 would suppress the fundamental and force higher harmonic modes."
+      },
+      {
+        "title": "Kundt's Tube Acoustic Coupling and Powder Striation Dynamics",
+        "text": "The operational brilliance of Kundt's tube lies in using a lightweight indicator powder to visualize microscopic acoustic wave motion. A small, light cork or cardboard disc mounted on the free end of the vibrating rod projects into the glass tube mouth, acting as an acoustic piston that oscillates back and forth at frequency f. When the air column length is tuned to resonance, stationary standing waves are established with acoustic particle velocity u(x, t) = u_max sin(kx) sin(ωt). The aerodynamic behavior of the fine lycopodium powder or cork dust is governed by acoustic radiation pressure, Bernoulli forces, and Rayleigh acoustic streaming. At displacement antinodes (sin(kx) = ±1), particle velocity oscillates with large amplitudes (often exceeding 1 to 2 m/s). This high velocity creates intense localized aerodynamic drag and Bernoulli suction, which violently lifts the powder off the tube floor and forms characteristic transverse striations (fine parallel ridges perpendicular to the tube axis). At displacement nodes (sin(kx) = 0), the air is completely quiescent: no acoustic forces act on the dust particles, allowing them to remain at rest and accumulate into well-defined, sharp heaps. The spatial distance between any two consecutive heaps corresponds to the distance between adjacent displacement nodes, which is exactly half of the acoustic wavelength in the air: d = λ_air / 2.",
+        "formula": "d = \\frac{\\lambda_{\\text{air}}}{2} \\iff \\lambda_{\\text{air}} = 2 d, \\qquad u_0 = \\omega \\xi_0 = \\frac{P_0}{\\rho_0 v_{\\text{air}}}",
+        "question": "How is the distance between two consecutive dust heaps related to the wavelength of sound in air?",
+        "answer": "The distance between consecutive dust heaps equals half of the acoustic wavelength in air: d = λ_air / 2. Therefore, the full wavelength of sound in air is twice the heap spacing: λ_air = 2d."
+      },
+      {
+        "title": "Comparative Velocity Ratio and Invariant Frequency Equivalence",
+        "text": "Because the vibrating rod acts as the acoustic driver for the air column, the frequency of the sound waves propagating through the air inside the tube is strictly identical to the mechanical vibration frequency of the rod: f_air = f_rod. Using the universal wave relationship v = f λ for both media, we have: f_air = v_air / λ_air and f_rod = v_rod / λ_rod. Equating these two expressions yields: v_air / λ_air = v_rod / λ_rod. Substituting the fundamental standing wave conditions λ_rod = 2 L_rod and λ_air = 2 d gives: v_air / (2 d) = v_rod / (2 L_rod), which simplifies directly to the classical Kundt velocity relation: v_rod / v_air = L_rod / d. Rearranging for the dust node spacing d yields: d = (v_air / v_rod) L_rod. This powerful relationship demonstrates that the ratio of sound velocities in the solid rod and the gaseous medium equals the ratio of the sounding rod length to the nodal dust spacing. If the speed of sound in air v_air is known from Laplace's adiabatic formula v_air = √(γ R T / M) (v_air = 331.3 √(1 + t / 273.15) m/s, yielding 343.20 m/s at 20.0 °C), the sound velocity in the metal rod can be determined with remarkable accuracy without requiring an electronic frequency counter.",
+        "formula": "\\frac{v_{\\text{rod}}}{v_{\\text{air}}} = \\frac{\\lambda_{\\text{rod}}}{\\lambda_{\\text{air}}} = \\frac{L_{\\text{rod}}}{d} \\implies d = \\left(\\frac{v_{\\text{air}}}{v_{\\text{rod}}}\\right) L_{\\text{rod}}, \\qquad v_{\\text{rod}} = v_{\\text{air}} \\left(\\frac{L_{\\text{rod}}}{d}\\right)",
+        "question": "If a brass rod of length 100 cm clamped at its center produces dust heaps spaced 9.81 cm apart in air where sound speed is 343.2 m/s, what is the speed of sound in the rod?",
+        "answer": "Using v_rod = v_air × (L_rod / d) = 343.2 × (1.000 / 0.0981) ≈ 3500 m/s (or 3.50 km/s)."
+      },
+      {
+        "title": "Determination of Dynamic Young's Modulus and Continuum Elasticity",
+        "text": "Kundt's tube provides an elegant method to measure the dynamic Young's modulus E of metals and alloys. From continuum mechanics, the phase velocity of longitudinal waves in an elastic rod whose lateral dimensions are small compared to the wavelength (r << λ) is given by v_rod = √(E / ρ_rod), where ρ_rod is the mass density. Squaring both sides yields: E = ρ_rod v_rod². Combining this with the Kundt velocity ratio gives: E = ρ_rod [v_air (L_rod / d)]². Measuring elastic moduli acoustically offers substantial advantages over static tensile testing (such as hanging weights from a wire). Static tensile tests are vulnerable to mechanical creep, microscopic plastic deformation, thermal expansion drifts, and support compliance. In contrast, acoustic vibrations operate at high audio frequencies (1 kHz to 5 kHz) under infinitesimal strain amplitudes (< 10⁻⁵) and purely adiabatic conditions, measuring the true reversible intermolecular bond stiffness of the crystal lattice. For cold-rolled cartridge brass with density ρ = 8500 kg/m³ and measured wave velocity v_rod = 3500 m/s, the dynamic Young's modulus is E = 8500 × (3500)² = 1.041 × 10¹¹ Pa = 104.1 GPa, in excellent agreement with standard ultrasonic pulse-echo benchmarks.",
+        "formula": "E = \\rho_{\\text{rod}} v_{\\text{rod}}^2 = \\rho_{\\text{rod}} \\left[ v_{\\text{air}} \\left(\\frac{L_{\\text{rod}}}{d}\\right) \\right]^2, \\qquad \\sigma_{xx} = E \\varepsilon_{xx}",
+        "question": "How can the dynamic Young's modulus of the brass rod be calculated from the measured speed of sound in the rod?",
+        "answer": "From the continuum wave equation in a thin elastic bar, v_rod = √(E / ρ_rod). Squaring both sides yields E = ρ_rod v_rod². Given brass density ρ ≈ 8500 kg/m³ and v_rod ≈ 3500 m/s, E ≈ 8500 × 3500² ≈ 1.04 × 10¹¹ Pa = 104 GPa."
+      },
+      {
+        "title": "Linear Regression Formulation and OLS Parameter Isolation",
+        "text": "To determine the longitudinal wave velocity and Young's modulus with rigorous metrological precision, experimentalists vary the sounding rod length L_rod across a calibrated series (e.g. 80.0 to 130.0 cm) and measure the corresponding mean dust node spacing d. From the theoretical relation d = (v_air / v_rod) L_rod, defining x = L_rod (in metres) as the independent variable and y = d (in metres) as the dependent variable yields the standard linear regression model: y = m x + b. Here, the regression slope m represents the dimensionless acoustic velocity ratio: m = v_air / v_rod. Inverting this relation isolates the longitudinal sound speed in the rod directly: v_rod = v_air / m. The intercept b provides a crucial experimental diagnostic: theoretically b = 0, so any statistically significant non-zero intercept detects end-coupling disc offsets, finite clamp width artifacts, or progressive visual reading bias. Ordinary least-squares (OLS) regression minimizes the sum of squared residuals, averaging out random errors in identifying dust heap crests and yielding unbiased slope and standard error estimates.",
+        "formula": "d = m L_{\\text{rod}} + b \\implies m = \\frac{v_{\\text{air}}}{v_{\\text{rod}}} \\iff v_{\\text{rod}} = \\frac{v_{\\text{air}}}{m}, \\qquad \\delta v_{\\text{rod}} = v_{\\text{air}} \\frac{\\delta m}{m^2}",
+        "question": "When plotting dust node spacing d on the vertical axis against rod length L_rod on the horizontal axis, what does the slope m represent?",
+        "answer": "The slope m = d / L_rod represents the velocity ratio v_air / v_rod. Dividing the known speed of sound in air v_air by the regression slope m directly gives the speed of sound in the metal rod: v_rod = v_air / m."
+      },
+      {
+        "title": "Gas Thermometry, Ratio of Specific Heats (γ), and Modern Applications",
+        "text": "In addition to investigating solids, Kundt's tube is a classic apparatus for studying the thermodynamics of gases. By sealing the tube and flushing it with test gases (such as Helium, Argon, or Carbon Dioxide), the ratio of specific heats γ = C_p / C_v can be determined. According to Laplace's equation, sound velocity in an ideal gas is v_gas = √(γ R T / M), where R is the universal gas constant, T is absolute temperature, and M is molar mass. Combining this with Kundt's formula gives: d_gas = (v_gas / v_rod) L_rod = (√(γ R T / M) / v_rod) L_rod. Comparing the nodal spacing d_gas in a test gas to d_air in air under identical rod excitation isolates the gas sound velocity: v_gas = v_air (d_gas / d_air). From v_gas, the heat capacity ratio is calculated as γ = (M v_gas²) / (R T). This enabled historical physicists to prove that noble gases like Argon and Helium are monatomic (γ ≈ 1.67, 3 translational degrees of freedom), while air is diatomic (γ ≈ 1.40, 5 degrees of freedom). In modern technology, the standing wave principles of Kundt's tube underpin acoustic levitation of pharmaceutical micro-droplets in containerless processing, thermoacoustic heat pumps and cryo-coolers, and ultrasonic non-destructive testing of structural pipelines.",
+        "formula": "v_{\\text{gas}} = \\sqrt{\\frac{\\gamma R T}{M}} \\implies \\gamma = \\frac{M v_{\\text{gas}}^2}{R T}, \\qquad \\frac{d_{\\text{gas}}}{d_{\\text{air}}} = \\frac{v_{\\text{gas}}}{v_{\\text{air}}} = \\sqrt{\\frac{\\gamma_{\\text{gas}} M_{\\text{air}}}{\\gamma_{\\text{air}} M_{\\text{gas}}}}",
+        "question": "If the air in Kundt's tube is replaced by carbon dioxide (CO₂, sound speed ≈ 267 m/s) while exciting the same rod, how does the spacing between dust heaps change?",
+        "answer": "Since d = (v_gas / v_rod) L_rod, the node spacing is directly proportional to the gas sound speed. Because sound travels slower in dense CO₂ (267 m/s) than in air (343.2 m/s), the wavelength is shorter and the dust heaps become closer together by a factor of 267 / 343.2 ≈ 0.78 (7.65 cm instead of 9.81 cm)."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "In Kundt's tube, the cork dust or lycopodium powder collects into distinct stationary heaps at the:",
+        "options": [
+          "Displacement nodes (points of zero acoustic particle velocity)",
+          "Displacement antinodes (points of maximum acoustic particle velocity)",
+          "Pressure nodes (points of atmospheric equilibrium pressure)",
+          "Positions where acoustic intensity is maximal"
+        ],
+        "correct": 0,
+        "explanation": "Dust particles are violently agitated and dispersed at displacement antinodes where acoustic air velocity is greatest. They come to rest and accumulate at displacement nodes where particle motion is zero."
+      },
+      {
+        "question": "A solid metal rod of length L clamped at its exact center vibrates in its fundamental longitudinal mode. Its acoustic wavelength λ_rod inside the rod is equal to:",
+        "options": [
+          "2 L",
+          "L",
+          "L / 2",
+          "4 L"
+        ],
+        "correct": 0,
+        "explanation": "Clamping at the midpoint creates a displacement node at the center and displacement antinodes at both free ends. The distance between two adjacent antinodes with a single node between them is one half-wavelength: L = λ / 2, which gives λ = 2 L."
+      },
+      {
+        "question": "If the distance between consecutive dust heaps in air is measured to be 10.0 cm when driven by a rod vibrating at 1716 Hz, what is the speed of sound in the air inside the tube?",
+        "options": [
+          "343.2 m/s",
+          "171.6 m/s",
+          "686.4 m/s",
+          "34.3 m/s"
+        ],
+        "correct": 0,
+        "explanation": "The dust heap spacing d = λ_air / 2 = 0.100 m, so λ_air = 0.200 m. Sound velocity is v = f λ = 1716 Hz × 0.200 m = 343.2 m/s."
+      },
+      {
+        "question": "When plotting dust node spacing d against rod length L_rod, the regression slope is found to be m = 0.0981. If the speed of sound in air is 343.2 m/s, the longitudinal wave speed in the rod is:",
+        "options": [
+          "3500 m/s",
+          "33.7 m/s",
+          "1750 m/s",
+          "7000 m/s"
+        ],
+        "correct": 0,
+        "explanation": "From d = (v_air / v_rod) L_rod, the slope is m = v_air / v_rod. Therefore, v_rod = v_air / m = 343.2 / 0.0981 ≈ 3498.5 ≈ 3500 m/s."
+      }
+    ],
+    "precautions": [
+      "Ensure the vibrating cork coupling disc never touches the inner wall of the glass tube during excitation to avoid damping the vibrations or cracking the glass.",
+      "Stroke the metal rod strictly in the longitudinal axial direction; avoid lateral or twisting forces that excite undesirable flexural or torsional vibration modes.",
+      "Keep the interior of the glass tube completely dry and free of condensation; even slight humidity causes lycopodium powder to aggregate into immobile clusters.",
+      "Wear acoustic ear defenders during longitudinal rod excitation, as high-frequency acoustic standing waves can exceed 95 dB SPL near the apparatus."
+    ],
+    "limitations": "The analytical model treats the sounding rod as an ideal, infinitely thin elastic bar with strictly one-dimensional longitudinal stress (Pochhammer-Chree radial inertia dispersion neglected), assumes perfectly planar acoustic wavefronts inside the glass tube with zero viscous tube boundary-layer drag (Helmholtz-Kirchhoff wall attenuation), and models the cork disc as a massless acoustic source. In a physical laboratory, small radial Poisson expansion in thick rods slightly alters overtone frequencies, narrow glass bore introduces small acoustic velocity depression (~0.2% to 0.4% from wall friction), and room temperature gradients cause minor sound velocity shifts in air.",
+    "modelExtra": ""
   }
 ]
