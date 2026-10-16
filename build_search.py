@@ -40,7 +40,8 @@ def experiment_index(experiments):
    'faradays-law-electrolysis':'faraday law electrolysis electrochemical equivalent copper voltameter deposition cathode anode charge coulomb avogadro constant molar mass chemical equivalent',
     'electrical-equivalent-heat':'electrical equivalent heat joule law heating calorimeter immersion coil water equivalent rumford cooling electric power energy conservation nichrome resistance chronometer',
     'potentiometer-emf-comparison':'potentiometer slide wire electromotive force emf weston standard cell null balance galvanometer jockey poggendorff potential gradient volt comparison internal resistance dry cell',
-    'emission-spectra-spectroscopy':'emission spectra spectroscopy balmer series rydberg constant hydrogen geissler tube diffraction grating bohr atom quantum energy levels fraunhofer lines wavelength wavenumber'}
+    'emission-spectra-spectroscopy':'emission spectra spectroscopy balmer series rydberg constant hydrogen geissler tube diffraction grating bohr atom quantum energy levels fraunhofer lines wavelength wavenumber',
+    'photometry-lamp-efficiency':'photometry lamp efficiency lummer brodhun bunsen grease spot candela lumen lux illuminance inverse square law luminous efficacy incandescent cfl led photometer bench optical track'}
  for exp in experiments:
   c=configs.get(exp['slug'],{});index.append({'slug':exp['slug'],'title':c.get('title',exp['title']),'subject':'physics','subjectName':'Physics','path':exp['page_path'],'summary':c.get('aim','Determine Planck’s constant from stopping potential and frequency.'),'keywords':' '.join([aliases.get(exp['slug'],''),*[a['name'] for a in c.get('apparatus',[])]])})
  return index

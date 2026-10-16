@@ -62,6 +62,7 @@ function drawComparativeSim(t,p,v,phase,ink,soft,orange){
   const isElecHeat=['electrical-equivalent-heat'].includes(cfg.slug);
   const isPotentiometer=['potentiometer-emf-comparison'].includes(cfg.slug);
   const isSpectra=['emission-spectra-spectroscopy'].includes(cfg.slug);
+  const isPhotometry=['photometry-lamp-efficiency'].includes(cfg.slug);
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
   const text=(x,y,str,color='#9fb498',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
@@ -668,6 +669,48 @@ function drawComparativeSim(t,p,v,phase,ink,soft,orange){
       if(idx<3)svg+='<line x1="'+(bX+18)+'" y1="'+(rowY+20)+'" x2="'+(bX+bW-18)+'" y2="'+(rowY+20)+'" stroke="#253a34" stroke-dasharray="2 2"/>';
     });
     svg+=text(360,305,"Kirchhoff's Laws: Every gas radiates bright spectral lines identical to its absorption wavelengths",soft,10);
+  }
+  else if(isPhotometry){
+    const gX=60,gY=55,gW=340,gH=210;
+    svg+='<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#14221e" stroke="'+soft+'" stroke-width="1.5" rx="4"/>';
+    svg+=text(gX+gW/2,gY-15,'LIGHTING TECHNOLOGY LUMINOUS EFFICACY (lm / W)','#e2ecd7',11);
+
+    const lamps=[
+      {name:'Incandescent Tungsten (75 W, 100 cd)',col:orange,eff:'16.8 lm/W',barW:0.12,desc:'Blackbody thermal emission at 2800 K · 88% lost as infrared heat'},
+      {name:'Compact Fluorescent CFL (16 W, 100 cd)',col:ink,eff:'78.5 lm/W',barW:0.56,desc:'Low-pressure mercury UV resonance (253.7 nm) + rare-earth phosphors'},
+      {name:'Solid-State White LED (9 W, 100 cd)',col:'#38bdf8',eff:'139.6 lm/W',barW:0.98,desc:'InGaN blue quantum well (450 nm) + cerium YAG phosphor down-conversion'}
+    ];
+
+    lamps.forEach((item,idx)=>{
+      const rowY=gY+35+idx*55;
+      svg+='<text x="'+(gX+18)+'" y="'+(rowY-8)+'" fill="'+item.col+'" font-size="10" font-weight="bold">'+item.name+'</text>';
+      svg+='<text x="'+(gX+gW-18)+'" y="'+(rowY-8)+'" text-anchor="end" fill="'+item.col+'" font-size="10" font-family="monospace">'+item.eff+'</text>';
+      svg+='<rect x="'+(gX+18)+'" y="'+rowY+'" width="'+(gW-36)+'" height="14" rx="3" fill="#101c18" stroke="'+soft+'" stroke-width="1"/>';
+      const bW=(gW-36)*item.barW;
+      svg+='<rect x="'+(gX+18)+'" y="'+rowY+'" width="'+bW.toFixed(1)+'" height="14" rx="3" fill="'+item.col+'"/>';
+      const pulseX=gX+18+((phase*(1.6+idx*0.5))%1)*(gW-36);
+      svg+='<circle cx="'+pulseX.toFixed(1)+'" cy="'+(rowY+7)+'" r="4.5" fill="#fde68a" stroke="#fff" stroke-width="1"/>';
+      svg+='<text x="'+(gX+22)+'" y="'+(rowY+26)+'" fill="#9fb498" font-size="8">'+item.desc+'</text>';
+    });
+
+    const bX=425,bY=55,bW=265,bH=210;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+22,'ENERGY DISSIPATION BUDGET (1256 lm)','#718e79',9.5);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+32)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+32)+'" stroke="#253a34"/>';
+
+    const lossStats=[
+      {name:'Incandescent (75 W)',vis:'9.2 W visible (12%)',heat:'65.8 W IR heat (88%)',col:orange},
+      {name:'Fluorescent CFL (16 W)',vis:'8.5 W visible (53%)',heat:'7.5 W ballast/heat (47%)',col:ink},
+      {name:'Solid-State LED (9 W)',vis:'7.4 W visible (82%)',heat:'1.6 W thermal junction (18%)',col:'#38bdf8'}
+    ];
+    lossStats.forEach((s,idx)=>{
+      const rowY=bY+52+idx*46;
+      svg+='<circle cx="'+(bX+22)+'" cy="'+(rowY-4)+'" r="4.5" fill="'+s.col+'"/>';
+      svg+='<text x="'+(bX+34)+'" y="'+rowY+'" fill="'+s.col+'" font-size="10.5" font-weight="bold">'+s.name+'</text>';
+      svg+='<text x="'+(bX+34)+'" y="'+(rowY+15)+'" fill="#9fb498" font-size="8.5">'+s.vis+' · '+s.heat+'</text>';
+      if(idx<2)svg+='<line x1="'+(bX+20)+'" y1="'+(rowY+24)+'" x2="'+(bX+bW-20)+'" y2="'+(rowY+24)+'" stroke="#253a34" stroke-dasharray="2 2"/>';
+    });
+    svg+=text(360,305,"Luminous Efficacy: η = Φ / P_elec = 4π I / P · Theoretical Maximum η_max = 683 lm W⁻¹ at 555 nm",soft,10);
   }
   else{
     const gX=60,gY=55,gW=340,gH=210;
@@ -1582,6 +1625,86 @@ function drawDynamicSandbox(t,p,v,phase,ink,soft,orange){
     svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+182)+'" text-anchor="middle" fill="'+pCol+'" font-size="8" font-weight="bold">PHOTON ENERGY: ΔE = h · ν = '+dE.toFixed(3)+' eV</text>';
     svg+='<text x="'+(bX+bW/2)+'" y="'+(bY+196)+'" text-anchor="middle" fill="#fde68a" font-size="7.5">λ = h c / ΔE = '+lambda_calc.toFixed(1)+' nm (Measured: '+p.raw.toFixed(1)+' nm)</text>';
     svg+=text(360,305,"Bohr Postulate: Angular Momentum L = n ℏ · Photon Emission: ΔE = E_initial − E_final = h ν",soft,10);
+  }
+  else if(isPhotometry){
+    const cX=50,cY=50,cW=340,cH=220;
+    svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081016" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+    svg+=text(cX+cW/2,cY-15,'SOLID ANGLE DIVERGENCE (dΩ = dA / r² ⟹ E ∝ 1/r²)','#e2ecd7',11);
+
+    const sX=cX+30, sY=cY+cH/2;
+    svg+='<circle cx="'+sX+'" cy="'+sY+'" r="7" fill="#facc15" stroke="#fde047" stroke-width="2"/>';
+    svg+='<circle cx="'+sX+'" cy="'+sY+'" r="14" fill="none" stroke="#facc15" stroke-width="1" opacity="0.4"/>';
+    svg+='<text x="'+sX+'" y="'+(sY+24)+'" text-anchor="middle" fill="#facc15" font-size="8" font-weight="bold">Source (I)</text>';
+
+    const coneLen=260;
+    const coneAngle=0.32;
+    const topRayX=sX+coneLen;
+    const topRayY=sY-coneLen*Math.tan(coneAngle);
+    const botRayX=sX+coneLen;
+    const botRayY=sY+coneLen*Math.tan(coneAngle);
+
+    svg+='<polygon points="'+sX+','+sY+' '+topRayX+','+topRayY+' '+botRayX+','+botRayY+'" fill="#facc15" opacity="0.08"/>';
+    svg+='<line x1="'+sX+'" y1="'+sY+'" x2="'+topRayX+'" y2="'+topRayY+'" stroke="#facc15" stroke-width="1.2" stroke-dasharray="3 3"/>';
+    svg+='<line x1="'+sX+'" y1="'+sY+'" x2="'+botRayX+'" y2="'+botRayY+'" stroke="#facc15" stroke-width="1.2" stroke-dasharray="3 3"/>';
+
+    const d1=100;
+    const h1=d1*Math.tan(coneAngle);
+    const p1X=sX+d1;
+    svg+='<line x1="'+p1X+'" y1="'+(sY-h1)+'" x2="'+p1X+'" y2="'+(sY+h1)+'" stroke="#38bdf8" stroke-width="3"/>';
+    svg+='<rect x="'+(p1X-2)+'" y="'+(sY-h1)+'" width="4" height="'+(2*h1)+'" fill="#38bdf8" opacity="0.7"/>';
+    svg+='<text x="'+p1X+'" y="'+(sY-h1-8)+'" text-anchor="middle" fill="#38bdf8" font-size="7.5" font-weight="bold">r = 1.0 m</text>';
+    svg+='<text x="'+p1X+'" y="'+(sY+h1+14)+'" text-anchor="middle" fill="#38bdf8" font-size="7">Area A₁ (100 lx)</text>';
+
+    const d2=200;
+    const h2=d2*Math.tan(coneAngle);
+    const p2X=sX+d2;
+    svg+='<line x1="'+p2X+'" y1="'+(sY-h2)+'" x2="'+p2X+'" y2="'+(sY+h2)+'" stroke="'+orange+'" stroke-width="3"/>';
+    svg+='<rect x="'+(p2X-2)+'" y="'+(sY-h2)+'" width="4" height="'+(2*h2)+'" fill="'+orange+'" opacity="0.7"/>';
+    svg+='<text x="'+p2X+'" y="'+(sY-h2-8)+'" text-anchor="middle" fill="'+orange+'" font-size="7.5" font-weight="bold">r = 2.0 m</text>';
+    svg+='<text x="'+p2X+'" y="'+(sY+h2+14)+'" text-anchor="middle" fill="'+orange+'" font-size="7">Area 4A₁ (25 lx)</text>';
+
+    for(let k=0;k<3;k++){
+      const pulseProg=((phase*1.2+k*0.33)%1.0);
+      const px_dist=pulseProg*coneLen;
+      const px_x=sX+px_dist;
+      const px_y1=sY-px_dist*Math.tan(coneAngle)*0.5;
+      const px_y2=sY+px_dist*Math.tan(coneAngle)*0.5;
+      svg+='<circle cx="'+px_x.toFixed(1)+'" cy="'+px_y1.toFixed(1)+'" r="2.5" fill="#fef08a"/>';
+      svg+='<circle cx="'+px_x.toFixed(1)+'" cy="'+px_y2.toFixed(1)+'" r="2.5" fill="#fef08a"/>';
+    }
+
+    const bX=420,bY=50,bW=270,bH=220;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#182824" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+    svg+=text(bX+bW/2,bY+20,'CIE 1931 PHOTOPIC EYE RESPONSE V(λ)','#718e79',9);
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+30)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+30)+'" stroke="#253a34"/>';
+
+    const cW_curve=210,cH_curve=75,cX_curve=bX+30,cY_curve=bY+45;
+    svg+='<rect x="'+cX_curve+'" y="'+cY_curve+'" width="'+cW_curve+'" height="'+cH_curve+'" fill="#0f172a" stroke="#334155" stroke-width="1" rx="3"/>';
+    svg+='<line x1="'+(cX_curve+cW_curve/2)+'" y1="'+cY_curve+'" x2="'+(cX_curve+cW_curve/2)+'" y2="'+(cY_curve+cH_curve)+'" stroke="#10b981" stroke-width="1" stroke-dasharray="2 2"/>';
+    svg+='<text x="'+(cX_curve+cW_curve/2)+'" y="'+(cY_curve+12)+'" text-anchor="middle" fill="#10b981" font-size="7" font-weight="bold">λ_max = 555 nm (1.000)</text>';
+
+    let curvePts=[];
+    for(let j=0;j<=30;j++){
+      const wl=400+j*10;
+      const xPt=cX_curve+(j/30)*cW_curve;
+      const v_val=Math.exp(-0.5*Math.pow((wl-555)/45,2));
+      const yPt=cY_curve+cH_curve-(v_val*0.9)*cH_curve;
+      curvePts.push(xPt.toFixed(1)+','+yPt.toFixed(1));
+    }
+    svg+='<polyline points="'+curvePts.join(' ')+'" fill="none" stroke="#22c55e" stroke-width="2"/>';
+    svg+='<text x="'+cX_curve+'" y="'+(cY_curve+cH_curve+11)+'" fill="#818cf8" font-size="7">400nm</text>';
+    svg+='<text x="'+(cX_curve+cW_curve)+'" y="'+(cY_curve+cH_curve+11)+'" text-anchor="end" fill="#ef4444" font-size="7">700nm</text>';
+
+    const lumY=bY+150;
+    svg+='<rect x="'+(bX+25)+'" y="'+lumY+'" width="220" height="60" rx="4" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>';
+    svg+='<circle cx="'+(bX+60)+'" cy="'+(lumY+30)+'" r="20" fill="#38bdf8" opacity="0.35"/>';
+    svg+='<circle cx="'+(bX+60)+'" cy="'+(lumY+30)+'" r="11" fill="#38bdf8" opacity="0.35"/>';
+    svg+='<circle cx="'+(bX+60)+'" cy="'+(lumY+30)+'" r="20" fill="none" stroke="#38bdf8" stroke-width="1.2"/>';
+    svg+='<circle cx="'+(bX+60)+'" cy="'+(lumY+30)+'" r="11" fill="none" stroke="#38bdf8" stroke-width="1" stroke-dasharray="2 2"/>';
+    svg+='<text x="'+(bX+95)+'" y="'+(lumY+22)+'" fill="#38bdf8" font-size="8.5" font-weight="bold">LUMMER-BRODHUN CONTRAST</text>';
+    svg+='<text x="'+(bX+95)+'" y="'+(lumY+36)+'" fill="#10b981" font-size="7.5" font-weight="bold">E₁ = E₂ = 100.0 lx (MATCHED)</text>';
+    svg+='<text x="'+(bX+95)+'" y="'+(lumY+49)+'" fill="#9fb498" font-size="7">Boundary disappears at photometric null</text>';
+    svg+=text(360,305,"Photometric Law: E = (I / r²) cos θ ⟹ Inverse-Square Attenuation with Spherical Wavefront Dilution",soft,10);
   }
   else{
     const cX=50,cY=50,cW=340,cH=220;
@@ -2733,9 +2856,82 @@ function draw(t){
     svg+=text(240,22,'Transmission Grating Emission Spectrometer');
     svg+=text(240,308,'Balmer Series: 1/λ = R_H (1/2² − 1/n²) · Rydberg Reference: R_H = 1.0967758 × 10⁷ m⁻¹');
   }
+  else if(cfg.slug==='photometry-lamp-efficiency'){
+    const r_dist=p.input;
+    const E_meas=v.raw;
+    const I_ref=100.00;
+    const P_W=75.00;
+    const phi_lm=4*Math.PI*I_ref;
+    const eta_val=phi_lm/P_W;
 
+    svg+='<rect x="30" y="250" width="410" height="14" rx="2" fill="#1b2a26" stroke="'+soft+'" stroke-width="1.5"/>';
 
+    const trX=40,trY=160,trW=390,trH=60;
+    svg+='<rect x="'+trX+'" y="'+trY+'" width="'+trW+'" height="'+trH+'" rx="4" fill="#1e293b" stroke="#475569" stroke-width="2"/>';
+    svg+='<rect x="'+(trX+15)+'" y="'+(trY+12)+'" width="'+(trW-30)+'" height="16" rx="2" fill="#020617"/>';
+    for(let m=0;m<=10;m++){
+      const tx=trX+25+m*34;
+      svg+='<line x1="'+tx+'" y1="'+(trY+12)+'" x2="'+tx+'" y2="'+(trY+22)+'" stroke="#64748b" stroke-width="1.2"/>';
+      svg+='<text x="'+tx+'" y="'+(trY+26)+'" text-anchor="middle" fill="#94a3b8" font-size="6.5">'+(m*20)+'cm</text>';
+    }
 
+    const lhX=50,lhY=60,lhW=70,lhH=100;
+    svg+='<rect x="'+lhX+'" y="'+lhY+'" width="'+lhW+'" height="'+lhH+'" rx="6" fill="#0f172a" stroke="#eab308" stroke-width="2"/>';
+    for(let l=0;l<3;l++){
+      svg+='<line x1="'+(lhX+12)+'" y1="'+(lhY+15+l*10)+'" x2="'+(lhX+lhW-12)+'" y2="'+(lhY+15+l*10)+'" stroke="#334155" stroke-width="1.5"/>';
+    }
+    const bCenterY=lhY+65;
+    svg+='<circle cx="'+(lhX+lhW/2)+'" cy="'+bCenterY+'" r="16" fill="#facc15" opacity="0.85"/>';
+    svg+='<circle cx="'+(lhX+lhW/2)+'" cy="'+bCenterY+'" r="24" fill="none" stroke="#facc15" stroke-width="1" opacity="0.4"/>';
+    svg+='<path d="M'+(lhX+lhW/2-6)+' '+(bCenterY+4)+' Q '+(lhX+lhW/2)+' '+(bCenterY-8)+' '+(lhX+lhW/2+6)+' '+(bCenterY+4)+'" fill="none" stroke="#ea580c" stroke-width="2.5"/>';
+    svg+='<rect x="'+(lhX+lhW-8)+'" y="'+(bCenterY-14)+'" width="8" height="28" fill="#182824" stroke="#eab308" stroke-width="1"/>';
+    svg+='<text x="'+(lhX+lhW/2)+'" y="'+(lhY+lhH+14)+'" text-anchor="middle" fill="#fde047" font-size="7.5" font-weight="bold">75 W Lamp (I = 100 cd)</text>';
 
+    const carX=trX+25+(r_dist/2.00)*340;
+    svg+='<rect x="'+(carX-16)+'" y="'+(trY+30)+'" width="32" height="22" rx="3" fill="#334155" stroke="#94a3b8" stroke-width="1.5"/>';
+    svg+='<line x1="'+carX+'" y1="'+(trY+12)+'" x2="'+carX+'" y2="'+(trY+30)+'" stroke="#ef4444" stroke-width="1.8"/>';
+    svg+='<polygon points="'+carX+','+(trY+14)+' '+(carX-4)+','+(trY+8)+' '+(carX+4)+','+(trY+8)+'" fill="#ef4444"/>';
+    svg+='<text x="'+carX+'" y="'+(trY+6)+'" text-anchor="middle" fill="'+orange+'" font-size="8" font-weight="bold">'+(r_dist*100).toFixed(0)+' cm</text>';
+
+    const detY=lhY+25;
+    svg+='<rect x="'+(carX-12)+'" y="'+detY+'" width="24" height="80" rx="4" fill="#0f172a" stroke="#38bdf8" stroke-width="1.8"/>';
+    svg+='<ellipse cx="'+(carX-12)+'" cy="'+(detY+35)+'" rx="3" ry="12" fill="#ffffff" stroke="#38bdf8" stroke-width="1"/>';
+    svg+='<text x="'+carX+'" y="'+(detY-8)+'" text-anchor="middle" fill="#38bdf8" font-size="7.5" font-weight="bold">Lux Sensor</text>';
+
+    svg+='<line x1="'+(lhX+lhW)+'" y1="'+(bCenterY-10)+'" x2="'+(carX-12)+'" y2="'+(detY+25)+'" stroke="#facc15" stroke-width="1.2" stroke-dasharray="3 2" opacity="0.75"/>';
+    svg+='<line x1="'+(lhX+lhW)+'" y1="'+(bCenterY+10)+'" x2="'+(carX-12)+'" y2="'+(detY+45)+'" stroke="#facc15" stroke-width="1.2" stroke-dasharray="3 2" opacity="0.75"/>';
+
+    const lmX=230,lmY=50,lmW=85,lmH=55;
+    svg+='<rect x="'+lmX+'" y="'+lmY+'" width="'+lmW+'" height="'+lmH+'" rx="4" fill="#0f172a" stroke="#10b981" stroke-width="1.5"/>';
+    svg+='<rect x="'+(lmX+8)+'" y="'+(lmY+8)+'" width="'+(lmW-16)+'" height="20" rx="2" fill="#020617"/>';
+    svg+='<text x="'+(lmX+lmW/2)+'" y="'+(lmY+22)+'" text-anchor="middle" fill="#10b981" font-size="12" font-family="monospace" font-weight="bold">'+E_meas.toFixed(1)+' lx</text>';
+    svg+='<text x="'+(lmX+lmW/2)+'" y="'+(lmY+44)+'" text-anchor="middle" fill="#e2ecd7" font-size="7">Digital Luxmeter</text>';
+
+    const paX=325,paY=50,paW=95,paH=55;
+    svg+='<rect x="'+paX+'" y="'+paY+'" width="'+paW+'" height="'+paH+'" rx="4" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>';
+    svg+='<rect x="'+(paX+8)+'" y="'+(paY+8)+'" width="'+(paW-16)+'" height="20" rx="2" fill="#020617"/>';
+    svg+='<text x="'+(paX+paW/2)+'" y="'+(paY+22)+'" text-anchor="middle" fill="#38bdf8" font-size="10.5" font-family="monospace" font-weight="bold">75.00 W RMS</text>';
+    svg+='<text x="'+(paX+paW/2)+'" y="'+(paY+44)+'" text-anchor="middle" fill="#e2ecd7" font-size="7">Power: 120V / 0.625A</text>';
+
+    const bX=470,bY=45,bW=220,bH=220;
+    svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#182824" stroke="'+soft+'" stroke-width="1.5"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#718e79" font-size="9">PHOTOMETER DISTANCE (r)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+52)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+r_dist.toFixed(2)+'</text>';
+    svg+='<text x="'+(bX+75)+'" y="'+(bY+50)+'" fill="'+soft+'" font-size="11">m</text>';
+    svg+='<text x="'+(bX+105)+'" y="'+(bY+50)+'" fill="#9fb498" font-size="8">('+(r_dist*100).toFixed(0)+' cm)</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#718e79" font-size="9">MEASURED ILLUMINANCE (E)</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="18" font-family="monospace" font-weight="bold">'+E_meas.toFixed(1)+' lux</text>';
+    svg+='<text x="'+(bX+130)+'" y="'+(bY+108)+'" fill="#9fb498" font-size="8.5">(1/r² = '+(1.0/(r_dist*r_dist)).toFixed(2)+' m⁻²)</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+125)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+125)+'" stroke="#253a34"/>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+144)+'" fill="#718e79" font-size="9">LUMINOUS INTENSITY & FLUX</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+168)+'" fill="'+orange+'" font-size="15" font-family="monospace" font-weight="bold">'+I_ref.toFixed(1)+' cd</text>';
+    svg+='<text x="'+(bX+95)+'" y="'+(bY+168)+'" fill="#9fb498" font-size="9">Φ = '+phi_lm.toFixed(0)+' lm</text>';
+    svg+='<text x="'+(bX+15)+'" y="'+(bY+184)+'" fill="#9fb498" font-size="8">Luminous Efficacy η = Φ / P = '+eta_val.toFixed(2)+' lm W⁻¹</text>';
+    svg+='<line x1="'+(bX+15)+'" y1="'+(bY+195)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+195)+'" stroke="#253a34"/>';
+    svg+=text(bX+15,bY+210,'E = I / r² ⇔ I = E · r² = S',ink,9);
+    svg+=text(240,22,'Precision Optical Bench Photometer & Lamp Efficiency');
+    svg+=text(240,308,'Inverse-Square Law: E = I / r² · Luminous Intensity: I = 100.00 cd · Efficacy: 16.75 lm W⁻¹');
+  }
    $('apparatusDiagram').innerHTML=svg;}
 let last=0;function animate(t){if(!paused&&t-last>70){draw(t);last=t;}requestAnimationFrame(animate);}requestAnimationFrame(animate);update();renderResults();
