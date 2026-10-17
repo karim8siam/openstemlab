@@ -110,6 +110,13 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:raw/1000.0,x,y,valid:v>=50&&v<=1000};
  }
+ if(slug==='trie-prefix-trees'){
+  const l=Number(input);
+  const raw=Math.round(l + 1);
+  const x=l;
+  const y=raw;
+  return {raw,ideal:raw,period:raw/50.0,x,y,valid:l>=4&&l<=64};
+ }
  throw Error('Unknown CS experiment: '+slug);
 }
 
@@ -179,6 +186,10 @@ function reading(slug,input,raw){
   x=Number(input);
   y=raw;
  }
+ if(slug==='trie-prefix-trees'){
+  x=Number(input);
+  y=raw;
+ }
  return {input,raw,x,y};
 }
 
@@ -244,6 +255,9 @@ function estimate(slug,f){
  }
  if(slug==='network-flow-max-cut'){
   return {value:f.m,se:f.slopeSE,reference:10.0000};
+ }
+ if(slug==='trie-prefix-trees'){
+  return {value:f.m,se:f.slopeSE,reference:1.0000};
  }
  throw Error('Unknown CS experiment: '+slug);
 }

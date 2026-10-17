@@ -140,6 +140,56 @@ function drawComparativeSim(t,p,v,ink,soft,orange){
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
+ if(cfg.slug==='trie-prefix-trees'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'PREFIX TREE & STRING RETRIEVAL PARADIGMS (L = '+p.input+' chars)','#e2f0f8',11);
+
+  const l=p.input;
+  const c_trie=Math.round(l + 1);
+  const c_patricia=Math.round(Math.ceil(l / 3.0) + 1);
+  const c_tst=Math.round(Math.ceil(2.4 * l) + 1);
+  const c_hash=Math.round(l + 1);
+  const c_bst=Math.round(Math.ceil(l * 13.3));
+
+  const strategies=[
+   {name:'Compressed Radix (Patricia Trie)',col:'#10b981',cost:c_patricia,scale:'O(L) time, ≤ 2n-1 nodes',desc:'Collapsed non-branching edges; ~85% RAM savings; CIDR IP routing'},
+   {name:'Standard Multi-Way Trie (256-way)',col:'#38bdf8',cost:c_trie,scale:'O(L) invariant, |Σ| pointers',desc:'Direct child indexing; prefix autocompletion; high memory tax'},
+   {name:'Ternary Search Tree (TST)',col:'#f97316',cost:c_tst,scale:'O(L + log |Σ|), 3 pointers',desc:'Left/Equal/Right branches; BST space density + Trie prefix power'},
+   {name:'Hash Table (Separate Chaining)',col:'#a855f7',cost:c_hash,scale:'O(L) expected, NO prefix/LPM',desc:'Key hashing; cannot find longest prefix, autocomplete, or rank'},
+   {name:'Balanced BST (Red-Black / std::set)',col:'#ef4444',cost:c_bst,scale:'O(L · log n) comparisons',desc:'Full string comparisons at each tree level; cache-hostile pointer hops'}
+  ];
+
+  strategies.forEach((item,idx)=>{
+   const rowY=cY+16+idx*42;
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+12)+'" fill="#dcebf2" font-size="8.5" font-weight="bold">'+item.name+'</text>';
+   const costStr=item.cost>=1000?(item.cost/1000).toFixed(1)+'k':item.cost;
+   svg+='<text x="'+(cX+cW-15)+'" y="'+(rowY+12)+'" text-anchor="end" fill="'+item.col+'" font-size="8.5" font-family="monospace" font-weight="bold">'+costStr+' ops ('+item.scale+')</text>';
+   
+   const barX=cX+15,barY=rowY+16,barMaxW=cW-30;
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barMaxW+'" height="7" rx="2" fill="#16242c"/>';
+   const maxVal=Math.max(100, c_bst);
+   const frac=Math.min(1.0,Math.log10(item.cost+1)/Math.log10(maxVal+1));
+   const fillW=Math.max(4,frac*barMaxW);
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+fillW+'" height="7" rx="2" fill="'+item.col+'"/>';
+  });
+
+  const bX=460,bY=45,bW=220,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">PATRICIA RADIX COMPRESSION</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">≤ 2n − 1</text>';
+  svg+='<text x="'+(bX+115)+'" y="'+(bY+46)+'" fill="#dcebf2" font-size="10">Max Nodes</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#7e9bab" font-size="9">MEMORY SAVINGS VS TRIE</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="16" font-family="monospace" font-weight="bold">~85% Less RAM</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+124)+'" fill="#8ba5b5" font-size="8">Eliminates single-child non-branching nodes</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+136)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+136)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+154)+'" fill="#7e9bab" font-size="9">LONGEST PREFIX MATCH (LPM)</text>';
+  svg+=text(bX+bW/2,bY+180,'CIDR IPv4/IPv6 Wire Speed (>400 Gbps)','#10b981',9.5);
+  svg+=text(bX+bW/2,bY+202,'Multi-stride routing table lookups',orange,8.5);
+  svg+=text(360,305,'Comparative Invariant: Standard Tries guarantee O(L) time regardless of dictionary size n; Patricia Tries bound node count to ≤ 2n − 1',soft,10);
+  return svg;
+ }
+
  if(cfg.slug==='network-flow-max-cut'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
   svg+=text(cX+cW/2,cY-14,'MAXIMUM FLOW ALGORITHMIC PARADIGMS (|V| = '+p.input+')','#e2f0f8',11);
@@ -860,6 +910,93 @@ function drawDynamicSandbox(t,p,v,ink,soft,orange){
  const cX=45,cY=45,cW=400,cH=230;
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+ if(cfg.slug==='trie-prefix-trees'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'PATRICIA RADIX PATH COMPRESSION & LPM SANDBOX (L = '+p.input+')','#e2f0f8',11);
+
+  svg+='<text x="'+(cX+15)+'" y="'+(cY+18)+'" fill="#10b981" font-size="8.5" font-weight="bold">PATH COMPRESSION: UNBRANCHED EDGES COLLAPSE INTO SUBSTRING LABELS</text>';
+
+  const trieBoxX=cX+15, trieBoxY=cY+28, trieBoxW=175, trieBoxH=185;
+  svg+='<rect x="'+trieBoxX+'" y="'+trieBoxY+'" width="'+trieBoxW+'" height="'+trieBoxH+'" rx="4" fill="#041a1e" stroke="#14b8a6" stroke-width="1.2"/>';
+  svg+='<text x="'+(trieBoxX+10)+'" y="'+(trieBoxY+15)+'" fill="#2dd4bf" font-size="8" font-weight="bold">UNCOMPRESSED MULTI-WAY TRIE</text>';
+  svg+='<text x="'+(trieBoxX+10)+'" y="'+(trieBoxY+28)+'" fill="#7e9bab" font-size="7.5">Keys: "test", "tester", "toast", "team"</text>';
+
+  const tNodes=[
+   {lbl:'ϵ',x:trieBoxX+87,y:trieBoxY+45,r:10,col:'#38bdf8'},
+   {lbl:'t',x:trieBoxX+87,y:trieBoxY+72,r:10,col:'#94a3b8'},
+   {lbl:'e',x:trieBoxX+55,y:trieBoxY+105,r:10,col:'#94a3b8'},
+   {lbl:'o',x:trieBoxX+125,y:trieBoxY+105,r:10,col:'#94a3b8'},
+   {lbl:'st',x:trieBoxX+40,y:trieBoxY+142,r:11,col:'#10b981',term:true},
+   {lbl:'am',x:trieBoxX+75,y:trieBoxY+142,r:11,col:'#10b981',term:true},
+   {lbl:'er',x:trieBoxX+40,y:trieBoxY+172,r:10,col:'#10b981',term:true}
+  ];
+
+  svg+='<line x1="'+(trieBoxX+87)+'" y1="'+(trieBoxY+55)+'" x2="'+(trieBoxX+87)+'" y2="'+(trieBoxY+62)+'" stroke="#38bdf8" stroke-width="1.5"/>';
+  svg+='<line x1="'+(trieBoxX+80)+'" y1="'+(trieBoxY+78)+'" x2="'+(trieBoxX+60)+'" y2="'+(trieBoxY+95)+'" stroke="#64748b" stroke-width="1.2"/>';
+  svg+='<line x1="'+(trieBoxX+94)+'" y1="'+(trieBoxY+78)+'" x2="'+(trieBoxX+120)+'" y2="'+(trieBoxY+95)+'" stroke="#64748b" stroke-width="1.2"/>';
+  svg+='<line x1="'+(trieBoxX+50)+'" y1="'+(trieBoxY+115)+'" x2="'+(trieBoxX+42)+'" y2="'+(trieBoxY+131)+'" stroke="#64748b" stroke-width="1.2"/>';
+  svg+='<line x1="'+(trieBoxX+60)+'" y1="'+(trieBoxY+115)+'" x2="'+(trieBoxX+72)+'" y2="'+(trieBoxY+131)+'" stroke="#64748b" stroke-width="1.2"/>';
+  svg+='<line x1="'+(trieBoxX+40)+'" y1="'+(trieBoxY+153)+'" x2="'+(trieBoxX+40)+'" y2="'+(trieBoxY+162)+'" stroke="#10b981" stroke-width="1.2"/>';
+
+  tNodes.forEach(n=>{
+   svg+='<circle cx="'+n.x+'" cy="'+n.y+'" r="'+n.r+'" fill="#0b1722" stroke="'+n.col+'" stroke-width="1.5"/>';
+   svg+='<text x="'+n.x+'" y="'+(n.y+3.5)+'" text-anchor="middle" fill="#f1f5f9" font-size="8" font-family="monospace">'+n.lbl+'</text>';
+  });
+
+  const radBoxX=cX+205, radBoxY=cY+28, radBoxW=180, radBoxH=185;
+  svg+='<rect x="'+radBoxX+'" y="'+radBoxY+'" width="'+radBoxW+'" height="'+radBoxH+'" rx="4" fill="#0f172a" stroke="#6366f1" stroke-width="1.2"/>';
+  svg+='<text x="'+(radBoxX+10)+'" y="'+(radBoxY+15)+'" fill="#a5b4fc" font-size="8" font-weight="bold">PATRICIA COMPRESSED RADIX TREE</text>';
+  svg+='<text x="'+(radBoxX+10)+'" y="'+(radBoxY+28)+'" fill="#7e9bab" font-size="7.5">Single-child nodes collapsed into strings</text>';
+
+  const rNodes=[
+   {lbl:'ϵ',x:radBoxX+90,y:radBoxY+48,col:'#38bdf8',r:10},
+   {lbl:'t',x:radBoxX+90,y:radBoxY+88,col:'#f59e0b',r:10},
+   {lbl:'ast',x:radBoxX+145,y:radBoxY+140,col:'#10b981',r:12,term:true},
+   {lbl:'e',x:radBoxX+55,y:radBoxY+125,col:'#818cf8',r:10},
+   {lbl:'am',x:radBoxX+30,y:radBoxY+165,col:'#10b981',r:12,term:true},
+   {lbl:'st',x:radBoxX+85,y:radBoxY+165,col:'#10b981',r:12,term:true}
+  ];
+
+  svg+='<line x1="'+(radBoxX+90)+'" y1="'+(radBoxY+58)+'" x2="'+(radBoxX+90)+'" y2="'+(radBoxY+78)+'" stroke="#38bdf8" stroke-width="1.5"/>';
+  svg+='<text x="'+(radBoxX+96)+'" y="'+(radBoxY+70)+'" fill="#38bdf8" font-size="7.5" font-family="monospace">"t"</text>';
+
+  svg+='<line x1="'+(radBoxX+82)+'" y1="'+(radBoxY+95)+'" x2="'+(radBoxX+60)+'" y2="'+(radBoxY+115)+'" stroke="#818cf8" stroke-width="1.5"/>';
+  svg+='<text x="'+(radBoxX+64)+'" y="'+(radBoxY+105)+'" fill="#818cf8" font-size="7.5" font-family="monospace">"e"</text>';
+
+  svg+='<line x1="'+(radBoxX+98)+'" y1="'+(radBoxY+95)+'" x2="'+(radBoxX+138)+'" y2="'+(radBoxY+130)+'" stroke="#10b981" stroke-width="1.5"/>';
+  svg+='<text x="'+(radBoxX+122)+'" y="'+(radBoxY+110)+'" fill="#10b981" font-size="7.5" font-family="monospace">"oast"</text>';
+
+  svg+='<line x1="'+(radBoxX+48)+'" y1="'+(radBoxY+133)+'" x2="'+(radBoxX+34)+'" y2="'+(radBoxY+153)+'" stroke="#10b981" stroke-width="1.5"/>';
+  svg+='<text x="'+(radBoxX+33)+'" y="'+(radBoxY+144)+'" fill="#10b981" font-size="7.5" font-family="monospace">"am"</text>';
+
+  svg+='<line x1="'+(radBoxX+62)+'" y1="'+(radBoxY+133)+'" x2="'+(radBoxX+78)+'" y2="'+(radBoxY+153)+'" stroke="#10b981" stroke-width="1.5"/>';
+  svg+='<text x="'+(radBoxX+75)+'" y="'+(radBoxY+144)+'" fill="#10b981" font-size="7.5" font-family="monospace">"st"</text>';
+
+  rNodes.forEach(n=>{
+   svg+='<circle cx="'+n.x+'" cy="'+n.y+'" r="'+n.r+'" fill="#0b1722" stroke="'+n.col+'" stroke-width="1.5"/>';
+   svg+='<text x="'+n.x+'" y="'+(n.y+3.5)+'" text-anchor="middle" fill="#f1f5f9" font-size="8" font-family="monospace">'+n.lbl+'</text>';
+  });
+
+  const bX=460, bY=45, bW=220, bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">PATH COMPRESSION RATIO</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="20" font-family="monospace" font-weight="bold">14 ⟶ 6 Nodes</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+66)+'" fill="#10b981" font-size="9">57.1% Node Allocation Reduction</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+76)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+76)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+94)+'" fill="#7e9bab" font-size="9">CIDR ROUTING LPM LOOKUP</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+112)+'" fill="'+ink+'" font-size="11" font-family="monospace" font-weight="bold">Dst IP: 192.168.1.137</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+128)+'" fill="#64748b" font-size="8.5">Match 1: 192.0.0.0/8 (len 8)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+142)+'" fill="#64748b" font-size="8.5">Match 2: 192.168.0.0/16 (len 16)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+158)+'" fill="#10b981" font-size="9" font-weight="bold">★ LPM: 192.168.1.0/24 (len 24)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+172)+'" fill="#38bdf8" font-size="8.5">Forward to Next Hop: eth0/10.0.0.1</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+182)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+182)+'" stroke="#1e3340"/>';
+  svg+=text(bX+bW/2,bY+202,'ART Node16 SIMD Acceleration',orange,8.5);
+  svg+=text(bX+bW/2,bY+218,'_mm_cmpeq_epi8 1-cycle lookup','#10b981',8.5);
+
+  svg+=text(360,305,'Sandbox Invariant: Patricia Trie collapses all non-branching chains into composite substring labels, guaranteeing ≤ 2n − 1 total nodes',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='network-flow-max-cut'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
@@ -1798,6 +1935,92 @@ function draw(t){
  const ink='#38bdf8',soft='#7e9bab',orange='#f97316';
  if(currentSimMode==='compare'){$('apparatusDiagram').innerHTML=drawComparativeSim(t,p,v,ink,soft,orange);return;}
  if(currentSimMode==='sandbox'){$('apparatusDiagram').innerHTML=drawDynamicSandbox(t,p,v,ink,soft,orange);return;}
+
+ if(cfg.slug==='trie-prefix-trees'){
+  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
+  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+  const l=p.input;
+  const t_derefs=v.raw;
+
+  svg+='<rect x="35" y="38" width="410" height="235" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+=text(240,24,'Multi-Way Trie Retrieval Architecture & Memory Dereferencing');
+
+  svg+='<text x="50" y="56" fill="#7e9bab" font-size="8.5" font-weight="bold">PREFIX KEY LENGTH L = '+l+' CHARACTERS · |Σ| = 64 ALPHABET · 10,000 STORED KEYS</text>';
+
+  const keyX=50, keyY=68, keyW=380, keyH=24;
+  svg+='<rect x="'+keyX+'" y="'+keyY+'" width="'+keyW+'" height="'+keyH+'" rx="4" fill="#07131b" stroke="#1e3a4a" stroke-width="1"/>';
+  svg+='<text x="'+(keyX+8)+'" y="'+(keyY+16)+'" fill="#38bdf8" font-size="9" font-family="monospace" font-weight="bold">QUERY KEY K[0..'+(l-1)+']:</text>';
+
+  const sampleChars=['A','L','G','O','R','I','T','H','M','S','_','R','U','L','E','_','P','R','E','F','I','X'];
+  const showCount=Math.min(10, l);
+  for(let i=0; i<showCount; i++){
+   const ch=sampleChars[i % sampleChars.length];
+   const cBx=keyX+150+i*20;
+   svg+='<rect x="'+cBx+'" y="'+(keyY+3)+'" width="16" height="18" rx="2" fill="#142834" stroke="#38bdf8" stroke-width="1"/>';
+   svg+='<text x="'+(cBx+8)+'" y="'+(keyY+15)+'" text-anchor="middle" fill="#f1f5f9" font-size="9" font-family="monospace">'+ch+'</text>';
+  }
+  if(l > showCount){
+   svg+='<text x="'+(keyX+155+showCount*20)+'" y="'+(keyY+15)+'" fill="#7e9bab" font-size="9" font-family="monospace">... +'+(l-showCount)+' chars</text>';
+  }
+
+  const trieLevels=[
+   {name:'Root Sentinel',deref:'Deref #1',x:110,y:122,col:'#38bdf8',desc:'Empty prefix ϵ; 256 child ptrs'},
+   {name:'Level 1: K[0]',deref:'Deref #2',x:205,y:122,col:'#10b981',desc:'k[0] ptr resolved (L1 cache)'},
+   {name:'Level 2: K[1]',deref:'Deref #3',x:300,y:122,col:'#10b981',desc:'k[1] ptr resolved (L1 cache)'},
+   {name:'Level L: K['+(l-1)+']',deref:'Deref #'+(l+1),x:390,y:122,col:orange,desc:'Terminal node payload'}
+  ];
+
+  svg+='<line x1="140" y1="122" x2="175" y2="122" stroke="#38bdf8" stroke-width="1.8"/>';
+  svg+='<text x="157" y="114" text-anchor="middle" fill="#38bdf8" font-size="7.5" font-family="monospace">ptr[c0]</text>';
+
+  svg+='<line x1="235" y1="122" x2="270" y2="122" stroke="#10b981" stroke-width="1.8"/>';
+  svg+='<text x="252" y="114" text-anchor="middle" fill="#10b981" font-size="7.5" font-family="monospace">ptr[c1]</text>';
+
+  svg+='<line x1="330" y1="122" x2="360" y2="122" stroke="'+orange+'" stroke-width="1.5" stroke-dasharray="3,2"/>';
+  svg+='<text x="345" y="114" text-anchor="middle" fill="'+orange+'" font-size="7.5" font-family="monospace">... · '+(l-2)+' ·</text>';
+
+  trieLevels.forEach(node=>{
+   svg+='<rect x="'+(node.x-30)+'" y="'+(node.y-18)+'" width="60" height="36" rx="4" fill="#091824" stroke="'+node.col+'" stroke-width="1.5"/>';
+   svg+='<text x="'+node.x+'" y="'+(node.y-4)+'" text-anchor="middle" fill="#dcebf2" font-size="7.5" font-weight="bold">'+node.name+'</text>';
+   svg+='<text x="'+node.x+'" y="'+(node.y+10)+'" text-anchor="middle" fill="'+node.col+'" font-size="7.5" font-family="monospace">'+node.deref+'</text>';
+  });
+
+  const mBoxX=50, mBoxY=155, mBoxW=380, mBoxH=105;
+  svg+='<rect x="'+mBoxX+'" y="'+mBoxY+'" width="'+mBoxW+'" height="'+mBoxH+'" rx="4" fill="#08141d" stroke="#1c303d" stroke-width="1"/>';
+  svg+='<text x="'+(mBoxX+10)+'" y="'+(mBoxY+16)+'" fill="#7e9bab" font-size="8.5" font-weight="bold">HARDWARE CPU MEMORY & CACHE BUS TELEMETRY</text>';
+
+  svg+='<text x="'+(mBoxX+15)+'" y="'+(mBoxY+35)+'" fill="#94a3b8" font-size="8">Sentinel Memory Address: 0x7ffee4b2a000 (Allocated in 64-bit DRAM)</text>';
+  svg+='<text x="'+(mBoxX+15)+'" y="'+(mBoxY+51)+'" fill="#94a3b8" font-size="8">Child Array Footprint: 64 pointers × 8 bytes = 512 bytes / node</text>';
+  svg+='<text x="'+(mBoxX+15)+'" y="'+(mBoxY+67)+'" fill="#38bdf8" font-size="8">L1 Data Cache Hit Latency: ~1.2 ns / pointer dereference</text>';
+  svg+='<text x="'+(mBoxX+15)+'" y="'+(mBoxY+83)+'" fill="#10b981" font-size="8" font-weight="bold">Deterministic Operation Sum: T(L) = 1 (Root) + '+l+' (Chars) = '+t_derefs+' Pointer Dereferences</text>';
+  svg+='<text x="'+(mBoxX+15)+'" y="'+(mBoxY+97)+'" fill="#64748b" font-size="7.5">Key search time is O(L) invariant: completely independent of |V| or dictionary size n.</text>';
+
+  const bX=460, bY=38, bW=225, bH=235;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+20)+'" fill="#7e9bab" font-size="8.5" font-weight="bold">TRIE RETRIEVAL TELEMETRY</text>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+38)+'" fill="#7e9bab" font-size="8">TOTAL DEREFERENCES T(L)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+64)+'" fill="'+orange+'" font-size="24" font-family="monospace" font-weight="bold">'+t_derefs+' ops</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+78)+'" fill="#10b981" font-size="8">T(L) = 1.0000 · L + 1.0000</text>';
+
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+86)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+86)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+102)+'" fill="#7e9bab" font-size="8">RETRIEVAL ASYMPTOTICS</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+124)+'" fill="'+ink+'" font-size="16" font-family="monospace" font-weight="bold">Θ(L) Linear</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+138)+'" fill="#8ba5b5" font-size="8">Zero dependence on n keys</text>';
+
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+146)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+146)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+162)+'" fill="#7e9bab" font-size="8">DEREFERENCE DECOMPOSITION</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+178)+'" fill="#dcebf2" font-size="8.5">• Root Sentinel: 1 deref</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+192)+'" fill="#dcebf2" font-size="8.5">• Edge Steps: '+l+' derefs</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+206)+'" fill="#38bdf8" font-size="8">• Slope k_trie: 1.0000 deref/char</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+220)+'" fill="#10b981" font-size="8">• Intercept T_0: 1.0000 deref</text>';
+
+  svg+=text(360,305,'Empirical Invariant: Trie key search dereferences strictly T(L) = 1.0000 · L + 1.0000 memory pointers, completely invariant to dictionary size n',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='network-flow-max-cut'){
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';

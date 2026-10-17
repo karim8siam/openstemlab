@@ -57,7 +57,8 @@ def experiment_index(experiments):
     'dynamic-programming-memoization':'dynamic programming memoization tabulation bellman recurrence optimal substructure overlapping subproblems 0 1 knapsack state space pseudo polynomial weak np complete rolling array reverse scan',
     'greedy-minimum-spanning-trees':'greedy algorithm minimum spanning tree mst kruskal prim boruvka disjoint set union dsu union find path compression union by rank cut property cycle property matroid',
     'string-matching-automata':'string matching automata knuth morris pratt kmp failure function prefix array boyer moore bad character good suffix rabin karp rolling hash aho corasick trie simd avx512',
-    'network-flow-max-cut':'network flow maximum flow max cut min cut ford fulkerson edmonds karp dinic push relabel residual graph augmenting path bottleneck capacity level graph bipartite matching duality'}
+    'network-flow-max-cut':'network flow maximum flow max cut min cut ford fulkerson edmonds karp dinic push relabel residual graph augmenting path bottleneck capacity level graph bipartite matching duality',
+    'trie-prefix-trees':'trie prefix tree radix tree patricia compressed ternary search tree tst longest prefix matching lpm cidr routing adaptive radix tree art suffix tree'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   sub='computer-science' if '/computer-science/' in exp.get('page_path','') else 'physics'
