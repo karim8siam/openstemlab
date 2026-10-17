@@ -38,6 +38,9 @@ function update(){
  }else if(cfg.slug==='surface-tension-stalagmometry'){
   $('liveState').textContent='Ready to collect '+p.input.toFixed(0)+' drops from Traube stalagmometer tip.';
   message('Set drop count N, throttle needle valve to 8–10 s/drop, collect into weighing bottle & weigh.');
+ }else if(cfg.slug==='colligative-freezing-point-depression'){
+  $('liveState').textContent='Ready to dissolve '+p.input.toFixed(2)+' g solute in 25.00 g cyclohexane.';
+  message('Set solute mass w_solute, cool cell in 2 °C ice bath, resolve cooling curve & record ΔT_f.');
  }else{
   $('liveState').textContent='Ready to dispense '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+' of liquid.';
   message('Adjust '+cfg.shortInput+' V, then weigh the dispensed aliquot.');
@@ -66,6 +69,7 @@ $('measure').onclick=async()=>{
  if(cfg.slug==='empirical-formula-magnesium-oxide') msgStart='Igniting magnesium ribbon, throttling aerosol smoke, digesting nitride with hot water, calcining at 850 °C…';
  if(cfg.slug==='liquid-viscosity-poiseuille') msgStart='Equilibrating jacket at 20.0 °C, establishing constant overflow head, timing effluent discharge…';
  if(cfg.slug==='surface-tension-stalagmometry') msgStart='Forming quasi-static pendent drops at 20.0 °C, detaching at razor tip, collecting into stoppered bottle…';
+ if(cfg.slug==='colligative-freezing-point-depression') msgStart='Cooling in ice bath, stirring at 60 strokes/min, supercooling & extrapolating plateau…';
  message(msgStart);
  await new Promise(resolve=>setTimeout(resolve,400));
  const raw=prediction.raw;
@@ -96,6 +100,9 @@ $('measure').onclick=async()=>{
  }else if(cfg.slug==='surface-tension-stalagmometry'){
   $('liveState').textContent='Collected '+p.input.toFixed(0)+' drops: net mass '+raw.toFixed(4)+' g.';
   message('Drop-weight stalagmometry complete: '+p.input.toFixed(0)+' drops = '+raw.toFixed(4)+' g (m_drop = '+(raw/p.input).toFixed(5)+' g/drop). Record in notebook.');
+ }else if(cfg.slug==='colligative-freezing-point-depression'){
+  $('liveState').textContent='Freezing point depressed: ΔT_f = '+raw.toFixed(3)+' °C (T_f = '+(6.550-raw).toFixed(3)+' °C).';
+  message('Cryoscopic determination complete: ΔT_f = '+raw.toFixed(3)+' °C for '+p.input.toFixed(2)+' g solute in cyclohexane (M = 154.2 g/mol). Record in notebook.');
  }else{
   $('liveState').textContent='Analytical balance stabilized: '+raw.toFixed(cfg.rawDecimals)+' g net mass.';
   message('Gravimetric measurement complete: '+raw.toFixed(cfg.rawDecimals)+' '+cfg.rawUnit+' for '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+'. Record in notebook.');
@@ -301,6 +308,18 @@ function draw(t){
    return;
   }
   $('apparatusDiagram').innerHTML=drawStalagBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='colligative-freezing-point-depression'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawCryoCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawCryoSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawCryoBenchView(p,rawVal);
   return;
  }
  if(currentSimMode==='compare'){
@@ -2610,5 +2629,259 @@ function drawStalagSandboxView(p,rawVal){
  });
 
  svg+=text(360,305,'Plateau Invariant: Operating at r/V⅓ = 0.7526 insulates Harkins-Jordan factor against droplet volume shifts.','#789c80',9);
+ return svg;
+}
+
+
+// ======================================================================
+// CHEMISTRY LAB 10: CRYOSCOPIC FREEZING-POINT DEPRESSION (MOLAR MASS)
+// ======================================================================
+function drawCryoBenchView(p,rawVal){
+ const w_solute=p.input;
+ const dt_f=rawVal;
+ const t_freeze=6.550-dt_f;
+ const molality=dt_f/20.00;
+ const m_calc=w_solute/(molality*0.025);
+
+ let svg='<defs>';
+ svg+='<linearGradient id="iceBath" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#bae6fd" stop-opacity=".6"/><stop offset="100%" stop-color="#38bdf8" stop-opacity=".85"/></linearGradient>';
+ svg+='<linearGradient id="solvGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#a7f3d0" stop-opacity=".5"/><stop offset="50%" stop-color="#6ee7b7" stop-opacity=".7"/><stop offset="100%" stop-color="#34d399" stop-opacity=".6"/></linearGradient>';
+ svg+='<linearGradient id="cellGlass" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#ffffff" stop-opacity=".25"/><stop offset="15%" stop-color="#ffffff" stop-opacity=".06"/><stop offset="85%" stop-color="#ffffff" stop-opacity=".08"/><stop offset="100%" stop-color="#ffffff" stop-opacity=".3"/></linearGradient>';
+ svg+='<linearGradient id="hgGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#94a3b8"/><stop offset="50%" stop-color="#cbd5e1"/><stop offset="100%" stop-color="#64748b"/></linearGradient>';
+ svg+='</defs><rect width="720" height="320" fill="#08140c"/>';
+
+ svg+=text(360,20,'BECKMANN CRYOSCOPIC FREEZING-POINT CELL: CYCLOHEXANE (K_f = 20.00 K·kg/mol)','#86efac',12);
+
+ // Table surface
+ svg+='<rect x="0" y="275" width="720" height="45" fill="#132419" stroke="#1f3b2a" stroke-width="1"/>';
+ svg+='<line x1="0" y1="275" x2="720" y2="275" stroke="#2d523b" stroke-width="2"/>';
+
+ // --- 1. Jacketed Cryostat Bath & Beckmann Cell (Left: x = 50 to 330) ---
+ const bX=175;
+ // Outer Cryostat Beaker (Crushed Ice & Water at 2.0 °C)
+ const bkX=bX-85,bkY=90,bkW=170,bkH=175;
+ svg+='<rect x="'+bkX+'" y="'+bkY+'" width="'+bkW+'" height="'+bkH+'" rx="8" fill="url(#iceBath)" stroke="#38bdf8" stroke-width="1.5"/>';
+ // Floating ice chunks
+ for(let ic=0;ic<6;ic++){
+  const ix=bkX+15+((ic*28)%135),iy=bkY+15+((ic*24)%45);
+  svg+='<polygon points="'+ix+','+iy+' '+(ix+16)+','+(iy-5)+' '+(ix+22)+','+(iy+10)+' '+(ix+8)+','+(iy+18)+' '+(ix-2)+','+(iy+10)+'" fill="#ffffff" fill-opacity=".7" stroke="#e0f2fe"/>';
+ }
+ svg+='<text x="'+(bkX+10)+'" y="'+(bkY+bkH-8)+'" fill="#0369a1" font-size="7.5" font-weight="bold">Ice-Water Cryostat (2.0 ± 0.5 °C)</text>';
+
+ // Outer Air Jacket Tube
+ const ajX=bX-34,ajY=65,ajW=68,ajH=185;
+ svg+='<rect x="'+ajX+'" y="'+ajY+'" width="'+ajW+'" height="'+ajH+'" rx="6" fill="url(#cellGlass)" stroke="#64748b" stroke-width="1.2"/>';
+ svg+='<text x="'+(ajX-4)+'" y="'+(ajY+45)+'" text-anchor="end" fill="#94a3b8" font-size="7">Air Jacket (Annular Insulation)</text>';
+
+ // Inner Boiling Tube containing 25.00 g Cyclohexane Solution
+ const itX=bX-22,itY=50,itW=44,itH=185;
+ svg+='<rect x="'+itX+'" y="'+itY+'" width="'+itW+'" height="'+itH+'" rx="5" fill="url(#cellGlass)" stroke="#475569" stroke-width="1"/>';
+ // Solution inside inner tube
+ const solH=75;
+ svg+='<rect x="'+(itX+2)+'" y="'+(itY+itH-solH)+'" width="'+(itW-4)+'" height="solH" rx="3" fill="url(#solvGrad)"/>';
+ // Needle-like cyclohexane crystals appearing if freezing
+ if(busy){
+  for(let cr=0;cr<8;cr++){
+   const cx1=itX+8+((cr*11)%28),cy1=itY+itH-12-((cr*8)%55);
+   svg+='<line x1="'+cx1+'" y1="'+cy1+'" x2="'+(cx1+10)+'" y2="'+(cy1-8)+'" stroke="#ffffff" stroke-width="1.5"/>';
+  }
+ }
+ svg+='<text x="'+bX+'" y="'+(itY+itH-8)+'" text-anchor="middle" fill="#065f46" font-size="7" font-weight="bold">25.00 g Cyclohexane + '+w_solute.toFixed(2)+' g Solute</text>';
+
+ // Beckmann Differential Thermometer (inserted through center stopper)
+ const thX=bX-4,thW=8;
+ // Thermometer stem extending up into the air
+ svg+='<rect x="'+thX+'" y="25" width="'+thW+'" height="150" fill="url(#cellGlass)" stroke="#475569" stroke-width="0.8"/>';
+ // Large lower mercury bulb submerged in solution
+ svg+='<rect x="'+(bX-6)+'" y="175" width="12" height="38" rx="4" fill="url(#hgGrad)" stroke="#475569"/>';
+ // Mercury thread in capillary stem
+ const hgH=Math.min(95, Math.max(15, (dt_f/6.5)*85));
+ svg+='<rect x="'+(thX+2)+'" y="'+(150-hgH)+'" width="4" height="'+(hgH+25)+'" fill="#cbd5e1"/>';
+ // Beckmann 5-degree etched scale lines
+ for(let sy=40;sy<=140;sy+=10){
+  svg+='<line x1="'+thX+'" y1="'+sy+'" x2="'+(thX+3)+'" y2="'+sy+'" stroke="#ffffff" stroke-width="0.7"/>';
+ }
+ // Top auxiliary mercury reservoir
+ svg+='<ellipse cx="'+(bX)+'" cy="25" rx="7" ry="5" fill="url(#cellGlass)" stroke="#475569"/>';
+ svg+='<circle cx="'+bX+'" cy="25" r="3.5" fill="#94a3b8"/>';
+ svg+='<text x="'+(bX+12)+'" y="28" fill="#cbd5e1" font-size="7">Auxiliary Mercury Chamber</text>';
+
+ // Motorized Wire Loop Stirrer (ring moving around thermometer)
+ const stY=busy?185:198;
+ svg+='<ellipse cx="'+bX+'" cy="'+stY+'" rx="16" ry="4" fill="none" stroke="#facc15" stroke-width="1.5"/>';
+ svg+='<line x1="'+(bX+16)+'" y1="'+stY+'" x2="'+(bX+16)+'" y2="45" stroke="#facc15" stroke-width="1.2"/>';
+ svg+='<text x="'+(bX+20)+'" y="52" fill="#facc15" font-size="7">Stirrer (60/min)</text>';
+
+
+ // --- 2. Digital Readout & Analysis Dashboard (Right: x = 360 to 695) ---
+ const dDashX=360,dDashY=45,dDashW=335,dDashH=220;
+ svg+='<rect x="'+dDashX+'" y="'+dDashY+'" width="'+dDashW+'" height="'+dDashH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg+='<text x="'+(dDashX+dDashW/2)+'" y="'+(dDashY+18)+'" text-anchor="middle" fill="#86efac" font-size="10" font-weight="bold">BECKMANN THERMOMETRIC READOUT & CRYOSCOPY</text>';
+
+ // Upper digital readouts (two side-by-side cards)
+ const c1X=dDashX+12,c1Y=dDashY+28,c1W=148,c1H=65;
+ svg+='<rect x="'+c1X+'" y="'+c1Y+'" width="'+c1W+'" height="'+c1H+'" rx="4" fill="#051009" stroke="#162e1e"/>';
+ svg+='<text x="'+(c1X+10)+'" y="'+(c1Y+15)+'" fill="#789c80" font-size="7.5" font-weight="bold">FREEZING-POINT DEPRESSION</text>';
+ const dispDT=measurement?dt_f.toFixed(3):(busy?(rawVal*0.75).toFixed(3):'0.000');
+ svg+='<text x="'+(c1X+10)+'" y="'+(c1Y+40)+'" fill="#38bdf8" font-size="20" font-family="monospace" font-weight="bold">ΔT = '+dispDT+' °C</text>';
+ svg+='<text x="'+(c1X+10)+'" y="'+(c1Y+55)+'" fill="#94a3b8" font-size="7.5">T_f = '+(6.550-dt_f).toFixed(3)+' °C (Pure: 6.550 °C)</text>';
+
+ const c2X=dDashX+175,c2Y=dDashY+28,c2W=148,c2H=65;
+ svg+='<rect x="'+c2X+'" y="'+c2Y+'" width="'+c2W+'" height="'+c2H+'" rx="4" fill="#051009" stroke="#162e1e"/>';
+ svg+='<text x="'+(c2X+10)+'" y="'+(c2Y+15)+'" fill="#789c80" font-size="7.5" font-weight="bold">SOLUTE MOLALITY & MOLAR MASS</text>';
+ svg+='<text x="'+(c2X+10)+'" y="'+(c2Y+32)+'" fill="#cbd5e1" font-size="8">m = ΔT/K_f = '+molality.toFixed(4)+' mol/kg</text>';
+ svg+='<text x="'+(c2X+10)+'" y="'+(c2Y+47)+'" fill="#facc15" font-size="8" font-family="monospace">w_solute = '+w_solute.toFixed(2)+' g in 25.00 g solv</text>';
+ svg+='<text x="'+(c2X+10)+'" y="'+(c2Y+60)+'" fill="#86efac" font-size="8.5" font-family="monospace" font-weight="bold">M = '+m_calc.toFixed(2)+' g/mol (Biphenyl)</text>';
+
+ // Lower Detailed Specification Box
+ const specX=dDashX+12,specY=dDashY+102,specW=dDashW-24,specH=105;
+ svg+='<rect x="'+specX+'" y="'+specY+'" width="'+specW+'" height="'+specH+'" rx="4" fill="#051009" stroke="#162e1e"/>';
+ svg+='<text x="'+(specX+12)+'" y="'+(specY+16)+'" fill="#86efac" font-size="8" font-weight="bold">THERMODYNAMIC CRYOSCOPIC PARAMETERS</text>';
+
+ svg+='<text x="'+(specX+12)+'" y="'+(specY+32)+'" fill="#cbd5e1" font-size="7.5">• Solvent: Anhydrous Cyclohexane (C₆H₁₂), w_solvent = 25.000 g (0.0250 kg)</text>';
+ svg+='<text x="'+(specX+12)+'" y="'+(specY+46)+'" fill="#cbd5e1" font-size="7.5">• Cryoscopic Constant: K_f = (R·T_f²·M_s) / (1000·ΔH_fus) = 20.00 K·kg/mol</text>';
+ svg+='<text x="'+(specX+12)+'" y="'+(specY+60)+'" fill="#cbd5e1" font-size="7.5">• Low Enthalpy of Fusion: ΔH_fus = 2.68 kJ/mol (Plastic Crystal Phase Tumbling)</text>';
+ svg+='<text x="'+(specX+12)+'" y="'+(specY+74)+'" fill="#38bdf8" font-size="7.5">• Unknown Solute: Pure crystalline biphenyl (C₁₂H₁₀, formula weight M = 154.21 g/mol)</text>';
+ svg+='<text x="'+(specX+12)+'" y="'+(specY+88)+'" fill="#86efac" font-size="8" font-family="monospace" font-weight="bold">• Invariant: ΔT_f = [K_f / (w_solv·M)] · w_solute ⟹ Slope m = 5.1873 °C/g (R² = 1.00000)</text>';
+
+ svg+=text(360,305,'Raoult Colligative Law: ΔT_f = K_f · m_solute; High K_f of cyclohexane (20.00) delivers extreme molecular weight precision.','#789c80',8.5);
+ return svg;
+}
+
+function drawCryoCompareView(p,rawVal){
+ let svg='<rect x="0" y="0" width="720" height="320" fill="#08140c"/>';
+ svg+=text(360,24,'COMPARATIVE MOLECULAR WEIGHT METROLOGY: THERMODYNAMIC COLLIGATIVE METHODS','#86efac',12);
+
+ const cards=[
+  {
+   title:'1. Cryoscopy (Freezing-Point)',
+   sub:'Beckmann Freezing Depression (Our Lab)',
+   color:'#86efac',
+   border:'#254d33',
+   items:[
+    'Principle: Solute lowers solvent chemical potential: ΔT_f = K_f · m',
+    'Sensitivity: Enormous K_f in plastic cyclohexane (K_f = 20.00 K·kg/mol)',
+    'Temperature: Low temperature (6.55 °C), prevents thermal degradation',
+    'Solute range: Small to medium non-volatiles (M = 50 to 800 g/mol)',
+    'Thermometry: Beckmann differential sensor (±0.002 °C precision)',
+    'Primary advantage: High temperature resolution, no thermal decomposition',
+    'Limitation: Cooling curves require supercooling extrapolation'
+   ]
+  },
+  {
+   title:'2. Ebulliometry (Boiling-Point)',
+   sub:'Cottrell Boiling Point Elevation',
+   color:'#38bdf8',
+   border:'#1e3a5f',
+   items:[
+    'Principle: Vapor pressure reduction raises bp: ΔT_b = K_b · m',
+    'Sensitivity: Modest K_b (water K_b = 0.512; benzene K_b = 2.53 K·kg/mol)',
+    'Temperature: High temperatures (solvent bp); can decompose biomolecules',
+    'Pumping system: Requires Cottrell vapor pump to spray equilibrium liquid',
+    'Thermometry: Beckmann thermometer submerged in boiling spray',
+    'Primary advantage: Direct thermodynamic liquid-vapor equilibrium',
+    'Limitation: Acute barometric pressure sensitivity (±0.1 mmHg shifts bp)'
+   ]
+  },
+  {
+   title:'3. Membrane & Vapor Osmometry',
+   sub:'Semipermeable Osmotic Pressure (VPO)',
+   color:'#fde047',
+   border:'#5a4814',
+   items:[
+    'Principle: Van 't Hoff osmotic pressure across membrane: Π = (c/M)·RT',
+    'Sensitivity: Immense pressure signals (0.001 M produces ~25 cm head)',
+    'Temperature: Isothermal ambient operation (25.0 °C)',
+    'Solute range: Macromolecules & synthetic polymers (M = 10⁴ to 10⁶ g/mol)',
+    'Thermometry: Matched thermistor bridges (in VPO) or pressure transducer',
+    'Primary advantage: Unrivaled for polymers where ΔT_f < 0.0001 °C',
+    'Limitation: Membrane leakage for low molecular weight solutes (M < 5000)'
+   ]
+  }
+ ];
+
+ cards.forEach((c,idx)=>{
+  const x=25+idx*230,y=46,w=210,h=242;
+  svg+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="6" fill="#0d1f14" stroke="'+c.border+'" stroke-width="1.5"/>';
+  svg+='<rect x="'+(x+8)+'" y="'+(y+8)+'" width="'+(w-16)+'" height="32" rx="4" fill="#051009"/>';
+  svg+='<text x="'+(x+w/2)+'" y="'+(y+22)+'" text-anchor="middle" fill="'+c.color+'" font-size="9.5" font-weight="bold">'+c.title+'</text>';
+  svg+='<text x="'+(x+w/2)+'" y="'+(y+34)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5">'+c.sub+'</text>';
+
+  c.items.forEach((item,ii)=>{
+   const iy=y+54+ii*26;
+   svg+='<circle cx="'+(x+16)+'" cy="'+(iy-3)+'" r="2" fill="'+c.color+'"/>';
+   svg+='<foreignObject x="'+(x+24)+'" y="'+(iy-10)+'" width="'+(w-32)+'" height="26"><p xmlns="http://www.w3.org/1999/xhtml" style="font-size:7.5px;color:#cbd5e1;line-height:1.2;margin:0">'+item+'</p></foreignObject>';
+  });
+ });
+
+ svg+=text(360,305,'Comparison: Cryoscopy uses plastic crystal solvents for small molecules; Osmometry measures macromolecules.','#789c80',9);
+ return svg;
+}
+
+function drawCryoSandboxView(p,rawVal){
+ const w_solute=p.input;
+ const dt_f=rawVal;
+ const t_freeze=6.550-dt_f;
+ const molality=dt_f/20.00;
+ const m_calc=w_solute/(molality*0.025);
+
+ let svg='<rect x="0" y="0" width="720" height="320" fill="#08140c"/>';
+ svg+=text(360,22,'SUPERCOOLING KINETICS, COOLING CURVE REBOUND & TEMPERATURE EXTRAPOLATION','#86efac',12);
+
+ // Left Panel: Experimental Cooling Curve (Temperature vs Time)
+ const lX=25,lY=46,lW=340,lH=230;
+ svg+='<rect x="'+lX+'" y="'+lY+'" width="'+lW+'" height="'+lH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg+='<text x="'+(lX+lW/2)+'" y="'+(lY+18)+'" text-anchor="middle" fill="#86efac" font-size="10" font-weight="bold">COOLING CURVE KINETICS: T(t) RESOLUTION</text>';
+
+ // Axes
+ const axX=lX+45,axY=lY+40,axW=270,axH=145;
+ svg+='<rect x="'+axX+'" y="'+axY+'" width="'+axW+'" height="'+axH+'" fill="#051009" stroke="#162e1e"/>';
+ svg+='<text x="'+(axX+axW/2)+'" y="'+(axY+axH+14)+'" text-anchor="middle" fill="#789c80" font-size="8">Time elapsed t (min)</text>';
+ svg+='<text transform="translate('+(axX-14)+' '+(axY+axH/2)+') rotate(-90)" text-anchor="middle" fill="#789c80" font-size="8">Temperature T (°C)</text>';
+
+ // Pure solvent cooling curve (gray dashed)
+ svg+='<path d="M'+axX+' '+(axY+15)+' L'+(axX+50)+' '+(axY+45)+' L'+(axX+65)+' '+(axY+65)+' L'+(axX+75)+' '+(axY+45)+' L'+(axX+axW)+' '+(axY+45)+'" fill="none" stroke="#64748b" stroke-width="1.2" stroke-dasharray="3,3"/>';
+ svg+='<text x="'+(axX+axW-5)+'" y="'+(axY+40)+'" text-anchor="end" fill="#94a3b8" font-size="7">Pure Cyclohexane T_f° = 6.550 °C</text>';
+
+ // Solution cooling curve showing supercooling & rebound
+ const dropPix=Math.min(65, (dt_f/6.5)*60);
+ const pY1=axY+25,pY2=axY+60+dropPix,pY3=axY+80+dropPix,pY4=axY+50+dropPix,pY5=axY+58+dropPix;
+ svg+='<path d="M'+axX+' '+pY1+' L'+(axX+55)+' '+pY2+' L'+(axX+75)+' '+pY3+' L'+(axX+90)+' '+pY4+' L'+(axX+axW)+' '+pY5+'" fill="none" stroke="#38bdf8" stroke-width="2"/>';
+
+ // Supercooling dip annotation
+ svg+='<circle cx="'+(axX+75)+'" cy="'+pY3+'" r="3" fill="#ef4444"/>';
+ svg+='<text x="'+(axX+75)+'" y="'+(pY3+12)+'" text-anchor="middle" fill="#ef4444" font-size="7">Supercooling Dip (~0.5 °C)</text>';
+
+ // Extrapolation line of crystallization plateau
+ svg+='<line x1="'+(axX+65)+'" y1="'+pY4+'" x2="'+(axX+axW)+'" y2="'+pY5+'" stroke="#facc15" stroke-width="1.5" stroke-dasharray="2,2"/>';
+ svg+='<text x="'+(axX+axW-5)+'" y="'+(pY4-5)+'" text-anchor="end" fill="#facc15" font-size="7.5" font-weight="bold">Extrapolated Equilibrium T_f = '+(6.550-dt_f).toFixed(3)+' °C</text>';
+
+ // Bottom delta T badge
+ svg+='<rect x="'+(lX+15)+'" y="'+(lY+190)+'" width="'+(lW-30)+'" height="30" rx="3" fill="#051009" stroke="#162e1e"/>';
+ svg+='<text x="'+(lX+lW/2)+'" y="'+(lY+208)+'" text-anchor="middle" fill="#86efac" font-size="8" font-family="monospace" font-weight="bold">Measured Freezing Depression: ΔT_f = T_f° − T_f = '+dt_f.toFixed(3)+' °C</text>';
+
+
+ // Right Panel: Phase Diagram & Error Sensitivity Audit
+ const rX=380,rY=46,rW=315,rH=230;
+ svg+='<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg+='<text x="'+(rX+rW/2)+'" y="'+(rY+18)+'" text-anchor="middle" fill="#86efac" font-size="10" font-weight="bold">COLLIGATIVE MECHANISM & ERROR AUDIT</text>';
+
+ const errItems=[
+  {label:'K_f Plastic Crystal (20.00)',desc:'ΔH_fus = 2.68 kJ/mol gives 10× higher resolution than water',val:'K_f = 20.00 K·kg/mol',col:'#48bb78'},
+  {label:'Supercooling Extrapolation',desc:'Linear plateau extrapolation removes kinetic undercooling',val:'±0.004 °C Precision',col:'#38bdf8'},
+  {label:'Solute Monomer Ideality',desc:'Biphenyl lacks H-bonding; discrete monomers (i = 1.000)',val:'Zero Dimerization Error',col:'#86efac'},
+  {label:'Solvent Volatility Headspace',desc:'Cyclohexane vapor (40 mmHg at 6 °C) sealed in side arm',val:'Prevented by ground stopper',col:'#fbbf24'},
+  {label:'OLS Slope Insulation (★)',desc:'Beckmann zero-setting calibration absorbed into ΔT₀',val:'Slope = 5.1873 °C/g Unbiased',col:'#86efac'}
+ ];
+
+ errItems.forEach((ei,idx)=>{
+  const ey=rY+30+idx*39;
+  svg+='<rect x="'+(rX+8)+'" y="'+ey+'" width="'+(rW-16)+'" height="33" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg+='<text x="'+(rX+14)+'" y="'+(ey+12)+'" fill="'+ei.col+'" font-size="7.5" font-weight="bold">'+ei.label+'</text>';
+  svg+='<text x="'+(rX+14)+'" y="'+(ey+25)+'" fill="#94a3b8" font-size="6.8">'+ei.desc+'</text>';
+  svg+='<text x="'+(rX+rW-14)+'" y="'+(ey+12)+'" text-anchor="end" fill="'+ei.col+'" font-size="7.5" font-family="monospace">'+ei.val+'</text>';
+ });
+
+ svg+=text(360,305,'Molar Mass Invariant: Ordinary least-squares regression slope m_slope = 5.1873 °C/g isolates M = 154.22 g/mol.','#789c80',9);
  return svg;
 }

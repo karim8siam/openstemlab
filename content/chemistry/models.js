@@ -81,6 +81,16 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:1.0,x,y,valid:n_drops>=10&&n_drops<=60};
  }
+ if(slug==='colligative-freezing-point-depression'){
+  const w=Number(input);
+  const Kf=20.00;
+  const w_solv=0.0250;
+  const M_true=154.21;
+  const raw=round((Kf * w) / (M_true * w_solv), 3);
+  const x=w;
+  const y=raw;
+  return {raw,ideal:raw,period:1.0,x,y,valid:w>=0.20&&w<=1.20};
+ }
  throw Error('Unknown Chemistry experiment predict: '+slug);
 }
 
@@ -121,6 +131,10 @@ function reading(slug,input,raw){
   y=Number(raw);
  }
  if(slug==='surface-tension-stalagmometry'){
+  x=Number(input);
+  y=Number(raw);
+ }
+ if(slug==='colligative-freezing-point-depression'){
   x=Number(input);
   y=Number(raw);
  }
@@ -197,6 +211,13 @@ function estimate(slug,f){
   const gamma_est=f.m * k_tip;
   const se=f.slopeSE * k_tip;
   return {value:gamma_est,se:se,reference:72.80};
+ }
+ if(slug==='colligative-freezing-point-depression'){
+  const Kf=20.00;
+  const w_solv=0.0250;
+  const M_est=Kf / (w_solv * f.m);
+  const se=(M_est / f.m) * f.slopeSE;
+  return {value:M_est,se:se,reference:154.21};
  }
  throw Error('Unknown Chemistry experiment estimate: '+slug);
 }

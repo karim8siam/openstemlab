@@ -77,6 +77,15 @@ def observation(c,value):
   x=n_drops
   y=raw
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='colligative-freezing-point-depression':
+  w=float(value)
+  Kf=20.00
+  w_solv=0.0250
+  M_true=154.21
+  raw=rnd((Kf * w) / (M_true * w_solv), 3)
+  x=w
+  y=raw
+  return {'input':value,'raw':raw,'x':x,'y':y}
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fit(rows):
@@ -131,6 +140,12 @@ def estimate(c,f):
   phi=0.6150
   k_tip=g / (2.0 * math.pi * r * phi)
   return f['m']*k_tip, f['slopeSE']*k_tip, 72.80
+ elif slug=='colligative-freezing-point-depression':
+  Kf=20.00
+  w_solv=0.0250
+  M_est=Kf / (w_solv * f['m'])
+  se=(M_est / f['m']) * f['slopeSE']
+  return M_est, se, 154.21
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fmt(v,n=5):
@@ -162,6 +177,9 @@ def formula(c,f):
  elif slug=='surface-tension-stalagmometry':
   k_tip=9.80665 / (2.0 * math.pi * 0.00350 * 0.6150)
   return f"γ = m_slope · K_tip = {fmt(f['m'],6)} × {k_tip:.2f} = {fmt(f['m']*k_tip,2)} mN/m; Intercept m₀ = {fmt(f['b'],6)} g"
+ elif slug=='colligative-freezing-point-depression':
+  conv=20.00 / (0.0250 * f['m'])
+  return f"M = K_f / (w_solvent · m_slope) = 20.00 / (0.0250 × {fmt(f['m'],6)}) = {fmt(conv,2)} g/mol; Intercept ΔT₀ = {fmt(f['b'],4)} °C"
  return ""
 
 def worked(c,row):
@@ -340,6 +358,26 @@ def worked(c,row):
    f"extracts the single-drop mass slope m_slope = 0.10040 g/drop, scaling by K_tip = 725.11 N/(m·kg) to isolate "
    f"the surface tension γ = 72.80 mN/m with R² = 1.00000, confirming Tate's law with Harkins-Jordan correction."
   )
+ elif slug=='colligative-freezing-point-depression':
+  w=row['input']
+  dt=row['raw']
+  Kf=20.00
+  w_solv=0.0250
+  molality=dt / Kf
+  n_solute=molality * w_solv
+  M_calc=w / n_solute
+  return (
+   f"Cryoscopic Solvent: Anhydrous Cyclohexane; Pure Freezing Point T_f° = 6.550 °C; Mass w_solvent = 25.00 g = 0.02500 kg.\n"
+   f"Cryoscopic Constant of Cyclohexane: K_f = 20.00 K·kg/mol (20.00 °C·kg/mol).\n"
+   f"Dissolved Non-Electrolyte Solute Mass: w_solute = {w:.4f} g.\n"
+   f"Measured Freezing-Point Depression: ΔT_f = T_f° − T_f = {dt:.3f} °C (Beckmann Differential Thermometry).\n"
+   f"Experimental Solution Molality: m = ΔT_f / K_f = {dt:.3f} °C / 20.00 °C·kg/mol = {molality:.6f} mol/kg.\n"
+   f"Dissolved Solute Moles: n_solute = m · w_solvent = {molality:.6f} mol/kg × 0.02500 kg = {n_solute:.6f} mol.\n"
+   f"Single-Trial Molar Mass: M = w_solute / n_solute = {w:.4f} g / {n_solute:.6f} mol = {M_calc:.2f} g/mol.\n"
+   f"Verification: Across the full six-point series from 0.20 to 1.20 g of solute, ordinary least-squares regression "
+   f"extracts the cryoscopic slope m_slope = 5.1873 °C/g, inverting via M = K_f / (w_solvent · m_slope) to isolate "
+   f"the molecular weight M = 154.22 g/mol with R² = 1.00000, confirming biphenyl (C₁₂H₁₀, theoretical M = 154.21 g/mol)."
+  )
  return ""
 
 def uncertainty_text(c):
@@ -502,6 +540,23 @@ def uncertainty_text(c):
    "ensuring pure capillary pinch-off without jetting. "
    "Ordinary least-squares linear regression across six independent drop counts (10 to 60 drops) yields an empirical slope of "
    "m_slope = 0.10040 g/drop with an ideal coefficient of determination R² = 1.00000, isolating the absolute surface tension γ = 72.80 mN/m with zero residual offset."
+  )
+ elif slug=='colligative-freezing-point-depression':
+  return (
+   "In cryoscopic molar mass determination governed by the colligative relation ΔT_f = [ K_f / (w_solvent · M) ] · w_solute + ΔT₀, "
+   "experimental measurement uncertainty is evaluated across thermodynamic, thermal, and gravimetric components: "
+   "(1) Beckmann Differential Temperature Resolution: The 5-degree Beckmann thermometer features etched graduations every 0.01 °C, "
+   "readable with a magnifying glass to ±0.002 °C. For freezing-point depressions spanning 1.038 °C to 6.225 °C, the relative temperature uncertainty "
+   "is δ(ΔT) / ΔT ≈ 0.002 / 3.63 ≈ 5.5 × 10⁻⁴ (0.055%), confirming outstanding thermal precision. "
+   "(2) Supercooling Plateau Extrapolation: Because liquid solutions supercool by 0.4 to 0.7 °C before crystallizing, latent heat release warms the slurry. "
+   "Extrapolating the post-rebound linear crystallization cooling slope back to the supercooling descent line identifies the true thermodynamic equilibrium freezing point T_f "
+   "with a repeatability of ±0.004 °C. "
+   "(3) Solvent Mass Gravimetry & Volatility: Cyclohexane solvent (25.000 g) is weighed to ±0.0005 g using a four-decimal balance. "
+   "Because cyclohexane exhibits an ambient vapor pressure of ~40 mmHg at 6.5 °C, sealing the side-arm with ground glass prevents headspace evaporative concentration (<0.01 g loss). "
+   "(4) Solute Monomer Ideality: In non-polar cyclohexane, non-electrolyte biphenyl molecules remain discrete monomers (van 't Hoff factor i = 1.000), "
+   "free from the dimerization non-ideality seen with carboxylic acids. "
+   "Ordinary least-squares linear regression across six independent solute loadings (0.20 to 1.20 g) extracts the empirical slope "
+   "m_slope = 5.1873 °C/g with an ideal coefficient of determination R² = 1.00000, isolating the solute molar mass M = 154.22 g/mol within 0.009% of theoretical biphenyl."
   )
  return ""
 
@@ -912,6 +967,46 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"The observed surface tension confirms the IAPWS thermodynamic reference value (72.80 mN/m) with a percentage difference of {percent:.4f}%. "
    "The investigation verified Tate's law, proved the necessity of the Harkins-Jordan hydrodynamic detachment correction, "
    "and demonstrated that multi-point gravimetric regression insulates interfacial measurements from container taring and transfer biases."
+  )
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='colligative-freezing-point-depression':
+  abstract=(
+   f"Six precision cryoscopic freezing-point depression trials were conducted using anhydrous cyclohexane solvent (w_solvent = 25.00 g, K_f = 20.00 K·kg/mol) "
+   f"across additions of an unknown organic solute from w_solute = {rows[0]['input']:.2f} g to {rows[-1]['input']:.2f} g. "
+   f"Using a high-precision Beckmann differential thermometer and motorized reciprocating loop stirrer inside an air-jacketed cell immersed in an ice bath at 2.0 °C, "
+   f"measured freezing-point depressions ranged from ΔT_f = {rows[0]['raw']:.3f} °C to {rows[-1]['raw']:.3f} °C, corrected for supercooling via cooling curve extrapolation. "
+   f"Ordinary least-squares linear regression of freezing-point depression ΔT_f against solute mass w_solute yielded an empirical cryoscopic slope of "
+   f"{fmt(f['m'],6)} °C/g, extracting an experimental solute molar mass of M = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} "
+   f"with an intercept of {fmt(f['b'],c['resultDecimals'])} °C and an ideal coefficient of determination R² = 1.00000, "
+   f"confirming the chemical identity of the unknown as biphenyl (C₁₂H₁₀, formula weight 154.21 g/mol) with a percentage difference of {percent:.4f}%."
+  )
+  graph_choice=(
+   f"The mathematical regression models the thermodynamic colligative relation ΔT_f = [ K_f / (w_solvent · M) ] · w_solute + ΔT₀, "
+   f"where w_solute represents the cumulative dissolved solute mass in g, ΔT_f represents the measured freezing-point depression in °C, "
+   f"and ΔT₀ represents the baseline Beckmann zero-setting intercept in °C (theoretically ΔT₀ = 0.000 °C). "
+   f"Inverting the regression slope m_slope via M = K_f / (w_solvent · m_slope) directly isolates the unknown solute molar mass in {c['resultUnit']}, "
+   f"while Beckmann thermometer reset calibration offsets are absorbed into ΔT₀."
+  )
+  discussion=(
+   "The experimental observations provide rigorous quantitative validation of Raoult's Law, Interfacial Phase Equilibria, and Colligative Cryoscopy. "
+   "In solution thermodynamics, dissolving a non-volatile solute lowers the solvent's chemical potential in the liquid phase, displacing the solid-liquid phase boundary "
+   "to a lower temperature proportional to solute molality. "
+   "Cyclohexane serves as an extraordinary cryoscopic solvent because its globular plastic crystal phase yields an exceptionally low molar enthalpy of fusion (ΔH_fus = 2.68 kJ/mol), "
+   "producing a gigantic cryoscopic constant of K_f = 20.00 K·kg/mol (more than ten times larger than water). "
+   "Across all six solute additions from 0.20 g to 1.20 g, the freezing-point depression exhibited flawless linear proportionality to dissolved solute mass. "
+   "The ordinary least-squares regression line ΔT_f = 5.1873 · w_solute + 0.0004 °C yielded an ideal coefficient of determination R² = 1.00000. "
+   "Inverting this slope isolated an experimental molar mass of M = 154.22 g/mol, matching the true formula weight of biphenyl (154.21 g/mol) to within 0.0086%. "
+   "Analysis of the cooling curves showed that mechanical stirring at 60 strokes/min restricted supercooling to ~0.5 °C before rapid latent heat release restored equilibrium, "
+   "and linear extrapolation of the post-crystallization plateau eliminated supercooling kinetic artifacts."
+  )
+  conclusion=(
+   "This laboratory investigation successfully determined the molecular weight and molar mass of an unknown organic solute via cryoscopic freezing-point depression. "
+   f"Through systematic temperature depression measurements across solute loadings from {rows[0]['input']:.2f} g to {rows[-1]['input']:.2f} g in cyclohexane, we extracted an "
+   f"experimental molar mass of M = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with a fit standard error of "
+   f"{fmt(se*c['resultScale'])} {c['resultUnit']} and an ideal coefficient of determination R² = 1.00000. "
+   f"The observed molar mass confirms the theoretical formula weight of biphenyl (154.21 g/mol) with a percentage difference of {percent:.4f}%. "
+   "The investigation verified Raoult's law of colligative lowering, demonstrated the diagnostic utility of Beckmann differential thermometry, "
+   "and proved that multi-point cryoscopic regression provides high-accuracy molecular weight determination free from single-point zero-datum biases."
   )
   return abstract, graph_choice, discussion, conclusion
  return "","","",""
