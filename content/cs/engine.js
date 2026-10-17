@@ -14,8 +14,8 @@ function update(){
  $('readingValue').textContent='—';
  $('recordReading').disabled=true;
  $('measure').disabled=busy;
- $('liveState').textContent='Ready to execute search complexity benchmark.';
- message('Adjust array size n, then execute benchmark.');
+ $('liveState').textContent='Ready to execute '+cfg.shortInput+' benchmark.';
+ message('Adjust '+cfg.shortInput+' n, then execute benchmark.');
  draw(performance.now());
 }
 
@@ -29,16 +29,16 @@ $('resetApparatus').onclick=()=>{if(busy)return;$('independent').value=cfg.initi
 $('measure').onclick=async()=>{
  if(busy)return;
  const p=params(),prediction=model.predict(cfg.slug,p.input);
- if(!prediction.valid){message('Select a valid array size between '+cfg.min+' and '+cfg.max+' elements.',true);return;}
+ if(!prediction.valid){message('Select a valid '+cfg.shortInput+' between '+cfg.min+' and '+cfg.max+' '+cfg.inputUnit+'.',true);return;}
  busy=true;$('measure').disabled=true;$('recordReading').disabled=true;$('independent').disabled=true;$('independentNumber').disabled=true;
- message('Running algorithmic search benchmark on n = '+p.input+' elements…');
+ message('Running algorithmic benchmark on n = '+p.input+' '+cfg.inputUnit+'…');
  await new Promise(resolve=>setTimeout(resolve,400));
  const raw=prediction.raw;
  measurement=model.reading(cfg.slug,p.input,raw);
  busy=false;$('independent').disabled=false;$('independentNumber').disabled=false;$('measure').disabled=false;$('recordReading').disabled=false;
  $('readingValue').textContent=raw.toFixed(cfg.rawDecimals)+' '+cfg.rawUnit;
  $('liveState').textContent='Benchmark observation ready to record.';
- message('Worst-case search completed: '+raw+' comparisons for n = '+p.input+'. Record in notebook.');
+ message('Benchmark completed: '+raw+' '+cfg.rawUnit+' for n = '+p.input+'. Record in notebook.');
 };
 
 $('recordReading').onclick=()=>{
@@ -98,7 +98,7 @@ function drawPlot(f){
 
 $('downloadReadings').onclick=()=>{
  if(!rows.length)return;
- const csv=[['experiment','array_size_n','observed_comparisons','log2_n_bits','y_comparisons'],...rows.map(r=>[cfg.slug,r.input,r.raw,r.x,r.y])].map(row=>row.join(',')).join('\r\n');
+ const csv=[['experiment',cfg.shortInput.replace(/\s+/g,'_')+'_n','observed_comparisons',cfg.xAxis,cfg.yAxis],...rows.map(r=>[cfg.slug,r.input,r.raw,r.x,r.y])].map(row=>row.join(',')).join('\r\n');
  const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');
  a.href=url;a.download=cfg.slug+'-observations.csv';a.click();
  setTimeout(()=>URL.revokeObjectURL(url),1000);
@@ -140,8 +140,55 @@ function drawComparativeSim(t,p,v,ink,soft,orange){
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
- svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
- svg+=text(cX+cW/2,cY-14,'SEARCH ALGORITHM COMPARATIVE BENCHMARK (n = '+p.input+')','#e2f0f8',11);
+ if(cfg.slug==='quadratic-sorting-algorithms'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'QUADRATIC SORTING COMPARATIVE BENCHMARK (n = '+p.input+')','#e2f0f8',11);
+
+  const n=p.input;
+  const c_worst=Math.round(n*(n-1)/2);
+  const c_avg=Math.round(n*(n-1)/4);
+  const c_best_ins=n-1;
+  const s_bubble_worst=c_worst;
+  const s_select_worst=n-1;
+  const s_ins_worst=c_worst;
+
+  const algos=[
+   {name:'Bubble Sort (Worst-Case)',col:'#ef4444',ops:c_worst,writes:s_bubble_worst*3,scale:'O(n²)',desc:'Max comparisons & high write churn'},
+   {name:'Selection Sort (All Cases)',col:'#38bdf8',ops:c_worst,writes:s_select_worst*2,scale:'Θ(n²)',desc:'Fixed comparisons, minimum O(n) writes'},
+   {name:'Insertion Sort (Worst-Case)',col:'#f97316',ops:c_worst,writes:s_ins_worst,scale:'O(n²)',desc:'Reverse order maximum shifts'},
+   {name:'Insertion Sort (Average-Case)',col:'#a855f7',ops:c_avg,writes:Math.round(s_ins_worst/2),scale:'Θ(n²)',desc:'Random array expected half-distance'},
+   {name:'Insertion Sort (Best-Case)',col:'#10b981',ops:c_best_ins,writes:0,scale:'O(n)',desc:'Pre-sorted adaptive early termination'}
+  ];
+
+  algos.forEach((item,idx)=>{
+   const rowY=cY+16+idx*42;
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+12)+'" fill="#dcebf2" font-size="8.5" font-weight="bold">'+item.name+'</text>';
+   svg+='<text x="'+(cX+cW-15)+'" y="'+(rowY+12)+'" text-anchor="end" fill="'+item.col+'" font-size="8.5" font-family="monospace" font-weight="bold">'+item.ops+' comp | '+item.writes+' wr ('+item.scale+')</text>';
+   
+   const barX=cX+15,barY=rowY+16,barMaxW=cW-30;
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barMaxW+'" height="7" rx="2" fill="#16242c"/>';
+   const frac=Math.min(1.0,item.ops/(70*69/2));
+   const fillW=Math.max(4,frac*barMaxW);
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+fillW+'" height="7" rx="2" fill="'+item.col+'"/>';
+  });
+
+  const bX=460,bY=45,bW=220,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">MEMORY WRITE REDUCTION</text>';
+  const writeRatio=((s_bubble_worst*3)/(Math.max(1,s_select_worst*2))).toFixed(1);
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+writeRatio+'×</text>';
+  svg+='<text x="'+(bX+95)+'" y="'+(bY+46)+'" fill="#dcebf2" font-size="10">Selection vs Bubble</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#7e9bab" font-size="9">NON-VOLATILE MEMORY WEAR</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="15" font-family="monospace" font-weight="bold">O(n) Swaps Max</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+124)+'" fill="#8ba5b5" font-size="8">Selection sort preserves Flash/EEPROM endurance</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+136)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+136)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+154)+'" fill="#7e9bab" font-size="9">ASYMPTOTIC RELATIONS</text>';
+  svg+=text(bX+bW/2,bY+180,'C(n) = n(n − 1) / 2 = Θ(n²)','#38bdf8',11);
+  svg+=text(bX+bW/2,bY+202,'Insertion Best Case: C(n) = n − 1 = Θ(n)',orange,9);
+  svg+=text(360,305,'Comparative Invariant: Selection minimizes physical writes · Insertion adapts to existing order',soft,10);
+  return svg;
+ }
 
  const n=p.input;
  const c_lin_worst=n;
@@ -157,6 +204,9 @@ function drawComparativeSim(t,p,v,ink,soft,orange){
   {name:'Binary Search (Average-Case)',col:'#10b981',count:c_bin_avg,scale:'Θ(log₂ n)',desc:'Average successful match = '+c_bin_avg+' comparisons'},
   {name:'Interpolation Search (Avg)',col:'#a855f7',count:c_int_avg,scale:'O(log log n)',desc:'Proportional probe on uniform keys = '+c_int_avg+' comparisons'}
  ];
+
+ svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+ svg+=text(cX+cW/2,cY-14,'SEARCH ALGORITHM COMPARATIVE BENCHMARK (n = '+p.input+')','#e2f0f8',11);
 
  algos.forEach((item,idx)=>{
   const rowY=cY+20+idx*40;
@@ -193,10 +243,57 @@ function drawDynamicSandbox(t,p,v,ink,soft,orange){
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
+ if(cfg.slug==='quadratic-sorting-algorithms'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'KENDALL-TAU INVERSION VECTOR & PAIR MATRIX (n = '+p.input+')','#e2f0f8',11);
+
+  const n=p.input;
+  const totalPairs=Math.round(n*(n-1)/2);
+  const avgInversions=Math.round(totalPairs/2);
+
+  const gridSize=Math.min(9,n);
+  const cellW=32,cellH=18;
+  const gridX=cX+25,gridY=cY+22;
+
+  svg+='<text x="'+gridX+'" y="'+(gridY-5)+'" fill="#7e9bab" font-size="8" font-weight="bold">PAIR INVERSION GRID (SAMPLE UPPER TRIANGLE i < j)</text>';
+  for(let i=0;i<gridSize;i++){
+   for(let j=i+1;j<gridSize;j++){
+    const isInverted=(i+j)%2===1||(i*3+j)%5===0;
+    const px=gridX+(j-1)*(cellW+4);
+    const py=gridY+i*(cellH+4);
+    svg+='<rect x="'+px+'" y="'+py+'" width="'+cellW+'" height="'+cellH+'" rx="2" fill="'+(isInverted?'#ef444433':'#10b98122')+'" stroke="'+(isInverted?'#ef4444':'#10b981')+'" stroke-width="1"/>';
+    svg+='<text x="'+(px+cellW/2)+'" y="'+(py+cellH/2+3)+'" text-anchor="middle" fill="'+(isInverted?'#fca5a5':'#6ee7b7')+'" font-size="7" font-family="monospace">'+(isInverted?'INV':'OK')+'</text>';
+   }
+  }
+
+  svg+='<rect x="'+(cX+15)+'" y="'+(cY+cH-38)+'" width="'+(cW-30)+'" height="30" rx="4" fill="#0e1a22" stroke="#1e3340"/>';
+  svg+='<text x="'+(cX+25)+'" y="'+(cY+cH-20)+'" fill="#38bdf8" font-size="8.5" font-family="monospace">Swap Invariant: Adjacent swap changes inversions I(A) by exactly ±1</text>';
+
+  const bX=470,bY=45,bW=210,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#7e9bab" font-size="9">TOTAL PAIR SPACE n(n − 1)/2</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+54)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+totalPairs+'</text>';
+  svg+='<text x="'+(bX+110)+'" y="'+(bY+50)+'" fill="#8ba5b5" font-size="11">pairs</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+68)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+68)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+88)+'" fill="#7e9bab" font-size="9">EXPECTED INVERSIONS E[I(A)]</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+112)+'" fill="'+ink+'" font-size="17" font-family="monospace" font-weight="bold">'+avgInversions+'</text>';
+  svg+='<text x="'+(bX+95)+'" y="'+(bY+108)+'" fill="#8ba5b5" font-size="9">n(n − 1) / 4</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+124)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+124)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+142)+'" fill="#7e9bab" font-size="9">LOWER BOUND THEOREM</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+166)+'" fill="#fde047" font-size="14" font-family="monospace" font-weight="bold">Ω(n²) swaps</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+184)+'" fill="#8ba5b5" font-size="8">Any adjacent-swap algorithm requires Ω(n²)</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+198)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+198)+'" stroke="#1e3340"/>';
+
+  svg+=text(bX+bW/2,bY+218,'Cayley Distance: at most n − 1 arbitrary swaps',orange,8.5);
+  svg+=text(360,305,'Mathematical Theorem: E[I] = n(n − 1)/4 ⟹ Average adjacent transpositions = Ω(n²)',soft,10);
+  return svg;
+ }
+
  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
  svg+=text(cX+cW/2,cY-14,'BINARY SEARCH DECISION TREE TRAVERSAL','#e2f0f8',11);
 
- const levels=4;
  const nodes=[
   {id:'mid0',label:'mid=n/2',x:cX+cW/2,y:cY+35,col:orange},
   {id:'l1a',label:'< K',x:cX+cW/4,y:cY+85,col:'#38bdf8'},
@@ -245,6 +342,88 @@ function draw(t){
  const ink='#38bdf8',soft='#7e9bab',orange='#f97316';
  if(currentSimMode==='compare'){$('apparatusDiagram').innerHTML=drawComparativeSim(t,p,v,ink,soft,orange);return;}
  if(currentSimMode==='sandbox'){$('apparatusDiagram').innerHTML=drawDynamicSandbox(t,p,v,ink,soft,orange);return;}
+
+ if(cfg.slug==='quadratic-sorting-algorithms'){
+  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
+  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+  const n=p.input;
+  const pairSpace=n*(n-1);
+  const c_total=v.raw;
+
+  svg+='<rect x="35" y="38" width="410" height="235" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+=text(240,24,'Virtual Memory Buffer & Quadratic Sorting Workbench');
+
+  const numBars=14;
+  const barW=22;
+  const startX=55,baseY=195,maxBarH=110;
+  const sortedCount=Math.floor(numBars/3);
+  const scanIdx=sortedCount+3;
+  const minIdx=sortedCount+1;
+
+  svg+='<text x="55" y="60" fill="#7e9bab" font-size="8.5" font-weight="bold">ARRAY BUFFER A[0 .. '+(n-1)+'] (SAMPLE WINDOW)</text>';
+  svg+='<text x="430" y="60" text-anchor="end" fill="'+orange+'" font-size="8.5" font-weight="bold">PASS i = '+Math.floor(n/3)+' / '+(n-1)+'</text>';
+
+  const sampleKeys=[12, 28, 45, 92, 63, 31, 74, 55, 88, 19, 67, 81, 40, 99];
+  for(let i=0;i<numBars;i++){
+   const bx=startX+i*(barW+4);
+   const h=Math.round((sampleKeys[i]/100)*maxBarH);
+   const by=baseY-h;
+   const isSorted=i<sortedCount;
+   const isScanning=i===scanIdx;
+   const isMin=i===minIdx;
+
+   let fillCol='#1e3e52',strokeCol='#334d5c';
+   if(isSorted){fillCol='#065f46';strokeCol='#10b981';}
+   else if(isMin){fillCol='#0c4a6e';strokeCol='#38bdf8';}
+   else if(isScanning){fillCol='#7c2d12';strokeCol=orange;}
+
+   svg+='<rect x="'+bx+'" y="'+by+'" width="'+barW+'" height="'+h+'" rx="2" fill="'+fillCol+'" stroke="'+strokeCol+'" stroke-width="'+(isScanning||isMin?2:1)+'"/>';
+   svg+='<text x="'+(bx+barW/2)+'" y="'+(by-5)+'" text-anchor="middle" fill="'+(isScanning?orange:isMin?'#38bdf8':isSorted?'#34d399':'#8ba5b5')+'" font-size="7.5" font-family="monospace">'+sampleKeys[i]+'</text>';
+   svg+='<text x="'+(bx+barW/2)+'" y="'+(baseY+12)+'" text-anchor="middle" fill="#5a7687" font-size="7">['+i+']</text>';
+  }
+
+  const scanPx=startX+scanIdx*(barW+4)+barW/2;
+  svg+='<polygon points="'+scanPx+','+(baseY+16)+' '+(scanPx-4)+','+(baseY+24)+' '+(scanPx+4)+','+(baseY+24)+'" fill="'+orange+'"/>';
+  svg+='<text x="'+scanPx+'" y="'+(baseY+33)+'" text-anchor="middle" fill="'+orange+'" font-size="7.5" font-weight="bold">j (scan)</text>';
+
+  const minPx=startX+minIdx*(barW+4)+barW/2;
+  svg+='<polygon points="'+minPx+','+(baseY+16)+' '+(minPx-4)+','+(baseY+24)+' '+(minPx+4)+','+(baseY+24)+'" fill="#38bdf8"/>';
+  svg+='<text x="'+minPx+'" y="'+(baseY+33)+'" text-anchor="middle" fill="#38bdf8" font-size="7.5" font-weight="bold">min_idx</text>';
+
+  const sortedPx=startX+(sortedCount-1)*(barW+4)+barW;
+  svg+='<line x1="'+sortedPx+'" y1="70" x2="'+sortedPx+'" y2="'+baseY+'" stroke="#10b981" stroke-width="1.5" stroke-dasharray="3 3"/>';
+  svg+='<text x="'+(startX+sortedCount*(barW+4)/2)+'" y="78" text-anchor="middle" fill="#10b981" font-size="7.5" font-weight="bold">Sorted Prefix</text>';
+
+  const regX=55,regY=235,regW=370,regH=32;
+  svg+='<rect x="'+regX+'" y="'+regY+'" width="'+regW+'" height="'+regH+'" rx="4" fill="#081016" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(regX+10)+'" y="'+(regY+14)+'" fill="#38bdf8" font-size="8" font-family="monospace">ALU Comparator: A[j] < A[min] ? ⟹ Evaluating Pair ('+scanIdx+', '+minIdx+')</text>';
+  svg+='<text x="'+(regX+10)+'" y="'+(regY+26)+'" fill="#8ba5b5" font-size="7.5">Inner comparisons remaining in pass i: '+(n - 1 - Math.floor(n/3))+' comparisons</text>';
+
+  const bX=465,bY=38,bW=220,bH=235;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">ARRAY SIZE (n)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+n+'</text>';
+  svg+='<text x="'+(bX+85)+'" y="'+(bY+46)+'" fill="#8ba5b5" font-size="11">elements</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+64)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+64)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+82)+'" fill="#7e9bab" font-size="9">PAIR SPACE n(n − 1)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+106)+'" fill="'+ink+'" font-size="18" font-family="monospace" font-weight="bold">'+pairSpace+'</text>';
+  svg+='<text x="'+(bX+100)+'" y="'+(bY+104)+'" fill="#8ba5b5" font-size="10">pairs</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+120)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+120)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+138)+'" fill="#7e9bab" font-size="9">KEY COMPARISONS C(n)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+164)+'" fill="#fde047" font-size="20" font-family="monospace" font-weight="bold">'+c_total+'</text>';
+  svg+='<text x="'+(bX+85)+'" y="'+(bY+160)+'" fill="#8ba5b5" font-size="9">n(n − 1) / 2</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+178)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+178)+'" stroke="#1e3340"/>';
+
+  svg+=text(bX+bW/2,bY+200,'C = a_quad · n(n − 1) + b',ink,10);
+  svg+=text(bX+bW/2,bY+218,'Scaling Gradient: a = 0.5000 comp/pair',orange,9);
+
+  svg+=text(360,305,'Algorithmic Complexity: C(n) = n(n − 1) / 2 = Θ(n²) · In-Place Space: O(1) Auxiliary',soft,10);
+  $('apparatusDiagram').innerHTML=svg;
+  return;
+ }
 
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';

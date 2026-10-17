@@ -15,6 +15,12 @@ def observation(c,value):
   raw=int(math.floor(x)+1)
   y=float(raw)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='quadratic-sorting-algorithms':
+  n=float(value)
+  x=n*(n-1.0)
+  raw=int(n*(n-1.0)/2.0)
+  y=float(raw)
+  return {'input':value,'raw':raw,'x':x,'y':y}
  raise ValueError(f"Unknown CS experiment {slug}")
 
 def fit(rows):
@@ -40,6 +46,8 @@ def estimate(c,f):
  slug=c['slug']
  if slug=='search-algorithms-complexity':
   return f['m'],f['slopeSE'],1.0000
+ elif slug=='quadratic-sorting-algorithms':
+  return f['m'],f['slopeSE'],0.5000
  raise ValueError(f"Unknown CS experiment {slug}")
 
 def fmt(v,n=5):
@@ -50,6 +58,9 @@ def formula(c,f):
  if slug=='search-algorithms-complexity':
   val=f['m']*c['resultScale']
   return f"k_search = m = {fmt(val,c['resultDecimals'])} comparisons/bit; Intercept b = {fmt(f['b'],c['resultDecimals'])} comparisons (theoretical intercept = 1.0000)"
+ elif slug=='quadratic-sorting-algorithms':
+  val=f['m']*c['resultScale']
+  return f"a_quad = m = {fmt(val,c['resultDecimals'])} comparisons/pair; Intercept b = {fmt(f['b'],c['resultDecimals'])} comparisons (theoretical a = 0.5000, b = 0.0000)"
  return ""
 
 def worked(c,row):
@@ -59,6 +70,11 @@ def worked(c,row):
   log2n=row['x']
   c_max=row['raw']
   return f"Array Size n = {int(n)} keys; Key Entropy log₂(n) = log₂({int(n)}) = {log2n:.4f} bits.\nWorst-Case Binary Search Key Comparisons: C_max = ⌊log₂(n)⌋ + 1 = ⌊{log2n:.4f}⌋ + 1 = {c_max} comparisons.\nVerification: At each step, remaining search space halves from {int(n)} ⟶ {int(n)//2} ⟶ {int(n)//4} ... terminating in exactly {c_max} iterations."
+ elif slug=='quadratic-sorting-algorithms':
+  n=row['input']
+  x_pairs=row['x']
+  c_ops=row['raw']
+  return f"Array Size n = {int(n)} keys; Directed Pair Space n(n − 1) = {int(n)} × {int(n)-1} = {int(x_pairs)} pairs.\nTotal Unordered Pairs to Compare: C = n(n − 1) / 2 = {int(x_pairs)} / 2 = {c_ops} comparisons.\nVerification: In each pass i from 0 to n−2, exactly n − 1 − i comparisons occur: (n−1) + (n−2) + ... + 1 = {c_ops} comparisons."
  return ""
 
 def uncertainty_text(c):
@@ -73,6 +89,17 @@ def uncertainty_text(c):
    "(3) Hardware spatial prefetchers, which optimize sequential linear access patterns over random binary bisections for small arrays (n ≤ 64); and "
    "(4) Operating system preemptive kernel scheduling interrupts and thread context switches. "
    "Ordinary least-squares regression across systematically doubled array sizes n in [64, 4096] extracts the fundamental scaling multiplier k_search = 1.0000 comparisons/bit with zero residual variance (R² = 1.00000), verifying the asymptotic divide-and-conquer bound Θ(log₂ n) with mathematical certitude."
+  )
+ elif slug=='quadratic-sorting-algorithms':
+  return (
+   "In combinatorial sorting analysis, the comparison count C(n) = n(n − 1)/2 for Selection Sort and worst-case Bubble Sort is an exact deterministic combinatorial identity. "
+   "Unlike noisy analog experimental instrumentation, discrete step counting in virtual machine execution registers exhibits zero random measurement error. "
+   "However, physical hardware execution is influenced by microarchitectural phenomena: "
+   "(1) L1 data cache spatial locality, where contiguous in-place array iterations execute with ~1 ns latency; "
+   "(2) Branch predictor mispredictions during conditional element checks (`if (A[j] < A[min])`), which stall superscalar execution pipelines by 15–20 clock cycles; "
+   "(3) Memory bus write contention during element swaps, where Selection Sort's O(n) write profile heavily outperforms Bubble Sort's O(n²) write churn; and "
+   "(4) CPU dynamic frequency scaling under continuous nested-loop arithmetic. "
+   "Ordinary least-squares linear regression of observed comparisons against permutation pair space x = n(n − 1) yields an empirical scaling slope a_quad = 0.5000 comparisons/pair with zero residual error (R² = 1.00000), rigorously verifying the quadratic complexity bound Θ(n²)."
   )
  return ""
 
@@ -102,8 +129,8 @@ def graph(c,rows,f):
 def theory(c):
  out=[
   '<section class="theory-section">',
-  '<h2>Theoretical Foundations of Search Algorithms and Computational Complexity</h2>',
-  '<p class="intro">In computational science, searching is the algorithmic task of locating a target record or key K within a structured or unstructured data collection. The mathematical formalization of searching establishes the core paradigm of computational complexity: how algorithmic resource consumption scales as a function of problem size n.</p>',
+  f'<h2>Theoretical Foundations of {E(c["shortTitle"])} and Computational Complexity</h2>',
+  f'<p class="intro">{E(c["intro"])}</p>',
   '<div class="theory-grid">'
  ]
  for i,t in enumerate(c['topics'],1):
@@ -115,14 +142,83 @@ def method(c):
  return '<div class="method-steps">'+''.join(f'<article class="method-step"><div class="step-num">{str(i).zfill(2)}</div><div><h3>{E(s["title"])}</h3><p>{E(s["text"])}</p></div></article>' for i,s in enumerate(c['procedure'],1))+'</div>'
 
 def workbench(c):
- return f'''<section aria-label="Interactive workbench"><div class="section-top"><div><div class="eyebrow">COMPUTE · BENCHMARK · ANALYSE</div><h2>Your virtual algorithm laboratory.</h2></div><button id="resetApparatus" class="text-button">Reset benchmark</button></div><div class="new-workbench"><div class="new-visual"><div class="visual-top"><div class="sim-mode-switcher" role="tablist" aria-label="Simulation Views"><button id="simModeBench" class="sim-mode-btn active" data-sim="bench" type="button" role="tab" aria-selected="true"><span class="sim-icon">🔬</span> 1. Algorithm Bench</button><button id="simModeCompare" class="sim-mode-btn" data-sim="compare" type="button" role="tab" aria-selected="false"><span class="sim-icon">⚖️</span> 2. Complexity Comparison</button><button id="simModeSandbox" class="sim-mode-btn" data-sim="sandbox" type="button" role="tab" aria-selected="false"><span class="sim-icon">⚛️</span> 3. Decision Tree Sandbox</button></div><button id="pauseMotion" class="dark-button" hidden>Pause motion</button></div><svg id="apparatusDiagram" viewBox="0 0 720 320" role="img" aria-label="Interactive virtual array and search comparator for {E(c['shortTitle'])}"></svg><div class="new-meter"><div><small>{E(c['rawLabel'].upper())}</small><strong id="readingValue">—</strong></div><div><small>EXECUTION STATUS</small><p id="liveState" style="font-size:11px;margin:7px 0">Ready to execute search complexity benchmark.</p></div></div></div><div class="new-controls"><label for="independent">{E(c['inputLabel'])}</label><output id="independentOut">{c['initial']} {E(c['inputUnit'])}</output><input id="independent" type="range" min="{c['min']}" max="{c['max']}" step="{c['step']}" value="{c['initial']}"><label for="independentNumber">Set {E(c['shortInput'])} ({E(c['inputUnit'])})</label><input id="independentNumber" type="number" min="{c['min']}" max="{c['max']}" step="{c['step']}" value="{c['initial']}"><div class="lab-control-meta">{E(c['settings'][0])}</div><button id="measure" class="primary full">{E(c['measureLabel'])}</button><button id="recordReading" class="secondary full" disabled>＋ Record observation</button><p id="trialStatus" class="trial-status" role="status">Adjust array size n, then execute benchmark.</p></div></div><p class="data-notice">Operation counts are generated deterministically by the exact algorithmic execution model. Modern hardware benchmarks additionally reflect cache line prefetching and branch misprediction penalties.</p><details class="model-note"><summary>Algorithmic assumptions and limits</summary><p>{E(c['limitations'])} {E(c['modelExtra'])}</p></details></section><section id="apparatus" class="lab-section"><h2>Computational tools & environment.</h2><div class="apparatus-list">{''.join('<article class="apparatus-item"><h3>'+E(a['name'])+'</h3><p>'+E(a['purpose'])+'</p></article>' for a in c['apparatus'])}</div></section><section id="method" class="lab-section"><div class="eyebrow">FOLLOW THE METHOD</div><h2>A reason behind every step.</h2><p class="intro">{E(c['aim'])} Suggested independent settings: {", ".join(map(str,c['samples']))} {E(c['inputUnit'])}.</p>{method(c)}</section><section id="results" class="lab-section"><div class="section-top"><div><div class="eyebrow">YOUR NOTEBOOK · <span id="notebookCount">0</span> OBSERVATIONS</div><h2>Turn measurements into asymptotic insight.</h2></div><a class="text-button" href="/computer-science/{c['slug']}/report/">See a complete example report ↗</a></div><div class="lab-result-grid"><div class="chart-card"><svg id="labPlot" viewBox="0 0 650 340" role="img" aria-label="Measured observations and fitted asymptotic graph"></svg><p>Points are your recorded benchmark observations. The regression line validates logarithmic complexity scaling.</p></div><div class="fit-card lab-fit"><span class="eyebrow">LINEAR ASYMPTOTIC FIT · y = mx + b</span><div id="fitSummary"></div><div class="report-equation">{E(c['fitEquation'])}</div></div></div><div class="table-card"><table><thead><tr><th>#</th><th>{E(c['inputLabel'])} ({E(c['inputUnit'])})</th><th>{E(c['rawLabel'])} ({E(c['rawUnit'])})</th><th>{E(c['xAxis'])}</th><th>{E(c['yAxis'])}</th><th>Remove</th></tr></thead><tbody id="readingRows"></tbody></table><p id="emptyReadings">No readings yet. Execute a search benchmark and record it.</p></div><div class="lab-reading-actions"><button id="downloadReadings" class="secondary" disabled>↓ Export CSV</button><button id="clearReadings" class="secondary" disabled>Clear notebook</button></div><div class="source-box"><h3>Calculate it yourself.</h3><label for="studentEstimate">Your estimate of {E(c['target'])} ({E(c['resultUnit'])})</label> <input id="studentEstimate" type="number" step="any" min="0" style="max-width:140px"><button id="checkEstimate" class="secondary" style="margin-left:10px">Check calculation</button><p id="estimateFeedback" role="status"></p></div></section><section id="check" class="lab-section lab-questions"><div class="eyebrow">CHECK YOUR UNDERSTANDING</div><h2>Explain what the operation counts mean.</h2>{''.join('<article class="quiz-card"><h3>'+E(q['question'])+'</h3><div class="quiz-choices">'+''.join('<button class="quiz-option" data-quiz="'+str(i)+'" data-choice="'+str(j)+'">'+E(a)+'</button>' for j,a in enumerate(q['options']))+'</div><p id="quizFeedback'+str(i)+'" class="quiz-feedback" role="status"></p></article>' for i,q in enumerate(c['quiz']))}</section>'''
+ sim_buttons=''.join(
+  f'<button id="simMode{m["id"].capitalize()}" class="sim-mode-btn{" active" if i==0 else ""}" data-sim="{m["id"]}" type="button" role="tab" aria-selected="{"true" if i==0 else "false"}"><span class="sim-icon">{m["icon"]}</span> {E(m["label"])}</button>'
+  for i,m in enumerate(c.get('simModes', [{'id':'bench','icon':'🔬','label':'1. Algorithm Bench'},{'id':'compare','icon':'⚖️','label':'2. Complexity Comparison'},{'id':'sandbox','icon':'⚛️','label':'3. Dynamic Sandbox'}]))
+ )
+ return f'''<section aria-label="Interactive workbench"><div class="section-top"><div><div class="eyebrow">COMPUTE · BENCHMARK · ANALYSE</div><h2>Your virtual algorithm laboratory.</h2></div><button id="resetApparatus" class="text-button">Reset benchmark</button></div><div class="new-workbench"><div class="new-visual"><div class="visual-top"><div class="sim-mode-switcher" role="tablist" aria-label="Simulation Views">{sim_buttons}</div><button id="pauseMotion" class="dark-button" hidden>Pause motion</button></div><svg id="apparatusDiagram" viewBox="0 0 720 320" role="img" aria-label="Interactive virtual array and comparator for {E(c['shortTitle'])}"></svg><div class="new-meter"><div><small>{E(c['rawLabel'].upper())}</small><strong id="readingValue">—</strong></div><div><small>EXECUTION STATUS</small><p id="liveState" style="font-size:11px;margin:7px 0">Ready to execute {E(c['shortInput'])} benchmark.</p></div></div></div><div class="new-controls"><label for="independent">{E(c['inputLabel'])}</label><output id="independentOut">{c['initial']} {E(c['inputUnit'])}</output><input id="independent" type="range" min="{c['min']}" max="{c['max']}" step="{c['step']}" value="{c['initial']}"><label for="independentNumber">Set {E(c['shortInput'])} ({E(c['inputUnit'])})</label><input id="independentNumber" type="number" min="{c['min']}" max="{c['max']}" step="{c['step']}" value="{c['initial']}"><div class="lab-control-meta">{E(c['settings'][0])}</div><button id="measure" class="primary full">{E(c['measureLabel'])}</button><button id="recordReading" class="secondary full" disabled>＋ Record observation</button><p id="trialStatus" class="trial-status" role="status">Adjust {E(c['shortInput'])} n, then execute benchmark.</p></div></div><p class="data-notice">Operation counts are generated deterministically by the exact algorithmic execution model. Modern hardware benchmarks additionally reflect cache line prefetching and branch misprediction penalties.</p><details class="model-note"><summary>Algorithmic assumptions and limits</summary><p>{E(c['limitations'])} {E(c['modelExtra'])}</p></details></section><section id="apparatus" class="lab-section"><h2>Computational tools & environment.</h2><div class="apparatus-list">{''.join('<article class="apparatus-item"><h3>'+E(a['name'])+'</h3><p>'+E(a['purpose'])+'</p></article>' for a in c['apparatus'])}</div></section><section id="method" class="lab-section"><div class="eyebrow">FOLLOW THE METHOD</div><h2>A reason behind every step.</h2><p class="intro">{E(c['aim'])} Suggested independent settings: {", ".join(map(str,c['samples']))} {E(c['inputUnit'])}.</p>{method(c)}</section><section id="results" class="lab-section"><div class="section-top"><div><div class="eyebrow">YOUR NOTEBOOK · <span id="notebookCount">0</span> OBSERVATIONS</div><h2>Turn measurements into asymptotic insight.</h2></div><a class="text-button" href="/computer-science/{c['slug']}/report/">See a complete example report ↗</a></div><div class="lab-result-grid"><div class="chart-card"><svg id="labPlot" viewBox="0 0 650 340" role="img" aria-label="Measured observations and fitted asymptotic graph"></svg><p>Points are your recorded benchmark observations. The regression line validates {E(c['shortTitle'])} complexity scaling.</p></div><div class="fit-card lab-fit"><span class="eyebrow">LINEAR ASYMPTOTIC FIT · y = mx + b</span><div id="fitSummary"></div><div class="report-equation">{E(c['fitEquation'])}</div></div></div><div class="table-card"><table><thead><tr><th>#</th><th>{E(c['inputLabel'])} ({E(c['inputUnit'])})</th><th>{E(c['rawLabel'])} ({E(c['rawUnit'])})</th><th>{E(c['xAxis'])}</th><th>{E(c['yAxis'])}</th><th>Remove</th></tr></thead><tbody id="readingRows"></tbody></table><p id="emptyReadings">No readings yet. Execute a {E(c['shortInput'])} benchmark and record it.</p></div><div class="lab-reading-actions"><button id="downloadReadings" class="secondary" disabled>↓ Export CSV</button><button id="clearReadings" class="secondary" disabled>Clear notebook</button></div><div class="source-box"><h3>Calculate it yourself.</h3><label for="studentEstimate">Your estimate of {E(c['target'])} ({E(c['resultUnit'])})</label> <input id="studentEstimate" type="number" step="any" min="0" style="max-width:140px"><button id="checkEstimate" class="secondary" style="margin-left:10px">Check calculation</button><p id="estimateFeedback" role="status"></p></div></section><section id="check" class="lab-section lab-questions"><div class="eyebrow">CHECK YOUR UNDERSTANDING</div><h2>Explain what the operation counts mean.</h2>{''.join('<article class="quiz-card"><h3>'+E(q['question'])+'</h3><div class="quiz-choices">'+''.join('<button class="quiz-option" data-quiz="'+str(i)+'" data-choice="'+str(j)+'">'+E(a)+'</button>' for j,a in enumerate(q['options']))+'</div><p id="quizFeedback'+str(i)+'" class="quiz-feedback" role="status"></p></article>' for i,q in enumerate(c['quiz']))}</section>'''
+
+def report_narrative(c,rows,f,value,percent,reference):
+ slug=c['slug']
+ if slug=='search-algorithms-complexity':
+  abstract=(
+   f"Seven benchmark trials were generated across input sizes n = {rows[0]['input']} to n = {rows[-1]['input']} {c['inputUnit']}. "
+   f"An ordinary least-squares regression of worst-case key comparisons against logarithmic entropy log₂(n) yielded an empirical complexity multiplier of "
+   f"{fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']}, demonstrating exact agreement with the theoretical divide-and-conquer bound "
+   f"(difference = {percent:.4f}%). The results empirically prove that Binary Search exhibits optimal Θ(log₂ n) asymptotic scaling, outperforming "
+   f"linear search by a factor of over 315× at n = {rows[-1]['input']}."
+  )
+  graph_choice=(
+   f"The mathematical regression fits the linear model y = mx + b, where x = log₂(n) represents input entropy in bits, "
+   f"y = C represents discrete key comparisons, m represents the logarithmic scaling factor, and b represents baseline termination "
+   f"comparison overhead. The gradient has physical units {c['gradientUnit']}."
+  )
+  discussion=(
+   "The empirical benchmark observations perfectly align with the theoretical divide-and-conquer recurrence T(n) = T(n/2) + O(1). "
+   "The slope m = 1.0000 confirms that exactly one additional comparison is required each time the dataset size doubles, illustrating "
+   "how logarithmic algorithms tame exponential data volume growth in modern computer systems."
+  )
+  conclusion=(
+   "This laboratory investigation quantitatively demonstrated the asymptotic complexity of search algorithms. Through empirical "
+   f"benchmarking across arrays ranging from {rows[0]['input']} to {rows[-1]['input']} elements, we verified that Binary Search achieves "
+   f"an optimal logarithmic scaling gradient of k_search = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']}, matching "
+   "the theoretical bound with zero residual error. The experiment highlights why divide-and-conquer is a foundational paradigm of modern "
+   "computational infrastructure."
+  )
+ elif slug=='quadratic-sorting-algorithms':
+  abstract=(
+   f"Seven benchmark trials were generated across input sizes n = {rows[0]['input']} to n = {rows[-1]['input']} elements "
+   f"(permutation pair space x = n(n − 1) from {int(rows[0]['x'])} to {int(rows[-1]['x'])} pairs). An ordinary least-squares regression "
+   f"of key comparisons C against permutation pair space yielded an empirical quadratic scaling coefficient of "
+   f"{fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']}, demonstrating exact agreement with the combinatorial identity "
+   f"C(n) = 1/2 n(n − 1) (difference = {percent:.4f}%). The empirical telemetry proves that while Bubble, Selection, and Insertion Sort "
+   f"all share Θ(n²) worst-case comparison complexity, Selection Sort strictly minimizes memory bus write amplification to at most n − 1 "
+   f"element swaps (2n − 2 writes), compared to Bubble Sort's up to n(n − 1)/2 swaps (~3× writes per swap), explaining why Selection Sort "
+   "is preferred in Flash/EEPROM architectures."
+  )
+  graph_choice=(
+   f"The mathematical regression fits the linear model y = mx + b, where x = n(n − 1) represents the total permutation pair space in pairs, "
+   f"y = C represents discrete key comparisons, m represents the quadratic scaling coefficient a_quad, and b represents baseline comparison "
+   f"overhead. The gradient has physical units {c['gradientUnit']}."
+  )
+  discussion=(
+   "The empirical benchmark observations perfectly align with the combinatorial pair summation C(n) = ∑_{i=1}^{n-1} (n − i) = n(n − 1)/2. "
+   "The slope m = 0.5000 confirms that exactly half of the directed pair space is compared in an unordered array. Furthermore, the inversion "
+   "analysis demonstrates why any algorithm relying strictly on adjacent element swaps requires Ω(n²) comparisons on average, as each adjacent "
+   "swap can eliminate at most one Kendall-tau inversion from an initial expectation of n(n − 1)/4 inversions. Finally, the hardware telemetry "
+   f"highlights the critical trade-off between comparisons and memory write amplification: Selection Sort achieves identical comparisons "
+   f"to Bubble Sort while reducing physical memory writes by a factor of over 35× at n = {rows[-1]['input']}."
+  )
+  conclusion=(
+   "This laboratory investigation quantitatively verified the asymptotic complexity and microarchitectural behavior of quadratic sorting "
+   f"algorithms. Through systematic benchmarking across arrays from {rows[0]['input']} to {rows[-1]['input']} elements, we verified the "
+   f"quadratic scaling multiplier a_quad = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']}, matching theoretical predictions "
+   "with an ideal R² = 1.00000. The investigation established the theoretical necessity of non-adjacent partition and exchange primitives "
+   "(such as Quicksort and Heapsort) to overcome the Ω(n²) barrier imposed by pairwise adjacent transpositions."
+  )
+ else:
+  abstract=f"Empirical benchmark trials were generated across input sizes for {c['title']}."
+  graph_choice=f"Regression fits y = mx + b for {c['fitEquation']}."
+  discussion=f"Empirical observations align with theoretical bound {fmt(reference*c['resultScale'],c['resultDecimals'])} {c['resultUnit']}."
+  conclusion=f"Quantitative benchmarking verified complexity scaling for {c['title']}."
+ return abstract, graph_choice, discussion, conclusion
 
 def report(c,rows,f,out):
  slug=c['slug']
  csvpath=f"/computer-science/{slug}/sample-data.csv"
  csv_content=io.StringIO()
  writer=csv.writer(csv_content)
- writer.writerow(['experiment','array_size_n','key_comparisons','log2_n_bits','fitted_comparisons','residual'])
+ writer.writerow(['experiment',c['shortInput'].replace(' ','_')+'_n','key_comparisons','x_metric','fitted_comparisons','residual'])
  for r in rows:
   fit_y=f['m']*r['x']+f['b']
   writer.writerow([slug,r['input'],r['raw'],f"{r['x']:.4f}",f"{fit_y:.4f}",f"{r['y']-fit_y:.4f}"])
@@ -131,13 +227,14 @@ def report(c,rows,f,out):
  value,se,reference=estimate(c,f)
  percent=abs(value-reference)/reference*100
  uncertainty=uncertainty_text(c)
+ abstract,graph_choice,discussion,conclusion=report_narrative(c,rows,f,value,percent,reference)
 
  obs="".join(
   f"<tr><td>{i+1}</td><td>{r['input']}</td><td>{r['raw']}</td><td>{r['x']:.4f}</td><td>{r['y']:.4f}</td><td>{f['m']*r['x']+f['b']:.4f}</td><td>{r['y']-(f['m']*r['x']+f['b']):.4f}</td></tr>"
   for i,r in enumerate(rows)
  )
 
- return f'''<div class="section-top"><div><div class="eyebrow">WORKED EXAMPLE · BENCHMARK OBSERVATIONS</div><h2>A complete example laboratory report.</h2></div><button class="secondary" onclick="window.print()">Print / save as PDF</button></div><div class="report-notice"><strong>Simulated demonstration data.</strong><p>This report illustrates formal algorithmic benchmarking, operation counting arithmetic, and regression analysis. Replace its observations with your own benchmark telemetry when preparing a practical submission.</p></div><div class="report-person"><span>Student: __________________</span><span>Student ID: __________________</span><span>Course: __________________</span><span>Date: __________________</span><span>Partner: __________________</span><span>Instructor: __________________</span></div><article class="lab-report"><h3>1. Title and aim</h3><p><strong>{E(c['title'])}.</strong> {E(c['aim'])}</p><h3>2. Abstract</h3><p>Seven benchmark trials were generated across input sizes n = 64 to n = 4096 elements. An ordinary least-squares regression of worst-case key comparisons against logarithmic entropy log₂(n) yielded an empirical complexity multiplier of {fmt(value*c['resultScale'],c['resultDecimals'])} {E(c['resultUnit'])}, demonstrating exact agreement with the theoretical divide-and-conquer bound (difference = {percent:.4f}%). The results empirically prove that Binary Search exhibits optimal Θ(log₂ n) asymptotic scaling, outperforming linear search by a factor of over 315× at n = 4096.</p><h3>3. Apparatus and fixed settings</h3><ul>{''.join('<li>'+E(a['name'])+': '+E(a['purpose'])+'</li>' for a in c['apparatus'])}{''.join('<li>'+E(s)+'</li>' for s in c['settings'])}</ul><h3>4. Theory and graph choice</h3><p>{E(c['intro'])}</p><div class="report-equation">{E(c['fitEquation'])}</div><p>The mathematical regression fits the linear model y = mx + b, where x = log₂(n) represents input entropy in bits, y = C represents discrete key comparisons, m represents the logarithmic scaling factor, and b represents baseline termination comparison overhead. The gradient has physical units {E(c['gradientUnit'])}.</p><h3>5. Method</h3><ol>{''.join('<li>'+E(s['text'])+'</li>' for s in c['procedure'])}</ol><h3>6. Observations and calculation table</h3><p>All benchmark observations use strictly ascending monotonic arrays. Values are recorded deterministically from the algorithmic comparator register. Residuals are computed relative to the ordinary least-squares regression line.</p><div class="table-card"><table><caption>Table 1. Seven simulated algorithmic benchmarks; x and y represent computational state metrics.</caption><thead><tr><th>No.</th><th>{E(c['inputLabel'])} ({E(c['inputUnit'])})</th><th>{E(c['rawLabel'])} ({E(c['rawUnit'])})</th><th>x (log₂ n)</th><th>y (C)</th><th>Fitted y (C)</th><th>Residual (C)</th></tr></thead><tbody>{obs}</tbody></table></div><p><a href="{csvpath}" download>Download the sample observations (CSV) ↓</a></p><h3>7. Worked calculation for one observation</h3><div class="report-equation">{E(worked(c,rows[0]))}</div><h3>8. Graph, gradient and final calculation</h3><div class="chart-card">{graph(c,rows,f)}</div><p>Circular markers represent empirical benchmark observations. The solid line represents the ordinary least-squares asymptotic linear fit.</p><div class="report-equation">x̄ = {fmt(f['mx'])}; ȳ = {fmt(f['my'])}<br>Σ(x − x̄)² = {fmt(f['sxx'])}<br>Σ(x − x̄)(y − ȳ) = {fmt(f['sxy'])}<br>m = Σ(x − x̄)(y − ȳ) / Σ(x − x̄)² = {fmt(f['m'],8)}<br>b = ȳ − mx̄ = {fmt(f['b'],8)}<br>{E(formula(c,f))}</div><h3>9. Uncertainty and comparison</h3><p>Percentage difference = |estimate − theoretical value| / |theoretical value| × 100 = <strong>{percent:.4f}%</strong>.</p><p>For n = 7 benchmark observations, Σresidual² = {fmt(f['sse'])}; s² = Σresidual²/(n − 2). Gradient standard error = √[s²/Σ(x − x̄)²] = {fmt(f['slopeSE'])}. Intercept standard error = √[s²(1/n + x̄²/Σ(x − x̄)²)] = {fmt(f['interceptSE'])}.</p><p>Propagating the fit parameters yields a <strong>fit standard error of {fmt(se*c['resultScale'])} {E(c['resultUnit'])}</strong>, with an ideal coefficient of determination R² = {f['r2']:.6f}.</p><p>{E(uncertainty)}</p><h3>10. Result and discussion</h3><div class="report-equation">{E(c['target'])} = {fmt(value*c['resultScale'],c['resultDecimals'])} {E(c['resultUnit'])}<br>Theoretical reference value: {fmt(reference*c['resultScale'],c['resultDecimals'])} {E(c['resultUnit'])}</div><p>The empirical benchmark observations perfectly align with the theoretical divide-and-conquer recurrence T(n) = T(n/2) + O(1). The slope m = 1.0000 confirms that exactly one additional comparison is required each time the dataset size doubles, illustrating how logarithmic algorithms tame exponential data volume growth in modern computer systems.</p><h3>11. Precautions and limitations</h3><ul>{''.join('<li>'+E(p)+'</li>' for p in c['precautions'])}</ul><p>{E(c['limitations'])} {E(c['modelExtra'])}</p><h3>12. Conclusion</h3><p>This laboratory investigation quantitatively demonstrated the asymptotic complexity of search algorithms. Through empirical benchmarking across arrays ranging from 64 to 4096 elements, we verified that Binary Search achieves an optimal logarithmic scaling gradient of k_search = {fmt(value*c['resultScale'],c['resultDecimals'])} {E(c['resultUnit'])}, matching the theoretical bound with zero residual error. The experiment highlights why divide-and-conquer is a foundational paradigm of modern computational infrastructure.</p></article>'''
+ return f'''<div class="section-top"><div><div class="eyebrow">WORKED EXAMPLE · BENCHMARK OBSERVATIONS</div><h2>A complete example laboratory report.</h2></div><button class="secondary" onclick="window.print()">Print / save as PDF</button></div><div class="report-notice"><strong>Simulated demonstration data.</strong><p>This report illustrates formal algorithmic benchmarking, operation counting arithmetic, and regression analysis. Replace its observations with your own benchmark telemetry when preparing a practical submission.</p></div><div class="report-person"><span>Student: __________________</span><span>Student ID: __________________</span><span>Course: __________________</span><span>Date: __________________</span><span>Partner: __________________</span><span>Instructor: __________________</span></div><article class="lab-report"><h3>1. Title and aim</h3><p><strong>{E(c['title'])}.</strong> {E(c['aim'])}</p><h3>2. Abstract</h3><p>{E(abstract)}</p><h3>3. Apparatus and fixed settings</h3><ul>{''.join('<li>'+E(a['name'])+': '+E(a['purpose'])+'</li>' for a in c['apparatus'])}{''.join('<li>'+E(s)+'</li>' for s in c['settings'])}</ul><h3>4. Theory and graph choice</h3><p>{E(c['intro'])}</p><div class="report-equation">{E(c['fitEquation'])}</div><p>{E(graph_choice)}</p><h3>5. Method</h3><ol>{''.join('<li>'+E(s['text'])+'</li>' for s in c['procedure'])}</ol><h3>6. Observations and calculation table</h3><p>All benchmark observations use strictly controlled memory buffers. Values are recorded deterministically from the algorithmic comparator register. Residuals are computed relative to the ordinary least-squares regression line.</p><div class="table-card"><table><caption>Table 1. Seven simulated algorithmic benchmarks; x and y represent computational state metrics.</caption><thead><tr><th>No.</th><th>{E(c['inputLabel'])} ({E(c['inputUnit'])})</th><th>{E(c['rawLabel'])} ({E(c['rawUnit'])})</th><th>{E(c['xAxis'])}</th><th>{E(c['yAxis'])}</th><th>Fitted y</th><th>Residual</th></tr></thead><tbody>{obs}</tbody></table></div><p><a href="{csvpath}" download>Download the sample observations (CSV) ↓</a></p><h3>7. Worked calculation for one observation</h3><div class="report-equation">{E(worked(c,rows[0]))}</div><h3>8. Graph, gradient and final calculation</h3><div class="chart-card">{graph(c,rows,f)}</div><p>Circular markers represent empirical benchmark observations. The solid line represents the ordinary least-squares asymptotic linear fit.</p><div class="report-equation">x̄ = {fmt(f['mx'])}; ȳ = {fmt(f['my'])}<br>Σ(x − x̄)² = {fmt(f['sxx'])}<br>Σ(x − x̄)(y − ȳ) = {fmt(f['sxy'])}<br>m = Σ(x − x̄)(y − ȳ) / Σ(x − x̄)² = {fmt(f['m'],8)}<br>b = ȳ − mx̄ = {fmt(f['b'],8)}<br>{E(formula(c,f))}</div><h3>9. Uncertainty and comparison</h3><p>Percentage difference = |estimate − theoretical value| / |theoretical value| × 100 = <strong>{percent:.4f}%</strong>.</p><p>For n = 7 benchmark observations, Σresidual² = {fmt(f['sse'])}; s² = Σresidual²/(n − 2). Gradient standard error = √[s²/Σ(x − x̄)²] = {fmt(f['slopeSE'])}. Intercept standard error = √[s²(1/n + x̄²/Σ(x − x̄)²)] = {fmt(f['interceptSE'])}.</p><p>Propagating the fit parameters yields a <strong>fit standard error of {fmt(se*c['resultScale'])} {E(c['resultUnit'])}</strong>, with an ideal coefficient of determination R² = {f['r2']:.6f}.</p><p>{E(uncertainty)}</p><h3>10. Result and discussion</h3><div class="report-equation">{E(c['target'])} = {fmt(value*c['resultScale'],c['resultDecimals'])} {E(c['resultUnit'])}<br>Theoretical reference value: {fmt(reference*c['resultScale'],c['resultDecimals'])} {E(c['resultUnit'])}</div><p>{E(discussion)}</p><h3>11. Precautions and limitations</h3><ul>{''.join('<li>'+E(p)+'</li>' for p in c['precautions'])}</ul><p>{E(c['limitations'])} {E(c['modelExtra'])}</p><h3>12. Conclusion</h3><p>{E(conclusion)}</p></article>'''
 
 def lesson_schema(c,part,path,title,desc,base):
  graph=[{'@type':'BreadcrumbList','itemListElement':[{'@type':'ListItem','position':1,'name':'Open STEM Lab','item':base+'/'},{'@type':'ListItem','position':2,'name':'Computer Science Laboratory','item':base+'/subjects/computer-science/'},{'@type':'ListItem','position':3,'name':c['shortTitle'],'item':base+f'/computer-science/{c["slug"]}/'}]}]
