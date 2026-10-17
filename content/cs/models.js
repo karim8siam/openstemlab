@@ -62,6 +62,15 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:raw/1000.0,x,y,valid:n>=32&&n<=8192};
  }
+ if(slug==='hash-tables-collision-resolution'){
+  const n=Number(input);
+  const m_cap=1000;
+  const alpha=n/m_cap;
+  const x=1/(1 - alpha);
+  const raw=round(x, 4);
+  const y=raw;
+  return {raw,ideal:raw,period:raw/5.0,x,y,valid:n>=100&&n<=950};
+ }
  throw Error('Unknown CS experiment: '+slug);
 }
 
@@ -102,6 +111,13 @@ function reading(slug,input,raw){
  if(slug==='binary-heaps-priority-queues'){
   const n=Number(input);
   x=n - Math.log2(n);
+  y=raw;
+ }
+ if(slug==='hash-tables-collision-resolution'){
+  const n=Number(input);
+  const m_cap=1000;
+  const alpha=n/m_cap;
+  x=1/(1 - alpha);
   y=raw;
  }
  return {input,raw,x,y};
@@ -151,6 +167,9 @@ function estimate(slug,f){
  }
  if(slug==='binary-heaps-priority-queues'){
   return {value:f.m,se:f.slopeSE,reference:2.0000};
+ }
+ if(slug==='hash-tables-collision-resolution'){
+  return {value:f.m,se:f.slopeSE,reference:1.0000};
  }
  throw Error('Unknown CS experiment: '+slug);
 }

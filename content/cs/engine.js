@@ -140,6 +140,57 @@ function drawComparativeSim(t,p,v,ink,soft,orange){
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
+ if(cfg.slug==='hash-tables-collision-resolution'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'COLLISION RESOLUTION PROBE COMPARISON (m = 1000 · n = '+p.input+')','#e2f0f8',11);
+
+  const n=p.input;
+  const alpha=n/1000.0;
+  const c_chain=(alpha).toFixed(2);
+  const c_double=(1.0/(1.0 - alpha)).toFixed(2);
+  const c_quad=(1.0 - Math.log(1.0 - alpha) - alpha/2.0).toFixed(2);
+  const c_linear=(0.5*(1.0 + 1.0/((1.0 - alpha)**2))).toFixed(2);
+  const c_swiss='1.00';
+
+  const strategies=[
+   {name:'Swiss Tables (16-Way SIMD Vector)',col:'#a855f7',cost:c_swiss,scale:'~1.00 vector probe',desc:'16 control bytes tested in 1 cycle via SSE2/AVX2; zero cache misses'},
+   {name:'Separate Chaining (Linked Buckets)',col:'#10b981',cost:c_chain,scale:'α = '+alpha.toFixed(2)+' probes',desc:'Linear degradation; no saturation limit; non-contiguous heap pointer hops'},
+   {name:'Double Hashing (Coprime Strides)',col:'#38bdf8',cost:c_double,scale:'1/(1−α) probes',desc:'Optimal open addressing; eliminates both primary & secondary clustering'},
+   {name:'Quadratic Probing (Triangular Steps)',col:'#f97316',cost:c_quad,scale:'1−ln(1−α)−α/2',desc:'Eliminates primary clustering runs; mild secondary clustering'},
+   {name:'Linear Probing (Sequential Stepping)',col:'#ef4444',cost:c_linear,scale:'0.5(1 + 1/(1−α)²)',desc:'Severe primary clustering; contiguous runs act as gravitational attractors'}
+  ];
+
+  strategies.forEach((item,idx)=>{
+   const rowY=cY+16+idx*42;
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+12)+'" fill="#dcebf2" font-size="8.5" font-weight="bold">'+item.name+'</text>';
+   svg+='<text x="'+(cX+cW-15)+'" y="'+(rowY+12)+'" text-anchor="end" fill="'+item.col+'" font-size="8.5" font-family="monospace" font-weight="bold">'+item.cost+' probes ('+item.scale+')</text>';
+   
+   const barX=cX+15,barY=rowY+16,barMaxW=cW-30;
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barMaxW+'" height="7" rx="2" fill="#16242c"/>';
+   const maxVal=Math.max(10, parseFloat(c_linear));
+   const frac=Math.min(1.0,Math.log10(parseFloat(item.cost)+1)/Math.log10(maxVal+1));
+   const fillW=Math.max(4,frac*barMaxW);
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+fillW+'" height="7" rx="2" fill="'+item.col+'"/>';
+  });
+
+  const bX=460,bY=45,bW=220,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">PRIMARY CLUSTERING PENALTY</text>';
+  const linOverDouble=(parseFloat(c_linear)/Math.max(0.1, parseFloat(c_double))).toFixed(1);
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+linOverDouble+'×</text>';
+  svg+='<text x="'+(bX+95)+'" y="'+(bY+46)+'" fill="#dcebf2" font-size="10">Linear vs Double</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#7e9bab" font-size="9">UNSUCCESSFUL PROBE BOUND</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="15" font-family="monospace" font-weight="bold">'+c_double+' vs '+c_linear+' probes</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+124)+'" fill="#8ba5b5" font-size="8">Double: 1/(1−α) · Linear: 0.5(1 + 1/(1−α)²)</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+136)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+136)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+154)+'" fill="#7e9bab" font-size="9">METADATA CACHE EFFICIENCY</text>';
+  svg+=text(bX+bW/2,bY+180,'Swiss Table: 1 Byte/slot (Control array)','#10b981',9.5);
+  svg+=text(bX+bW/2,bY+202,'Chaining: 24 Bytes/node (600% overhead)',orange,8.5);
+  svg+=text(360,305,'Comparative Invariant: Double Hashing achieves optimal 1/(1−α) probe depth without primary clustering degradation',soft,10);
+  return svg;
+ }
+
  if(cfg.slug==='binary-heaps-priority-queues'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
   svg+=text(cX+cW/2,cY-14,'PRIORITY QUEUE IMPLEMENTATION & EXTRACTION BENCHMARK (n = '+p.input+')','#e2f0f8',11);
@@ -546,6 +597,69 @@ function drawDynamicSandbox(t,p,v,ink,soft,orange){
  const cX=45,cY=45,cW=400,cH=230;
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+ if(cfg.slug==='hash-tables-collision-resolution'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'PRIMARY CLUSTERING CASCADE & AVALANCHE SANDBOX (n = '+p.input+')','#e2f0f8',11);
+
+  // Top header for array segment
+  svg+='<text x="'+(cX+15)+'" y="'+(cY+22)+'" fill="#ef4444" font-size="8.5" font-weight="bold">LINEAR PROBE GRAVITATIONAL CLUSTER (SLOTS 3..7 OCCUPIED · L = 5)</text>';
+
+  // Contiguous slot array representation
+  const arrY=cY+42,slotW=28,slotH=38,startX=cX+18;
+  const slots=[
+   {idx:0,val:'NULL',occ:false},{idx:1,val:'NULL',occ:false},{idx:2,val:'NULL',occ:false},
+   {idx:3,val:'512',occ:true},{idx:4,val:'108',occ:true},{idx:5,val:'934',occ:true},
+   {idx:6,val:'427',occ:true},{idx:7,val:'615',occ:true},{idx:8,val:'+743',occ:true,isNew:true},
+   {idx:9,val:'NULL',occ:false},{idx:10,val:'NULL',occ:false},{idx:11,val:'NULL',occ:false}
+  ];
+
+  slots.forEach((s,i)=>{
+   const sX=startX+i*(slotW+3);
+   const fillCol=s.isNew?'#431407':s.occ?'#1e293b':'#050b0e';
+   const strokeCol=s.isNew?orange:s.occ?'#ef4444':'#1e3340';
+   svg+='<rect x="'+sX+'" y="'+arrY+'" width="'+slotW+'" height="'+slotH+'" rx="3" fill="'+fillCol+'" stroke="'+strokeCol+'" stroke-width="'+(s.isNew||s.occ?1.5:1)+'"/>';
+   svg+='<text x="'+(sX+slotW/2)+'" y="'+(arrY+12)+'" text-anchor="middle" fill="#64748b" font-size="6" font-family="monospace">['+s.idx+']</text>';
+   svg+='<text x="'+(sX+slotW/2)+'" y="'+(arrY+28)+'" text-anchor="middle" fill="'+(s.isNew?orange:s.occ?'#fca5a5':'#334155')+'" font-size="7" font-weight="bold">'+s.val+'</text>';
+  });
+
+  // Collision Hop Arrows from slot 4 to slot 8
+  const hopY=arrY-10;
+  svg+='<path d="M '+(startX+4*(slotW+3)+slotW/2)+' '+arrY+' Q '+(startX+6*(slotW+3))+' '+(arrY-22)+' '+(startX+8*(slotW+3)+slotW/2)+' '+arrY+'" fill="none" stroke="'+orange+'" stroke-width="2" stroke-dasharray="3,2"/>';
+  svg+='<polygon points="'+(startX+8*(slotW+3)+slotW/2)+','+arrY+' '+(startX+8*(slotW+3)+slotW/2-4)+','+(arrY-7)+' '+(startX+8*(slotW+3)+slotW/2+4)+','+(arrY-7)+'" fill="'+orange+'"/>';
+  svg+='<text x="'+(startX+6*(slotW+3))+'" y="'+(arrY-25)+'" text-anchor="middle" fill="'+orange+'" font-size="7" font-weight="bold">Key 743 hashes to [4] ⟶ 4 Collision Hops ⟶ Committed at [8]</text>';
+
+  // Probability comparison box
+  const prX=cX+15,prY=cY+92,prW=cW-30,prH=50;
+  svg+='<rect x="'+prX+'" y="'+prY+'" width="'+prW+'" height="'+prH+'" rx="4" fill="#050b0e" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(prX+12)+'" y="'+(prY+16)+'" fill="#38bdf8" font-size="8" font-weight="bold">GRAVITATIONAL ATTRACTION PROBABILITY THEOREM</text>';
+  svg+='<text x="'+(prX+12)+'" y="'+(prY+30)+'" fill="#dcebf2" font-size="7.5" font-family="monospace">P(hitting empty slot [8]) = (L + 1) / m = (5 + 1) / 1000 = 0.0060 (6× baseline!)</text>';
+  svg+='<text x="'+(prX+12)+'" y="'+(prY+42)+'" fill="#ef4444" font-size="7" font-family="monospace">P(hitting isolated slot [0]) = 1 / m = 1 / 1000 = 0.0010</text>';
+
+  // Code sequence box
+  const cdX=cX+15,cdY=cY+148,cdW=cW-30,cdH=72;
+  svg+='<rect x="'+cdX+'" y="'+cdY+'" width="'+cdW+'" height="'+cdH+'" rx="4" fill="#050b0e" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(cdX+12)+'" y="'+(cdY+16)+'" fill="#10b981" font-size="8" font-weight="bold">DOUBLE HASHING RESOLUTION (AVOIDING CLUSTERING CASCADE)</text>';
+  svg+='<text x="'+(cdX+12)+'" y="'+(cdY+32)+'" fill="#38bdf8" font-size="7.5" font-family="monospace">1: int h1 = hash1(k) % m; int h2 = 1 + (hash2(k) % (m - 1)); // Coprime stride</text>';
+  svg+='<text x="'+(cdX+12)+'" y="'+(cdY+46)+'" fill="#10b981" font-size="7.5" font-family="monospace">2: for (int i = 0; i &lt; m; ++i) { int idx = (h1 + i * h2) % m; // Divergent cyclic path</text>';
+  svg+='<text x="'+(cdX+12)+'" y="'+(cdY+60)+'" fill="'+orange+'" font-size="7.5" font-family="monospace">3:   if (table[idx] == NULL) { table[idx] = k; break; } } // Zero cluster merging</text>';
+
+  const bX=465,bY=45,bW=210,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#7e9bab" font-size="9">CLUSTER ATTRACTION MULTIPLIER</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+54)+'" fill="'+orange+'" font-size="24" font-family="monospace" font-weight="bold">6.0×</text>';
+  svg+='<text x="'+(bX+85)+'" y="'+(bY+50)+'" fill="#8ba5b5" font-size="10">vs Isolated Slot</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+84)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+84)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+102)+'" fill="#7e9bab" font-size="9">KNUTH CLUSTERING PENALTY</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+124)+'" fill="'+ink+'" font-size="16" font-family="monospace" font-weight="bold">(1 − α)⁻²</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+140)+'" fill="#8ba5b5" font-size="8">Quadratic expansion of probe length</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+154)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+154)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+172)+'" fill="#7e9bab" font-size="9">DOUBLE HASHING COUNTERMEASURE</text>';
+  svg+=text(bX+bW/2,bY+194,'h(k,i) = (h₁ + i·h₂) mod m','#38bdf8',9.5);
+  svg+=text(bX+bW/2,bY+212,'Strict gcd(h₂, m) = 1 (Coprimality)',orange,8.5);
+  svg+=text(360,305,'Sandbox Invariant: In linear probing, contiguous runs act as gravitational attractors, expanding at rate proportional to cluster length',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='binary-heaps-priority-queues'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
@@ -1099,6 +1213,97 @@ function draw(t){
  const ink='#38bdf8',soft='#7e9bab',orange='#f97316';
  if(currentSimMode==='compare'){$('apparatusDiagram').innerHTML=drawComparativeSim(t,p,v,ink,soft,orange);return;}
  if(currentSimMode==='sandbox'){$('apparatusDiagram').innerHTML=drawDynamicSandbox(t,p,v,ink,soft,orange);return;}
+
+ if(cfg.slug==='hash-tables-collision-resolution'){
+  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
+  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+  const n=p.input;
+  const alpha=n/1000.0;
+  const p_exp=v.raw;
+  const x_coord=(1.0/(1.0 - alpha));
+
+  svg+='<rect x="35" y="38" width="410" height="235" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+=text(240,24,'Open Addressing Hash Table Architecture & Double Hashing Path');
+
+  svg+='<text x="50" y="56" fill="#7e9bab" font-size="8.5" font-weight="bold">TABLE SLOTS [m = 1000] · n = '+n+' KEYS · LOAD FACTOR α = '+alpha.toFixed(2)+'</text>';
+
+  // Representative array slots (14 slots)
+  const slotW=25,slotH=42,startX=48,arrY=75;
+  const slots=[
+   {idx:0,val:'NULL',occ:false,isPath:false},
+   {idx:1,val:'412',occ:true,isPath:false},
+   {idx:2,val:'791',occ:true,isPath:true},
+   {idx:3,val:'NULL',occ:false,isPath:false},
+   {idx:4,val:'155',occ:true,isPath:false},
+   {idx:5,val:'683',occ:true,isPath:false},
+   {idx:6,val:'NULL',occ:false,isPath:false},
+   {idx:7,val:'920',occ:true,isPath:true},
+   {idx:8,val:'NULL',occ:false,isPath:false},
+   {idx:9,val:'347',occ:true,isPath:false},
+   {idx:10,val:'NULL',occ:false,isPath:false},
+   {idx:11,val:'582',occ:true,isPath:false},
+   {idx:12,val:'+773',occ:true,isPath:true,isNew:true},
+   {idx:13,val:'NULL',occ:false,isPath:false}
+  ];
+
+  slots.forEach((s,i)=>{
+   const sX=startX+i*(slotW+2);
+   const fillCol=s.isNew?'#431407':s.isPath?'#1e293b':s.occ?'#0f172a':'#081016';
+   const strokeCol=s.isNew?orange:s.isPath?'#ef4444':s.occ?'#38bdf8':'#1e3340';
+   svg+='<rect x="'+sX+'" y="'+arrY+'" width="'+slotW+'" height="'+slotH+'" rx="3" fill="'+fillCol+'" stroke="'+strokeCol+'" stroke-width="'+(s.isPath||s.isNew?1.5:1)+'"/>';
+   svg+='<text x="'+(sX+slotW/2)+'" y="'+(arrY+12)+'" text-anchor="middle" fill="#64748b" font-size="5.5" font-family="monospace">['+s.idx+']</text>';
+   svg+='<text x="'+(sX+slotW/2)+'" y="'+(arrY+28)+'" text-anchor="middle" fill="'+(s.isNew?orange:s.isPath?'#fca5a5':s.occ?'#38bdf8':'#334155')+'" font-size="6.5" font-weight="bold">'+s.val+'</text>';
+  });
+
+  // Probe path hopping curve: 2 -> 7 -> 12
+  const p2X=startX+2*(slotW+2)+slotW/2;
+  const p7X=startX+7*(slotW+2)+slotW/2;
+  const p12X=startX+12*(slotW+2)+slotW/2;
+  const hopY=arrY-10;
+
+  // Hop 1: 2 to 7
+  svg+='<path d="M '+p2X+' '+arrY+' Q '+((p2X+p7X)/2)+' '+(arrY-22)+' '+p7X+' '+arrY+'" fill="none" stroke="'+orange+'" stroke-width="2" stroke-dasharray="3,2"/>';
+  svg+='<polygon points="'+p7X+','+arrY+' '+(p7X-3)+','+(arrY-6)+' '+(p7X+3)+','+(arrY-6)+'" fill="'+orange+'"/>';
+
+  // Hop 2: 7 to 12
+  svg+='<path d="M '+p7X+' '+arrY+' Q '+((p7X+p12X)/2)+' '+(arrY-22)+' '+p12X+' '+arrY+'" fill="none" stroke="#10b981" stroke-width="2" stroke-dasharray="3,2"/>';
+  svg+='<polygon points="'+p12X+','+arrY+' '+(p12X-3)+','+(arrY-6)+' '+(p12X+3)+','+(arrY-6)+'" fill="#10b981"/>';
+
+  // Path narration box
+  const nbX=50,nbY=135,nbW=380,nbH=45;
+  svg+='<rect x="'+nbX+'" y="'+nbY+'" width="'+nbW+'" height="'+nbH+'" rx="4" fill="#081016" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(nbX+10)+'" y="'+(nbY+16)+'" fill="'+orange+'" font-size="8" font-family="monospace">Search Query K = 773: Base h₁(K) = 2 (Occupied, 791) [Probe 1]</text>';
+  svg+='<text x="'+(nbX+10)+'" y="'+(nbY+28)+'" fill="'+orange+'" font-size="8" font-family="monospace">Stride h₂(K) = 5 ⟶ Slot 7 (Occupied, 920) [Probe 2]</text>';
+  svg+='<text x="'+(nbX+10)+'" y="'+(nbY+40)+'" fill="#10b981" font-size="8" font-family="monospace">Stride + 5 ⟶ Slot 12 (Found NULL/Target!) [Terminated in 3 probes]</text>';
+
+  // Telemetry box below array
+  const regX=50,regY=192,regW=380,regH=65;
+  svg+='<rect x="'+regX+'" y="'+regY+'" width="'+regW+'" height="'+regH+'" rx="4" fill="#081016" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(regX+10)+'" y="'+(regY+16)+'" fill="#38bdf8" font-size="7.5" font-family="monospace">Knuth Model: E[P_unsuccessful] = 1 / (1 − α) = '+p_exp.toFixed(4)+' probes</text>';
+  svg+='<text x="'+(regX+10)+'" y="'+(regY+30)+'" fill="#dcebf2" font-size="7" font-family="monospace">Transformed Coordinate: x = 1 / (1 − '+alpha.toFixed(2)+') = '+x_coord.toFixed(4)+' · Baseline b = 0.0000</text>';
+  svg+='<text x="'+(regX+10)+'" y="'+(regY+44)+'" fill="#8ba5b5" font-size="6.5">Coprimality Invariant: gcd(h₂(k), 1000) = 1 guarantees probe sequence traverses full table permutation</text>';
+  svg+='<text x="'+(regX+10)+'" y="'+(regY+56)+'" fill="#8ba5b5" font-size="6.5">Memory Layout: Contiguous 8000 bytes (1000 slots × 8 bytes), zero pointer overhead</text>';
+
+  const bX=465,bY=38,bW=220,bH=235;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#7e9bab" font-size="9">EXPECTED PROBES E[P]</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+54)+'" fill="'+orange+'" font-size="24" font-family="monospace" font-weight="bold">'+p_exp.toFixed(2)+'</text>';
+  svg+='<text x="'+(bX+95)+'" y="'+(bY+50)+'" fill="#8ba5b5" font-size="11">probes</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+84)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+84)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+102)+'" fill="#7e9bab" font-size="9">TABLE LOAD FACTOR (α)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+126)+'" fill="'+ink+'" font-size="18" font-family="monospace" font-weight="bold">α = '+alpha.toFixed(2)+'</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+142)+'" fill="#8ba5b5" font-size="8">'+n+' / 1000 occupied slots</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+156)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+156)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+174)+'" fill="#7e9bab" font-size="9">UNIFORM HASHING ASYMPTOTE</text>';
+  svg+=text(bX+bW/2,bY+196,'E[P] = 1 / (1 − α)','#10b981',10);
+  svg+=text(bX+bW/2,bY+214,'Linearized Coordinate: 1/(1−α)',orange,8.5);
+
+  svg+=text(360,305,'Mathematical Model: E[P] = 1.0000 · [1 / (1 − α)] + 0.0000 probes · R² = 1.000000',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='binary-heaps-priority-queues'){
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
