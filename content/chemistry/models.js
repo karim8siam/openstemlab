@@ -3,6 +3,14 @@
 const round=(v,n)=>Math.round((v+Number.EPSILON)*10**n)/10**n;
 
 function predict(slug,input){
+  if(slug==='infrared-spectroscopy-vibrational-force-constants'){
+   const m=Number(input);
+   const table_raw={1.0:2885.593, 2.0:2884.671, 3.0:2883.135, 4.0:2880.985, 5.0:2878.220, 6.0:2874.841};
+   const key=round(m, 1);
+   const m2=m*m;
+   let raw_val=table_raw.hasOwnProperty(key)?table_raw[key]:round(2885.90 - 0.3072*m2, 3);
+   return {raw:raw_val,ideal:raw_val,period:1.0,x:m2,y:raw_val,valid:m>=1.0&&m<=8.0};
+  }
   if(slug==='fluorescence-quenching-stern-volmer'){
    const c_q=Number(input);
    const table_raw={0.0020:82.64, 0.0050:65.57, 0.0100:48.78, 0.0150:38.83, 0.0200:32.26, 0.0250:27.59};
@@ -552,6 +560,12 @@ function predict(slug,input){
 
 function reading(slug,input,raw){
  let x=Number(input),y=Number(raw);
+  if(slug==='infrared-spectroscopy-vibrational-force-constants'){
+   const m=Number(input);
+   const raw_val=Number(raw);
+   x=m*m;
+   y=raw_val;
+  }
   if(slug==='fluorescence-quenching-stern-volmer'){
    const c_q=Number(input);
    const raw_val=Number(raw);
@@ -882,6 +896,14 @@ function fit(rows){
 }
 
 function estimate(slug,f){
+  if(slug==='infrared-spectroscopy-vibrational-force-constants'){
+   const nu0=f.b;
+   const c_cm_s=2.99792458e10;
+   const mu_kg=1.626652e-27;
+   const k_est=4.0 * Math.PI * Math.PI * c_cm_s * c_cm_s * nu0 * nu0 * mu_kg;
+   const se=f.interceptSE || 0.15;
+   return {value:k_est,se:se,reference:481.0};
+  }
   if(slug==='fluorescence-quenching-stern-volmer'){
    const k_sv_est=f.m;
    const se=f.slopeSE || 0.05;

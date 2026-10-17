@@ -159,6 +159,18 @@ def observation(c,value):
   v0_mM=raw / 1000.0
   y=rnd(1.0 / v0_mM, 2)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='infrared-spectroscopy-vibrational-force-constants':
+  m_val=float(value)
+  table_raw={1.0:2885.593, 2.0:2884.671, 3.0:2883.135, 4.0:2880.985, 5.0:2878.220, 6.0:2874.841}
+  key=round(m_val, 1)
+  m2=m_val*m_val
+  if key in table_raw:
+   raw=table_raw[key]
+  else:
+   raw=round(2885.90 - 0.3072*m2, 3)
+  x=m2
+  y=raw
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='fluorescence-quenching-stern-volmer':
   cq=float(value)
   table_raw={0.0020:82.64, 0.0050:65.57, 0.0100:48.78, 0.0150:38.83, 0.0200:32.26, 0.0250:27.59}
@@ -617,6 +629,13 @@ def estimate(c,f):
   D_scaled=D_est * 1e6
   se=abs(f.get('slopeSE', 0.05)) / prefactor * 2.0 * math.sqrt(D_est) * 1e6
   return D_scaled, se, 7.60
+ elif slug=='infrared-spectroscopy-vibrational-force-constants':
+  nu0=f['b']
+  c_cm_s=2.99792458e10
+  mu_kg=1.626652e-27
+  k_est=4.0 * math.pi * math.pi * c_cm_s * c_cm_s * nu0 * nu0 * mu_kg
+  se=f.get('interceptSE', 0.15)
+  return k_est, se, 481.0
  elif slug=='fluorescence-quenching-stern-volmer':
   k_sv_est=f['m']
   se=f.get('slopeSE', 0.05)
@@ -829,6 +848,15 @@ def formula(c,f):
   D_est=((m * 1e-6) / prefactor)**2
   D_scaled=D_est * 1e6
   return f"Randles-Ševčík Fit: i_pc = {fmt(m,2)}·ν¹/² + {fmt(b,3)} μA; Diffusion Coefficient D = {fmt(D_scaled,2)} × 10⁻⁶ cm²·s⁻¹; Peak Separation ΔE_p = 59.2 mV"
+ elif slug=='infrared-spectroscopy-vibrational-force-constants':
+  m=f['m']
+  b=f['b']
+  alpha_e=abs(m)
+  nu0=b
+  c_cm_s=2.99792458e10
+  mu_kg=1.626652e-27
+  k_est=4.0 * math.pi * math.pi * c_cm_s * c_cm_s * nu0 * nu0 * mu_kg
+  return f"Ro-Vibrational Fit: ν̃_mean = {fmt(m,5)}·m² + {fmt(b,3)} cm⁻¹; Band Origin ν̃₀ = {fmt(nu0,2)} cm⁻¹; Coupling α_e = {fmt(alpha_e,4)} cm⁻¹; Force Constant k = {fmt(k_est,1)} N/m"
  elif slug=='fluorescence-quenching-stern-volmer':
   m=f['m']
   b=f['b']
@@ -1399,6 +1427,54 @@ def worked(c,row):
    f"   Scaled diffusion coefficient: D = {fmt(D_scaled, 2)} × 10⁻⁶ cm²·s⁻¹.\n"
    f"   Literature reference benchmark at 25.00 °C: D = 7.60 × 10⁻⁶ cm²·s⁻¹ (percentage difference = {fmt(abs(D_scaled - 7.60)/7.60*100.0, 4)}%).\n"
    f"   Transient Nernst diffusion layer thickness at ν = {fmt(v_val,1)} mV/s: δ ≈ √(π·D·t) = {fmt(math.sqrt(math.pi * D_est * (0.70/(v_val*1e-3)))*1e4, 1)} μm."
+  )
+ elif slug=='infrared-spectroscopy-vibrational-force-constants':
+  m_val=row['input']
+  raw=row['raw']
+  x_val=row['x']
+  y_val=row['y']
+  m_int=int(round(m_val))
+  m2=m_val*m_val
+  nu0=2885.90
+  B0=10.4398
+  B1=10.1326
+  nu_R=nu0 + (B1 + B0)*m_val + (B1 - B0)*(m2)
+  nu_P=nu0 - (B1 + B0)*m_val + (B1 - B0)*(m2)
+  mean_calc=(nu_R + nu_P) / 2.0
+  diff_calc=nu_R - nu_P
+  c_cm_s=2.99792458e10
+  mu_kg=1.626652e-27
+  k_calc=4.0 * math.pi * math.pi * (c_cm_s**2) * (nu0**2) * mu_kg
+  h_planck=6.62607015e-34
+  Be_val=10.5934
+  re_calc=math.sqrt(h_planck / (8.0 * math.pi * math.pi * c_cm_s * mu_kg * Be_val)) * 1e10
+  return (
+   f"1. High-Resolution Ro-Vibrational FTIR Acquisition Coordinates at 25.0 °C:\n"
+   f"   Diatomic gas: Anhydrous hydrogen chloride (H³⁵Cl / H³⁷Cl) at 25.0 Torr in 100.0 mm path length cell with NaCl windows.\n"
+   f"   Running rotational quantum index: m = {fmt(m_val, 0)}  ⇒  squared running index: m² = {fmt(m2, 0)}.\n"
+   f"   R-branch line R({m_int-1}) (J'' = {m_int-1} → J' = {m_int}): ν̃_R = {fmt(nu_R, 2)} cm⁻¹.\n"
+   f"   P-branch line P({m_int}) (J'' = {m_int} → J' = {m_int-1}): ν̃_P = {fmt(nu_P, 2)} cm⁻¹.\n"
+   f"   Experimental mean transition wavenumber: ν̃_mean(m) = [ν̃_R({m_int-1}) + ν̃_P({m_int})] / 2 = {fmt(raw, 3)} cm⁻¹.\n"
+   f"\n"
+   f"2. Spectroscopic Branch Separation and Vibration-Rotation Coupling:\n"
+   f"   Branch transition separation: Δν̃(m) = ν̃_R({m_int-1}) − ν̃_P({m_int}) = {fmt(diff_calc, 2)} cm⁻¹ = 2·(B₁ + B₀)·m.\n"
+   f"   Effective rotational constants: ground state B₀ = 10.4398 cm⁻¹; excited state B₁ = 10.1326 cm⁻¹.\n"
+   f"   Theoretical mean wavenumber relation: ν̃_mean(m) = ν̃₀ + (B₁ − B₀)·m² = ν̃₀ − α_e·m².\n"
+   f"   Vibration-rotation coupling constant: α_e = B₀ − B₁ = 10.4398 − 10.1326 = 0.3072 cm⁻¹.\n"
+   f"\n"
+   f"3. Multi-Point Rotational Mean Regression & Band Origin Extrapolation:\n"
+   f"   Ordinary least-squares linear regression of ν̃_mean against m² across six line pairs (m = 1 to 6) yields:\n"
+   f"   Slope: −α_e = −0.30719 ± 0.00008 cm⁻¹  ⇒  α_e = 0.3072 cm⁻¹.\n"
+   f"   Y-intercept: ν̃₀ = 2885.89995 ± 0.00150 cm⁻¹  ⇒  fundamental vibrational band origin ν̃₀ = 2885.90 cm⁻¹.\n"
+   f"   Linear correlation: R² = 1.0000000, establishing perfect conformity with quantum anharmonic ro-vibrational theory.\n"
+   f"\n"
+   f"4. Harmonic Bond Force Constant and Equilibrium Internuclear Distance:\n"
+   f"   Reduced mass of H³⁵Cl: μ = (1.007825 × 34.968853) / (1.007825 + 34.968853) × 1.660539 × 10⁻²⁷ = 1.626652 × 10⁻²⁷ kg.\n"
+   f"   Harmonic bond force constant: k = 4π²·c²·ν̃₀²·μ\n"
+   f"   k = 4π² × (2.997925 × 10¹⁰ cm/s)² × (2885.90 cm⁻¹)² × (1.626652 × 10⁻²⁷ kg) = {fmt(k_calc, 2)} N·m⁻¹ ({fmt(k_calc, 1)} N/m),\n"
+   f"   agreeing within 0.066% of the authoritative 481.0 N/m literature benchmark.\n"
+   f"   Equilibrium rotational constant: B_e = B₀ + 0.5·α_e = 10.4398 + 0.1536 = 10.5934 cm⁻¹.\n"
+   f"   Equilibrium internuclear bond length: r_e = √[ h / (8π²·c·μ·B_e) ] = {fmt(re_calc, 3)} Å (127.5 pm).\n"
   )
  elif slug=='fluorescence-quenching-stern-volmer':
   cq_val=row['input']
@@ -2428,6 +2504,29 @@ def uncertainty_text(c):
    "propagate as u_r(D) = √[ 4(u(m)/m)² + 4(u(A)/A)² + 4(u(c)/c)² + (u(T)/T)² ] = √[ 4(0.0001)² + 4(0.0033)² + 4(0.0012)² + (0.00007)² ] = 0.70%. "
    "For an empirical diffusion coefficient D = 7.60 × 10⁻⁶ cm²·s⁻¹, the expanded uncertainty at the 95% confidence level (coverage factor k = 2) "
    "is U(D) = ±0.11 × 10⁻⁶ cm²·s⁻¹ (1.4%), confirming exceptional concordance with the authoritative literature benchmark (7.60 ± 0.05 × 10⁻⁶ cm²·s⁻¹)."
+  )
+ elif slug=='infrared-spectroscopy-vibrational-force-constants':
+  return (
+   "In the high-precision determination of fundamental vibrational frequencies, vibration-rotation coupling parameters, and "
+   "harmonic bond force constants via gas-phase Fourier transform infrared (FTIR) spectroscopy, experimental uncertainties and physical "
+   "boundary conditions are rigorously quantified across interferometric, optomechanical, barometric, isotopic, and quantum domains: "
+   "(1) Interferometer Optical Frequency Metrology & HeNe Connes Advantage: The FTIR spectrometer employs a co-axial frequency-stabilized "
+   "helium-neon (HeNe) laser (λ_ref = 632.816 nm) to sample interferogram optical path differences with sub-picometer spatial fidelity. "
+   "The Connes advantage guarantees inherent wavenumber calibration accuracy to ±0.005 cm⁻¹ across the 4000 to 2000 cm⁻¹ spectral range, "
+   "rendering instrumental wavenumber drift virtually negligible (u(ν̃)/ν̃ < 0.0002%). "
+   "(2) Cell Window Transmission & Optical Cleanliness: The 100.0 ± 0.1 mm path length gas cell features polished single-crystal sodium chloride "
+   "(NaCl) optical windows with transmission > 92% across the mid-IR. Continuous dry nitrogen purging (dew point < −70 °C) prevents surface "
+   "fogging by ambient humidity and completely eliminates atmospheric water vapor rotational lines in the 2900 cm⁻¹ envelope. "
+   "(3) Gas Pressure Optimization & Collisional Broadening Control: Gaseous HCl is admitted at 25.0 ± 0.5 Torr. At this optimal pressure, "
+   "the Lorentzian pressure-broadening full-width at half-maximum (FWHM ≈ 0.08 cm⁻¹) remains well below the instrumental optical resolution "
+   "(0.50 cm⁻¹), preventing line overlap and ensuring unambiguous peak centroid deconvolution of the ³⁵Cl and ³⁷Cl isotopic doublets. "
+   "(4) Isotopic Resolution & Centroid Peak Fitting: Natural chlorine (75.8% ³⁵Cl, 24.2% ³⁷Cl) yields well-resolved doublet components separated "
+   "by Δν̃ ≈ 2.1 cm⁻¹. Nonlinear Marquardt-Levenberg Voigt deconvolution determines line centers to within u(ν̃_line) = ±0.008 cm⁻¹. "
+   "(5) Multi-Point Least-Squares Regression & Uncertainty Propagation: Linear regression of ν̃_mean(m) against m² across six rotational pairs "
+   "yields an empirical intercept ν̃₀ = 2885.900 ± 0.002 cm⁻¹ and slope −α_e = −0.30719 ± 0.00008 cm⁻¹ with R² = 1.0000000. Propagating "
+   "standard uncertainties in ν̃₀, c, and reduced mass μ through the harmonic relation k = 4π²c²ν̃₀²μ yields an expanded uncertainty for the "
+   "harmonic force constant of U(k) = ±0.3 N/m at the 95% confidence level (coverage factor k = 2), establishing k = 480.7 ± 0.3 N/m, "
+   "in flawless concordance with the NIST and IUPAC reference benchmark of 481.0 N/m.\n"
   )
  elif slug=='fluorescence-quenching-stern-volmer':
   return (
@@ -3986,6 +4085,74 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"invariant peak potential separation ΔE_p = 59.2 mV and current ratio |i_pa / i_pc| = 1.000 confirming ideal Nernstian reversibility. The extracted "
    f"diffusion coefficient agrees with authoritative electrochemistry literature benchmarks within {fmt(abs(D_val - 7.60)/7.60*100.0, 4)}% relative deviation, "
    f"demonstrating the high metrological precision of the Randles-Ševčík formulation for diagnostic electrochemistry."
+  )
+  
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='infrared-spectroscopy-vibrational-force-constants':
+  m_val=f['m']
+  b_val=f['b']
+  k_val=value
+  r2_val=f['r2']
+  alpha_val=abs(m_val)
+  nu0_val=b_val
+  
+  abstract=(
+   f"The ro-vibrational infrared absorption spectrum of gas-phase anhydrous hydrogen chloride (HCl) was investigated at 25.0 °C "
+   f"using high-resolution Fourier transform infrared (FTIR) spectroscopy at 0.50 cm⁻¹ optical resolution in a 100.0 mm path length "
+   f"gas cell equipped with polished NaCl optical windows. Pure HCl gas was stabilized at 25.0 ± 0.5 Torr inside the evacuated optical cell. "
+   f"The fundamental vibrational band centered near 2886 cm⁻¹ displayed two well-resolved manifolds: an R-branch (ΔJ = +1) on the high-frequency "
+   f"side and a P-branch (ΔJ = −1) on the low-frequency side, separated by a missing central gap at the forbidden pure vibrational transition "
+   f"(ΔJ = 0). Every individual rotational line exhibited clean splitting into a 3:1 isotopic doublet corresponding to H³⁵Cl and H³⁷Cl. "
+   f"For the predominant H³⁵Cl isotopologue, six rotational pairs (R(0) through R(5) and P(1) through P(6)) were analyzed by evaluating the "
+   f"mean transition wavenumbers ν̃_mean(m) = [ν̃_R(m−1) + ν̃_P(m)] / 2 as a function of the squared rotational running index m². "
+   f"Ordinary least-squares linear regression yielded an empirical slope of −α_e = {fmt(m_val, 5)} cm⁻¹ (extracting a vibration-rotation coupling "
+   f"constant α_e = {fmt(alpha_val, 4)} cm⁻¹) and a Y-intercept representing the fundamental vibrational band origin of "
+   f"ν̃₀ = {fmt(nu0_val, 3)} ± 0.002 cm⁻¹ with a flawless coefficient of determination R² = {fmt(r2_val, 7)}. Combining ν̃₀ with the reduced mass "
+   f"μ(H³⁵Cl) = 1.62665 × 10⁻²⁷ kg yielded an empirical harmonic bond force constant of k = {fmt(k_val, 1)} N·m⁻¹ (difference = {percent:.4f}% "
+   f"relative to the authoritative physical chemistry benchmark of 481.0 N/m) and an equilibrium internuclear distance of r_e = 1.275 Å, "
+   f"providing comprehensive verification of quantum mechanical diatomic oscillator-rotor models."
+  )
+  
+  graph_choice=(
+   f"The quantitative spectroscopic analysis is based on the linearized rotational mean formulation: ν̃_mean(m) = −α_e · m² + ν̃₀, "
+   f"where the mean transition wavenumber ν̃_mean(m) = [ν̃_R(m−1) + ν̃_P(m)] / 2 represents the dependent variable on the Y-axis (in cm⁻¹) "
+   f"and the squared rotational running index m² serves as the independent variable on the X-axis. In a vibrating-rotating diatomic molecule, "
+   f"anharmonic bond expansion causes the effective rotational constant in the excited vibrational state (B₁) to be smaller than in the "
+   f"ground state (B₀) by the vibration-rotation coupling constant α_e: B₁ = B₀ − α_e. When transition wavenumbers for corresponding "
+   f"R-branch lines (ν̃_R = ν̃₀ + (B₁+B₀)m + (B₁−B₀)m²) and P-branch lines (ν̃_P = ν̃₀ − (B₁+B₀)m + (B₁−B₀)m²) are averaged, the linear "
+   f"rotational term (B₁+B₀)m cancels algebraically, leaving an exact quadratic relation in m: ν̃_mean = ν̃₀ − α_e · m². Plotting ν̃_mean "
+   f"versus m² across six rotational pairs yields an ideal straight line (R² = {fmt(r2_val, 7)}) whose Y-intercept directly isolates "
+   f"the fundamental vibrational band origin ν̃₀ = {fmt(nu0_val, 3)} cm⁻¹ and whose negative slope yields α_e = {fmt(alpha_val, 4)} cm⁻¹."
+  )
+  
+  discussion=(
+   f"The high-resolution FTIR data provide deep insights into the quantum mechanics of molecular vibrations and rotations. Hydrogen chloride "
+   f"possesses a permanent electric dipole moment (μ_D = 1.11 D) that changes significantly with bond elongation, conferring immense infrared "
+   f"absorption intensity. The fundamental absorption band originates in transitions from the ground vibrational state (v = 0) to the first "
+   f"excited vibrational state (v = 1). Because HCl has a ¹Σ⁺ electronic ground state with zero electronic angular momentum about the internuclear "
+   f"axis, conservation of total angular momentum dictates that the photon's spin (S = 1) must be absorbed into molecular rotation, strictly "
+   f"enforcing the rotational selection rule ΔJ = ±1. Consequently, the pure vibrational transition (ΔJ = 0) is forbidden, creating the conspicuous "
+   f"central gap between R(0) at 2906.17 cm⁻¹ and P(1) at 2865.02 cm⁻¹.\n\n"
+   f"The observed progression of line intensities in both branches reflects the thermal Boltzmann distribution of rotational states in the v = 0 "
+   f"level. The population of rotational level J is governed by N_J ∝ (2J + 1) · exp[−B₀ J(J + 1) h c / (k_B T)], where the (2J + 1) spatial "
+   f"degeneracy factor initially dominates at low J, driving intensity upward to a peak maximum at J_max ≈ 3, before the exponential Boltzmann "
+   f"decay causes intensities to diminish at higher J. Each rotational line is cleanly split into an asymmetric doublet due to the presence of "
+   f"two chlorine isotopes: ³⁵Cl (75.8%) and ³⁷Cl (24.2%). Because ³⁷Cl is heavier, its reduced mass is larger, shifting its band origin down by "
+   f"2.10 cm⁻¹ and yielding a constant doublet intensity ratio of approximately 3.1:1 across all lines.\n\n"
+   f"The vibration-rotation coupling constant α_e = {fmt(alpha_val, 4)} cm⁻¹ reflects the asymmetric anharmonic curvature of the HCl potential energy "
+   f"well (Morse potential). Because the potential rises steeply at short distances (nuclear repulsion) and flattens at long distances (dissociation), "
+   f"vibrational excitation from v = 0 to v = 1 increases the average internuclear bond length from r₀ = 1.284 Å to r₁ = 1.293 Å, reducing the "
+   f"effective rotational constant from B₀ = 10.44 cm⁻¹ to B₁ = 10.13 cm⁻¹. The extracted harmonic force constant k = {fmt(k_val, 1)} N/m reflects "
+   f"the substantial stiffness of the covalent H−Cl single bond, in outstanding agreement with theoretical ab initio potential energy surfaces."
+  )
+  
+  conclusion=(
+   f"High-resolution FTIR spectroscopy of gas-phase hydrogen chloride at 25.0 °C successfully resolved the ro-vibrational structure of the "
+   f"fundamental vibrational band at 0.50 cm⁻¹ resolution. Linear regression of the rotational mean transition model ν̃_mean(m) = −α_e · m² + ν̃₀ "
+   f"across six rotational pairs for H³⁵Cl yielded an empirical slope of −α_e = {fmt(m_val, 5)} cm⁻¹ (α_e = {fmt(alpha_val, 4)} cm⁻¹) and a band origin "
+   f"Y-intercept of ν̃₀ = {fmt(nu0_val, 3)} cm⁻¹ with R² = {fmt(r2_val, 7)}. From ν̃₀ and the reduced mass μ = 1.62665 × 10⁻²⁷ kg, the harmonic bond "
+   f"force constant was determined to be k = {fmt(k_val, 1)} N/m (differing by only {percent:.4f}% from the accepted literature benchmark of 481.0 N/m), "
+   f"and the equilibrium bond length was determined to be r_e = 1.275 Å, rigorously validating diatomic quantum mechanics."
   )
   
   return abstract, graph_choice, discussion, conclusion

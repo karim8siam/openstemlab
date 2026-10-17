@@ -87,6 +87,18 @@ function update(){
   $('apparatusDiagram').innerHTML=drawEnzymeKineticsBenchView(p,rawVal);
   return;
  }
+ if(cfg.slug==='infrared-spectroscopy-vibrational-force-constants'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawInfraredCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawInfraredSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawInfraredBenchView(p,rawVal);
+  return;
+ }
  if(cfg.slug==='fluorescence-quenching-stern-volmer'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawFluorescenceCompareView(p,rawVal);
@@ -324,6 +336,21 @@ function update(){
   const dA_dt = v0_uM * 0.0185;
   $('liveState').textContent='Photometric trace recorded: v₀ = '+v0_uM.toFixed(2)+' μM/min (dA/dt = '+(dA_dt/1000).toFixed(4)+' AU/min).';
   message('Assay complete: v₀ = '+v0_uM.toFixed(2)+' μM/min (1/v₀ = '+inv_v0.toFixed(2)+' min/mM, 1/[S] = '+inv_s.toFixed(2)+' mM⁻¹). Record in notebook.');
+ }else if(cfg.slug==='infrared-spectroscopy-vibrational-force-constants'){
+  const m_idx = Math.round(p.input);
+  const m2 = m_idx * m_idx;
+  $('liveState').textContent='Ready to measure ro-vibrational pair at running index m = '+m_idx+' (m² = '+m2+').';
+  message('Select rotational index m, measure R(m−1) & P(m) line wavenumbers, evaluate mean ν̃_mean.');
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawInfraredCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawInfraredSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawInfraredBenchView(p,rawVal);
+  return;
  }else if(cfg.slug==='fluorescence-quenching-stern-volmer'){
   const cq = p.input;
   const cq_mM = cq * 1000.0;
@@ -14897,4 +14924,342 @@ function drawFluorescenceSandboxView(p, rawVal) {
 
  return svg;
 }
+
+function drawInfraredBenchView(p, rawVal) {
+ var m_idx = Math.round(p.input) || 3;
+ var m2 = m_idx * m_idx;
+ var rawNu = (rawVal !== null && rawVal !== undefined) ? rawVal : (2885.90 - 0.3072 * m2);
+ var nu0 = 2885.90;
+ var B0 = 10.4398;
+ var B1 = 10.1326;
+ var nuR = nu0 + (B1 + B0) * m_idx + (B1 - B0) * (m_idx * m_idx);
+ var nuP = nu0 - (B1 + B0) * m_idx + (B1 - B0) * (m_idx * m_idx);
+ var deltaNu = nuR - nuP;
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a111a');
+ svg += '<defs>';
+ svg += '<linearGradient id="irBeamGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#f97316" stop-opacity="0.85"/><stop offset="100%" stop-color="#eab308" stop-opacity="0.75"/></linearGradient>';
+ svg += '<linearGradient id="naclWindowGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#94a3b8" stop-opacity="0.5"/><stop offset="50%" stop-color="#f8fafc" stop-opacity="0.2"/><stop offset="100%" stop-color="#94a3b8" stop-opacity="0.5"/></linearGradient>';
+ svg += '<filter id="irGlow"><feGaussianBlur stdDeviation="1.8" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+ svg += '</defs>';
+
+ // Header
+ svg += text(20, 24, "LABORATORY BENCH: HIGH-RESOLUTION GAS-PHASE FTIR SPECTROMETER", '#f8fafc', 12, 'bold');
+ svg += text(20, 40, 'Hydrogen Chloride (H³⁵Cl/H³⁷Cl) · 100 mm NaCl Cell (25.0 Torr) · Michelson Interferometer & MCT Detector (0.50 cm⁻¹)', '#38bdf8', 9);
+
+ // --- LEFT SECTION: FTIR OPTICAL TRAIN (x: 20 to 365, y: 55 to 305) ---
+ svg += rect(20, 55, 345, 250, '#0f172a', '#1e293b', 1.5, 6);
+ svg += text(30, 72, 'Michelson Interferometer & 100 mm Gas Absorption Cell', '#94a3b8', 7, 'start', 'bold');
+
+ // Ceramic Globar IR Source
+ svg += rect(30, 120, 34, 46, '#1e293b', '#f97316', 1.2, 4);
+ svg += circle(47, 143, 9, '#fb923c', '#ea580c', 1.5);
+ svg += text(47, 146, 'IR', '#431407', 6.5, 'middle', 'bold');
+ svg += text(47, 178, 'Globar', '#94a3b8', 5.5, 'middle');
+
+ // Primary IR Source Beam to Beam Splitter
+ svg += '<line x1="64" y1="143" x2="105" y2="143" stroke="#f97316" stroke-width="2.5" filter="url(#irGlow)"/>';
+
+ // Michelson Beam Splitter (KBr coated)
+ svg += circle(115, 143, 14, '#334155', '#cbd5e1', 1.2);
+ svg += '<line x1="105" y1="133" x2="125" y2="153" stroke="#f8fafc" stroke-width="2"/>';
+ svg += text(115, 124, 'KBr Splitter', '#94a3b8', 5.5, 'middle');
+
+ // Fixed Mirror (top) & Moving Mirror (right)
+ svg += '<line x1="115" y1="130" x2="115" y2="92" stroke="#ea580c" stroke-width="1.8"/>';
+ svg += rect(103, 88, 24, 6, '#334155', '#f8fafc', 1);
+ svg += text(115, 82, 'Fixed Mirror', '#94a3b8', 5, 'middle');
+
+ svg += '<line x1="128" y1="143" x2="158" y2="143" stroke="#ea580c" stroke-width="1.8"/>';
+ svg += rect(158, 131, 6, 24, '#334155', '#38bdf8', 1);
+ svg += text(161, 163, 'Moving M.', '#38bdf8', 5, 'middle');
+
+ // Modulated Interferogram Beam (downward then into gas cell)
+ svg += '<path d="M 115 156 L 115 200 L 140 200" fill="none" stroke="url(#irBeamGrad)" stroke-width="2.5" filter="url(#irGlow)"/>';
+
+ // 100 mm Cylindrical Gas Cell (x: 140 to 240, y: 180 to 220)
+ svg += rect(140, 180, 100, 40, '#020617', '#64748b', 1.5, 4);
+ // NaCl Windows on both ends
+ svg += rect(140, 178, 6, 44, 'url(#naclWindowGrad)', '#94a3b8', 1);
+ svg += rect(234, 178, 6, 44, 'url(#naclWindowGrad)', '#94a3b8', 1);
+ // HCl Gas Inside
+ svg += rect(146, 184, 88, 32, 'rgba(56, 189, 248, 0.08)', 'none');
+ svg += text(190, 196, 'HCl Gas (25 Torr)', '#38bdf8', 6, 'middle', 'bold');
+ svg += text(190, 208, '100 mm Optical Path', '#94a3b8', 5.5, 'middle');
+
+ // Transmitted Beam from Gas Cell to Detector
+ svg += '<line x1="240" y1="200" x2="275" y2="200" stroke="#f97316" stroke-width="2" filter="url(#irGlow)"/>';
+
+ // MCT Detector (Liquid Nitrogen De-war)
+ svg += rect(275, 175, 36, 50, '#1e293b', '#06b6d4', 1.2, 4);
+ svg += circle(293, 195, 8, '#0891b2', '#22d3ee', 1.2);
+ svg += text(293, 198, 'MCT', '#ffffff', 5.5, 'middle', 'bold');
+ svg += text(293, 218, '77 K LN₂', '#38bdf8', 5, 'middle');
+
+ // Manometer & Vacuum Manifold Tag
+ svg += rect(25, 240, 105, 52, '#1e293b', '#334155', 1, 3);
+ svg += text(35, 256, 'Vacuum Manifold:', '#94a3b8', 5.5, 'start');
+ svg += text(35, 269, 'HCl: 25.0 ± 0.5 Torr', '#facc15', 6, 'start', 'bold');
+ svg += text(35, 282, 'Dry N₂ Purge: 25 L/min', '#4ade80', 5.5, 'start');
+
+ // Laser Fringe Reference Tag
+ svg += rect(140, 240, 95, 52, '#1e293b', '#334155', 1, 3);
+ svg += text(148, 256, 'HeNe Laser Reference:', '#94a3b8', 5.5, 'start');
+ svg += text(148, 269, 'λ_ref = 632.816 nm', '#f43f5e', 6, 'start', 'bold');
+ svg += text(148, 282, 'Resolution: 0.50 cm⁻¹', '#cbd5e1', 5.5, 'start');
+
+ // --- RIGHT SECTION: DIGITAL CONSOLE (x: 375 to 705, y: 55 to 305) ---
+ svg += rect(375, 55, 330, 250, '#0f172a', '#334155', 1.5, 6);
+ svg += text(390, 74, "RO-VIBRATIONAL INFRARED METROLOGY", '#f8fafc', 8, 'start', 'bold');
+
+ // Dual Primary Digital Readouts
+ svg += rect(390, 85, 145, 54, '#020617', '#38bdf8', 1.2, 4);
+ svg += text(400, 98, 'ROTATIONAL RUNNING INDEX m', '#38bdf8', 6, 'start', 'bold');
+ svg += text(462, 126, 'm = ' + m_idx + ' (m² = ' + m2 + ')', '#38bdf8', 13, 'middle', 'bold');
+
+ svg += rect(545, 85, 145, 54, '#020617', '#facc15', 1.2, 4);
+ svg += text(555, 98, 'MEAN WAVENUMBER ν̃_mean', '#facc15', 6, 'start', 'bold');
+ svg += text(617, 126, rawNu.toFixed(3) + ' cm⁻¹', '#facc15', 13, 'middle', 'bold');
+
+ // Telemetry Data Grid
+ var rowsGrid = [
+  ['R-Branch Line R(' + (m_idx - 1) + ')', 'ν̃_R = ' + nuR.toFixed(2) + ' cm⁻¹ (J\'\' = ' + (m_idx - 1) + ' → J\' = ' + m_idx + ')'],
+  ['P-Branch Line P(' + m_idx + ')', 'ν̃_P = ' + nuP.toFixed(2) + ' cm⁻¹ (J\'\' = ' + m_idx + ' → J\' = ' + (m_idx - 1) + ')'],
+  ['Branch Line Separation Δν̃', 'Δν̃ = ν̃_R − ν̃_P = ' + deltaNu.toFixed(2) + ' cm⁻¹'],
+  ['Fundamental Band Origin ν̃₀', 'ν̃₀ = 2885.90 cm⁻¹ (Missing Q-Branch Gap)'],
+  ['Vibration-Rotation Coupling α_e', 'α_e = 0.3072 cm⁻¹ (Slope = −α_e)'],
+  ['Harmonic Force Constant k', 'k = 481.0 N/m (480.68 N/m from ν̃₀)'],
+  ['Equilibrium Internuclear Distance', 'r_e = 1.275 Å (127.5 pm from B_e = 10.59 cm⁻¹)']
+ ];
+ for (var i = 0; i < rowsGrid.length; i++) {
+  var ry = 148 + i * 17;
+  svg += rect(390, ry, 300, 15, i % 2 === 0 ? '#1e293b' : '#0f172a', 'none', 0, 2);
+  svg += text(398, ry + 11, rowsGrid[i][0], '#94a3b8', 6, 'start');
+  svg += text(682, ry + 11, rowsGrid[i][1], i === 3 ? '#38bdf8' : (i === 5 ? '#facc15' : '#f8fafc'), 6, 'end', (i === 3 || i === 5) ? 'bold' : 'normal');
+ }
+
+ // Status Badges
+ svg += rect(390, 275, 95, 18, '#1e3a8a', '#3b82f6', 1, 3);
+ svg += text(437, 287, 'FTIR RO-VIBRATIONAL', '#60a5fa', 5.5, 'middle', 'bold');
+
+ svg += rect(492, 275, 100, 18, '#14532d', '#22c55e', 1, 3);
+ svg += text(542, 287, 'k = 481.0 N/m', '#4ade80', 5.5, 'middle', 'bold');
+
+ svg += rect(599, 275, 91, 18, '#831843', '#f43f5e', 1, 3);
+ svg += text(644, 287, '³⁵Cl/³⁷Cl 3:1 SPLIT', '#fda4af', 5.5, 'middle', 'bold');
+
+ return svg;
+}
+
+function drawInfraredCompareView(p, rawVal) {
+ var m_idx = Math.round(p.input) || 3;
+ var m2 = m_idx * m_idx;
+ var rawNu = (rawVal !== null && rawVal !== undefined) ? rawVal : (2885.90 - 0.3072 * m2);
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a111a');
+
+ // Header
+ svg += text(20, 24, "ROTATIONAL MEAN PROGRESSION & VIBRATIONAL BAND ORIGIN EXTRAPOLATION", '#f8fafc', 12, 'bold');
+ svg += text(20, 40, 'ν̃_mean(m) = −α_e·m² + ν̃₀ · Intercept ν̃₀ = 2885.90 cm⁻¹ · Slope −α_e = −0.3072 cm⁻¹ (R² = 1.0000000)', '#38bdf8', 9);
+
+ // --- LEFT REGRESSION PLOT (x: 45 to 465, y: 60 to 275) ---
+ var gx = 45, gy = 60, gw = 420, gh = 215;
+ svg += rect(gx, gy, gw, gh, '#0f172a', '#334155', 1, 4);
+
+ // Y-axis grid lines (Wavenumber 2872 to 2888 cm^-1)
+ for (var nu_grid = 2872.0; nu_grid <= 2888.1; nu_grid += 4.0) {
+  var py = gy + gh - ((nu_grid - 2872.0) / 16.0) * gh;
+  svg += '<line x1="' + gx + '" y1="' + py + '" x2="' + (gx + gw) + '" y2="' + py + '" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(gx - 8, py + 3, nu_grid.toFixed(0), '#64748b', 6, 'end');
+ }
+ svg += text(gx - 26, gy + gh/2, 'Mean Wavenumber ν̃_mean (cm⁻¹)', '#94a3b8', 7, 'middle', 'bold');
+
+ // X-axis grid lines (m^2 from 0 to 40)
+ for (var m2_grid = 0; m2_grid <= 40.1; m2_grid += 10) {
+  var px = gx + (m2_grid / 40.0) * gw;
+  svg += '<line x1="' + px + '" y1="' + gy + '" x2="' + px + '" y2="' + (gy + gh) + '" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(px, gy + gh + 12, m2_grid.toString(), '#64748b', 6, 'middle');
+ }
+ svg += text(gx + gw/2, gy + gh + 24, 'Squared Rotational Running Index m²', '#94a3b8', 7, 'middle', 'bold');
+
+ // Linear Regression Line: nu_mean = 2885.90 - 0.3072 * m2
+ var px0 = gx;
+ var py0 = gy + gh - ((2885.90 - 2872.0) / 16.0) * gh;
+ var pxEnd = gx + (38.0 / 40.0) * gw;
+ var pyEnd = gy + gh - (((2885.90 - 0.3072 * 38.0) - 2872.0) / 16.0) * gh;
+ svg += '<line x1="' + px0 + '" y1="' + py0 + '" x2="' + pxEnd + '" y2="' + pyEnd + '" stroke="#38bdf8" stroke-width="2.2"/>';
+
+ // Six Calibration Points
+ var calibPoints = [
+  { m: 1, m2: 1, nu: 2885.593 },
+  { m: 2, m2: 4, nu: 2884.671 },
+  { m: 3, m2: 9, nu: 2883.135 },
+  { m: 4, m2: 16, nu: 2880.985 },
+  { m: 5, m2: 25, nu: 2878.220 },
+  { m: 6, m2: 36, nu: 2874.841 }
+ ];
+ for (var k = 0; k < calibPoints.length; k++) {
+  var sx = gx + (calibPoints[k].m2 / 40.0) * gw;
+  var sy = gy + gh - ((calibPoints[k].nu - 2872.0) / 16.0) * gh;
+  svg += circle(sx, sy, 4.5, '#38bdf8', '#ffffff', 1.2);
+ }
+
+ // Active Measurement Crosshair
+ var curX = gx + (m2 / 40.0) * gw;
+ var curY = gy + gh - ((rawNu - 2872.0) / 16.0) * gh;
+ svg += '<line x1="' + curX + '" y1="' + gy + '" x2="' + curX + '" y2="' + (gy + gh) + '" stroke="#facc15" stroke-width="1.2" stroke-dasharray="3,2"/>';
+ svg += '<line x1="' + gx + '" y1="' + curY + '" x2="' + (gx + gw) + '" y2="' + curY + '" stroke="#facc15" stroke-width="1.2" stroke-dasharray="3,2"/>';
+ svg += circle(curX, curY, 6, '#facc15', '#ffffff', 2);
+ svg += text(curX + 8, curY - 6, 'm² = ' + m2 + ' (' + rawNu.toFixed(3) + ' cm⁻¹)', '#facc15', 6.5, 'start', 'bold');
+
+ // Overlay Linear Fit Equation
+ svg += rect(gx + 15, gy + 15, 230, 32, '#1e293b', '#38bdf8', 1, 3);
+ svg += text(gx + 22, gy + 27, 'Fit: ν̃_mean = −0.3072·m² + 2885.90 cm⁻¹', '#f8fafc', 6.5, 'start', 'bold');
+ svg += text(gx + 22, gy + 40, 'R² = 1.0000000 · Band Origin ν̃₀ = 2885.90 cm⁻¹', '#4ade80', 6, 'start');
+
+ // --- RIGHT CARD: MOLECULAR CONSTANTS (x: 480 to 705) ---
+ svg += rect(480, 55, 225, 250, '#0f172a', '#334155', 1.5, 6);
+ svg += text(490, 75, "DIATOMIC MOLECULAR CONSTANTS", '#f8fafc', 8, 'start', 'bold');
+
+ var infoLines = [
+  "• Fundamental Band Origin (ν̃₀):",
+  "  ν̃₀ = 2885.900 ± 0.005 cm⁻¹ (Intercept)",
+  "  H³⁷Cl Origin: 2883.80 cm⁻¹ (Δν̃ = 2.10 cm⁻¹)",
+  "• Harmonic Force Constant (k):",
+  "  k = 4π²c²ν̃₀²μ = 480.68 ± 0.15 N/m",
+  "  Literature Benchmark: 481.0 N/m (Diff: 0.07%)",
+  "• Vibration-Rotation Coupling (α_e):",
+  "  α_e = −Slope = 0.3072 ± 0.0001 cm⁻¹",
+  "• Equilibrium Rotational Constant (B_e):",
+  "  B_e = 10.5934 cm⁻¹  (B₀ = 10.44, B₁ = 10.13)",
+  "• Equilibrium Internuclear Distance (r_e):",
+  "  r_e = √[ h / (8π²cμB_e) ] = 1.275 Å (127.5 pm)",
+  "• Zero-Point Energy (ZPE):",
+  "  E_ZPE = 0.5 h c ν̃_e = 17.38 kJ/mol"
+ ];
+ for (var j = 0; j < infoLines.length; j++) {
+  var isHead = (j === 0 || j === 3 || j === 6 || j === 8 || j === 10 || j === 12);
+  svg += text(490, 95 + j * 14.5, infoLines[j], isHead ? '#38bdf8' : '#cbd5e1', 5.5, 'start', isHead ? 'bold' : 'normal');
+ }
+
+ return svg;
+}
+
+function drawInfraredSandboxView(p, rawVal) {
+ var m_idx = Math.round(p.input) || 3;
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a111a');
+
+ // Header
+ svg += text(20, 24, "HIGH-RESOLUTION RO-VIBRATIONAL INFRARED SPECTRUM OF HYDROGEN CHLORIDE", '#f8fafc', 12, 'bold');
+ svg += text(20, 40, 'P-Branch (ΔJ = −1) · Forbidden Gap at ν̃₀ = 2885.90 cm⁻¹ · R-Branch (ΔJ = +1) · ³⁵Cl/³⁷Cl Doublets', '#38bdf8', 9);
+
+ // --- LEFT SPECTRUM PLOT (x: 40 to 455, y: 60 to 275) ---
+ var gx = 40, gy = 60, gw = 415, gh = 215;
+ svg += rect(gx, gy, gw, gh, '#0f172a', '#334155', 1, 4);
+
+ // X-axis Wavenumbers: 2700 to 3050 cm^-1
+ for (var nu_x = 2700; nu_x <= 3050; nu_x += 50) {
+  var px = gx + ((nu_x - 2700) / 350.0) * gw;
+  svg += '<line x1="' + px + '" y1="' + gy + '" x2="' + px + '" y2="' + (gy + gh) + '" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(px, gy + gh + 12, nu_x.toString(), '#64748b', 6, 'middle');
+ }
+ svg += text(gx + gw/2, gy + gh + 24, 'Wavenumber ν̃ (cm⁻¹)', '#94a3b8', 7, 'middle', 'bold');
+
+ // Y-axis Absorbance: 0.0 to 1.2 AU
+ for (var a_y = 0.0; a_y <= 1.21; a_y += 0.3) {
+  var py = gy + gh - (a_y / 1.2) * gh;
+  svg += '<line x1="' + gx + '" y1="' + py + '" x2="' + (gx + gw) + '" y2="' + py + '" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(gx - 8, py + 3, a_y.toFixed(1), '#64748b', 6, 'end');
+ }
+ svg += text(gx - 26, gy + gh/2, 'Absorbance (AU)', '#94a3b8', 7, 'middle', 'bold');
+
+ // Forbidden Band Center Gap Marker at 2885.90 cm^-1
+ var pxGap = gx + ((2885.90 - 2700) / 350.0) * gw;
+ svg += '<line x1="' + pxGap + '" y1="' + gy + '" x2="' + pxGap + '" y2="' + (gy + gh) + '" stroke="#f43f5e" stroke-width="1.2" stroke-dasharray="3,2"/>';
+ svg += text(pxGap, gy + 14, 'Gap: 2885.9 cm⁻¹ (Q=0)', '#f43f5e', 5.5, 'middle', 'bold');
+
+ // Theoretical Spectrum Peaks for P-branch (m = -1 to -7) and R-branch (m = 1 to 6)
+ var rLines = [
+  { m: 1, nu35: 2906.17, nu37: 2904.11, int: 0.85, lbl: 'R(0)' },
+  { m: 2, nu35: 2925.82, nu37: 2923.73, int: 1.05, lbl: 'R(1)' },
+  { m: 3, nu35: 2944.85, nu37: 2942.72, int: 1.08, lbl: 'R(2)' },
+  { m: 4, nu35: 2963.27, nu37: 2961.11, int: 0.95, lbl: 'R(3)' },
+  { m: 5, nu35: 2981.08, nu37: 2978.88, int: 0.72, lbl: 'R(4)' },
+  { m: 6, nu35: 2998.28, nu37: 2996.05, int: 0.48, lbl: 'R(5)' }
+ ];
+
+ var pLines = [
+  { m: 1, nu35: 2865.02, nu37: 2863.00, int: 0.88, lbl: 'P(1)' },
+  { m: 2, nu35: 2843.53, nu37: 2841.48, int: 1.06, lbl: 'P(2)' },
+  { m: 3, nu35: 2821.42, nu37: 2819.34, int: 1.04, lbl: 'P(3)' },
+  { m: 4, nu35: 2798.70, nu37: 2796.59, int: 0.88, lbl: 'P(4)' },
+  { m: 5, nu35: 2775.36, nu37: 2773.22, int: 0.65, lbl: 'P(5)' },
+  { m: 6, nu35: 2751.41, nu37: 2749.24, int: 0.42, lbl: 'P(6)' }
+ ];
+
+ function drawDoublet(nu35, nu37, height, isHighlight, lbl) {
+  var x35 = gx + ((nu35 - 2700) / 350.0) * gw;
+  var y35 = gy + gh - (height / 1.2) * gh;
+  var x37 = gx + ((nu37 - 2700) / 350.0) * gw;
+  var y37 = gy + gh - ((height * 0.32) / 1.2) * gh;
+
+  var col35 = isHighlight ? '#facc15' : '#38bdf8';
+  var col37 = isHighlight ? '#eab308' : '#0284c7';
+  var strokeW = isHighlight ? 2.5 : 1.8;
+
+  // H35Cl major peak
+  svg += '<line x1="' + x35 + '" y1="' + (gy + gh) + '" x2="' + x35 + '" y2="' + y35 + '" stroke="' + col35 + '" stroke-width="' + strokeW + '"/>';
+  // H37Cl minor peak
+  svg += '<line x1="' + x37 + '" y1="' + (gy + gh) + '" x2="' + x37 + '" y2="' + y37 + '" stroke="' + col37 + '" stroke-width="' + (strokeW * 0.8) + '"/>';
+
+  if (lbl) {
+   svg += text(x35, y35 - 4, lbl, isHighlight ? '#facc15' : '#94a3b8', isHighlight ? 6 : 5, 'middle', isHighlight ? 'bold' : 'normal');
+  }
+ }
+
+ for (var r_i = 0; r_i < rLines.length; r_i++) {
+  var isH = (rLines[r_i].m === m_idx);
+  drawDoublet(rLines[r_i].nu35, rLines[r_i].nu37, rLines[r_i].int, isH, rLines[r_i].lbl);
+ }
+
+ for (var p_i = 0; p_i < pLines.length; p_i++) {
+  var isHp = (pLines[p_i].m === m_idx);
+  drawDoublet(pLines[p_i].nu35, pLines[p_i].nu37, pLines[p_i].int, isHp, pLines[p_i].lbl);
+ }
+
+ // Labels for P and R branches
+ svg += text(gx + 0.22 * gw, gy + 22, '← P-BRANCH (ΔJ = −1)', '#38bdf8', 6.5, 'middle', 'bold');
+ svg += text(gx + 0.78 * gw, gy + 22, 'R-BRANCH (ΔJ = +1) →', '#38bdf8', 6.5, 'middle', 'bold');
+
+ // --- RIGHT PANEL: QUANTUM STATISTICS (x: 470 to 705) ---
+ svg += rect(470, 55, 235, 250, '#0f172a', '#334155', 1.5, 6);
+ svg += text(480, 75, 'BOLTZMANN POPULATION & QUANTUM RULES', '#f8fafc', 7.5, 'start', 'bold');
+
+ var quantLines = [
+  "• Rotational Thermal Population Envelope:",
+  "  N_J ∝ (2J + 1) · exp[ −B J(J+1) h c / (k_B T) ]",
+  "  J_max = √[ k_B T / (2 B h c) ] − 1/2 ≈ 3.1",
+  "  Peak intensity occurs at J = 3 (R(2) & P(3)).",
+  "• Selection Rules for ¹Σ Diatomic Molecule:",
+  "  Vibrational: Δv = ±1 (Harmonic Oscillator)",
+  "  Rotational: ΔJ = ±1 (Angular Momentum)",
+  "  Q-Branch (ΔJ = 0): Strictly Forbidden (Gap)",
+  "• Chlorine Isotopic Doublet Structure:",
+  "  ³⁵Cl (75.8%) : ³⁷Cl (24.2%) ≈ 3.12 : 1",
+  "  Mass ratio shifts ν̃₀ by 2.10 cm⁻¹.",
+  "• Active Pair Selected: m = " + m_idx + ":",
+  "  R(" + (m_idx - 1) + ") and P(" + m_idx + ") highlighted in yellow."
+ ];
+ for (var q_idx = 0; q_idx < quantLines.length; q_idx++) {
+  var isHead = (q_idx === 0 || q_idx === 4 || q_idx === 8 || q_idx === 11);
+  svg += text(480, 95 + q_idx * 14.5, quantLines[q_idx], isHead ? '#38bdf8' : '#cbd5e1', 5.5, 'start', isHead ? 'bold' : 'normal');
+ }
+
+ return svg;
+}
+
 
