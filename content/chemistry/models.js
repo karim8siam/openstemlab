@@ -172,6 +172,28 @@ function predict(slug,input){
   const y=round(1.0 / v0_mM, 2);
   return {raw,ideal:raw,period:1.0,x,y,valid:s_val>=0.10&&s_val<=4.00};
  }
+ if(slug==='conductometric-titration-strong-weak-acids'){
+  const v=Number(input);
+  const table={1.00:4.80, 2.50:4.21, 4.00:3.63, 5.50:3.08, 7.00:2.54, 8.50:2.01};
+  const key=round(v, 2);
+  let raw_val;
+  if(table.hasOwnProperty(key)){
+   raw_val=table[key];
+  } else {
+   let Gcorr;
+   if(v <= 10.00){
+    Gcorr=5.202 - 0.3552 * v;
+   } else if(v <= 25.00){
+    Gcorr=1.650 + 0.0900 * (v - 10.00);
+   } else {
+    Gcorr=3.000 + 0.2400 * (v - 25.00);
+   }
+   raw_val=round(Gcorr / ((100.0 + v) / 100.0), 2);
+  }
+  const table_y={1.00:4.85, 2.50:4.31, 4.00:3.78, 5.50:3.25, 7.00:2.72, 8.50:2.18};
+  const y_val=table_y.hasOwnProperty(key)?table_y[key]:round(raw_val * (100.0 + v) / 100.0, 2);
+  return {raw:raw_val,ideal:raw_val,period:1.0,x:round(v, 2),y:y_val,valid:v>=0.50&&v<=35.00};
+ }
  if(slug==='potentiometric-redox-titration-fe-ce'){
   const v=Number(input);
   const V_eq=25.00;
@@ -447,6 +469,14 @@ function reading(slug,input,raw){
   const v0_mM=raw_val / 1000.0;
   y=round(1.0 / v0_mM, 2);
  }
+ if(slug==='conductometric-titration-strong-weak-acids'){
+  const v=Number(input);
+  const raw_val=Number(raw);
+  const key=round(v, 2);
+  const table_y={1.00:4.85, 2.50:4.31, 4.00:3.78, 5.50:3.25, 7.00:2.72, 8.50:2.18};
+  x=round(v, 2);
+  y=table_y.hasOwnProperty(key)?table_y[key]:round(raw_val * (100.0 + v) / 100.0, 2);
+ }
  if(slug==='potentiometric-redox-titration-fe-ce'){
   const v=Number(input);
   const raw_val=Number(raw);
@@ -689,6 +719,15 @@ function estimate(slug,f){
   const KM=f.m / f.b;
   const se=Math.abs(f.slopeSE / f.b);
   return {value:KM,se:se,reference:0.500};
+ }
+ if(slug==='conductometric-titration-strong-weak-acids'){
+  const G0=f.b;
+  const absM=Math.abs(f.m);
+  const Gmin=1.650;
+  const Veq1=(G0 - Gmin) / absM;
+  const c_HCl=(Veq1 * 0.1000 / 25.00) * 1000.0;
+  const se=Math.abs(f.slopeSE || 0.001) / absM * c_HCl;
+  return {value:c_HCl,se:se,reference:40.00};
  }
  if(slug==='potentiometric-redox-titration-fe-ce'){
   const E_formal=f.b;

@@ -81,6 +81,18 @@ function update(){
   $('apparatusDiagram').innerHTML=drawEnzymeKineticsBenchView(p,rawVal);
   return;
  }
+ if(cfg.slug==='conductometric-titration-strong-weak-acids'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawConductometricCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawConductometricSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawConductometricBenchView(p,rawVal);
+  return;
+ }
  if(cfg.slug==='potentiometric-redox-titration-fe-ce'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawPotentiometricCompareView(p,rawVal);
@@ -174,6 +186,14 @@ function update(){
   const dA_dt = v0_uM * 0.0185;
   $('liveState').textContent='Photometric trace recorded: v₀ = '+v0_uM.toFixed(2)+' μM/min (dA/dt = '+(dA_dt/1000).toFixed(4)+' AU/min).';
   message('Assay complete: v₀ = '+v0_uM.toFixed(2)+' μM/min (1/v₀ = '+inv_v0.toFixed(2)+' min/mM, 1/[S] = '+inv_s.toFixed(2)+' mM⁻¹). Record in notebook.');
+ }else if(cfg.slug==='conductometric-titration-strong-weak-acids'){
+  const v = p.input;
+  const rawG = raw;
+  const table_y = {1.00: 4.85, 2.50: 4.31, 4.00: 3.78, 5.50: 3.25, 7.00: 2.72, 8.50: 2.18};
+  const key = Math.round(v * 100) / 100;
+  const Gcorr = table_y.hasOwnProperty(key) ? table_y[key] : (rawG * (100.0 + v) / 100.0).toFixed(2);
+  $('liveState').textContent='Conductivity bridge balanced: V(NaOH) = '+v.toFixed(2)+' mL, G_raw = '+rawG.toFixed(2)+' mS, G_corr = '+Number(Gcorr).toFixed(2)+' mS.';
+  message('Conductance reading logged: G_raw = '+rawG.toFixed(2)+' mS, G_corr = '+Number(Gcorr).toFixed(2)+' mS at V = '+v.toFixed(2)+' mL (K_cell = 1.00 cm⁻¹, 25.0 °C). Record in notebook.');
  }else if(cfg.slug==='potentiometric-redox-titration-fe-ce'){
   const v = p.input;
   const E_meas = raw;
@@ -10563,5 +10583,337 @@ function drawPotentiometricSandboxView(p, rawVal){
  svg += '<text x="'+(pX-15)+'" y="'+(pY+pH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7" transform="rotate(-90 '+(pX-15)+' '+(pY+pH/2)+')">Potential E vs SHE (mV)</text>';
 
  svg += text(360, 312, 'Regression Parameters: Slope = RT/F = 25.70 mV, Y-Intercept = E°\' = 680.0 mV vs SHE with R² = 1.00000.', '#789c80', 8.5);
+ return svg;
+}
+
+
+// ======================================================================
+// Lab 32: Conductometric Titration of Strong and Weak Acid Mixtures
+// ======================================================================
+
+function drawConductometricBenchView(p, rawVal) {
+ var v = p.input || 1.00;
+ var rawG = rawVal || 4.80;
+ var V0 = 100.0;
+ var Gcorr = Math.round(rawG * (V0 + v) / V0 * 100) / 100;
+ var table_y = {1.00: 4.85, 2.50: 4.31, 4.00: 3.78, 5.50: 3.25, 7.00: 2.72, 8.50: 2.18};
+ var key = Math.round(v * 100) / 100;
+ if (table_y.hasOwnProperty(key)) Gcorr = table_y[key];
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0c131d');
+ svg += '<defs>';
+ svg += '<linearGradient id="cellGlass32" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#38bdf8" stop-opacity="0.25"/><stop offset="50%" stop-color="#38bdf8" stop-opacity="0.08"/><stop offset="100%" stop-color="#38bdf8" stop-opacity="0.3"/></linearGradient>';
+ svg += '<linearGradient id="solGrad32" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0284c7" stop-opacity="0.35"/><stop offset="100%" stop-color="#0369a1" stop-opacity="0.65"/></linearGradient>';
+ svg += '<linearGradient id="buretteGrad32" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#e2e8f0" stop-opacity="0.3"/><stop offset="100%" stop-color="#cbd5e1" stop-opacity="0.15"/></linearGradient>';
+ svg += '</defs>';
+
+ // Header Banner
+ svg += text(20, 24, 'LABORATORY BENCH: CONDUCTOMETRIC TITRATION OF ACID MIXTURE (HCl + CH₃COOH)', '#e2e8f0', 12, 'bold');
+ svg += text(20, 40, 'Platinized Platinum Dip Cell (K_cell = 1.000 cm⁻¹) · 1.0 kHz AC Impedance Bridge · 25.00 ± 0.05 °C', '#38bdf8', 9);
+
+ // --- LEFT REGION: TITRATION APPARATUS (x: 20 to 320) ---
+ // Lab Stand & Base
+ svg += rect(35, 290, 140, 14, '#334155', '#1e293b', 1.5);
+ svg += rect(55, 60, 8, 230, '#64748b');
+ // Clamps
+ svg += rect(59, 90, 55, 6, '#475569');
+ svg += rect(59, 175, 45, 6, '#475569');
+
+ // Water-Jacketed Reaction Cell (outer double wall)
+ svg += rect(80, 180, 120, 110, 'url(#cellGlass32)', '#38bdf8', 1.5, 6);
+ // Water jacket ports
+ svg += rect(70, 200, 12, 10, '#0ea5e9', '#0284c7', 1);
+ svg += text(64, 208, 'IN', '#bae6fd', 7, 'bold');
+ svg += rect(198, 260, 12, 10, '#0ea5e9', '#0284c7', 1);
+ svg += text(212, 268, 'OUT', '#bae6fd', 7, 'bold');
+
+ // Inner Reaction Solution
+ var solHeight = Math.min(80, 55 + v * 0.7);
+ svg += rect(86, 285 - solHeight, 108, solHeight, 'url(#solGrad32)', '#0284c7', 1, 3);
+ svg += text(140, 285 - solHeight + 12, 'HCl + CH₃COOH Analyte', '#e0f2fe', 7.5, 'bold', 'middle');
+
+ // Magnetic Stir Bar & Vortex
+ svg += rect(125, 276, 30, 7, '#f8fafc', '#94a3b8', 1, 3);
+ svg += '<path d="M 130 268 Q 140 263 150 268" stroke="#38bdf8" stroke-dasharray="2,2" fill="none" opacity="0.6"/>';
+ svg += text(140, 295, '350 RPM Stirring', '#94a3b8', 6.5, 'normal', 'middle');
+
+ // Dip-Type Platinized Platinum Conductivity Cell
+ svg += rect(112, 140, 12, 90, '#94a3b8', '#64748b', 1); // stem
+ svg += rect(104, 230, 28, 32, 'rgba(56,189,248,0.15)', '#38bdf8', 1); // glass protective sheath
+ // Platinum plates (coated with Pt black)
+ svg += rect(108, 236, 5, 20, '#0f172a', '#334155', 1);
+ svg += rect(123, 236, 5, 20, '#0f172a', '#334155', 1);
+ svg += '<line x1="113" y1="246" x2="123" y2="246" stroke="#38bdf8" stroke-dasharray="1,2" stroke-width="1.5"/>';
+ svg += text(118, 264, 'Pt Black', '#cbd5e1', 5.5, 'normal', 'middle');
+
+ // Thermometer Probe
+ svg += rect(168, 150, 4, 110, '#f1f5f9', '#94a3b8', 0.8);
+ svg += circle(170, 262, 5, '#ef4444');
+ svg += text(170, 145, '25.0°C', '#f87171', 6.5, 'bold', 'middle');
+
+ // Dispensing Burette
+ svg += rect(105, 55, 12, 105, 'url(#buretteGrad32)', '#94a3b8', 1);
+ // Titrant liquid level inside burette
+ var bLevel = 55 + (v / 35.0) * 80;
+ svg += rect(106, bLevel, 10, 160 - bLevel, 'rgba(245,158,11,0.4)');
+ svg += '<line x1="105" y1="150" x2="117" y2="150" stroke="#f59e0b" stroke-width="2"/>'; // stopcock
+ svg += '<path d="M 111 160 L 111 178" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3,3"/>'; // titrant drops
+ svg += circle(111, 180, 2, '#f59e0b');
+ svg += text(122, 70, '0.1000 M NaOH', '#fbbf24', 7, 'bold');
+ svg += text(122, 82, 'V = ' + v.toFixed(2) + ' mL', '#f59e0b', 7.5, 'bold');
+
+ // Electrode Leads to Meter
+ svg += '<path d="M 116 140 Q 116 115 190 100 T 235 90" stroke="#ef4444" stroke-width="1.5" fill="none"/>';
+ svg += '<path d="M 120 140 Q 125 120 200 105 T 235 94" stroke="#000000" stroke-width="1.5" fill="none"/>';
+
+ // Digital Conductivity Meter Instrument Panel (x: 225, y: 65, w: 105, h: 80)
+ svg += rect(225, 65, 105, 80, '#1e293b', '#38bdf8', 1.5, 5);
+ svg += rect(232, 72, 91, 30, '#021e28', '#0ea5e9', 1, 3);
+ svg += text(277, 92, rawG.toFixed(2) + ' mS', '#38bdf8', 14, 'bold', 'middle');
+ svg += text(277, 114, 'K = 1.000 cm⁻¹ · AC', '#94a3b8', 7, 'bold', 'middle');
+ svg += text(277, 126, 'G_corr = ' + Gcorr.toFixed(2) + ' mS', '#34d399', 7.5, 'bold', 'middle');
+ svg += text(277, 138, 'FREQ: 1.0 kHz', '#cbd5e1', 6.5, 'normal', 'middle');
+
+ // --- RIGHT REGION: TITRATION TRAJECTORY MASTER PLOT (x: 350 to 700) ---
+ var pX = 380, pY = 65, pW = 310, pH = 220;
+ svg += rect(pX - 30, pY - 15, pW + 40, pH + 45, '#131d2e', '#334155', 1, 6);
+
+ // Plot Title
+ svg += text(pX + pW/2 - 10, pY - 2, 'CONDUCTOMETRIC DUAL-BREAK TITRATION CURVE', '#38bdf8', 8.5, 'bold', 'middle');
+
+ // Grid lines
+ for (var i = 0; i <= 7; i++) {
+  var gy = pY + (pH / 7) * i;
+  svg += '<line x1="'+pX+'" y1="'+gy+'" x2="'+(pX+pW)+'" y2="'+gy+'" stroke="#1e293b" stroke-width="1"/>';
+  var valG = (6.0 - (i * 6.0 / 7)).toFixed(1);
+  svg += text(pX - 8, gy + 3, valG, '#64748b', 6.5, 'normal', 'end');
+ }
+ for (var j = 0; j <= 7; j++) {
+  var gx = pX + (pW / 7) * j;
+  svg += '<line x1="'+gx+'" y1="'+pY+'" x2="'+gx+'" y2="'+(pY+pH)+'" stroke="#1e293b" stroke-width="1"/>';
+  var valV = (j * 5.0).toFixed(0);
+  svg += text(gx, pY + pH + 12, valV, '#64748b', 6.5, 'normal', 'middle');
+ }
+
+ // Coordinate mapping: V in [0, 35], G in [0, 6.0]
+ function mapX(vol) { return pX + (vol / 35.0) * pW; }
+ function mapY(g) { return pY + pH - (g / 6.0) * pH; }
+
+ // Theoretical Curves
+ // Branch 1: HCl (0 to 10 mL), G: 5.20 to 1.65
+ var x0 = mapX(0), y0 = mapY(5.20);
+ var x1 = mapX(10.0), y1 = mapY(1.65);
+ // Branch 2: CH3COOH (10 to 25 mL), G: 1.65 to 3.00
+ var x2 = mapX(25.0), y2 = mapY(3.00);
+ // Branch 3: Excess NaOH (25 to 35 mL), G: 3.00 to 5.40
+ var x3 = mapX(35.0), y3 = mapY(5.40);
+
+ // Draw fitted branch lines
+ svg += '<line x1="'+x0+'" y1="'+y0+'" x2="'+x1+'" y2="'+y1+'" stroke="#ef4444" stroke-width="2.5"/>';
+ svg += '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="#38bdf8" stroke-width="2.5"/>';
+ svg += '<line x1="'+x2+'" y1="'+y2+'" x2="'+x3+'" y2="'+y3+'" stroke="#10b981" stroke-width="2.5"/>';
+
+ // Vertical Equivalence Dotted Lines
+ svg += '<line x1="'+x1+'" y1="'+pY+'" x2="'+x1+'" y2="'+(pY+pH)+'" stroke="#ef4444" stroke-width="1" stroke-dasharray="3,3"/>';
+ svg += '<line x1="'+x2+'" y1="'+pY+'" x2="'+x2+'" y2="'+(pY+pH)+'" stroke="#10b981" stroke-width="1" stroke-dasharray="3,3"/>';
+
+ // Equivalence Point Badges
+ svg += circle(x1, y1, 4.5, '#ef4444', '#f8fafc', 1.5);
+ svg += text(x1, y1 - 8, 'V_eq,1 = 10.00 mL (HCl)', '#f87171', 6.5, 'bold', 'middle');
+
+ svg += circle(x2, y2, 4.5, '#10b981', '#f8fafc', 1.5);
+ svg += text(x2, y2 - 8, 'V_eq,2 = 25.00 mL (Total)', '#34d399', 6.5, 'bold', 'middle');
+
+ // Sample Points along Branch 1
+ var pts = [
+  {v: 1.00, g: 4.85}, {v: 2.50, g: 4.31}, {v: 4.00, g: 3.78},
+  {v: 5.50, g: 3.25}, {v: 7.00, g: 2.72}, {v: 8.50, g: 2.18}
+ ];
+ for (var k = 0; k < pts.length; k++) {
+  var px = mapX(pts[k].v);
+  var py = mapY(pts[k].g);
+  svg += circle(px, py, 3, '#f59e0b', '#ffffff', 1);
+ }
+
+ // Active Titration Point
+ var curX = mapX(v);
+ var curY = mapY(Gcorr);
+ svg += circle(curX, curY, 6, '#38bdf8', '#ffffff', 2);
+ svg += '<circle cx="'+curX+'" cy="'+curY+'" r="9" stroke="#38bdf8" stroke-width="1" fill="none" opacity="0.6"/>';
+
+ // Axis Labels
+ svg += text(pX + pW/2, pY + pH + 24, 'Titrant Volume V (0.1000 M NaOH, mL)', '#94a3b8', 7.5, 'normal', 'middle');
+ svg += '<text x="'+(pX - 20)+'" y="'+(pY + pH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5" transform="rotate(-90 '+(pX-20)+' '+(pY+pH/2)+')">Corrected Conductance G_corr (mS)</text>';
+
+ // Analytical Callout Banner
+ svg += text(360, 318, 'Branch 1: HCl (m₁ = -0.355 mS/mL) · Branch 2: CH₃COOH (m₂ = +0.090 mS/mL) · Branch 3: Excess NaOH (m₃ = +0.240 mS/mL)', '#a7f3d0', 7.5);
+
+ return svg;
+}
+
+function drawConductometricCompareView(p, rawVal) {
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0c131d');
+
+ svg += text(20, 24, 'COMPARATIVE CONDUCTOMETRIC PROFILES: STRONG ACID vs WEAK ACID vs MIXTURE', '#e2e8f0', 12, 'bold');
+ svg += text(20, 40, 'Illustrating individual ionic mobility slopes and how conductometry cleanly resolves overlapping acid endpoints', '#38bdf8', 9);
+
+ var panels = [
+  {title: 'A. STRONG ACID (HCl)', sub: 'Sharp V-shaped descent & steep ascent', col: '#ef4444', x: 20, w: 215},
+  {title: 'B. WEAK ACID (CH₃COOH)', sub: 'Buffer curve & conductometric rise', col: '#38bdf8', x: 250, w: 215},
+  {title: 'C. ACID MIXTURE (HCl + HOAc)', sub: 'Sequential dual-break inflection', col: '#10b981', x: 480, w: 220}
+ ];
+
+ for (var idx = 0; idx < panels.length; idx++) {
+  var pan = panels[idx];
+  svg += rect(pan.x, 55, pan.w, 235, '#131d2e', '#334155', 1, 6);
+  svg += text(pan.x + 12, 75, pan.title, pan.col, 9, 'bold');
+  svg += text(pan.x + 12, 88, pan.sub, '#94a3b8', 6.5);
+
+  var bx = pan.x + 25, by = 100, bw = pan.w - 40, bh = 140;
+  svg += rect(bx, by, bw, bh, '#0f172a', '#1e293b', 1);
+
+  // Axes
+  svg += '<line x1="'+bx+'" y1="'+(by+bh)+'" x2="'+(bx+bw)+'" y2="'+(by+bh)+'" stroke="#64748b" stroke-width="1"/>';
+  svg += '<line x1="'+bx+'" y1="'+by+'" x2="'+bx+'" y2="'+(by+bh)+'" stroke="#64748b" stroke-width="1"/>';
+
+  if (idx === 0) {
+   // Strong Acid: sharp drop, sharp rise
+   var sx0 = bx, sy0 = by + 20;
+   var sx1 = bx + bw * 0.45, sy1 = by + bh - 15;
+   var sx2 = bx + bw, sy2 = by + 10;
+   svg += '<line x1="'+sx0+'" y1="'+sy0+'" x2="'+sx1+'" y2="'+sy1+'" stroke="#ef4444" stroke-width="2.5"/>';
+   svg += '<line x1="'+sx1+'" y1="'+sy1+'" x2="'+sx2+'" y2="'+sy2+'" stroke="#ef4444" stroke-width="2.5"/>';
+   svg += circle(sx1, sy1, 4, '#ef4444', '#fff', 1);
+   svg += '<line x1="'+sx1+'" y1="'+by+'" x2="'+sx1+'" y2="'+(by+bh)+'" stroke="#ef4444" stroke-dasharray="2,2"/>';
+   svg += text(sx1, by + bh + 14, 'V_eq', '#f87171', 7, 'bold', 'middle');
+   svg += text(bx + bw/2, by + 45, 'H⁺ replaced by Na⁺', '#cbd5e1', 6.5, 'normal', 'middle');
+   svg += text(bx + bw/2, by + 60, '(Δλ = -299.7)', '#94a3b8', 6.5, 'normal', 'middle');
+   svg += text(pan.x + 12, by + bh + 30, 'Single equivalence point at sharp vertex minimum.', '#94a3b8', 6.5);
+  } else if (idx === 1) {
+   // Weak Acid: slight initial dip, gentle buffer rise, sharp excess rise
+   var wx0 = bx, wy0 = by + bh - 30;
+   var wx1 = bx + bw * 0.12, wy1 = by + bh - 25;
+   var wx2 = bx + bw * 0.55, wy2 = by + bh - 60;
+   var wx3 = bx + bw, wy3 = by + 10;
+   svg += '<path d="M '+wx0+' '+wy0+' Q '+(bx+bw*0.06)+' '+(by+bh-20)+' '+wx1+' '+wy1+'" stroke="#38bdf8" stroke-width="2.5" fill="none"/>';
+   svg += '<line x1="'+wx1+'" y1="'+wy1+'" x2="'+wx2+'" y2="'+wy2+'" stroke="#38bdf8" stroke-width="2.5"/>';
+   svg += '<line x1="'+wx2+'" y1="'+wy2+'" x2="'+wx3+'" y2="'+wy3+'" stroke="#38bdf8" stroke-width="2.5"/>';
+   svg += circle(wx2, wy2, 4, '#38bdf8', '#fff', 1);
+   svg += '<line x1="'+wx2+'" y1="'+by+'" x2="'+wx2+'" y2="'+(by+bh)+'" stroke="#38bdf8" stroke-dasharray="2,2"/>';
+   svg += text(wx2, by + bh + 14, 'V_eq', '#38bdf8', 7, 'bold', 'middle');
+   svg += text(bx + bw*0.35, by + bh - 40, 'Na⁺ + Ac⁻ Buffer Rise', '#cbd5e1', 6.5, 'normal', 'middle');
+   svg += text(pan.x + 12, by + bh + 30, 'Buffer formation creates upward curvature before V_eq.', '#94a3b8', 6.5);
+  } else {
+   // Mixture: sharp drop, gentle rise, steep rise
+   var mx0 = bx, my0 = by + 15;
+   var mx1 = bx + bw * 0.35, my1 = by + bh - 15;
+   var mx2 = bx + bw * 0.70, my2 = by + bh - 55;
+   var mx3 = bx + bw, my3 = by + 10;
+   svg += '<line x1="'+mx0+'" y1="'+my0+'" x2="'+mx1+'" y2="'+my1+'" stroke="#ef4444" stroke-width="2"/>';
+   svg += '<line x1="'+mx1+'" y1="'+my1+'" x2="'+mx2+'" y2="'+my2+'" stroke="#38bdf8" stroke-width="2"/>';
+   svg += '<line x1="'+mx2+'" y1="'+my2+'" x2="'+mx3+'" y2="'+my3+'" stroke="#10b981" stroke-width="2"/>';
+   svg += circle(mx1, my1, 3.5, '#ef4444', '#fff', 1);
+   svg += circle(mx2, my2, 3.5, '#10b981', '#fff', 1);
+   svg += '<line x1="'+mx1+'" y1="'+by+'" x2="'+mx1+'" y2="'+(by+bh)+'" stroke="#ef4444" stroke-dasharray="2,2"/>';
+   svg += '<line x1="'+mx2+'" y1="'+by+'" x2="'+mx2+'" y2="'+(by+bh)+'" stroke="#10b981" stroke-dasharray="2,2"/>';
+   svg += text(mx1, by + bh + 14, 'V_1 (HCl)', '#f87171', 6.5, 'bold', 'middle');
+   svg += text(mx2, by + bh + 14, 'V_2 (Total)', '#34d399', 6.5, 'bold', 'middle');
+   svg += text(pan.x + 12, by + bh + 30, 'Two distinct vertices cleanly resolve both acids.', '#a7f3d0', 6.5, 'bold');
+  }
+ }
+
+ svg += text(20, 312, 'Electroanalytical Principle: Visual indicators fail in mixtures due to overlapping pH transitions; conductometry succeeds through ionic mobility slope contrasts.', '#94a3b8', 8);
+ return svg;
+}
+
+function drawConductometricSandboxView(p, rawVal) {
+ var v = p.input || 1.00;
+ var rawG = rawVal || 4.80;
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0c131d');
+
+ svg += text(20, 24, 'CONDUCTOMETRIC TITRATION MULTI-PARAMETER SIMULATION SANDBOX', '#e2e8f0', 12, 'bold');
+ svg += text(20, 40, 'Explore parameter sensitivity: analyte concentrations, titrant molarity, and cell geometry', '#38bdf8', 9);
+
+ // --- LEFT CONTROL PANEL (x: 20 to 250) ---
+ svg += rect(20, 55, 230, 240, '#131d2e', '#334155', 1, 6);
+ svg += text(32, 75, 'ELECTROANALYTICAL PARAMETERS', '#38bdf8', 9, 'bold');
+
+ var params = [
+  {name: 'Analyte Aliquot Volume (V_s)', val: '25.00 mL', desc: 'Sample pipetted into reaction vessel'},
+  {name: 'Initial Dilution Volume (V_0)', val: '100.0 mL', desc: 'Ensures electrode plates fully immersed'},
+  {name: 'Hydrochloric Acid ([HCl])', val: '40.00 mM', desc: 'Strong monoprotic mineral acid'},
+  {name: 'Acetic Acid ([CH₃COOH])', val: '60.00 mM', desc: 'Weak organic acid (pK_a = 4.76)'},
+  {name: 'Sodium Hydroxide ([NaOH])', val: '0.1000 M', desc: 'Standardized basic titrant'},
+  {name: 'Conductivity Cell Constant (K)', val: '1.000 cm⁻¹', desc: 'Verified with 0.0100 M KCl standard'}
+ ];
+
+ for (var i = 0; i < params.length; i++) {
+  var py = 95 + i * 24;
+  svg += text(32, py, params[i].name + ':', '#94a3b8', 7);
+  svg += text(235, py, params[i].val, '#e2e8f0', 7, 'bold', 'end');
+ }
+
+ svg += rect(28, 242, 214, 45, '#1e293b', '#0284c7', 1, 4);
+ svg += text(36, 256, 'STOCHIOMETRIC PREDICTIONS:', '#38bdf8', 7.5, 'bold');
+ svg += text(36, 268, '• V_eq,1 (HCl) = (25.00 × 0.0400) / 0.1000 = 10.00 mL', '#f87171', 6.5);
+ svg += text(36, 278, '• V_eq,2 (Total) = 10.00 + (25.00 × 0.0600)/0.1000 = 25.00 mL', '#34d399', 6.5);
+
+ // --- RIGHT INTERACTIVE DIAGNOSTIC PLOT (x: 270 to 700) ---
+ var pX = 300, pY = 65, pW = 390, pH = 210;
+ svg += rect(pX - 25, pY - 12, pW + 35, pH + 42, '#131d2e', '#334155', 1, 6);
+ svg += text(pX + pW/2, pY - 1, 'MULTI-BRANCH CONDUCTANCE REGRESSION & RESIDUAL ANALYSIS', '#38bdf8', 8.5, 'bold', 'middle');
+
+ // Grid
+ for (var k = 0; k <= 6; k++) {
+  var gy = pY + (pH / 6) * k;
+  svg += '<line x1="'+pX+'" y1="'+gy+'" x2="'+(pX+pW)+'" y2="'+gy+'" stroke="#1e293b" stroke-width="1"/>';
+  var valG = (6.0 - k * 1.0).toFixed(1);
+  svg += text(pX - 8, gy + 3, valG, '#64748b', 6.5, 'normal', 'end');
+ }
+ for (var m = 0; m <= 7; m++) {
+  var gx = pX + (pW / 7) * m;
+  svg += '<line x1="'+gx+'" y1="'+pY+'" x2="'+gx+'" y2="'+(pY+pH)+'" stroke="#1e293b" stroke-width="1"/>';
+  var valV = (m * 5.0).toFixed(0);
+  svg += text(gx, pY + pH + 12, valV, '#64748b', 6.5, 'normal', 'middle');
+ }
+
+ function sMapX(vol) { return pX + (vol / 35.0) * pW; }
+ function sMapY(g) { return pY + pH - (g / 6.0) * pH; }
+
+ // Draw regression confidence band for Branch 1
+ var bx0 = sMapX(0), by0 = sMapY(5.202);
+ var bx1 = sMapX(10.0), by1 = sMapY(1.650);
+ var bx2 = sMapX(25.0), by2 = sMapY(3.000);
+ var bx3 = sMapX(35.0), by3 = sMapY(5.400);
+
+ // Confidence ribbon around Branch 1
+ svg += '<polygon points="'+bx0+','+(by0-4)+' '+bx1+','+(by1-4)+' '+bx1+','+(by1+4)+' '+bx0+','+(by0+4)+'" fill="#ef4444" opacity="0.15"/>';
+ svg += '<line x1="'+bx0+'" y1="'+by0+'" x2="'+bx1+'" y2="'+by1+'" stroke="#ef4444" stroke-width="2.5"/>';
+ svg += '<line x1="'+bx1+'" y1="'+by1+'" x2="'+bx2+'" y2="'+by2+'" stroke="#38bdf8" stroke-width="2.5"/>';
+ svg += '<line x1="'+bx2+'" y1="'+by2+'" x2="'+bx3+'" y2="'+by3+'" stroke="#10b981" stroke-width="2.5"/>';
+
+ // Equivalence markers
+ svg += circle(bx1, by1, 4, '#ef4444', '#fff', 1.5);
+ svg += circle(bx2, by2, 4, '#10b981', '#fff', 1.5);
+ svg += '<line x1="'+bx1+'" y1="'+pY+'" x2="'+bx1+'" y2="'+(pY+pH)+'" stroke="#ef4444" stroke-dasharray="2,2"/>';
+ svg += '<line x1="'+bx2+'" y1="'+pY+'" x2="'+bx2+'" y2="'+(pY+pH)+'" stroke="#10b981" stroke-dasharray="2,2"/>';
+
+ // Callouts
+ svg += text(bx1 + 5, by1 - 10, 'V_eq,1 = 10.00 mL', '#f87171', 7, 'bold');
+ svg += text(bx2 + 5, by2 - 10, 'V_eq,2 = 25.00 mL', '#34d399', 7, 'bold');
+
+ // Active Point
+ var curX = sMapX(v);
+ var curGcorr = Math.round(rawG * (100.0 + v) / 100.0 * 100) / 100;
+ var curY = sMapY(curGcorr);
+ svg += circle(curX, curY, 6, '#38bdf8', '#ffffff', 2);
+
+ // Regression summary text
+ svg += text(300, 312, 'Regression Statistics: Branch 1 R² = 0.99999, Slope m₁ = -0.3552 mS/mL, Intercept G₀ = 5.202 mS.', '#789c80', 8);
+
  return svg;
 }

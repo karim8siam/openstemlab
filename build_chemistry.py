@@ -159,6 +159,24 @@ def observation(c,value):
   v0_mM=raw / 1000.0
   y=rnd(1.0 / v0_mM, 2)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='conductometric-titration-strong-weak-acids':
+  v=float(value)
+  table_raw={1.00:4.80, 2.50:4.21, 4.00:3.63, 5.50:3.08, 7.00:2.54, 8.50:2.01}
+  table_y={1.00:4.85, 2.50:4.31, 4.00:3.78, 5.50:3.25, 7.00:2.72, 8.50:2.18}
+  key=round(v, 2)
+  if key in table_raw:
+   raw=table_raw[key]
+  else:
+   if v <= 10.00:
+    Gcorr = 5.202 - 0.3552 * v
+   elif v <= 25.00:
+    Gcorr = 1.650 + 0.0900 * (v - 10.00)
+   else:
+    Gcorr = 3.000 + 0.2400 * (v - 25.00)
+   raw=round(Gcorr / ((100.0 + v) / 100.0), 2)
+  x=rnd(v, 2)
+  y=table_y.get(key, rnd(raw * (100.0 + v) / 100.0, 2))
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='potentiometric-redox-titration-fe-ce':
   v=float(value)
   table={5.00:644.36, 8.00:660.62, 10.00:669.62, 12.50:679.99, 15.00:690.38, 20.00:715.65}
@@ -415,6 +433,14 @@ def estimate(c,f):
   ref=0.500
   se=abs(f.get('slopeSE', 0.05) / b) if b > 0 else 0.002
   return KM, se, ref
+ elif slug=='conductometric-titration-strong-weak-acids':
+  G0=f['b']
+  absM=abs(f['m'])
+  Gmin=1.650
+  Veq1=(G0 - Gmin) / absM
+  c_HCl=(Veq1 * 0.1000 / 25.00) * 1000.0
+  se=abs(f.get('slopeSE', 0.001)) / absM * c_HCl
+  return c_HCl, se, 40.00
  elif slug=='potentiometric-redox-titration-fe-ce':
   E_formal=f['b']
   se=f.get('interceptSE', f.get('slopeSE', 0.05))
@@ -546,6 +572,10 @@ def formula(c,f):
   Vmax=1.0 / b
   KM=m / b
   return f"Slope K_M/V_max = {fmt(m,4)} min; Intercept 1/V_max = {fmt(b,4)} min·mM⁻¹ (V_max = {fmt(Vmax*1000.0,2)} μM/min, K_M = {fmt(KM,4)} mM)"
+ elif slug=='conductometric-titration-strong-weak-acids':
+  G0=f['b']
+  m=f['m']
+  return f"Branch 1 Fit: G_corr = {fmt(m,4)}·V + {fmt(G0,3)} mS; Extrapolated V_eq,1 = 10.00 mL; c_HCl = (V_eq,1·c_NaOH)/V_s = 40.00 mM"
  elif slug=='potentiometric-redox-titration-fe-ce':
   E_formal=f['b']
   slope=f['m']
@@ -943,6 +973,25 @@ def worked(c,row):
    f"   Linearized equation: 1/v₀ = (K_M / V_max) · (1/[S]) + 1/V_max.\n"
    f"   Slope m = K_M / V_max = 12.50 min; Y-intercept b = 1/V_max = 25.00 min·mM⁻¹.\n"
    f"   Extracted parameters: V_max = 1/b = 0.0400 mM/min (40.0 μM/min); K_M = m / b = 0.500 mM with R² = 1.00000."
+  )
+ elif slug=='conductometric-titration-strong-weak-acids':
+  v=row['input']
+  raw=row['raw']
+  x=row['x']
+  y=row['y']
+  return (
+   f"Representative calculation for conductometric acid titration coordinate at titrant addition V = {v:.2f} mL:\n"
+   f"1. Conductance Acquisition & Dilution Correction Factor (initial volume V_0 = 100.0 mL):\n"
+   f"   Measured raw electrolytic conductance on digital bridge: G_raw = {raw:.2f} mS.\n"
+   f"   Volumetric expansion factor: (V_0 + V) / V_0 = (100.0 + {v:.2f}) / 100.0 = {(100.0+v)/100.0:.4f}.\n"
+   f"   Normalized corrected conductance: G_corr = G_raw × (V_0 + V) / V_0 = {raw:.2f} × {(100.0+v)/100.0:.4f} = {y:.2f} mS.\n"
+   f"2. Coordinate Mapping for Branch 1 Regression:\n"
+   f"   Abscissa: x = Titrant Volume V = {x:.2f} mL.\n"
+   f"   Ordinate: y = G_corr = {y:.2f} mS.\n"
+   f"3. Linear Branch 1 Regression & Concentration Extraction:\n"
+   f"   Linear model: G_corr = -m_1 · V + G_0 with fitted slope m_1 = -0.3552 mS/mL and intercept G_0 = 5.202 mS (R² = 0.99999).\n"
+   f"   First equivalence volume at minimum conductance G_min = 1.650 mS: V_eq,1 = (5.202 − 1.650) / 0.3552 = 10.00 mL.\n"
+   f"   Hydrochloric acid concentration: c_HCl = (V_eq,1 × c_NaOH) / V_aliquot = (10.00 mL × 0.1000 M) / 25.00 mL = 0.0400 M = 40.00 mM."
   )
  elif slug=='potentiometric-redox-titration-fe-ce':
   v=row['input']
@@ -1595,6 +1644,34 @@ def uncertainty_text(c):
    "covariance matrix through the regression parameters gives u(K_M) / K_M = √[ (u(m)/m)² + (u(b)/b)² - 2·cov(m,b)/(m·b) ]. "
    "The high negative correlation between slope and intercept (r ≈ -0.88) substantially attenuates overall uncertainty, yielding an "
    "expanded uncertainty U(K_M) = 0.015 mM (coverage factor k = 2, 95% confidence level)."
+  )
+ elif slug=='conductometric-titration-strong-weak-acids':
+  return (
+   "In the high-precision conductometric titration of binary strong and weak acid mixtures (hydrochloric acid and acetic acid), "
+   "metrological uncertainties and physical electroanalytical boundary factors are rigorously quantified across electrochemical, "
+   "thermostatic, volumetric, and multi-branch regression domains: "
+   "(1) High-Frequency AC Impedance Bridge Calibration and Phase Nulling: Conductance measurements are acquired using a microprocessor-controlled "
+   "alternating-current Wheatstone bridge operating at an excitation frequency of 1.0 kHz. High-frequency excitation eliminates Faradaic "
+   "electrolysis of the aqueous solvent and suppresses capacitive double-layer polarization at the platinized platinum electrode plates. "
+   "Residual capacitive phase shifts are balanced via an adjustable parallel trimmer capacitor, ensuring that the measured conductance "
+   "reflects pure ohmic solution conductivity with an instrument accuracy of ±0.05% of reading (±0.001 mS). "
+   "(2) Cell Constant Metrology and Calibration Traceability: The dip-type conductivity cell is calibrated against certified 0.0100 M KCl "
+   "primary reference standard solution (κ_std = 1.4087 mS/cm at 25.00 °C, traceable to NIST Standard Reference Material 3193). The experimental "
+   "cell constant K_cell = 1.000 ± 0.004 cm⁻¹ carries an expanded relative uncertainty u_r(K_cell) = 0.40% (coverage factor k = 2). "
+   "(3) Thermostatic Jacket Stability and Temperature Coefficient Sensitivity: Electrolytic conductivity displays a large positive "
+   "temperature coefficient of approximately +1.8% per °C (α_25 = +0.018 K⁻¹), driven by the Arrhenius reduction of water dynamic viscosity "
+   "and thermal acceleration of the Grotthuss proton-hopping mechanism. The double-walled reaction cell is coupled to an external circulating "
+   "water bath maintaining T = 25.00 ± 0.05 °C (298.15 K). This tight thermal control bounds temperature-induced conductance drift to within "
+   "±0.09% (less than ±0.004 mS), preventing artificial curvature along the linear branches. "
+   "(4) Volumetric Dispensing and Dilution Correction Uncertainty: Titrant delivery from a Class A 50.00 mL micro-burette (ISO 385, tolerance "
+   "±0.02 mL) and initial aliquot delivery via a certified 25.00 mL Class A pipette (tolerance ±0.03 mL) combine with the 75.00 mL diluent "
+   "to establish an initial volume V_0 = 100.0 ± 0.05 mL. Applying the dilution factor (V_0 + V) / V_0 propagates a relative uncertainty "
+   "u_r(G_corr) < 0.15% into the corrected conductance values. "
+   "(5) Multi-Branch Least-Squares Intersection Covariance: Ordinary linear regression of corrected conductance G_corr against titrant volume V "
+   "along Branch 1 yields empirical slope m_1 = -0.3552 ± 0.0008 mS/mL and intercept G_0 = 5.202 ± 0.004 mS (R² = 0.99999). Extrapolation "
+   "to the conductance baseline minimum G_min = 1.650 mS isolates the first equivalence volume V_eq,1 = 10.00 ± 0.02 mL. Propagating into "
+   "the hydrochloric acid stoichiometry c_HCl = (V_eq,1 × c_NaOH) / V_aliquot establishes c_HCl = 40.00 ± 0.06 mM, with an expanded "
+   "uncertainty U(c_HCl) = 0.12 mM (coverage factor k = 2, 95% confidence level)."
   )
  elif slug=='potentiometric-redox-titration-fe-ce':
   return (
@@ -2731,6 +2808,91 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"reversible enzyme inhibition mechanisms."
   )
   
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='conductometric-titration-strong-weak-acids':
+  slope_val=f['m']
+  G0_val=f['b']
+  r2_val=f['r2']
+  c_HCl_val=value
+  
+  abstract=(
+   f"The conductometric titration of an unknown binary acid mixture containing hydrochloric acid (strong monoprotic mineral acid) "
+   f"and acetic acid (weak organic carboxylic acid) was quantitatively investigated at 298.15 ± 0.05 K (25.00 °C) using a dip-type "
+   f"platinized platinum electrode cell (cell constant K_cell = 1.000 cm⁻¹) coupled to a 1.0 kHz alternating-current precision conductance bridge. "
+   f"A 25.00 mL analyte aliquot diluted to 100.0 mL in a thermostatic water-jacketed cell was titrated with standardized 0.1000 M NaOH titrant "
+   f"under continuous 350 RPM magnetic stirring. Six titration coordinates spanning the hydrochloric acid neutralization regime (V = {rows[0]['input']:.2f} mL "
+   f"to {rows[-1]['input']:.2f} mL) were recorded following 15 seconds of hydrodynamic mixing and 5 seconds of quiescent equilibration. "
+   f"Raw electrolytic conductance values dropped sharply from {rows[0]['raw']:.2f} mS to {rows[-1]['raw']:.2f} mS as highly mobile hydronium ions "
+   f"(limiting molar conductivity 349.8 S·cm²·mol⁻¹) were progressively replaced by slower sodium ions (50.11 S·cm²·mol⁻¹). Multiplication by the "
+   f"volumetric expansion factor (V_0 + V) / V_0 restored strict linear stoichiometry (R² = {r2_val:.5f}), yielding an empirical neutralization slope "
+   f"m₁ = {slope_val:.4f} mS·mL⁻¹ and initial conductance G₀ = {G0_val:.3f} mS. Extrapolation to the conductance baseline minimum G_min = 1.650 mS "
+   f"isolated the first equivalence point V_eq,1 = 10.00 mL, establishing the concentration of hydrochloric acid as c_HCl = {c_HCl_val:.2f} ± "
+   f"{se:.2f} mM, differing by only {percent:.3f}% from the certified analytical benchmark ({reference:.2f} mM). Beyond the first equivalence point, "
+   f"the onset of weak acid neutralization produced a moderate upward conductance slope (m₂ = +0.090 mS·mL⁻¹) culminating in a second equivalence "
+   f"vertex at V_eq,2 = 25.00 mL, confirming quantitative dual-endpoint resolution."
+  )
+
+  graph_choice=(
+   f"The primary analytical graphic presents the multi-branch conductometric master titration plot: normalized corrected conductance "
+   f"y = G_corr (in mS) plotted against titrant volume x = V (in mL of 0.1000 M NaOH) across the entire titration trajectory (0 to 35 mL). "
+   f"In accordance with electrolytic conduction principles, the plot partitions into three sharply delineated linear regimes: "
+   f"(1) Branch 1 (0 ≤ V ≤ 10.00 mL): a steep descending line (slope m₁ = {slope_val:.4f} mS·mL⁻¹, R² = {r2_val:.5f}) corresponding to the "
+   f"neutralization of hydrochloric acid via H⁺ replacement by Na⁺; (2) Branch 2 (10.00 ≤ V ≤ 25.00 mL): a moderate ascending line "
+   f"(slope m₂ = +0.090 mS·mL⁻¹) reflecting the formation of conducting sodium acetate from unionized acetic acid; and (3) Branch 3 (V > 25.00 mL): "
+   f"a steep ascending line (slope m₃ = +0.240 mS·mL⁻¹) driven by the accumulation of excess, highly mobile hydroxide ions (λ° = 198.6 S·cm²·mol⁻¹). "
+   f"The sharp intersection of Branches 1 and 2 directly establishes V_eq,1 = 10.00 mL, while the intersection of Branches 2 and 3 identifies "
+   f"V_eq,2 = 25.00 mL. A secondary overlay contrasts the linear corrected conductance G_corr with the curved raw conductance G_raw, demonstrating "
+   f"the mathematical necessity of the dilution correction factor (V_0 + V) / V_0."
+  )
+
+  discussion=(
+   f"Conductometric titrimetry is founded upon the fundamental physical principle that electrolytic solutions conduct electrical current via "
+   f"the directed hydrodynamic and structural migration of solvated ions under an applied electric field. In accordance with Kohlrausch's law "
+   f"of independent ionic migration, the total electrolytic conductivity of an electrolyte mixture is the sum of the products of each ionic species' "
+   f"concentration and its characteristic molar conductivity:\n"
+   f"  κ = ∑ c_i · λ_i\n\n"
+   f"In the titration of a mixture containing hydrochloric acid and acetic acid with sodium hydroxide:\n"
+   f"  HCl(aq) + NaOH(aq) → NaCl(aq) + H₂O(l)    [Branch 1]\n"
+   f"  CH₃COOH(aq) + NaOH(aq) → CH₃COONa(aq) + H₂O(l)    [Branch 2]\n"
+   f"  NaOH(aq) in excess    [Branch 3]\n\n"
+   f"A critical thermodynamic feature of this binary system is the phenomenon of common-ion suppression. Hydrochloric acid is a strong electrolyte "
+   f"that dissociates completely in water, producing an initial hydronium concentration of [H⁺] ≈ 0.010 M (pH ≈ 2.0). Under this acidic condition, "
+   f"the ionization equilibrium of the weak acetic acid (K_a = 1.75 × 10⁻⁵):\n"
+   f"  CH₃COOH(aq) + H₂O(l) ⇄ H₃O⁺(aq) + CH₃COO⁻(aq)\n"
+   f"is driven backward by Le Chatelier's principle. The degree of dissociation of acetic acid is suppressed below 0.18%, leaving more than 99.8% "
+   f"of the acid in the uncharged molecular form CH₃COOH. Because neutral molecules do not possess net electrical charge, acetic acid contributes "
+   f"essentially zero conductance to the initial solution. Conductance is dictated entirely by free H⁺ and Cl⁻ ions from hydrochloric acid.\n\n"
+   f"Throughout Branch 1, added hydroxide reacts preferentially with the highly acidic hydronium ions. Because the limiting molar conductivity of H⁺ "
+   f"(349.8 S·cm²·mol⁻¹) is nearly seven times greater than that of Na⁺ (50.11 S·cm²·mol⁻¹), every equivalent of H⁺ removed and replaced by Na⁺ "
+   f"produces a massive net conductance loss (Δλ = -299.7 S·cm²·mol⁻¹). This creates the steep negative slope m₁ = {slope_val:.4f} mS·mL⁻¹. "
+   f"At the first equivalence point (V_eq,1 = 10.00 mL), all hydrochloric acid is consumed and the solution reaches a conductance minimum "
+   f"consisting solely of sodium chloride and unionized acetic acid.\n\n"
+   f"Upon further titrant addition (Branch 2), neutralization of acetic acid begins. Molecular CH₃COOH is converted into sodium acetate, "
+   f"releasing free Na⁺ (50.11 S·cm²·mol⁻¹) and acetate anions (40.90 S·cm²·mol⁻¹). Because new ions are continuously added to the solution without "
+   f"consuming existing ionic carriers, conductance rises with a positive slope proportional to (λ°_Na + λ°_Ac) = +91.01 S·cm²·mol⁻¹. "
+   f"At the second equivalence point (V_eq,2 = 25.00 mL), all acetic acid is neutralized. Subsequent addition of sodium hydroxide (Branch 3) "
+   f"introduces excess unreacted Na⁺ and highly mobile OH⁻ ions (λ°_OH = 198.6 S·cm²·mol⁻¹), accelerating the upward slope to a steep "
+   f"+248.71 S·cm²·mol⁻¹.\n\n"
+   f"From the linear intersection coordinates, the equivalence volumes were determined as V_eq,1 = 10.00 mL and V_eq,2 = 25.00 mL. "
+   f"The concentration of hydrochloric acid in the original 25.00 mL aliquot was calculated as:\n"
+   f"  c_HCl = (V_eq,1 × c_NaOH) / V_aliquot = (10.00 mL × 0.1000 M) / 25.00 mL = 0.0400 M = 40.00 mM\n"
+   f"while the concentration of acetic acid was calculated from the differential volume ΔV = V_eq,2 − V_eq,1 = 15.00 mL:\n"
+   f"  c_HOAc = (ΔV × c_NaOH) / V_aliquot = (15.00 mL × 0.1000 M) / 25.00 mL = 0.0600 M = 60.00 mM.\n"
+   f"The experimental hydrochloric acid concentration ({c_HCl_val:.2f} mM) agrees exactly with the reference standard ({reference:.2f} mM), "
+   f"demonstrating the exceptional discriminatory power and accuracy of conductometric titrimetry."
+  )
+
+  conclusion=(
+   f"The conductometric titration of an unknown binary mixture of hydrochloric acid and acetic acid with standardized sodium hydroxide has rigorously established: "
+   f"(1) strict linearity of the dilution-corrected conductometric branches across the pre-equivalence neutralization regime (R² = {r2_val:.5f}); "
+   f"(2) an experimental hydrochloric acid concentration c_HCl = {c_HCl_val:.2f} ± {se:.2f} mM, differing by only {percent:.3f}% from the certified "
+   f"benchmark value of {reference:.2f} mM; "
+   f"(3) an empirical neutralization slope m₁ = {slope_val:.4f} mS·mL⁻¹ confirming the selective consumption of high-mobility hydronium ions; "
+   f"(4) clean resolution of the weak acetic acid equivalence point at V_eq,2 = 25.00 mL (c_HOAc = 60.00 mM) via the second linear intersection vertex; "
+   f"and (5) the operational validity of high-frequency AC impedance bridges (1.0 kHz) and platinized platinum electrodes for eliminating Faradaic "
+   f"electrolysis and double-layer polarization in quantitative electroanalytical chemistry."
+  )
+
   return abstract, graph_choice, discussion, conclusion
  elif slug=='potentiometric-redox-titration-fe-ce':
   slope_val=f['m']
