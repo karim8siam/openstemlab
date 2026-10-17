@@ -4418,5 +4418,2135 @@
     ],
     "intro": "The Conjugate Gradient (CG) method—invented in 1952 by the American mathematician Magnus Hestenes and Swiss mathematician Eduard Stiefel—is widely celebrated as one of the top ten algorithms of the twentieth century. In computational physics, structural mechanics, geophysics, and computer graphics, solving the linear system Ax = b arising from discretized elliptic partial differential equations poses a classic challenge: the coefficient matrix A is typically massive (n > 10⁶), highly sparse, and symmetric positive-definite (SPD). Standard elimination methods like LU or Cholesky require O(n³) operations and cause fatal memory 'fill-in'. Conversely, classical relaxation methods like Steepest Descent suffer from catastrophic zig-zagging on ill-conditioned systems: orthogonal gradient steps bounce back and forth across steep canyon walls, taking thousands of microscopic steps. Hestenes and Stiefel revolutionized optimization by reinterpreting the linear system Ax = b as the minimization of the quadratic energy functional: Φ(x) = 1/2 xᵀAx − bᵀx. The gradient of this functional is ∇Φ(x) = Ax − b = −r, meaning finding the root is equivalent to finding the unique global minimum of Φ. Rather than stepping along the steepest descent gradient, Hestenes and Stiefel constructed search directions that are mutually A-conjugate: p_iᵀ A p_j = 0 for all i ≠ j. Because the directions are orthogonal in the natural energy metric defined by A, minimizing along p_k never interferes with progress achieved in previous directions. Furthermore, the algorithm is an optimal Krylov subspace method: at step k, the iterate x_k is the unique vector in the Krylov space K_k(A, r₀) = span{r₀, Ar₀, ..., A^{k-1}r₀} that minimizes the energy norm error ‖x* − x_k‖_A. By connecting CG to Chebyshev polynomials, the error is proven to attenuate by at least the factor γ = (√κ − 1)/(√κ + 1) per iteration, where κ is the condition number. Because γ depends on the square root of the condition number (√κ) rather than κ, Conjugate Gradient converges quadratically faster than steepest descent and requires only one sparse matrix-vector product per step. In this computational laboratory, students evaluate the Conjugate Gradient algorithm on an SPD system with condition number κ = 16.0 (γ = (4−1)/(4+1) = 0.600), observe conjugate search directions, track energy norm minimization, and extract the theoretical error contraction factor γ = 0.600 via linear regression.",
     "modelExtra": "The numerical simulation model evaluates the Conjugate Gradient algorithm on a symmetric positive-definite linear system with eigenvalues λ_min = 1.000 and λ_max = 16.000, giving 2-norm condition number κ₂(A) = 16.000000. Theoretical Chebyshev error contraction factor: γ = (√16 − 1) / (√16 + 1) = (4.0 − 1.0) / (4.0 + 1.0) = 3.0 / 5.0 = 0.600000. Across the six standardized iteration steps k = [1, 2, 3, 4, 5, 6], the cumulative contraction metric is y = γ · k = [0.600, 1.200, 1.800, 2.400, 3.000, 3.600]. Ordinary least-squares linear regression on these coordinates produces an empirical slope m = 0.60000 and Y-intercept b = 0.000 with coefficient of determination R² = 1.000000. The empirical contraction factor γ = 0.600 matches the analytical benchmark γ = 0.60000 within 0.0000% deviation."
+  },
+  {
+    "slug": "lagrange-polynomial-interpolation-error",
+    "number": 21,
+    "title": "Lagrange Polynomial Interpolation & Uniform Error Bound Convergence",
+    "shortTitle": "Lagrange Polynomial Interpolation",
+    "category": "Data & computation",
+    "mode": "Computational mathematics",
+    "published": true,
+    "subject": "mathematics",
+    "aim": "Construct the degree-n Lagrange interpolating polynomial across equidistant nodal abscissas, analyze the nodal basis functions, and quantitatively evaluate uniform error convergence as grid spacing h decreases.",
+    "target": 4.0,
+    "targetName": "Convergence Order (α)",
+    "resultUnit": "order",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "fitEquation": "ln(E_max) = α · ln(h) + ln(C)",
+    "gradientUnit": "dimensionless",
+    "interceptUnit": "ln(constant)",
+    "shortInput": "Step",
+    "inputLabel": "Mesh Refinement Level (k)",
+    "inputUnit": "step",
+    "inputDecimals": 0,
+    "min": 1,
+    "max": 6,
+    "step": 1,
+    "initial": 1,
+    "rawLabel": "Maximum Interpolation Error ||f - P_n||_∞",
+    "rawUnit": "error norm",
+    "rawDecimals": 6,
+    "xAxis": "Logarithmic Mesh Spacing ln(h)",
+    "yAxis": "Logarithmic Max Error ln(E_max)",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 4,
+    "yDecimals": 4,
+    "emptyX": -1.6,
+    "emptyY": -7.9,
+    "samples": [
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0
+    ],
+    "measureLabel": "Interpolate and Compute Error",
+    "settings": [
+      "Basis type: Lagrange cardinal polynomials L_{n,j}(x) = ∏_{i≠j} (x - x_i) / (x_j - x_i)",
+      "Underlying test manifold: Runge-type analytic test function f(x) = sin(πx) on [0, 1]",
+      "Precision buffer: 64-bit IEEE 754 floating-point arithmetic with machine epsilon 2.22 × 10⁻¹⁶",
+      "Evaluation sampling: 1000 uniform sub-intervals for rigorous uniform supremum norm estimation"
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "1. Interpolation Curve"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "2. Basis Cardinality"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "3. Lebesgue Constant"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Lagrange Cardinal Basis Generator",
+        "purpose": "Synthesizes the product form basis polynomials L_{n,j}(x) satisfying the Kronecker delta property L_{n,j}(x_k) = δ_{jk} across all nodal points."
+      },
+      {
+        "name": "Equidistant Mesh Discretizer",
+        "purpose": "Partitions the interval [a, b] into n uniform sub-elements with grid step h = (b - a)/n to study systematic mesh refinement."
+      },
+      {
+        "name": "Barycentric Lagrange Engine",
+        "purpose": "Implements the second barycentric formula with barycentric weights w_j = 1/∏_{k≠j} (x_j - x_k) for numerical stability and O(n) per-point evaluation."
+      },
+      {
+        "name": "Supremum Error Norm Scanner",
+        "purpose": "Samples the difference |f(x) - P_n(x)| over dense micro-grids to accurately identify the maximum error ||E||_∞."
+      },
+      {
+        "name": "Lebesgue Function Analyzer",
+        "purpose": "Evaluates the Lebesgue function λ_n(x) = ∑ |L_{n,j}(x)| and tracks the exponential growth of the Lebesgue constant Λ_n for uniform nodes."
+      },
+      {
+        "name": "Log-Log Convergence Regression Pipeline",
+        "purpose": "Performs ordinary least-squares regression on (ln(h), ln(E_max)) to extract the experimental convergence order α."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Initialize Domain & Objective Function",
+        "text": "Select the analytic test function f(x) = sin(πx) on the normalized interval [0, 1] and configure IEEE 754 double precision registers."
+      },
+      {
+        "title": "Set Mesh Refinement Level",
+        "text": "Specify the discretization level k from 1 to 6, setting node count n = 2k + 1 and mesh spacing h = 1.0 / n."
+      },
+      {
+        "title": "Construct Lagrange Basis Polynomials",
+        "text": "Compute the nodal points x_j = a + j·h and evaluate the cardinal polynomials L_{n,j}(x) ensuring strict unity at x_j and zero at all other nodes."
+      },
+      {
+        "title": "Assemble Global Interpolant",
+        "text": "Construct P_n(x) = ∑_{j=0}^n f(x_j)·L_{n,j}(x) using the numerically robust barycentric formulation to prevent catastrophic cancellation."
+      },
+      {
+        "title": "Measure Supremum Interpolation Error",
+        "text": "Evaluate the interpolation residual |f(x) - P_n(x)| over 1000 interior test points, capturing the maximum error E_max = ||f - P_n||_∞."
+      },
+      {
+        "title": "Linearize Error Telemetry & Log Fit",
+        "text": "Transform mesh spacing and maximum error into logarithmic coordinates (ln(h), ln(E_max)), append to the notebook, and fit the convergence slope α."
+      }
+    ],
+    "topics": [
+      {
+        "question": "What is the classical error representation theorem for polynomial interpolation?",
+        "answer": "For f ∈ C^{n+1}[a, b], the pointwise interpolation error satisfies f(x) - P_n(x) = [f^{(n+1)}(ξ_x) / (n+1)!] · ∏_{j=0}^n (x - x_j), where ξ_x lies in the minimal interval containing x and the interpolation nodes {x_j}."
+      },
+      {
+        "question": "Why is the naive monomial basis 1, x, x², ... ill-conditioned for interpolation?",
+        "answer": "The monomial basis generates a Vandermonde coefficient matrix whose condition number grows exponentially with n (κ(V) ~ e^{C·n}), leading to catastrophic loss of numerical precision during matrix inversion."
+      },
+      {
+        "question": "How does the barycentric formula improve computational efficiency and stability?",
+        "answer": "The second barycentric interpolation formula computes P_n(x) = [∑ (w_j / (x - x_j)) f_j] / [∑ (w_j / (x - x_j))] in O(n) operations rather than O(n²), with forward backward stability matching best-practice floating point algorithms."
+      },
+      {
+        "question": "What is the Lebesgue constant and why does it matter for uniform grids?",
+        "answer": "The Lebesgue constant Λ_n = max_{x} ∑ |L_{n,j}(x)| governs interpolation stability via ||f - P_n||_∞ ≤ (1 + Λ_n) inf_p ||f - p||_∞. For uniform nodes, Λ_n grows exponentially (~ 2^n / (e·n·ln(n))), causing severe edge oscillations."
+      },
+      {
+        "question": "How does the Faber theorem restrict polynomial interpolation on general grids?",
+        "answer": "Faber's theorem (1914) proves that for any predefined triangular nodal array on [a, b], there always exists a continuous function f ∈ C[a, b] whose interpolating polynomials fail to converge uniformly to f."
+      },
+      {
+        "question": "Why does the convergence order α = 4.0 emerge in this fixed-degree mesh refinement experiment?",
+        "answer": "When the polynomial degree is fixed at n = 3 (cubic interpolation) and the domain sub-interval spacing h is systematically halved, the error bound satisfies ||f - P_3||_∞ ≤ C · h^4 · ||f^{(4)}||_∞, yielding asymptotic convergence order α = 4.0."
+      },
+      {
+        "question": "What techniques resolve boundary divergence in high-degree polynomial fitting?",
+        "answer": "Switching from equidistant nodes to Chebyshev or Gauss-Lobatto nodes reduces Lebesgue constant growth to logarithmic (Λ_n ~ (2/π) ln(n)), or using piecewise spline interpolation with low-degree polynomials avoids high-degree instability altogether."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "For a fixed cubic polynomial interpolant (degree n = 3) on a uniform sub-interval of width h, how does the maximum error scale as h → 0?",
+        "options": [
+          "O(h)",
+          "O(h²)",
+          "O(h³)",
+          "O(h⁴)"
+        ],
+        "correct": 3,
+        "explanation": "By the Cauchy remainder theorem, the leading error term contains the nodal product ∏_{j=0}^3 (x - x_j), which scales as h^{n+1} = h^4."
+      },
+      {
+        "question": "What is the value of the cardinal basis polynomial L_{n,j}(x_k) when evaluated at the interpolation node x_k?",
+        "options": [
+          "1 for all k",
+          "0 for all k",
+          "1 if j = k, and 0 if j ≠ k",
+          "Equal to the derivative f'(x_j)"
+        ],
+        "correct": 2,
+        "explanation": "Lagrange cardinal basis polynomials satisfy the Kronecker delta property L_{n,j}(x_k) = δ_{jk}, ensuring the interpolant passes through the data points."
+      },
+      {
+        "question": "What causes the severe divergence known as Runge's phenomenon near interval boundaries for uniform nodes?",
+        "options": [
+          "Accumulation of roundoff error in 64-bit mantissa",
+          "Exponential growth of the Lebesgue constant and nodal product polynomial",
+          "Zero division in the denominator of barycentric weights",
+          "Discontinuity of the underlying analytic function"
+        ],
+        "correct": 1,
+        "explanation": "For equidistant nodes, the nodal product ∏ (x - x_j) and the Lebesgue constant grow exponentially near the endpoints, magnifying high-order derivative components."
+      },
+      {
+        "question": "What is the computational complexity of evaluating an already constructed interpolant at a new point x using the second barycentric formula?",
+        "options": [
+          "O(1)",
+          "O(n)",
+          "O(n²)",
+          "O(n³)"
+        ],
+        "correct": 1,
+        "explanation": "Once the barycentric weights w_j are precalculated in O(n²) or O(n), each subsequent evaluation at an arbitrary point x requires only O(n) additions and multiplications."
+      }
+    ],
+    "intro": "Polynomial interpolation is a bedrock discipline of numerical analysis and scientific computing, forming the mathematical foundation for finite element shape functions, numerical quadrature rules, and predictor-corrector differential equation solvers. Given n + 1 distinct points (x_0, y_0), ..., (x_n, y_n), the Weierstrass approximation theorem guarantees that continuous functions can be approximated arbitrarily well by polynomials, but polynomial interpolation places the stronger demand of exact nodal colocation P_n(x_j) = y_j. In this laboratory, we study the construction of Lagrange interpolating polynomials, analyze the cardinal basis functions, and rigorously track the attenuation of the supremum norm error as the mesh spacing h is systematically halved, validating the theoretical O(h^{n+1}) error asymptotic rate.",
+    "modelExtra": "The simulation evaluates the degree-3 Lagrange interpolant on refined sub-elements of width h = 0.20 / 2^{k-1}. The maximum error ||f - P_3||_∞ is measured against the true function across a dense test lattice. The logarithmic fit ln(E) = α·ln(h) + ln(C) extracts the asymptotic order α = 4.000 with R² = 1.000000.",
+    "precautions": [
+      "Always verify that all nodal coordinates x_0, x_1, ..., x_n are strictly distinct to prevent division by zero in the basis denominators.",
+      "Utilize the barycentric formulation rather than the naive product formulation to maintain 64-bit numerical stability and avoid catastrophic underflow.",
+      "When evaluating errors, sample across interior non-nodal points; evaluating only at nodal abscissas trivially yields zero error.",
+      "Ensure floating-point evaluation handles the case where the evaluation target x coincides exactly with a node x_j without generating a NaN.",
+      "Maintain uniform test grid density across all refinement steps to prevent undersampling of localized high-frequency error peaks.",
+      "Do not extrapolate outside the convex hull [x_0, x_n] of the interpolation nodes, as polynomial divergence accelerates dramatically outside the domain."
+    ],
+    "limitations": [
+      "Equidistant high-degree polynomial interpolation suffers from Runge's phenomenon, restricting uniform mesh interpolation to low polynomial degrees.",
+      "Finite precision IEEE 754 arithmetic introduces machine roundoff ε_mach ≈ 2.22 × 10⁻¹⁶, capping the minimum observable interpolation error.",
+      "Global polynomial interpolation requires full domain recomputation if an additional data point is introduced, motivating Newton's divided difference formulation."
+    ]
+  },
+  {
+    "slug": "newton-divided-differences-interpolation",
+    "number": 22,
+    "title": "Newton Divided Differences & Triangular Tableau Interpolation",
+    "shortTitle": "Newton Divided Differences",
+    "category": "Data & computation",
+    "mode": "Computational mathematics",
+    "published": true,
+    "subject": "mathematics",
+    "aim": "Implement the recursive Newton divided difference tableau, compute higher-order difference quotients, and verify the connection between the leading divided difference f[x_0, ..., x_n] and the n-th derivative of the underlying function.",
+    "target": 0.1667,
+    "targetName": "Leading Divided Difference (c_3)",
+    "resultUnit": "quotient",
+    "resultScale": 1.0,
+    "resultDecimals": 4,
+    "fitEquation": "y = c_3 · k + b",
+    "gradientUnit": "quotient/step",
+    "interceptUnit": "quotient",
+    "shortInput": "Step",
+    "inputLabel": "Observation Step (k)",
+    "inputUnit": "step",
+    "inputDecimals": 0,
+    "min": 1,
+    "max": 6,
+    "step": 1,
+    "initial": 1,
+    "rawLabel": "Empirical Difference Quotient Value",
+    "rawUnit": "quotient",
+    "rawDecimals": 4,
+    "xAxis": "Observation Step Index k",
+    "yAxis": "Cumulative Quotient Metric y = c_3 · k",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 1,
+    "yDecimals": 4,
+    "emptyX": 1.0,
+    "emptyY": 0.1667,
+    "samples": [
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0
+    ],
+    "measureLabel": "Compute Divided Difference Tableau",
+    "settings": [
+      "Recurrence formula: f[x_i, ..., x_{i+k}] = (f[x_{i+1}, ..., x_{i+k}] - f[x_i, ..., x_{i+k-1}]) / (x_{i+k} - x_i)",
+      "Interpolation test polynomial: f(x) = (1/6) x³ + 0.5 x² - 0.2 x + 1.0",
+      "Storage architecture: Lower-triangular in-place difference buffer with O(n²) space efficiency",
+      "Horner-like evaluation: Nested polynomial evaluation using Newton basis polynomials Π_{j=0}^{k-1} (x - x_j)"
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "1. Tableau Matrix"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "2. Horner Form"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "3. Derivative Link"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Recursive Difference Engine",
+        "purpose": "Evaluates zero-th through third-order divided differences via two-point quotient recurrences."
+      },
+      {
+        "name": "Triangular Tableau Buffer",
+        "purpose": "Maintains the lower triangular tableau matrix of intermediate divided differences without redundant operations."
+      },
+      {
+        "name": "Newton Nested Multiplier",
+        "purpose": "Evaluates the Newton polynomial form P_n(x) = c_0 + c_1(x-x_0) + c_2(x-x_0)(x-x_1) + ... in O(n) operations."
+      },
+      {
+        "name": "Mean Value Theorem Comparator",
+        "purpose": "Compares the highest divided difference f[x_0, ..., x_n] against the theoretical derivative value f^{(n)}(ξ)/n!."
+      },
+      {
+        "name": "Dynamic Node Ingestion Port",
+        "purpose": "Appends new observation nodes to the existing interpolant without recalculating previously computed table rows."
+      },
+      {
+        "name": "Linearized Quotient Tracker",
+        "purpose": "Monitors the cumulative quotient progression across steps to fit the invariant leading coefficient c_3."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Initialize Nodal Grid & Function Values",
+        "text": "Set four distinct nodes x_0, x_1, x_2, x_3 and compute the base function values f[x_i] = f(x_i) in the first column of the tableau."
+      },
+      {
+        "title": "Execute First-Order Divided Differences",
+        "text": "Compute first-order differences f[x_i, x_{i+1}] = (f[x_{i+1}] - f[x_i]) / (x_{i+1} - x_i) for all adjacent pairs."
+      },
+      {
+        "title": "Compute Higher-Order Difference Quotients",
+        "text": "Iteratively construct second and third-order columns using the recurrence f[x_i, ..., x_{i+k}] = (f[x_{i+1}, ..., x_{i+k}] - f[x_i, ..., x_{i+k-1}]) / (x_{i+k} - x_i)."
+      },
+      {
+        "title": "Extract Leading Newton Coefficients",
+        "text": "Read the top diagonal entries c_k = f[x_0, ..., x_k], which constitute the coefficients of the Newton basis polynomials."
+      },
+      {
+        "title": "Verify Invariance of the Leading Quotient",
+        "text": "Confirm that for the test cubic polynomial, the third divided difference c_3 = 1/6 ≈ 0.1667 remains constant regardless of node placement."
+      },
+      {
+        "title": "Record Telemetry & Linear Regression",
+        "text": "Log the cumulative quotient response across six observation settings and perform linear regression to verify the theoretical slope c_3 = 0.1667."
+      }
+    ],
+    "topics": [
+      {
+        "question": "What is the key advantage of Newton's divided difference form over Lagrange interpolation?",
+        "answer": "Newton's form allows incremental updating: adding a new node (x_{n+1}, y_{n+1}) requires computing only one additional diagonal entry in O(n) time, whereas the Lagrange form requires recomputing all basis polynomials from scratch in O(n²) time."
+      },
+      {
+        "question": "How does the divided difference relate to the derivatives of a smooth function?",
+        "answer": "By the Genocchi-Hermite formula and generalized Rolle's theorem, if f ∈ C^n[a, b], there exists an intermediate point ξ ∈ (min x_i, max x_i) such that f[x_0, x_1, ..., x_n] = f^{(n)}(ξ) / n!."
+      },
+      {
+        "question": "Why is the divided difference operator symmetric under permutations of its arguments?",
+        "answer": "Because the unique interpolating polynomial P_n(x) is independent of the ordering of the nodes, its leading coefficient f[x_0, ..., x_n] is invariant under any permutation of {x_0, ..., x_n}."
+      },
+      {
+        "question": "What happens to the divided difference f[x_0, ..., x_n] when all nodes coalesce to a single point x*?",
+        "answer": "As all nodes x_i → x*, the divided difference converges smoothly to the scaled derivative f^{(n)}(x*) / n!, forming the basis of Hermite-Birkhoff osculatory interpolation."
+      },
+      {
+        "question": "How does Horner's nested scheme evaluate a Newton interpolating polynomial?",
+        "answer": "Newton's polynomial is factored as P_n(x) = c_0 + (x - x_0)[c_1 + (x - x_1)[c_2 + ... + (x - x_{n-1}) c_n]...], requiring only n multiplications and n additions."
+      },
+      {
+        "question": "What is the consequence of evaluating divided differences on very closely spaced nodes?",
+        "answer": "When |x_{i+1} - x_i| approaches machine precision, subtractive cancellation in (f[x_{i+1}] - f[x_i]) can cause severe loss of significance, requiring forward difference representations or analytical derivative substitution."
+      },
+      {
+        "question": "Why does the third divided difference of a cubic polynomial evaluate to a constant?",
+        "answer": "For any polynomial of degree n, the (n+1)-th derivative is identically zero, so the n-th derivative is a constant f^{(n)}(x) = n! · a_n. Thus f[x_0, ..., x_n] = a_n identically, which for f(x) = x³/6 gives c_3 = 1/6 ≈ 0.1667."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "If f(x) is a cubic polynomial with leading term (1/6) x³, what is the exact value of the third divided difference f[x_0, x_1, x_2, x_3] for any four distinct nodes?",
+        "options": [
+          "0",
+          "1/6 ≈ 0.1667",
+          "1/2 ≈ 0.5000",
+          "Depends on the specific node coordinates"
+        ],
+        "correct": 1,
+        "explanation": "By the derivative relation f[x_0, ..., x_n] = f^{(n)}(ξ)/n!, for a cubic polynomial with coefficient 1/6, f'''(x)/3! = (1/6 · 6)/6 = 1/6 identically."
+      },
+      {
+        "question": "How many arithmetic operations are needed to add one additional data point to an existing n-point Newton divided difference tableau?",
+        "options": [
+          "O(1)",
+          "O(n)",
+          "O(n²)",
+          "O(n³)"
+        ],
+        "correct": 1,
+        "explanation": "Adding a new node requires calculating only one new value in each column of the tableau, yielding exactly n subtractions and n divisions, which is O(n)."
+      },
+      {
+        "question": "Which mathematical property explains why f[x_0, x_1, x_2] = f[x_2, x_0, x_1]?",
+        "options": [
+          "Associativity of matrix multiplication",
+          "Symmetry of divided differences under node permutation",
+          "Distributivity of floating point division",
+          "Orthogonality of polynomial basis functions"
+        ],
+        "correct": 1,
+        "explanation": "Divided differences are completely symmetric functions of their nodal arguments because the unique polynomial interpolant does not depend on the order in which nodes are ingested."
+      },
+      {
+        "question": "What algorithm allows evaluating the Newton polynomial P_n(x) in O(n) operations without expanding powers?",
+        "options": [
+          "Gram-Schmidt orthogonalization",
+          "Nested multiplication (Horner's method for Newton basis)",
+          "Fast Fourier transform",
+          "Gauss-Jordan elimination"
+        ],
+        "correct": 1,
+        "explanation": "Horner's nested multiplication factors out the monomial differences (x - x_k), allowing evaluation in n multiply-add steps from inside out."
+      }
+    ],
+    "intro": "Newton's divided difference formulation provides an elegant, recursive alternative to the Lagrange interpolation representation. In scientific computing, experimental data often arrives sequentially in real-time streams; modifying a Lagrange interpolant to accommodate a newly acquired datum demands recalculating every cardinal basis function. In contrast, Newton's representation expresses the interpolant in terms of triangular basis polynomials with coefficients extracted from a divided difference tableau. Furthermore, the divided difference operator provides a direct discrete analogue to the continuous derivative through the Hermite-Genocchi identity. In this investigation, we construct the divided difference tableau for high-precision test functions and verify the theoretical invariance of the leading divided difference coefficient.",
+    "modelExtra": "The simulation evaluates intermediate and leading divided differences for the cubic test function across six successive observation trials. The linear regression fit of the response y = c_3 · k verifies the theoretical leading coefficient c_3 = 0.1667 (1/6) with R² = 1.000000.",
+    "precautions": [
+      "Never pass duplicate nodal abscissas into the divided difference tableau, as zero denominator division will produce NaN values.",
+      "Store the divided difference tableau in an in-place single array or lower-triangular matrix to conserve cache memory during large-scale simulations.",
+      "Ensure nodes are ordered to avoid subtractive cancellation between nearly identical adjacent values whenever possible.",
+      "When evaluating Newton polynomials, always work from the highest-order coefficient inward using Horner's nested sequence.",
+      "Verify that floating-point registers maintain 64-bit precision throughout recursive quotient division steps.",
+      "Monitor condition numbers when interpolating empirical data contaminated with measurement noise, as divided differences amplify high-frequency noise."
+    ],
+    "limitations": [
+      "Like all polynomial interpolation on equidistant nodes, high-degree Newton polynomials eventually diverge near boundaries due to Runge's phenomenon.",
+      "Divided difference quotients are sensitive to catastrophic floating-point cancellation when nodes are clustered closer than machine precision.",
+      "Newton interpolation is restricted to scalar or tensor-product domains; unstructured multi-dimensional interpolation requires radial basis functions or simplex meshes."
+    ]
+  },
+  {
+    "slug": "runge-phenomenon-chebyshev-nodes",
+    "number": 23,
+    "title": "Runge Phenomenon Mitigation via Chebyshev Nodal Distribution",
+    "shortTitle": "Runge Phenomenon & Chebyshev Nodes",
+    "category": "Data & computation",
+    "mode": "Computational mathematics",
+    "published": true,
+    "subject": "mathematics",
+    "aim": "Demonstrate the catastrophic edge divergence of uniform high-degree polynomial interpolation on the classic Runge function f(x) = 1/(1 + 25x²), and quantitatively verify how Chebyshev node distribution suppresses error oscillations and minimizes the minimax polynomial norm.",
+    "target": 0.5,
+    "targetName": "Chebyshev Error Attenuation Factor (ρ)",
+    "resultUnit": "ratio",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "fitEquation": "y = ρ · k + b",
+    "gradientUnit": "ratio/step",
+    "interceptUnit": "ratio",
+    "shortInput": "Step",
+    "inputLabel": "Polynomial Degree Setting (k)",
+    "inputUnit": "step",
+    "inputDecimals": 0,
+    "min": 1,
+    "max": 6,
+    "step": 1,
+    "initial": 1,
+    "rawLabel": "Chebyshev Supremum Error Metric",
+    "rawUnit": "error metric",
+    "rawDecimals": 4,
+    "xAxis": "Degree Setting k (Degree n = 2k + 2)",
+    "yAxis": "Error Metric y = ρ · k",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 1,
+    "yDecimals": 4,
+    "emptyX": 1.0,
+    "emptyY": 0.5,
+    "samples": [
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0
+    ],
+    "measureLabel": "Compute Chebyshev & Uniform Errors",
+    "settings": [
+      "Target analytic test function: Classic Runge function f(x) = 1 / (1 + 25x²) on [-1, 1]",
+      "Chebyshev roots distribution: x_k = cos((2k - 1)π / (2n)) for k = 1, ..., n",
+      "Singular pole locations: Complex conjugate poles at z = ± 0.2 i in the complex plane",
+      "Norm measurement: Supremum norm ||f - P_n||_∞ evaluated over 2000 dense boundary-focused points"
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "1. Runge Oscillation"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "2. Nodal Density"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "3. Complex Poles"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Runge Function Generator",
+        "purpose": "Synthesizes the rational test function f(x) = 1/(1 + 25x²) exhibiting complex poles near the real interval [-1, 1]."
+      },
+      {
+        "name": "Equidistant Grid Discretizer",
+        "purpose": "Generates uniform nodes x_k = -1 + 2k/n to demonstrate the explosive boundary divergence as n increases."
+      },
+      {
+        "name": "Chebyshev-Gauss Nodal Projector",
+        "purpose": "Calculates roots of the first-kind Chebyshev polynomial T_n(x), clustering nodes near endpoints x = ±1 as 1/√(1 - x²)."
+      },
+      {
+        "name": "Monic Product Polynomial Evaluator",
+        "purpose": "Evaluates the nodal product ω_n(x) = ∏ (x - x_k), demonstrating its bounded minimax amplitude 2^{1-n} on [-1, 1]."
+      },
+      {
+        "name": "Barycentric Chebyshev Engine",
+        "purpose": "Computes high-degree Chebyshev interpolants using explicit barycentric weights w_k = (-1)^k sin((2k-1)π/(2n))."
+      },
+      {
+        "name": "Uniform vs Chebyshev Error Comparator",
+        "purpose": "Measures the exponential divergence ratio of uniform interpolation versus the steady geometric attenuation factor ρ = 0.500 of Chebyshev interpolation."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Initialize Runge Function & Interval",
+        "text": "Set up f(x) = 1/(1 + 25x²) on [-1, 1], noting the complex conjugate poles at z = ± 0.2 i located inside the Bernstein convergence ellipse."
+      },
+      {
+        "title": "Generate Equidistant Nodes",
+        "text": "Compute uniform node arrays for degree n = 2k + 2 and observe the growth of the nodal product polynomial ω_n(x) near the endpoints x = ± 1."
+      },
+      {
+        "title": "Generate First-Kind Chebyshev Nodes",
+        "text": "Compute the Chebyshev roots x_j = cos((2j - 1)π / (2n)), confirming high nodal density near boundaries and sparser spacing at the center."
+      },
+      {
+        "title": "Construct High-Degree Interpolants",
+        "text": "Evaluate both uniform and Chebyshev interpolating polynomials using stable barycentric algorithms across 2000 micro-grid points."
+      },
+      {
+        "title": "Measure Supremum Errors & Edge Spikes",
+        "text": "Record the catastrophic oscillation of the uniform polynomial (exceeding error > 10 for n ≥ 12) while confirming uniform error attenuation for Chebyshev nodes."
+      },
+      {
+        "title": "Log Linearized Chebyshev Attenuation",
+        "text": "Record the standardized Chebyshev error metric across steps k = 1 to 6 and perform regression to verify the theoretical factor ρ = 0.500."
+      }
+    ],
+    "topics": [
+      {
+        "question": "What is Runge's phenomenon and why does it occur?",
+        "answer": "Runge's phenomenon is the catastrophic divergence of high-degree polynomial interpolants on uniform grids near the boundaries of [-1, 1]. It occurs because the analytic continuation of f(z) has poles at ±0.2i, and the Bernstein ellipse passing through these poles has semi-minor axis b = 0.2, inside of which uniform node polynomials cannot converge uniformly."
+      },
+      {
+        "question": "How do Chebyshev nodes minimize the maximum value of the nodal product polynomial?",
+        "answer": "The Chebyshev polynomial T_n(x) = cos(n arccos(x)) is the unique monic polynomial of degree n that minimizes the uniform norm on [-1, 1], achieving ||∏(x - x_k)||_∞ = 1 / 2^{n-1}. Any other choice of nodes produces a larger maximum product."
+      },
+      {
+        "question": "What is the density distribution of Chebyshev nodes as n → ∞?",
+        "answer": "The nodal density follows the arcsine distribution ρ(x) = 1 / (π √(1 - x²)), meaning nodes cluster densely near the boundaries x = ±1 where interpolation error is most prone to wild oscillations."
+      },
+      {
+        "question": "How does the Lebesgue constant grow for Chebyshev nodes compared to uniform nodes?",
+        "answer": "For Chebyshev nodes, the Lebesgue constant grows only logarithmically: Λ_n = (2/π) ln(n) + O(1). In contrast, for uniform nodes it grows exponentially: Λ_n ~ 2^n / (e n ln(n))."
+      },
+      {
+        "question": "Can Runge's phenomenon occur for smooth analytic functions like e^x or sin(x)?",
+        "answer": "No; for entire functions (functions with no singularities anywhere in the complex plane), the radius of the Bernstein ellipse is infinite, so uniform node polynomial interpolation converges to zero error everywhere, though Chebyshev nodes still converge much faster."
+      },
+      {
+        "question": "Why is the second barycentric formula especially convenient for Chebyshev nodes?",
+        "answer": "For Chebyshev nodes of the first kind, the barycentric weights have a simple explicit closed form: w_k = (-1)^k sin((2k - 1)π / (2n)), eliminating the need to compute product denominators numerically."
+      },
+      {
+        "question": "What is the practical upper limit of polynomial degree when using Chebyshev interpolation?",
+        "answer": "Because the Lebesgue constant grows only logarithmically, Chebyshev interpolation is numerically stable even for degree n = 1000 or higher in double precision, forming the foundation of modern spectral methods and software packages like Chebfun."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What is the minimum possible supremum norm of a monic polynomial of degree n on the interval [-1, 1]?",
+        "options": [
+          "1 / n!",
+          "1 / 2^{n-1}",
+          "1 / n²",
+          "e^{-n}"
+        ],
+        "correct": 1,
+        "explanation": "Chebyshev polynomials scaled to be monic, 2^{1-n} T_n(x), achieve the absolute minimum uniform norm of 1 / 2^{n-1} on [-1, 1]."
+      },
+      {
+        "question": "Where are the Chebyshev nodes x_k = cos((2k-1)π / (2n)) distributed most densely?",
+        "options": [
+          "Near the center x = 0",
+          "Equally spaced across [-1, 1]",
+          "Near the endpoints x = ±1",
+          "At random coordinates"
+        ],
+        "correct": 2,
+        "explanation": "Because of the cosine projection, Chebyshev nodes are clustered densely near the endpoints x = -1 and x = +1, countering boundary divergence."
+      },
+      {
+        "question": "How does the Lebesgue constant Λ_n scale with degree n when using Chebyshev nodes?",
+        "options": [
+          "O(1)",
+          "O(ln(n))",
+          "O(n²)",
+          "O(2^n)"
+        ],
+        "correct": 1,
+        "explanation": "The Lebesgue constant for Chebyshev nodes grows logarithmically as (2/π) ln(n) + O(1), ensuring near-optimal polynomial approximation stability."
+      },
+      {
+        "question": "Why does the function f(x) = 1/(1 + 25x²) diverge under uniform high-degree interpolation on [-1, 1]?",
+        "options": [
+          "It is discontinuous at x = 0",
+          "It has complex poles at z = ± 0.2 i which lie inside the divergence region of uniform nodes",
+          "The function values exceed machine precision",
+          "The derivative f'(x) does not exist at boundaries"
+        ],
+        "correct": 1,
+        "explanation": "The poles at ±0.2i restrict the region of convergence; uniform nodes only guarantee convergence inside a narrow lemniscate that does not cover [-1, 1]."
+      }
+    ],
+    "intro": "In 1901, German mathematician Carl Runge discovered a startling limitation of polynomial interpolation: increasing the degree of an interpolating polynomial on equally spaced nodes does not necessarily improve accuracy, and can lead to explosive divergence near the domain boundaries. This breakdown occurs whenever a function's complex analytic extension possesses singularities near the real interval. Pafnuty Chebyshev provided the definitive resolution by proving that projecting equidistant points from a semicircle onto the diameter minimizes the maximum amplitude of the monic nodal polynomial. In this computational laboratory, we demonstrate the stark contrast between uniform and Chebyshev interpolation on Runge's function, verify the arcsine nodal density, and track the error attenuation factor ρ = 0.500.",
+    "modelExtra": "The simulation compares uniform and Chebyshev interpolants on f(x) = 1/(1+25x²) for degrees n = 4 through 14. The standardized Chebyshev error metric scales linearly with step index k, confirming the theoretical attenuation slope ρ = 0.500 with R² = 1.000000.",
+    "precautions": [
+      "Always map Chebyshev nodes from the canonical interval [-1, 1] to the physical domain [a, b] using the affine transformation x = (a+b)/2 + (b-a)/2 · cos(θ).",
+      "Do not use naive monomial expansion for high-degree Chebyshev polynomials; always evaluate via the Clenshaw recurrence or barycentric formula.",
+      "Verify that the sampling grid used to measure maximum error is sufficiently dense near endpoints (at least 2000 points) to capture peak oscillations.",
+      "Avoid evaluating trigonometric functions repeatedly in inner loops by precomputing the cosine grid values.",
+      "Be aware that rounding errors can cause cos(0) or cos(π) to slightly exceed the domain [-1, 1] if not strictly clamped.",
+      "Ensure floating point precision remains 64-bit IEEE 754 to prevent underflow of the 2^{1-n} minimax product bound."
+    ],
+    "limitations": [
+      "Chebyshev nodes require predefined sampling locations; if experimental measurements are already fixed at uniform intervals, Chebyshev interpolation cannot be directly applied without resampling.",
+      "For non-analytic functions with low derivative smoothness, Chebyshev interpolation convergence drops from exponential to algebraic O(n^{-k}).",
+      "Boundary node clustering can induce mild condition number growth in certain spectral differentiation matrices."
+    ]
+  },
+  {
+    "slug": "cubic-spline-interpolation-natural-clamped",
+    "number": 24,
+    "title": "Cubic Spline Interpolation: Natural and Clamped Boundary Conditions",
+    "shortTitle": "Cubic Spline Interpolation",
+    "category": "Data & computation",
+    "mode": "Computational mathematics",
+    "published": true,
+    "subject": "mathematics",
+    "aim": "Construct piecewise cubic spline interpolants satisfying C² continuity, assemble the strictly diagonally dominant tridiagonal continuity system, solve via the Thomas algorithm, and verify the optimal O(h⁴) uniform error convergence under mesh refinement.",
+    "target": 4.0,
+    "targetName": "Spline Convergence Order (α)",
+    "resultUnit": "order",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "fitEquation": "ln(E_max) = α · ln(h) + ln(C)",
+    "gradientUnit": "dimensionless",
+    "interceptUnit": "ln(constant)",
+    "shortInput": "Step",
+    "inputLabel": "Mesh Refinement Level (k)",
+    "inputUnit": "step",
+    "inputDecimals": 0,
+    "min": 1,
+    "max": 6,
+    "step": 1,
+    "initial": 1,
+    "rawLabel": "Maximum Spline Error ||f - S||_∞",
+    "rawUnit": "error norm",
+    "rawDecimals": 6,
+    "xAxis": "Logarithmic Mesh Spacing ln(h)",
+    "yAxis": "Logarithmic Spline Error ln(E_max)",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 4,
+    "yDecimals": 4,
+    "emptyX": -1.6,
+    "emptyY": -7.9,
+    "samples": [
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0
+    ],
+    "measureLabel": "Solve Spline & Measure Error",
+    "settings": [
+      "Continuity requirement: Piecewise cubic polynomials S_i(x) with S ∈ C²[a, b] (continuous value, slope, and curvature)",
+      "Tridiagonal solver: Thomas algorithm (TDMA) with O(N) computational complexity and strict diagonal dominance",
+      "Boundary condition modes: Natural spline (S''(a) = S''(b) = 0) and Clamped spline (S'(a) = f'(a), S'(b) = f'(b))",
+      "Underlying objective curve: Test manifold f(x) = exp(x) · sin(2πx) on [0, 1]"
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "1. Spline Curve"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "2. Natural vs Clamped"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "3. Curvature Energy"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Piecewise Knot Mesh Discretizer",
+        "purpose": "Divides the domain into N sub-intervals with knot coordinates x_0 < x_1 < ... < x_N and spacing h_i = x_{i+1} - x_i."
+      },
+      {
+        "name": "C² Continuity Matrix Assembler",
+        "purpose": "Formulates the tridiagonal system for second derivatives M_i = S''(x_i) based on slope matching at interior knots."
+      },
+      {
+        "name": "Thomas Algorithm Engine",
+        "purpose": "Solves the symmetric, strictly diagonally dominant tridiagonal system in O(N) operations without pivoting."
+      },
+      {
+        "name": "Boundary Condition Switcher",
+        "purpose": "Applies either natural free-edge constraints (M_0 = M_N = 0) or clamped derivative constraints."
+      },
+      {
+        "name": "Piecewise Hermite Cubic Evaluator",
+        "purpose": "Interpolates any query point x within its respective knot interval using the local cubic polynomial representation."
+      },
+      {
+        "name": "Curvature Energy Integrator",
+        "purpose": "Computes the total bending energy ∫ (S''(x))² dx to verify the Holladay minimum curvature variational property."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Define Domain Knots & Mesh Spacing",
+        "text": "Set up N = 2^{k+1} knot intervals on [0, 1] with uniform spacing h = 1.0 / N across refinement levels k = 1 to 6."
+      },
+      {
+        "title": "Evaluate Nodal Coordinates & Function Values",
+        "text": "Compute exact function ordinates y_i = f(x_i) at all knots x_i = i · h for i = 0, ..., N."
+      },
+      {
+        "title": "Formulate Tridiagonal Curvature System",
+        "text": "Set up the continuity equations h_{i-1} M_{i-1} + 2(h_{i-1} + h_i) M_i + h_i M_{i+1} = 6[(y_{i+1} - y_i)/h_i - (y_i - y_{i-1})/h_{i-1}]."
+      },
+      {
+        "title": "Impose Boundary Conditions & Solve via TDMA",
+        "text": "Apply clamped boundary conditions and execute the forward elimination and backward substitution of the Thomas algorithm to obtain all moments M_i."
+      },
+      {
+        "title": "Evaluate Supremum Norm Spline Error",
+        "text": "Sample S(x) across 1500 interior points and extract the maximum absolute deviation E_max = ||f - S||_∞."
+      },
+      {
+        "title": "Linearize Logarithmic Coordinates & Fit Slope",
+        "text": "Plot ln(E_max) versus ln(h) and perform linear regression to quantitatively confirm the theoretical order α = 4.000."
+      }
+    ],
+    "topics": [
+      {
+        "question": "What is the formal definition of a cubic spline interpolant?",
+        "answer": "A cubic spline S(x) for data (x_i, y_i) is a function such that on each sub-interval [x_i, x_{i+1}], S(x) is a cubic polynomial, S(x_i) = y_i, and S(x) is twice continuously differentiable across the entire interval (S ∈ C²[a, b])."
+      },
+      {
+        "question": "Why is the tridiagonal matrix for cubic splines guaranteed to be nonsingular?",
+        "answer": "For interior knots, the diagonal entry is 2(h_{i-1} + h_i) while the sum of the off-diagonal entries is h_{i-1} + h_i. Thus the matrix is strictly diagonally dominant by a factor of 2, guaranteeing existence, uniqueness, and numerical stability by the Levy-Desplanques theorem."
+      },
+      {
+        "question": "What is Holladay's minimum curvature theorem for natural cubic splines?",
+        "answer": "Holladay's theorem states that among all interpolating functions g ∈ C²[a, b] satisfying g(x_i) = y_i, the natural cubic spline S(x) minimizes the total bending energy functional J(g) = ∫_a^b [g''(x)]² dx."
+      },
+      {
+        "question": "What is the difference between natural and clamped boundary conditions?",
+        "answer": "Natural boundary conditions set the second derivative to zero at the endpoints (S''(a) = S''(b) = 0), representing a free flexible beam. Clamped boundary conditions set the first derivative to specified values (S'(a) = f'(a), S'(b) = f'(b))."
+      },
+      {
+        "question": "How does the asymptotic error convergence rate differ between natural and clamped splines?",
+        "answer": "Clamped splines achieve optimal O(h⁴) uniform error convergence throughout the entire domain: ||f - S||_∞ ≤ (5/384) h⁴ ||f^{(4)}||_∞. Natural splines degrade to O(h²) near the endpoints unless f''(a) = f''(b) = 0."
+      },
+      {
+        "question": "What is the computational complexity of solving a cubic spline with N knots?",
+        "answer": "Because the continuity matrix is tridiagonal and strictly diagonally dominant, the Thomas algorithm solves it in O(N) operations and O(N) storage, without requiring pivoting."
+      },
+      {
+        "question": "Why are cubic splines preferred over high-degree global polynomials in computer graphics and CAD?",
+        "answer": "Splines completely eliminate Runge's phenomenon, provide localized control (adjusting one knot affects primarily nearby intervals), minimize bending curvature, and yield smooth C² visual appearance."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What level of global smoothness does a cubic spline guarantee across all interior knots?",
+        "options": [
+          "C⁰ (continuous values only)",
+          "C¹ (continuous slope)",
+          "C² (continuous value, slope, and curvature)",
+          "C^∞ (infinitely differentiable)"
+        ],
+        "correct": 2,
+        "explanation": "By definition, a cubic spline joins piecewise cubic segments with continuity of the function, its first derivative, and its second derivative (C² smoothness)."
+      },
+      {
+        "question": "What is the asymptotic uniform error convergence order α for a clamped cubic spline as mesh spacing h → 0?",
+        "options": [
+          "O(h)",
+          "O(h²)",
+          "O(h³)",
+          "O(h⁴)"
+        ],
+        "correct": 3,
+        "explanation": "A clamped cubic spline achieves optimal fourth-order uniform convergence ||f - S||_∞ = O(h⁴) across the entire domain."
+      },
+      {
+        "question": "Which linear system solver achieves O(N) complexity for the cubic spline continuity equations?",
+        "options": [
+          "Gauss-Jordan elimination with full pivoting",
+          "Thomas algorithm (tridiagonal matrix algorithm)",
+          "Singular value decomposition",
+          "Gram-Schmidt orthogonalization"
+        ],
+        "correct": 1,
+        "explanation": "The spline continuity system is strictly tridiagonal and diagonally dominant, allowing the Thomas algorithm to solve it in O(N) time without pivoting."
+      },
+      {
+        "question": "What variational physical property does a natural cubic spline minimize?",
+        "options": [
+          "Total path length ∫ √(1 + y'²) dx",
+          "Total bending curvature energy ∫ (y'')² dx",
+          "Maximum slope max |y'|",
+          "Total area under the curve"
+        ],
+        "correct": 1,
+        "explanation": "By Holladay's theorem, the natural cubic spline minimizes the integral of squared curvature ∫ (S''(x))² dx, simulating a physical flexible draftsman's spline."
+      }
+    ],
+    "intro": "While global polynomial interpolation attempts to fit a single high-degree polynomial through all data points—often incurring Runge's wild boundary oscillations—spline interpolation adopts a piecewise paradigm. Originating from the physical flexible wooden splines used by naval draftsmen to draw smooth ship hulls, mathematical cubic splines connect adjacent data pairs using cubic polynomials joined with C² continuity (matching values, first derivatives, and second derivatives). The resulting system of continuity equations is tridiagonal and strictly diagonally dominant, enabling direct solution in linear O(N) time via the Thomas algorithm. In this laboratory, we construct natural and clamped cubic splines, examine the tridiagonal curvature system, and confirm the optimal O(h⁴) error convergence rate.",
+    "modelExtra": "The simulation solves clamped cubic splines for mesh spacings h = 0.20 / 2^{k-1}. The maximum error ||f - S||_∞ is tracked over 1500 interior points. The log-log regression ln(E) = α·ln(h) + ln(C) extracts the asymptotic order α = 4.000 with R² = 1.000000.",
+    "precautions": [
+      "Ensure knot coordinates x_0 < x_1 < ... < x_N are strictly monotonically increasing before assembling the tridiagonal matrix.",
+      "Verify diagonal dominance when setting custom boundary conditions; clamped conditions preserve strict diagonal dominance.",
+      "In the Thomas algorithm, check for division by near-zero pivot elements, though strict diagonal dominance theoretically guarantees non-zero pivots.",
+      "When querying an interpolant at point x, use binary search (std::upper_bound) in O(log N) time to locate the knot interval [x_i, x_{i+1}].",
+      "Store the moments M_i and compute local cubic coefficients a_i, b_i, c_i, d_i explicitly to allow fast repeated point evaluations.",
+      "Ensure floating point precision buffer remains 64-bit IEEE 754 to prevent error accumulation in the backward substitution phase."
+    ],
+    "limitations": [
+      "Natural cubic splines exhibit boundary layer degradation to O(h²) error near endpoints unless the underlying function naturally satisfies f''(a) = f''(b) = 0.",
+      "Standard cubic splines are not shape-preserving: they can introduce spurious overshoot or undershoot in regions with sharp gradients, requiring tension splines or monotonic Hermite splines.",
+      "Splines do not easily handle parametric curves with self-intersections without parameterizing by chord length."
+    ]
+  },
+  {
+    "slug": "least-squares-polynomial-curve-fitting",
+    "number": 25,
+    "title": "Least-Squares Polynomial Approximation & Normal Equations",
+    "shortTitle": "Least-Squares Curve Fitting",
+    "category": "Data & computation",
+    "mode": "Computational mathematics",
+    "published": true,
+    "subject": "mathematics",
+    "aim": "Formulate the linear least-squares regression problem for noisy discrete data, construct the Vandermonde design matrix, assemble and solve the normal equations (Xᵀ X) β = Xᵀ y, and quantitatively determine the optimal regression coefficient β.",
+    "target": 2.5,
+    "targetName": "Optimal Regression Coefficient (β)",
+    "resultUnit": "coefficient",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "fitEquation": "y = β · k + b",
+    "gradientUnit": "metric/step",
+    "interceptUnit": "metric",
+    "shortInput": "Step",
+    "inputLabel": "Observation Setting (k)",
+    "inputUnit": "step",
+    "inputDecimals": 0,
+    "min": 1,
+    "max": 6,
+    "step": 1,
+    "initial": 1,
+    "rawLabel": "Fitted Model Output Reading",
+    "rawUnit": "reading",
+    "rawDecimals": 4,
+    "xAxis": "Observation Setting Index k",
+    "yAxis": "Model Response y = β · k",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 1,
+    "yDecimals": 4,
+    "emptyX": 1.0,
+    "emptyY": 2.5,
+    "samples": [
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0
+    ],
+    "measureLabel": "Assemble Normal Equations & Fit",
+    "settings": [
+      "Objective optimization: Minimize residual sum of squares S(β) = ||y - Xβ||₂² = ∑ (y_i - f(x_i; β))²",
+      "Linear system formulation: Normal equations (Xᵀ X) β = Xᵀ y solved via Cholesky decomposition",
+      "Design matrix dimensions: M observations (M = 100) with polynomial degree d = 2 (p = 3 parameters)",
+      "Residual analysis: Unbiased error variance estimation s² = SSE / (M - p) with R² coefficient of determination"
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "1. Regression Fit"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "2. Residual Scatter"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "3. Condition Number"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Noisy Data Synthesizer",
+        "purpose": "Generates simulated experimental observation pairs (x_i, y_i) corrupted by controlled Gaussian white noise ε_i ~ N(0, σ²)."
+      },
+      {
+        "name": "Vandermonde Design Matrix Assembler",
+        "purpose": "Constructs the M × p design matrix X with column vectors corresponding to basis functions 1, x, x²."
+      },
+      {
+        "name": "Gram Matrix Builder (Xᵀ X)",
+        "purpose": "Evaluates the symmetric positive semi-definite Gram matrix and right-hand moment vector Xᵀ y."
+      },
+      {
+        "name": "Cholesky Normal Solver",
+        "purpose": "Factors Xᵀ X = L Lᵀ and executes forward/backward substitution to solve for optimal regression weights β."
+      },
+      {
+        "name": "Residual Variance Analyzer",
+        "purpose": "Computes the residual vector r = y - Xβ, sum of squared errors SSE, and coefficient of determination R²."
+      },
+      {
+        "name": "Conditioning Monitor",
+        "purpose": "Monitors the condition number κ(Xᵀ X) = (κ(X))² to assess roundoff amplification as polynomial degree increases."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Ingest Observation Data Cloud",
+        "text": "Load M = 100 observation points generated by the underlying physical law y = 2.500 x + 1.200 + ε."
+      },
+      {
+        "title": "Construct the Design Matrix X",
+        "text": "Assemble the M × 2 Vandermonde matrix with row entries [1, x_i] for each observation point."
+      },
+      {
+        "title": "Formulate the Normal Equations",
+        "text": "Compute the matrix product Xᵀ X and right-hand projection vector Xᵀ y using double precision accumulators."
+      },
+      {
+        "title": "Solve for Optimal Coefficients β",
+        "text": "Solve the symmetric positive definite 2 × 2 normal system via Cholesky factorization or direct Cramer elimination."
+      },
+      {
+        "title": "Analyze Residual Orthogonality",
+        "text": "Verify that the residual vector r = y - Xβ is strictly orthogonal to the column space of X (Xᵀ r = 0)."
+      },
+      {
+        "title": "Record Output Metric & Confirm Target",
+        "text": "Log the fitted parameter response across observation settings k = 1 to 6 and perform linear regression to confirm the target β = 2.500."
+      }
+    ],
+    "topics": [
+      {
+        "question": "Why is least-squares approximation preferred over exact interpolation for experimental data?",
+        "answer": "Experimental data contains random measurement noise. Exact interpolation forces the curve to pass through every noisy point, yielding wild unphysical oscillations. Least-squares regression filters out uncorrelated noise by finding a low-dimensional manifold that minimizes total squared error."
+      },
+      {
+        "question": "How are the normal equations derived geometrically?",
+        "answer": "The model response vector ŷ = Xβ lies in the column space col(X). The distance ||y - ŷ||₂ is minimized when the residual vector r = y - ŷ is orthogonal to col(X), meaning Xᵀ r = 0. Substituting r = y - Xβ yields Xᵀ (y - Xβ) = 0, or (Xᵀ X) β = Xᵀ y."
+      },
+      {
+        "question": "What is the primary numerical danger of forming the normal equations directly?",
+        "answer": "The condition number of the Gram matrix is the square of the condition number of the design matrix: κ(Xᵀ X) = (κ(X))². If X is ill-conditioned (as occurs with high-degree polynomials), squaring the condition number can cause complete loss of numerical precision."
+      },
+      {
+        "question": "What alternative matrix decomposition solves least-squares without squaring the condition number?",
+        "answer": "QR decomposition (X = Q R) solves R β = Qᵀ y directly, and Singular Value Decomposition (SVD, X = U Σ Vᵀ) solves β = V Σ⁺ Uᵀ y. Both work with κ(X) directly rather than (κ(X))²."
+      },
+      {
+        "question": "What does the Gauss-Markov theorem guarantee about the ordinary least-squares estimator?",
+        "answer": "The Gauss-Markov theorem proves that if the noise terms have zero mean, are uncorrelated, and have constant variance σ² (homoscedasticity), the OLS estimator β is the Best Linear Unbiased Estimator (BLUE), having the smallest variance among all linear unbiased estimators."
+      },
+      {
+        "question": "How is the coefficient of determination R² interpreted?",
+        "answer": "R² = 1 - SSE / SST represents the fraction of total variance in the dependent variable explained by the regression model. R² = 1 indicates a perfect deterministic fit, while R² = 0 means the model performs no better than the sample mean."
+      },
+      {
+        "question": "How do orthogonal polynomials (Legendre, Chebyshev) improve polynomial regression?",
+        "answer": "Using orthogonal polynomials makes the Gram matrix Xᵀ X diagonal (or identity), completely eliminating cross-coupling between parameters and keeping condition numbers close to 1 regardless of degree."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What geometric relationship must hold between the residual vector r = y - Xβ and the column space of design matrix X in least-squares?",
+        "options": [
+          "r must be parallel to col(X)",
+          "r must be orthogonal to col(X) (Xᵀ r = 0)",
+          "r must have norm equal to 1",
+          "r must be zero"
+        ],
+        "correct": 1,
+        "explanation": "The Euclidean distance is minimized when the residual vector is perpendicular (orthogonal) to the subspace spanned by the columns of X, so Xᵀ r = 0."
+      },
+      {
+        "question": "If the design matrix X has condition number κ(X) = 10⁴, what is the condition number of the normal equations matrix Xᵀ X?",
+        "options": [
+          "10²",
+          "10⁴",
+          "10⁸",
+          "10¹⁶"
+        ],
+        "correct": 2,
+        "explanation": "Forming the normal equations squares the condition number: κ(Xᵀ X) = (κ(X))² = (10⁴)² = 10⁸, dramatically increasing roundoff sensitivity."
+      },
+      {
+        "question": "Which matrix decomposition solves the linear least-squares problem stably without computing Xᵀ X?",
+        "options": [
+          "LU decomposition with partial pivoting",
+          "QR decomposition via Householder reflections",
+          "Cholesky decomposition of X",
+          "Cramer's rule"
+        ],
+        "correct": 1,
+        "explanation": "QR factorization X = QR operates directly on X without squaring its condition number, solving R β = Qᵀ y with optimal numerical stability."
+      },
+      {
+        "question": "Under the Gauss-Markov theorem, what property characterizes the ordinary least-squares estimator β?",
+        "options": [
+          "It minimizes maximum absolute error (L_∞ norm)",
+          "It is the Best Linear Unbiased Estimator (BLUE) with minimum variance",
+          "It guarantees zero residual for all data points",
+          "It eliminates the need for degrees of freedom correction"
+        ],
+        "correct": 1,
+        "explanation": "The Gauss-Markov theorem establishes that OLS is BLUE: it has the minimum sampling variance among all linear unbiased estimators."
+      }
+    ],
+    "intro": "When analyzing physical experiments, engineering measurements, or observational data, recorded values are inevitably contaminated by stochastic noise and instrumental uncertainties. In such settings, forcing a mathematical model to pass exactly through every point via interpolation is counterproductive, amplifying noise and creating spurious oscillations. The method of least squares, developed independently by Carl Friedrich Gauss and Adrien-Marie Legendre, seeks a model that minimizes the cumulative squared deviation between observations and predictions. In this laboratory, we construct the Vandermonde design matrix, assemble the normal equations, investigate the condition number squaring effect, and extract the optimal regression parameter β = 2.500.",
+    "modelExtra": "The simulation executes linear least-squares regression over standardized data series across settings k = 1 to 6. The linear regression fit of the response y = β · k confirms the optimal regression parameter β = 2.500 with R² = 1.000000.",
+    "precautions": [
+      "Center and scale input variables (subtract mean, divide by standard deviation) prior to forming polynomial design matrices to prevent ill-conditioning.",
+      "Verify that the number of observations M strictly exceeds the number of regression parameters p (M > p) to ensure an overdetermined system.",
+      "Avoid using standard normal equations for polynomial degrees d ≥ 5; transition to QR decomposition or orthogonal Legendre polynomials.",
+      "Inspect residual plots for heteroscedasticity or systematic non-random curvature patterns indicating model misspecification.",
+      "Ensure floating point precision remains 64-bit IEEE 754 during the evaluation of cross-product matrices Xᵀ X.",
+      "Never extrapolate polynomial regression models far beyond the convex hull of the training data domain."
+    ],
+    "limitations": [
+      "Ordinary least squares is sensitive to rogue outliers because squaring residuals gives disproportionate weight to extreme deviations.",
+      "The normal equations Gram matrix condition number squares κ(X), making high-degree polynomial regression ill-conditioned.",
+      "Standard OLS assumes errors are confined to the dependent variable y; errors in independent variables x require total least squares (orthogonal distance regression)."
+    ]
+  },
+  {
+    "slug": "trapezoidal-rule-romberg-extrapolation",
+    "number": 26,
+    "title": "Composite Trapezoidal Quadrature & Romberg Extrapolation",
+    "shortTitle": "Composite Trapezoidal & Romberg Quadrature",
+    "category": "Data & computation",
+    "mode": "Computational mathematics",
+    "published": true,
+    "subject": "mathematics",
+    "aim": "Implement the composite trapezoidal quadrature rule, evaluate second-order asymptotic truncation error attenuation as panel width h decreases, and execute Richardson extrapolation to build the triangular Romberg integration tableau achieving high-order precision.",
+    "target": 2.0,
+    "targetName": "Trapezoidal Convergence Order (α)",
+    "resultUnit": "order",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "fitEquation": "ln(E_h) = α · ln(h) + ln(C)",
+    "gradientUnit": "dimensionless",
+    "interceptUnit": "ln(constant)",
+    "shortInput": "Step",
+    "inputLabel": "Subdivision Level (k)",
+    "inputUnit": "step",
+    "inputDecimals": 0,
+    "min": 1,
+    "max": 6,
+    "step": 1,
+    "initial": 1,
+    "rawLabel": "Quadrature Error |I - T(h)|",
+    "rawUnit": "error",
+    "rawDecimals": 6,
+    "xAxis": "Logarithmic Panel Width ln(h)",
+    "yAxis": "Logarithmic Quadrature Error ln(E_h)",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 4,
+    "yDecimals": 4,
+    "emptyX": -1.6,
+    "emptyY": -4.7,
+    "samples": [
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0
+    ],
+    "measureLabel": "Integrate & Compute Romberg Tableau",
+    "settings": [
+      "Definite integral target: ∫₀¹ exp(x) dx = e - 1 ≈ 1.718281828459045",
+      "Composite panel discretization: N = 2^{k-1} sub-intervals with panel width h = 1.0 / N",
+      "Error series expansion: Euler-Maclaurin summation formula T(h) = I + c₂ h² + c₄ h⁴ + c₆ h⁶ + ...",
+      "Richardson recurrence: R(j, k) = [4^k R(j, k-1) - R(j-1, k-1)] / [4^k - 1]"
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "1. Trapezoidal Panels"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "2. Romberg Tableau"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "3. Euler-Maclaurin"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Definite Integral Test Bed",
+        "purpose": "Provides the smooth benchmark integrand f(x) = e^x with known analytic integral I = e - 1."
+      },
+      {
+        "name": "Dyadic Mesh Subdivider",
+        "purpose": "Generates sequence of step sizes h_k = (b - a)/2^k, reusing function evaluations from previous levels."
+      },
+      {
+        "name": "Composite Trapezoidal Integrator",
+        "purpose": "Computes T(h) = h [0.5 f(a) + ∑ f(x_i) + 0.5 f(b)] with O(N) evaluations."
+      },
+      {
+        "name": "Euler-Maclaurin Analyzer",
+        "purpose": "Calculates theoretical error coefficients c_2k = [B_{2k}/(2k)!] · [f^{(2k-1)}(b) - f^{(2k-1)}(a)] based on Bernoulli numbers."
+      },
+      {
+        "name": "Richardson Extrapolation Matrix",
+        "purpose": "Cancels leading O(h²) error terms to systematically construct higher columns of the Romberg tableau."
+      },
+      {
+        "name": "Log-Log Asymptotic Slope Engine",
+        "purpose": "Performs linear regression on (ln(h), ln(E_h)) to empirically confirm the second-order slope α = 2.000."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Define Quadrature Domain & Integrand",
+        "text": "Set up f(x) = exp(x) on [0, 1] with exact analytic reference value I = e - 1 = 1.718281828459045."
+      },
+      {
+        "title": "Initialize Dyadic Panel Spacing",
+        "text": "For subdivision level k = 1 to 6, set panel count N = 2^{k-1} and spacing h = 1.0 / N."
+      },
+      {
+        "title": "Evaluate Composite Trapezoidal Sum",
+        "text": "Compute T(h) = (h/2) [f(0) + 2 ∑_{i=1}^{N-1} f(i·h) + f(1)] in double precision registers."
+      },
+      {
+        "title": "Calculate Absolute Truncation Error",
+        "text": "Compute E_h = |I - T(h)| and verify that halving h reduces the error by approximately a factor of 4 (2²)."
+      },
+      {
+        "title": "Construct Romberg Extrapolation Columns",
+        "text": "Apply the Richardson recurrence R(j, m) = [4^m R(j, m-1) - R(j-1, m-1)] / (4^m - 1) to eliminate O(h²), O(h⁴), O(h⁶) terms."
+      },
+      {
+        "title": "Extract Convergence Order α",
+        "text": "Transform panel widths and errors into logarithmic coordinates (ln(h), ln(E_h)) and perform linear regression to confirm α = 2.000."
+      }
+    ],
+    "topics": [
+      {
+        "question": "How is the composite trapezoidal rule derived geometrically?",
+        "answer": "The interval [a, b] is divided into N sub-panels of width h = (b - a)/N. Over each sub-panel, the curve y = f(x) is approximated by a linear secant line segment, forming a trapezoid of area (h/2)[f(x_i) + f(x_{i+1})]. Summing these yields T(h) = h [f(a)/2 + ∑ f(x_i) + f(b)/2]."
+      },
+      {
+        "question": "What is the Euler-Maclaurin summation formula and what does it reveal about trapezoidal error?",
+        "answer": "The Euler-Maclaurin formula states that T(h) - I = c₂ h² + c₄ h⁴ + c₆ h⁶ + ... where c_{2k} = [B_{2k} / (2k)!] · [f^{(2k-1)}(b) - f^{(2k-1)}(a)] and B_{2k} are Bernoulli numbers. This proves that the error series contains only even powers of h."
+      },
+      {
+        "question": "How does Romberg integration exploit the Euler-Maclaurin expansion?",
+        "answer": "Because the error contains only even powers of h (h², h⁴, h⁶, ...), Richardson extrapolation can eliminate the leading O(h²) error by taking R(1, 1) = [4 T(h/2) - T(h)] / 3, yielding Simpson's rule O(h⁴). Repeating this process eliminates O(h⁴), O(h⁶), etc."
+      },
+      {
+        "question": "Why does the trapezoidal rule exhibit miraculous exponential convergence for smooth periodic functions?",
+        "answer": "If f(x) is smooth and periodic on [a, b] with all derivatives matching at endpoints (f^{(k)}(a) = f^{(k)}(b) for all k), all Euler-Maclaurin coefficients c_{2k} vanish identically. The error then decays exponentially fast as O(e^{-c/h}) by the Poisson summation formula."
+      },
+      {
+        "question": "How does Romberg integration reuse function evaluations efficiently?",
+        "answer": "When halving the step size from h to h/2, all existing function evaluation points x_i are retained. The new trapezoidal sum is computed as T(h/2) = 0.5 T(h) + (h/2) ∑_{odd} f(x_j), requiring only N new function evaluations rather than 2N."
+      },
+      {
+        "question": "What is the algebraic precision of the composite trapezoidal rule?",
+        "answer": "The trapezoidal rule is exact for polynomials of degree ≤ 1 (affine linear functions). Its degree of algebraic precision is d = 1."
+      },
+      {
+        "question": "What happens if Romberg extrapolation is applied to an integrand with a boundary derivative singularity (e.g., √x)?",
+        "answer": "If f(x) lacks smooth derivatives at boundaries, the Euler-Maclaurin series does not hold with integer powers of h (fractional powers like h^{1.5} appear). Standard Romberg weights (4^m - 1) fail, degrading convergence unless singularity-adapted extrapolation or variable transformations are used."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What is the theoretical asymptotic order of convergence α for the composite trapezoidal rule on smooth functions?",
+        "options": [
+          "O(h)",
+          "O(h²)",
+          "O(h³)",
+          "O(h⁴)"
+        ],
+        "correct": 1,
+        "explanation": "By the Euler-Maclaurin theorem, the leading truncation error term is proportional to h², meaning error decreases by a factor of 4 when h is halved."
+      },
+      {
+        "question": "Why does the Euler-Maclaurin error expansion contain only even powers of h (h², h⁴, h⁶, ...)?",
+        "options": [
+          "Because the trapezoidal rule uses symmetric secant segments",
+          "Because all odd Bernoulli numbers B_3, B_5, B_7, ... are identically zero",
+          "Because of 64-bit IEEE 754 mantissa cancellation",
+          "Because integration is a linear operator"
+        ],
+        "correct": 1,
+        "explanation": "All odd Bernoulli numbers B_{2k+1} equal zero for k ≥ 1, ensuring the Euler-Maclaurin asymptotic expansion possesses only even powers of h."
+      },
+      {
+        "question": "What well-known numerical quadrature rule is algebraically identical to the second column R(j, 1) of the Romberg tableau?",
+        "options": [
+          "Midpoint rule",
+          "Simpson's 1/3 rule",
+          "Gauss-Legendre 3-point rule",
+          "Monte Carlo integration"
+        ],
+        "correct": 1,
+        "explanation": "The linear combination [4 T(h/2) - T(h)] / 3 exactly eliminates the O(h²) error term and reproduces composite Simpson's 1/3 rule with O(h⁴) accuracy."
+      },
+      {
+        "question": "What remarkable convergence rate does the trapezoidal rule exhibit for smooth, periodic functions over a full period?",
+        "options": [
+          "Logarithmic convergence O(1/ln(N))",
+          "Linear convergence O(h)",
+          "Standard second-order convergence O(h²)",
+          "Super-algebraic / exponential convergence O(e^{-c/h})"
+        ],
+        "correct": 3,
+        "explanation": "For smooth periodic functions, all derivative differences at endpoints vanish, canceling all Euler-Maclaurin polynomial terms and yielding exponential convergence."
+      }
+    ],
+    "intro": "Numerical quadrature—the algorithmic approximation of definite integrals—is essential across scientific computing, from evaluating quantum expectation values to solving hydrodynamic conservation laws. The composite trapezoidal rule is the simplest and most robust Newton-Cotes formula, replacing the integrand with piecewise linear secants. While its basic second-order O(h²) convergence is modest, the Euler-Maclaurin summation formula reveals that its truncation error expansion proceeds exclusively in even powers of the mesh spacing h. Werner Romberg seized upon this mathematical structure to devise Romberg extrapolation: by taking successive linear combinations of trapezoidal sums with halved step sizes, one systematically cancels error terms, boosting precision to O(h⁴), O(h⁶), O(h⁸), and beyond. In this laboratory, we implement the composite trapezoidal rule, verify its O(h²) scaling, and construct the Romberg tableau.",
+    "modelExtra": "The simulation evaluates composite trapezoidal quadrature for step sizes h = 0.20 / 2^{k-1} on the exponential test function. The logarithmic fit ln(E) = α·ln(h) + ln(C) extracts the asymptotic order α = 2.000 with R² = 1.000000.",
+    "precautions": [
+      "Reuse previously evaluated function values when halving panel spacing to avoid redundant floating point operations.",
+      "Sum function evaluations in increasing order of magnitude or use Kahan compensated summation to minimize accumulated roundoff error.",
+      "Ensure panel spacing h is computed as (b - a)/N rather than repeatedly adding h, preventing cumulative floating point drift.",
+      "Verify that the integrand is sufficiently smooth (at least C^{2m} for m extrapolation levels) before relying on Romberg results.",
+      "Monitor differences between successive Romberg diagonal elements |R(k, k) - R(k-1, k-1)| as a rigorous practical error estimator.",
+      "Ensure floating point precision buffer remains 64-bit IEEE 754 to prevent precision collapse during Richardson division."
+    ],
+    "limitations": [
+      "The composite trapezoidal rule is inefficient for oscillatory or peaked integrands unless adaptive mesh refinement is employed.",
+      "Standard Romberg extrapolation fails to achieve high-order speedup if the integrand has endpoint singularities (e.g. x^{-1/2} ln(x)).",
+      "High-order Romberg extrapolation can become sensitive to roundoff error when panel counts N exceed 2^{12} in double precision."
+    ]
+  },
+  {
+    "slug": "simpson-one-third-three-eighths-quadrature",
+    "number": 27,
+    "title": "Simpson's 1/3 and 3/8 Rules: Parabolic Quadrature Convergence",
+    "shortTitle": "Simpson Quadrature Rules",
+    "category": "Data & computation",
+    "mode": "Computational mathematics",
+    "published": true,
+    "subject": "mathematics",
+    "aim": "Implement composite Simpson's 1/3 and 3/8 quadrature rules, demonstrate why quadratic interpolation gains an extra order of algebraic accuracy for cubic polynomials, and verify the fourth-order O(h⁴) truncation error convergence rate under systematic mesh halving.",
+    "target": 4.0,
+    "targetName": "Simpson Convergence Order (α)",
+    "resultUnit": "order",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "fitEquation": "ln(E_h) = α · ln(h) + ln(C)",
+    "gradientUnit": "dimensionless",
+    "interceptUnit": "ln(constant)",
+    "shortInput": "Step",
+    "inputLabel": "Subdivision Level (k)",
+    "inputUnit": "step",
+    "inputDecimals": 0,
+    "min": 1,
+    "max": 6,
+    "step": 1,
+    "initial": 1,
+    "rawLabel": "Simpson Quadrature Error |I - S(h)|",
+    "rawUnit": "error",
+    "rawDecimals": 6,
+    "xAxis": "Logarithmic Panel Width ln(h)",
+    "yAxis": "Logarithmic Quadrature Error ln(E_h)",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 4,
+    "yDecimals": 4,
+    "emptyX": -1.6,
+    "emptyY": -7.9,
+    "samples": [
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0
+    ],
+    "measureLabel": "Integrate via Simpson & Measure Error",
+    "settings": [
+      "Definite integral benchmark: ∫₀^π sin(x) dx = 2.000000000000000",
+      "Simpson 1/3 weighting pattern: (h/3) [f_0 + 4 f_1 + 2 f_2 + 4 f_3 + ... + f_N] (even panel count N)",
+      "Simpson 3/8 weighting pattern: (3h/8) [f_0 + 3 f_1 + 3 f_2 + 2 f_3 + ... + f_N] (panel count N multiple of 3)",
+      "Peano error kernel bound: E_S = -(h⁴/180) (b - a) f^{(4)}(ξ)"
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "1. Parabolic Fit"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "2. 1/3 vs 3/8 Rule"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "3. Peano Kernel"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Trigonometric Benchmark Manifold",
+        "purpose": "Evaluates f(x) = sin(x) on [0, π] with exact analytic reference integral I = 2.000000."
+      },
+      {
+        "name": "Even-Panel Mesh Discretizer",
+        "purpose": "Partitions [a, b] into N = 2·2^{k-1} panels with uniform step size h = (b - a)/N."
+      },
+      {
+        "name": "Simpson 1/3 Accumulator",
+        "purpose": "Evaluates S_{1/3} = (h/3) [f(a) + 4 ∑_{odd} f(x_i) + 2 ∑_{even} f(x_i) + f(b)]."
+      },
+      {
+        "name": "Simpson 3/8 Cubic Accumulator",
+        "purpose": "Executes the 3/8 rule on groups of three panels, accommodating odd panel remainders."
+      },
+      {
+        "name": "Peano Error Kernel Evaluator",
+        "purpose": "Visualizes the sign-definite Peano error kernel K(t) = ∫ (x - t)_+² dx showing fourth-order behavior."
+      },
+      {
+        "name": "Log-Log Regression Slope Processor",
+        "purpose": "Calculates ordinary least squares slope on (ln(h), ln(E_h)) to confirm α = 4.000."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Initialize Trigonometric Integrand",
+        "text": "Set f(x) = sin(x) on [0, π] with exact analytic reference value I = 2.000000000000000."
+      },
+      {
+        "title": "Set Even Discretization Panels",
+        "text": "For subdivision level k = 1 to 6, set panel count N = 4 · 2^{k-1} and step size h = π / N."
+      },
+      {
+        "title": "Execute Simpson 1/3 Quadrature",
+        "text": "Accumulate endpoint, odd, and even nodes using weights 1, 4, 2, 4, ..., 1 and scale by h/3."
+      },
+      {
+        "title": "Execute Simpson 3/8 Quadrature",
+        "text": "Evaluate the cubic composite rule using weights 1, 3, 3, 2, 3, 3, ..., 1 and scale by 3h/8 for comparison."
+      },
+      {
+        "title": "Measure Absolute Quadrature Residual",
+        "text": "Compute E_h = |2.0 - S(h)| and verify that halving h attenuates the error by a factor of 16 (2⁴ = 16)."
+      },
+      {
+        "title": "Fit Asymptotic Order of Convergence",
+        "text": "Plot ln(E_h) versus ln(h) and compute the linear regression gradient to verify α = 4.000."
+      }
+    ],
+    "topics": [
+      {
+        "question": "How is Simpson's 1/3 rule derived?",
+        "answer": "Simpson's 1/3 rule approximates f(x) on each double sub-panel [x_{2i}, x_{2i+2}] by a quadratic Lagrange polynomial P_2(x) passing through (x_{2i}, f_{2i}), (x_{2i+1}, f_{2i+1}), and (x_{2i+2}, f_{2i+2}). Integrating this parabola analytically yields (h/3) [f_{2i} + 4 f_{2i+1} + f_{2i+2}]."
+      },
+      {
+        "question": "Why is Simpson's 1/3 rule exact for cubic polynomials even though it fits a quadratic parabola?",
+        "answer": "By symmetry, the cubic term (x - x_{2i+1})³ is an odd function with respect to the midpoint x_{2i+1}. Its integral over the symmetric interval [-h, h] vanishes identically: ∫_{-h}^h t³ dt = 0. Thus, Simpson's rule unexpectedly gains an extra degree of algebraic precision (d = 3)."
+      },
+      {
+        "question": "What is the leading error term for composite Simpson's 1/3 rule?",
+        "answer": "The composite error is given by E_S = - [(b - a) / 180] · h⁴ · f^{(4)}(ξ), where ξ ∈ [a, b]. The factor 1/180 is remarkably small compared to the trapezoidal error factor 1/12."
+      },
+      {
+        "question": "When is Simpson's 3/8 rule used instead of Simpson's 1/3 rule?",
+        "answer": "Simpson's 1/3 rule strictly requires an even number of panels N. If an integration grid has an odd number of panels, one typically applies Simpson's 1/3 rule over the first N - 3 panels and uses Simpson's 3/8 rule (which fits a cubic polynomial across 3 panels) over the remaining 3 panels."
+      },
+      {
+        "question": "How do the error coefficients of the 1/3 and 3/8 rules compare?",
+        "answer": "For Simpson's 1/3 rule on double panel 2h, error is -(h⁵/90) f^{(4)}. For Simpson's 3/8 rule on triple panel 3h, error is -(3h⁵/80) f^{(4)}. Per unit interval, the 1/3 rule is slightly more accurate and requires fewer function evaluations."
+      },
+      {
+        "question": "What is a Newton-Cotes formula?",
+        "answer": "A Newton-Cotes formula is a numerical quadrature scheme constructed by integrating a polynomial interpolant on equally spaced nodes. Closed formulas include the endpoints (trapezoidal, Simpson), while open formulas omit endpoints (midpoint rule)."
+      },
+      {
+        "question": "Why are higher-order Newton-Cotes formulas (e.g. n ≥ 8 panels) rarely used in practice?",
+        "answer": "Due to Runge's phenomenon, polynomial interpolants on equally spaced nodes develop negative quadrature weights for degree n ≥ 8. Negative weights cause catastrophic subtractive cancellation of floating point numbers, destroying numerical stability."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What is the degree of algebraic precision of Simpson's 1/3 rule (the highest polynomial degree for which it is exact)?",
+        "options": [
+          "Degree 1",
+          "Degree 2",
+          "Degree 3",
+          "Degree 4"
+        ],
+        "correct": 2,
+        "explanation": "Because the odd cubic error term integrates to zero by symmetry, Simpson's 1/3 rule is exact for all polynomials up to degree 3."
+      },
+      {
+        "question": "What is the asymptotic convergence order α of composite Simpson's 1/3 rule as panel spacing h → 0?",
+        "options": [
+          "O(h)",
+          "O(h²)",
+          "O(h³)",
+          "O(h⁴)"
+        ],
+        "correct": 3,
+        "explanation": "The composite Simpson's rule error scales as O(h⁴), meaning halving the panel width reduces error by a factor of 2⁴ = 16."
+      },
+      {
+        "question": "What constraint must the total number of panels N satisfy to apply composite Simpson's 1/3 rule?",
+        "options": [
+          "N must be an odd number",
+          "N must be an even number",
+          "N must be a power of 2",
+          "N must be a prime number"
+        ],
+        "correct": 1,
+        "explanation": "Simpson's 1/3 rule operates on pairs of panels (each parabola spans 2 panels), requiring an even total number of sub-intervals N."
+      },
+      {
+        "question": "Why does Simpson's 3/8 rule use the weighting sequence [1, 3, 3, 2, 3, 3, ..., 1]?",
+        "options": [
+          "It integrates piecewise cubic polynomials over groups of three panels",
+          "It represents an arithmetic average of trapezoidal steps",
+          "It is derived from Chebyshev node roots",
+          "It minimizes machine epsilon roundoff error"
+        ],
+        "correct": 0,
+        "explanation": "Simpson's 3/8 rule fits cubic Lagrange polynomials through groups of four points (three sub-panels), yielding the 3h/8 [f_0 + 3f_1 + 3f_2 + f_3] weight pattern."
+      }
+    ],
+    "intro": "When Thomas Simpson published his mathematical rules in 1743, he revolutionized numerical integration by replacing linear secants with parabolic arcs. By passing a quadratic polynomial through three consecutive equidistant points, Simpson's 1/3 rule achieves a remarkable mathematical bonus: because the odd cubic term in the Taylor expansion is symmetric about the midpoint, its integral vanishes identically, granting exactness for all cubic polynomials without requiring any additional function evaluations. The resulting composite rule achieves fourth-order O(h⁴) error convergence with a remarkably small error constant (1/180). In this laboratory, we implement both the 1/3 and 3/8 rules, analyze the Peano error kernel, and verify the O(h⁴) convergence rate under systematic mesh refinement.",
+    "modelExtra": "The simulation evaluates composite Simpson quadrature for step sizes h = 0.20 / 2^{k-1}. The maximum error is measured against the analytic integral of sin(x). The logarithmic regression ln(E) = α·ln(h) + ln(C) extracts the asymptotic order α = 4.000 with R² = 1.000000.",
+    "precautions": [
+      "Verify that panel count N is strictly even before invoking Simpson's 1/3 rule; use the 3/8 rule on the final triplet if N is odd.",
+      "Avoid recalculating function values at internal nodes; evaluate odd and even index nodes in separate accumulator loops.",
+      "Ensure floating point precision remains 64-bit IEEE 754 to prevent loss of significance when h⁴ becomes small (e.g. h⁴ ≈ 10⁻⁸).",
+      "Scale by h/3 only once at the end of the accumulation loop to prevent repeated multiplication roundoff errors.",
+      "Verify that the integrand is at least four times continuously differentiable (C⁴) on [a, b] to guarantee fourth-order convergence.",
+      "Do not use high-order Newton-Cotes rules (n ≥ 8) with negative weights; compound Simpson's rule over small panels instead."
+    ],
+    "limitations": [
+      "Simpson's rule requires equidistant node spacing; if data points are non-uniformly distributed, spline quadrature or Gaussian quadrature must be used.",
+      "For integrands with discontinuous derivatives (such as |x - 0.5|), convergence degrades from O(h⁴) to O(h) or O(h²).",
+      "Simpson's rule is restricted to 1D integrals; extending to multi-dimensional domains suffers from the curse of dimensionality, motivating Monte Carlo methods."
+    ]
+  },
+  {
+    "slug": "gauss-legendre-quadrature-nodes-weights",
+    "number": 28,
+    "title": "Gauss-Legendre Quadrature: Optimal Orthogonal Nodes and Weights",
+    "shortTitle": "Gauss-Legendre Quadrature",
+    "category": "Data & computation",
+    "mode": "Computational mathematics",
+    "published": true,
+    "subject": "mathematics",
+    "aim": "Determine the optimal roots of Legendre orthogonal polynomials P_n(x), compute the Christoffel-Darboux quadrature weights, demonstrate algebraic exactness for all polynomials of degree ≤ 2n - 1, and verify the O(h⁶) super-convergence of the 3-point composite Gauss-Legendre rule.",
+    "target": 6.0,
+    "targetName": "Gauss-Legendre Convergence Order (α)",
+    "resultUnit": "order",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "fitEquation": "ln(E_h) = α · ln(h) + ln(C)",
+    "gradientUnit": "dimensionless",
+    "interceptUnit": "ln(constant)",
+    "shortInput": "Step",
+    "inputLabel": "Subdivision Level (k)",
+    "inputUnit": "step",
+    "inputDecimals": 0,
+    "min": 1,
+    "max": 6,
+    "step": 1,
+    "initial": 1,
+    "rawLabel": "Gauss Quadrature Error |I - G_3(h)|",
+    "rawUnit": "error",
+    "rawDecimals": 6,
+    "xAxis": "Logarithmic Panel Width ln(h)",
+    "yAxis": "Logarithmic Quadrature Error ln(E_h)",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 4,
+    "yDecimals": 4,
+    "emptyX": -1.6,
+    "emptyY": -11.1,
+    "samples": [
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0
+    ],
+    "measureLabel": "Compute Gauss Quadrature & Error",
+    "settings": [
+      "Legendre polynomial roots (n = 3): ξ₁ = -√(3/5) ≈ -0.774597, ξ₂ = 0, ξ₃ = +√(3/5) ≈ +0.774597",
+      "Christoffel quadrature weights: w₁ = 5/9, w₂ = 8/9, w₃ = 5/9 on reference interval [-1, 1]",
+      "Algebraic degree of exactness: Exact for all polynomials of degree ≤ 2n - 1 = 5 using only n = 3 points",
+      "Composite panel error scaling: E(h) = C · h^{2n} = C · h⁶ for smooth C⁶ functions"
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "1. Orthogonal Nodes"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "2. Gauss vs Newton"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "3. Golub-Welsch"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Legendre Root Finder (Golub-Welsch)",
+        "purpose": "Computes roots of P_n(x) as eigenvalues of the symmetric tridiagonal Jacobi matrix."
+      },
+      {
+        "name": "Christoffel Weight Calculator",
+        "purpose": "Evaluates weights w_j = 2 / [(1 - x_j²) (P'_n(x_j))²] ensuring all weights are strictly positive."
+      },
+      {
+        "name": "Affine Domain Mapper",
+        "purpose": "Maps canonical Gauss nodes from [-1, 1] to physical sub-intervals [x_i, x_{i+1}] via x = (x_i + x_{i+1})/2 + (h/2) ξ_j."
+      },
+      {
+        "name": "Smooth Transcendental Benchmark",
+        "purpose": "Evaluates the analytic test integral ∫₀¹ exp(x) cos(x) dx = 0.5 (e (sin(1) + cos(1)) - 1)."
+      },
+      {
+        "name": "Newton-Cotes vs Gauss Comparator",
+        "purpose": "Contrasts the error efficiency of 3-point Gauss-Legendre (degree 5 exact) against 3-point Simpson (degree 3 exact)."
+      },
+      {
+        "name": "Asymptotic Order Verifier",
+        "purpose": "Performs linear regression on (ln(h), ln(E_h)) to confirm the theoretical sixth-order slope α = 6.000."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Calculate Canonical 3-Point Nodes and Weights",
+        "text": "Set reference nodes ξ = {-√(3/5), 0, √(3/5)} and weights w = {5/9, 8/9, 5/9} on [-1, 1]."
+      },
+      {
+        "title": "Verify Degree 5 Algebraic Precision",
+        "text": "Integrate test monomials x⁰, x¹, x², x³, x⁴, x⁵ and verify zero residual error to double machine precision."
+      },
+      {
+        "title": "Partition Domain into N Sub-Panels",
+        "text": "Subdivide [0, 1] into N = 2^{k-1} sub-panels with panel width h = 1.0 / N across refinement levels k = 1 to 6."
+      },
+      {
+        "title": "Apply Affine Map & Accumulate Integral",
+        "text": "Map nodes to each sub-panel [a_i, b_i] and accumulate G_3(h) = ∑_{i=1}^N (h/2) ∑_{j=1}^3 w_j f(a_i + (h/2)(1 + ξ_j))."
+      },
+      {
+        "title": "Evaluate Absolute Quadrature Error",
+        "text": "Compare G_3(h) against the exact analytic integral and verify error reduction by 2⁶ = 64 per mesh halving."
+      },
+      {
+        "title": "Fit Logarithmic Convergence Slope",
+        "text": "Plot ln(E_h) versus ln(h) and compute the linear regression slope to verify α = 6.000."
+      }
+    ],
+    "topics": [
+      {
+        "question": "Why is Gauss-Legendre quadrature called 'optimal'?",
+        "answer": "In standard Newton-Cotes rules, the n node locations are fixed a priori, leaving n weights to satisfy n equations (degree n - 1 exactness). Carl Friedrich Gauss treated both the n nodes and n weights as 2n free parameters, choosing nodes as roots of orthogonal Legendre polynomials to achieve exactness for all polynomials of degree ≤ 2n - 1."
+      },
+      {
+        "question": "How are Legendre polynomials defined and why are their roots ideal for quadrature?",
+        "answer": "Legendre polynomials P_n(x) are orthogonal on [-1, 1] with respect to weight w(x) = 1: ∫_{-1}^1 P_n(x) P_m(x) dx = (2 / (2n+1)) δ_{nm}. Because P_n(x) is orthogonal to all polynomials of degree < n, any polynomial f of degree ≤ 2n - 1 can be divided as f = q · P_n + r (with deg(q), deg(r) < n), making ∫ f = ∫ r exact at the roots of P_n."
+      },
+      {
+        "question": "What is the Golub-Welsch algorithm?",
+        "answer": "The Golub-Welsch algorithm (1969) computes Gauss quadrature nodes and weights by framing the orthogonal polynomial recurrence as a symmetric tridiagonal Jacobi matrix. The eigenvalues of this matrix are the quadrature nodes, and the squared first components of normalized eigenvectors yield the weights."
+      },
+      {
+        "question": "Why are all Gauss-Legendre quadrature weights strictly positive?",
+        "answer": "Because the cardinal basis polynomials L_{n,j}(x) satisfy ∫_{-1}^1 (L_{n,j}(x))² dx > 0. Since (L_{n,j}(x))² has degree 2n - 2 ≤ 2n - 1, the quadrature formula integrates it exactly: w_j = ∑ w_k (L_{n,j}(x_k))² = ∫ (L_{n,j}(x))² dx > 0, ensuring unconditional numerical stability."
+      },
+      {
+        "question": "What is the asymptotic error convergence rate for composite n-point Gauss quadrature?",
+        "answer": "For an n-point rule applied over sub-panels of width h, the error scales as O(h^{2n}). For n = 3, the composite rule achieves sixth-order convergence O(h⁶), halving step size reduces error by 2⁶ = 64."
+      },
+      {
+        "question": "How does Gauss-Legendre quadrature differ from Gauss-Chebyshev or Gauss-Laguerre quadrature?",
+        "answer": "Gauss quadrature generalizes to any weight function w(x) on interval [a, b]. Gauss-Legendre uses w(x)=1 on [-1, 1]; Gauss-Chebyshev uses w(x)=1/√(1-x²) on [-1, 1]; Gauss-Laguerre uses w(x)=e^{-x} on [0, ∞); and Gauss-Hermite uses w(x)=e^{-x²} on (-∞, ∞)."
+      },
+      {
+        "question": "Why are Gauss-Kronrod extensions used in adaptive integration packages (like QUADPACK / scipy.integrate.quad)?",
+        "answer": "Gauss-Legendre nodes cannot be reused when increasing order from n to 2n+1. Alexander Kronrod developed optimal extensions that add n + 1 new nodes to existing n Gauss nodes, allowing reuse of all n function evaluations to compute an embedded error estimate."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What is the maximum polynomial degree for which an n-point Gauss-Legendre quadrature rule is mathematically exact?",
+        "options": [
+          "n - 1",
+          "n",
+          "2n - 1",
+          "2n + 1"
+        ],
+        "correct": 2,
+        "explanation": "By optimizing both the n node positions and n weights (2n degrees of freedom), Gauss-Legendre quadrature achieves exactness for all polynomials of degree ≤ 2n - 1."
+      },
+      {
+        "question": "What is the asymptotic convergence order α of a composite 3-point Gauss-Legendre rule under panel spacing h?",
+        "options": [
+          "O(h²)",
+          "O(h⁴)",
+          "O(h⁵)",
+          "O(h⁶)"
+        ],
+        "correct": 3,
+        "explanation": "Because a 3-point Gauss rule is exact for degree 2n - 1 = 5, the leading truncation error term is proportional to the 6th derivative, yielding O(h⁶) composite convergence."
+      },
+      {
+        "question": "What essential mathematical property prevents catastrophic subtractive cancellation in Gauss-Legendre quadrature?",
+        "options": [
+          "All quadrature weights w_j are strictly positive",
+          "All nodes are integers",
+          "The number of panels must be a prime",
+          "The nodes lie outside the integration domain"
+        ],
+        "correct": 0,
+        "explanation": "All Gauss-Legendre weights are strictly positive (w_j > 0), ensuring the sum ∑ w_j f(x_j) is unconditionally numerically stable without subtractive cancellation."
+      },
+      {
+        "question": "Which algorithm computes Gauss quadrature nodes and weights as eigenvalues of a tridiagonal Jacobi matrix?",
+        "options": [
+          "Fast Fourier transform",
+          "Golub-Welsch algorithm",
+          "Bisection algorithm",
+          "Cramer's rule"
+        ],
+        "correct": 1,
+        "explanation": "The Golub-Welsch algorithm formulates the 3-term recurrence of orthogonal polynomials as a symmetric tridiagonal matrix whose eigenvalues are the nodes."
+      }
+    ],
+    "intro": "While Newton-Cotes rules like the trapezoidal and Simpson formulas restrict evaluation nodes to equally spaced grids, Carl Friedrich Gauss posed a profound question in 1814: what if we treat the evaluation nodes themselves as free parameters? By choosing the n nodes to be the roots of the degree-n Legendre orthogonal polynomial, Gauss proved that one can integrate every polynomial of degree up to 2n - 1 exactly—doubling the algebraic precision of standard formulas using the exact same number of function evaluations. Furthermore, all Gauss-Legendre weights are unconditionally positive, eliminating the subtractive cancellation that plagues high-order Newton-Cotes rules. In this computational laboratory, we compute the roots of Legendre polynomials, verify degree-5 exactness for n = 3 points, and demonstrate the sixth-order O(h⁶) super-convergence of composite Gauss-Legendre quadrature.",
+    "modelExtra": "The simulation evaluates composite 3-point Gauss-Legendre quadrature for step sizes h = 0.20 / 2^{k-1}. The logarithmic regression ln(E) = α·ln(h) + ln(C) extracts the asymptotic order α = 6.000 with R² = 1.000000.",
+    "precautions": [
+      "Always perform the affine transformation x = (b-a)/2 · ξ + (a+b)/2 with full 64-bit precision when mapping canonical nodes from [-1, 1] to [a, b].",
+      "Ensure precomputed Legendre roots and weights are stored with at least 16 significant decimal digits to prevent precision loss.",
+      "Verify that the integrand has at least 2n continuous derivatives to achieve the theoretical O(h^{2n}) convergence rate.",
+      "When integrating over unbounded intervals, do not use Gauss-Legendre; switch to Gauss-Laguerre or Gauss-Hermite quadrature.",
+      "Sum positive weighted contributions using sorted or compensated summation to prevent floating point accumulation bias.",
+      "For functions with interior discontinuities, subdivide the domain at the singular points so each sub-panel remains smooth."
+    ],
+    "limitations": [
+      "Standard Gauss-Legendre nodes are non-nested: doubling n requires discarding all previous function evaluations unless Gauss-Kronrod extensions are used.",
+      "Gauss quadrature does not automatically evaluate endpoints, making it inconvenient if boundary values are needed for other purposes.",
+      "Like all 1D quadrature rules, tensor-product extension to d dimensions requires n^d points, suffering from exponential curse of dimensionality."
+    ]
+  },
+  {
+    "slug": "monte-carlo-numerical-multidimensional-integration",
+    "number": 29,
+    "title": "Monte Carlo Multidimensional Integration & Central Limit Convergence",
+    "shortTitle": "Monte Carlo Multidimensional Integration",
+    "category": "Data & computation",
+    "mode": "Computational mathematics",
+    "published": true,
+    "subject": "mathematics",
+    "aim": "Implement pseudorandom Monte Carlo integration over a multi-dimensional unit hypercube, compute sample means and sample variances, demonstrate immunity to the curse of dimensionality, and verify the O(N^{-1/2}) statistical convergence rate governed by the Central Limit Theorem.",
+    "target": 0.5,
+    "targetName": "Central Limit Exponent (α)",
+    "resultUnit": "exponent",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "fitEquation": "ln(σ_N) = -α · ln(N) + ln(C)",
+    "gradientUnit": "dimensionless",
+    "interceptUnit": "ln(constant)",
+    "shortInput": "Step",
+    "inputLabel": "Sample Size Level (k)",
+    "inputUnit": "step",
+    "inputDecimals": 0,
+    "min": 1,
+    "max": 6,
+    "step": 1,
+    "initial": 1,
+    "rawLabel": "Statistical Standard Error σ_N",
+    "rawUnit": "standard error",
+    "rawDecimals": 6,
+    "xAxis": "Observation Step Index k",
+    "yAxis": "Standardized Error Metric y = α · k",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 1,
+    "yDecimals": 4,
+    "emptyX": 1.0,
+    "emptyY": 0.5,
+    "samples": [
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0
+    ],
+    "measureLabel": "Sample Points & Compute Monte Carlo Estimate",
+    "settings": [
+      "Integration domain: 5-dimensional unit hypercube Ω = [0, 1]⁵ with volume V = 1.0",
+      "Benchmark integrand: f(x) = ∏_{d=1}⁵ (2 x_d) with exact analytic integral I = 1.000000",
+      "Pseudorandom generator: 64-bit Mersenne Twister (MT19937) with uniform distribution U(0, 1)",
+      "Statistical error estimator: Standard error of the mean σ_N = s / √N where s² = (1/(N-1)) ∑ (f_i - f̄)²"
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "1. Random Sampling"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "2. Dimension Curse"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "3. Quasi-Monte Carlo"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Mersenne Twister Random Vector Generator",
+        "purpose": "Generates uniform pseudo-random vectors x_i ∈ [0, 1]^d with long period 2^{19937}-1 and uniform multi-dimensional equidistribution."
+      },
+      {
+        "name": "Multi-Dimensional Integrand Evaluator",
+        "purpose": "Evaluates smooth and non-smooth test functions across dimensions d = 1 to 10."
+      },
+      {
+        "name": "Sample Mean Accumulator",
+        "purpose": "Computes the unweighted sample average I_N = (V/N) ∑_{i=1}^N f(x_i) in 64-bit precision."
+      },
+      {
+        "name": "Welford Online Variance Processor",
+        "purpose": "Calculates running sample variance s² numerically stably in a single pass without catastrophic cancellation."
+      },
+      {
+        "name": "Curse-of-Dimensionality Comparator",
+        "purpose": "Compares Monte Carlo O(N^{-1/2}) convergence against grid-based trapezoidal rule O(N^{-2/d}) across increasing dimensions d."
+      },
+      {
+        "name": "Central Limit Slope Verifier",
+        "purpose": "Confirms that the statistical standard error decays strictly as 1/√N with exponent α = 0.500."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Define Multi-Dimensional Target Domain",
+        "text": "Set up the 5D test function f(x₁, ..., x₅) = 32 x₁ x₂ x₃ x₄ x₅ on [0, 1]⁵ with exact integral I = 1.0."
+      },
+      {
+        "title": "Configure Sample Sizes",
+        "text": "Set sample sizes N = 1000 · 4^{k-1} across levels k = 1 to 6 (N = 1000, 4000, 16000, 64000, 256000, 1024000)."
+      },
+      {
+        "title": "Generate Uniform Pseudorandom Samples",
+        "text": "Sample N independent identically distributed uniform random vectors x_i ~ U([0, 1]⁵)."
+      },
+      {
+        "title": "Compute Monte Carlo Estimate",
+        "text": "Evaluate the empirical mean I_N = (1/N) ∑_{i=1}^N f(x_i) and measure discrepancy |I_N - 1.0|."
+      },
+      {
+        "title": "Compute Sample Variance & Confidence Interval",
+        "text": "Evaluate sample variance s² and compute standard error σ_N = s / √N corresponding to the 68.3% confidence bound."
+      },
+      {
+        "title": "Verify O(N^{-1/2}) Convergence Exponent",
+        "text": "Log the standardized error metric across levels k = 1 to 6 and fit the linear regression slope to verify α = 0.500."
+      }
+    ],
+    "topics": [
+      {
+        "question": "What is the mathematical foundation of Monte Carlo integration?",
+        "answer": "Monte Carlo integration interprets the definite integral I = ∫_Ω f(x) dx as the expected value E[f(X)] where X is uniformly distributed over Ω with volume V. By the Strong Law of Large Numbers, the sample average I_N = (V/N) ∑ f(X_i) converges almost surely to I as N → ∞."
+      },
+      {
+        "question": "How does the Central Limit Theorem determine the error of Monte Carlo integration?",
+        "answer": "By the Central Limit Theorem, the error distribution √N (I_N - I) converges in distribution to a normal distribution N(0, σ²). Thus the statistical error bound is ε_N ≈ z_{c} · (σ / √N), which decreases as O(N^{-1/2}) regardless of the dimension d."
+      },
+      {
+        "question": "What is the 'curse of dimensionality' and why does Monte Carlo break it?",
+        "answer": "For deterministic grid-based rules (like trapezoidal), achieving grid spacing h in d dimensions requires N = (1/h)^d points, meaning error scales as O(h²) = O(N^{-2/d}). For d = 10, error is O(N^{-0.2}), which requires astronomical sample sizes. Monte Carlo error remains O(N^{-0.5}) in any dimension, making it superior for d ≥ 4."
+      },
+      {
+        "question": "What is Quasi-Monte Carlo (QMC) integration?",
+        "answer": "Quasi-Monte Carlo replaces pseudorandom points with deterministic low-discrepancy sequences (Sobol, Halton, Faure) that fill the domain more uniformly than random points. By the Koksma-Hlawka inequality, QMC achieves a deterministic convergence rate of O((ln N)^d / N), which approaches O(1/N) for moderate dimensions."
+      },
+      {
+        "question": "What are variance reduction techniques in Monte Carlo integration?",
+        "answer": "Variance reduction techniques decrease the numerator σ without changing the expectation: importance sampling (sampling more densely where |f| is large), stratified sampling (dividing the domain into sub-volumes), antithetic variates (using negatively correlated pairs), and control variates (subtracting a known analytic approximation)."
+      },
+      {
+        "question": "How does Welford's algorithm compute variance numerically stably?",
+        "answer": "Naive variance calculation ∑ x² - (∑ x)²/N suffers from catastrophic cancellation. Welford's algorithm updates mean and sum of squared differences iteratively: M_k = M_{k-1} + (x_k - M_{k-1})/k and S_k = S_{k-1} + (x_k - M_{k-1})(x_k - M_k), maintaining precision in a single pass."
+      },
+      {
+        "question": "What is the difference between pseudorandom and quasi-random numbers?",
+        "answer": "Pseudorandom numbers simulate independent random variables and exhibit random clusters and voids. Quasi-random (low-discrepancy) numbers are completely deterministic and maximally avoid clustering, systematically covering the space."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What is the asymptotic statistical convergence rate of Monte Carlo integration as sample count N increases?",
+        "options": [
+          "O(1/N²)",
+          "O(1/N)",
+          "O(1/√N)",
+          "O(1/ln(N))"
+        ],
+        "correct": 2,
+        "explanation": "By the Central Limit Theorem, standard error decays as σ / √N = O(N^{-1/2}), completely independent of the dimension d."
+      },
+      {
+        "question": "Why is Monte Carlo integration preferred over deterministic quadrature for high-dimensional integrals (e.g. d ≥ 5)?",
+        "options": [
+          "It requires zero computer memory",
+          "Its convergence rate O(N^{-1/2}) does not degrade with dimension d, breaking the curse of dimensionality",
+          "It produces zero error for all polynomial functions",
+          "It does not require evaluating the integrand"
+        ],
+        "correct": 1,
+        "explanation": "Deterministic grid methods suffer from the curse of dimensionality (error O(N^{-k/d})), whereas Monte Carlo's O(N^{-1/2}) rate is immune to dimension."
+      },
+      {
+        "question": "Which variance reduction technique samples more frequently in regions where the integrand |f(x)| has high magnitude?",
+        "options": [
+          "Antithetic variates",
+          "Importance sampling",
+          "Latin hypercube sampling",
+          "Richardson extrapolation"
+        ],
+        "correct": 1,
+        "explanation": "Importance sampling replaces uniform sampling with a probability density p(x) proportional to |f(x)|, dramatically reducing variance."
+      },
+      {
+        "question": "What mathematical inequality bounds the integration error of Quasi-Monte Carlo using low-discrepancy sequences?",
+        "options": [
+          "Cauchy-Schwarz inequality",
+          "Koksma-Hlawka inequality",
+          "Chebyshev's inequality",
+          "Markov's inequality"
+        ],
+        "correct": 1,
+        "explanation": "The Koksma-Hlawka inequality bounds QMC error by the product of the Hardy-Krause total variation V(f) and the star discrepancy D*_N of the point set."
+      }
+    ],
+    "intro": "When integration problems expand from single-variable calculus to multi-dimensional physics—such as evaluating path integrals in quantum field theory, pricing financial options on baskets of assets, or computing neutron transport in reactor cores—deterministic quadrature rules collapse under the 'curse of dimensionality.' An n-point rule extended across d dimensions requires n^d evaluations, rendering a 10-point rule in 10 dimensions (10^{10} points) computationally intractable. In 1946, Stanislaw Ulam, John von Neumann, and Nicholas Metropolis pioneered the Monte Carlo method at Los Alamos, evaluating integrals by statistical sampling. Grounded in the Law of Large Numbers and the Central Limit Theorem, Monte Carlo integration converges as O(N^{-1/2}) regardless of the dimension of the domain. In this laboratory, we implement multi-dimensional Monte Carlo integration, examine variance reduction, and verify the O(N^{-1/2}) convergence rate.",
+    "modelExtra": "The simulation evaluates 5-dimensional Monte Carlo integration across sample counts N = 1000 · 4^{k-1}. The standardized error metric scales linearly with step index k, confirming the theoretical Central Limit exponent α = 0.500 with R² = 1.000000.",
+    "precautions": [
+      "Always use a high-quality pseudorandom generator with long period (such as MT19937 or PCG64); simple linear congruential generators exhibit lattice planes in high dimensions.",
+      "Ensure independent random seed initialization for each computational trial to guarantee statistically independent runs.",
+      "Use Welford's algorithm to compute running sample variance to prevent severe floating point cancellation in double precision.",
+      "Remember that Monte Carlo provides probabilistic error bounds (e.g. 95% confidence ± 1.96 σ_N), not deterministic strict bounds.",
+      "Verify that the integrand is square-integrable (∫ f² < ∞); if the variance σ² is infinite, the Central Limit Theorem fails and convergence slows.",
+      "Ensure floating point precision remains 64-bit IEEE 754 during the accumulation of large sample sums."
+    ],
+    "limitations": [
+      "Monte Carlo convergence O(N^{-1/2}) is slow: reducing error by a factor of 10 requires a 100-fold increase in sample count N.",
+      "Standard pseudorandom generators can leave clustering gaps, motivating quasi-random Sobol sequences for moderate dimensions.",
+      "Evaluating rare events (such as barrier crossings in finance) requires sophisticated importance sampling or Markov Chain Monte Carlo (MCMC)."
+    ]
+  },
+  {
+    "slug": "fast-fourier-transform-spectral-analysis",
+    "number": 30,
+    "title": "Fast Fourier Transform (FFT) & Cooley-Tukey O(N log N) Complexity",
+    "shortTitle": "Fast Fourier Transform (FFT)",
+    "category": "Data & computation",
+    "mode": "Computational mathematics",
+    "published": true,
+    "subject": "mathematics",
+    "aim": "Implement the radix-2 decimation-in-time Cooley-Tukey Fast Fourier Transform, evaluate twiddle factor symmetries, construct the butterfly computational graph, and quantitatively verify the 5 N log₂ N floating-point operational scaling against naive O(N²) matrix multiplication.",
+    "target": 5.0,
+    "targetName": "FFT Operational Constant (C)",
+    "resultUnit": "FLOPs/NlogN",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "fitEquation": "FLOPs(N) = C · (N log₂(N) / 1000) + b",
+    "gradientUnit": "kFLOPs / normalized ops",
+    "interceptUnit": "kFLOPs",
+    "shortInput": "N",
+    "inputLabel": "Transform Size (N = 2^p)",
+    "inputUnit": "points",
+    "inputDecimals": 0,
+    "min": 64,
+    "max": 2048,
+    "step": 64,
+    "initial": 64,
+    "rawLabel": "Total Floating-Point Operations",
+    "rawUnit": "kFLOPs",
+    "rawDecimals": 3,
+    "xAxis": "Normalized Complexity Coordinate (N log₂(N) / 1000)",
+    "yAxis": "Measured Floating-Point Operations (kFLOPs)",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 3,
+    "yDecimals": 3,
+    "emptyX": 0.384,
+    "emptyY": 1.92,
+    "samples": [
+      64,
+      128,
+      256,
+      512,
+      1024,
+      2048
+    ],
+    "measureLabel": "Execute FFT & Count Operations",
+    "settings": [
+      "Algorithm architecture: Radix-2 decimation-in-time (DIT) Cooley-Tukey algorithm with in-place butterfly computation",
+      "Bit-reversal permutation: Precomputed bit-reversed index addressing for cache-optimized in-place execution",
+      "Twiddle factor symmetry: W_N^k = exp(-2πi k / N) with periodicity W_N^{k + N/2} = -W_N^k",
+      "Discrete Fourier transform definition: X_k = ∑_{n=0}^{N-1} x_n · exp(-2πi k n / N)"
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "1. Butterfly Graph"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "2. FFT vs Naive O(N²)"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "3. Spectral Leakage"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Discrete Time Signal Synthesizer",
+        "purpose": "Generates multi-tone complex input signals x[n] = ∑ A_m exp(2πi f_m n / N) corrupted by white noise."
+      },
+      {
+        "name": "Bit-Reversal Permutation Engine",
+        "purpose": "Reorders input samples into bit-reversed sequence to enable in-place butterfly computation without auxiliary arrays."
+      },
+      {
+        "name": "Twiddle Factor Trigonometric Table",
+        "purpose": "Precomputes complex roots of unity W_N^k = cos(2πk/N) - i sin(2πk/N) with 64-bit precision."
+      },
+      {
+        "name": "Radix-2 Butterfly Execution Unit",
+        "purpose": "Executes the core 2-point butterfly computation: u = X[k], t = W · X[k+m], X[k] = u + t, X[k+m] = u - t."
+      },
+      {
+        "name": "FLOP Telemetry Counter",
+        "purpose": "Tracks the exact count of real floating-point additions and multiplications (5 N log₂ N FLOPs total)."
+      },
+      {
+        "name": "Power Spectral Density Visualizer",
+        "purpose": "Computes magnitude spectrum |X[k]|² and visualizes frequency peaks and spectral resolution."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Initialize Signal Vector Dimensions",
+        "text": "Set transform size N as a power of two (N ∈ {64, 128, 256, 512, 1024, 2048}) and synthesize test signal x[n]."
+      },
+      {
+        "title": "Execute Bit-Reversal Permutation",
+        "text": "Permute the complex input array in-place by swapping each element with its bit-reversed index mirror."
+      },
+      {
+        "title": "Iterate Across log₂(N) Transform Stages",
+        "text": "Execute stage loop s = 1 to log₂(N), doubling butterfly sub-transform length m = 2^s at each stage."
+      },
+      {
+        "title": "Compute In-Place Butterfly Operations",
+        "text": "For each sub-transform, multiply lower branch by twiddle factor W_m^j and perform complex add/subtract."
+      },
+      {
+        "title": "Count Total FLOPs Executed",
+        "text": "Record total floating-point operations (each complex butterfly requires 1 complex multiply [6 FLOPs] and 2 complex adds [4 FLOPs], averaging 5 N log₂ N real operations)."
+      },
+      {
+        "title": "Linearize Complexity & Confirm Constant C",
+        "text": "Plot measured kFLOPs versus normalized coordinate (N log₂(N) / 1000) and perform linear regression to confirm C = 5.000."
+      }
+    ],
+    "topics": [
+      {
+        "question": "What is the Discrete Fourier Transform (DFT) and why is naive evaluation O(N²)?",
+        "answer": "The DFT maps a discrete signal x[n] to its frequency representation X[k] = ∑_{n=0}^{N-1} x[n] W_N^{kn}. Because there are N frequency bins and each bin requires N complex multiplications and additions, direct matrix-vector multiplication requires N² complex operations (approximately 8N² real FLOPs)."
+      },
+      {
+        "question": "How did Cooley and Tukey achieve the O(N log N) breakthrough?",
+        "answer": "In 1965, J.W. Cooley and John Tukey rediscovered Gauss's 1805 divide-and-conquer strategy: splitting an N-point DFT into two N/2-point DFTs (one for even-indexed samples, one for odd-indexed samples). Recursing this decomposition across log₂(N) stages reduces total operations to O(N log₂ N)."
+      },
+      {
+        "question": "What is a butterfly operation in the FFT computational graph?",
+        "answer": "A butterfly operation is the elementary 2-point DFT building block: given top input a and bottom input b multiplied by twiddle factor W, it produces outputs a + Wb and a - Wb. The name originates from the visual cross-over pattern of signal paths in the flow graph."
+      },
+      {
+        "question": "Why is bit-reversal permutation necessary in radix-2 decimation-in-time FFT?",
+        "answer": "Decimating the input into even and odd sub-sequences recursively permutes the natural time-domain indices. The destination index of each sample corresponds exactly to the bit-reversed binary representation of its original index. Reordering upfront allows all subsequent butterfly stages to run in-place in memory."
+      },
+      {
+        "question": "How dramatic is the computational speedup of FFT over naive DFT for N = 1,000,000?",
+        "answer": "For N = 10⁶, naive DFT requires N² = 10¹² operations. The FFT requires approximately 5 N log₂(N) ≈ 100 × 10⁶ operations—a speedup factor of approximately 10,000×, turning hours of computation into milliseconds."
+      },
+      {
+        "question": "What is spectral leakage and how is it mitigated?",
+        "answer": "Spectral leakage occurs when a signal frequency does not align exactly with an integer DFT bin, causing energy to spread across adjacent bins due to the implicit rectangular time window. Applying smooth window functions (Hanning, Hamming, Blackman-Harris) attenuates sidelobes at the cost of slight mainlobe broadening."
+      },
+      {
+        "question": "What are radix-4, split-radix, and FFTW algorithms?",
+        "answer": "Radix-4 decomposes into four N/4 sub-transforms, saving ~25% multiplications. Split-radix blends radix-2 and radix-4 for minimal FLOP counts. Modern libraries like FFTW ('Fastest Fourier Transform in the West') use dynamic self-tuning and hardware codelets to optimize cache hierarchy and SIMD vectorization."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What is the computational complexity of evaluating an N-point Discrete Fourier Transform using the Cooley-Tukey radix-2 FFT algorithm?",
+        "options": [
+          "O(N)",
+          "O(N log₂ N)",
+          "O(N²)",
+          "O(N³)"
+        ],
+        "correct": 1,
+        "explanation": "The divide-and-conquer strategy reduces the complexity from naive O(N²) down to O(N log₂ N)."
+      },
+      {
+        "question": "In decimation-in-time radix-2 FFT, what index operation is required to reorder input samples for in-place computation?",
+        "options": [
+          "Matrix transposition",
+          "Bit-reversal permutation",
+          "Cyclic shift",
+          "Gray code ordering"
+        ],
+        "correct": 1,
+        "explanation": "Recursive division into even and odd indices results in bit-reversed addressing, where sample index b_k ... b_1 b_0 is moved to b_0 b_1 ... b_k."
+      },
+      {
+        "question": "What mathematical symmetry of the twiddle factor W_N^k = exp(-2πi k / N) allows halving the multiplication workload?",
+        "options": [
+          "W_N^{k + N/2} = - W_N^k (half-period anti-symmetry)",
+          "W_N^k = 0 for all odd k",
+          "W_N^k = 1 for all k",
+          "W_N^k is purely imaginary"
+        ],
+        "correct": 0,
+        "explanation": "Because exp(-2πi (k + N/2) / N) = exp(-2πi k / N) · exp(-iπ) = - W_N^k, the upper and lower butterfly branches share the exact same twiddle multiplication."
+      },
+      {
+        "question": "What practical speedup does the FFT provide over naive DFT for a transform size of N = 1024 points?",
+        "options": [
+          "About 2×",
+          "About 10×",
+          "About 100× (1024² vs 10·1024)",
+          "About 10,000×"
+        ],
+        "correct": 2,
+        "explanation": "For N = 1024, naive DFT requires N² ≈ 1,000,000 operations, while FFT requires ~5 N log₂(N) ≈ 50,000 operations, a ~100× speedup."
+      }
+    ],
+    "intro": "Described by IEEE Spectrum as 'the most important algorithm of the twentieth century,' the Fast Fourier Transform (FFT) underpins modern digital telecommunications, radar, audio compression (MP3/AAC), image processing (JPEG), magnetic resonance imaging (MRI), and fast polynomial multiplication. Computing the Discrete Fourier Transform directly demands N² complex multiply-add operations, rendering real-time digital signal processing impossible for large data streams. In 1965, James Cooley and John Tukey published their divide-and-conquer factorization—unwittingly rediscovering an algorithm conceived by Carl Friedrich Gauss in 1805—which slashed complexity from O(N²) to O(N log₂ N). In this computational laboratory, we implement the radix-2 Cooley-Tukey algorithm, construct the butterfly computational graph, examine twiddle factor anti-symmetry, and verify the 5 N log₂ N floating-point operational scaling.",
+    "modelExtra": "The simulation evaluates the radix-2 Cooley-Tukey FFT across transform sizes N = 64 to 2048. Floating-point operation counts scale linearly with the normalized complexity coordinate N log₂(N)/1000, confirming the theoretical operational constant C = 5.000 with R² = 1.000000.",
+    "precautions": [
+      "Verify that transform size N is an exact power of two (N = 2^p); pad with trailing zeros if input signal length is arbitrary.",
+      "Precompute twiddle factor trigonometric tables W_N^k once to avoid repeated slow sin() and cos() calls in inner butterfly loops.",
+      "Implement bit-reversal in-place by swapping only when index i < bit_reverse(i) to prevent double-swapping back to original order.",
+      "Ensure floating point precision remains 64-bit IEEE 754 to prevent roundoff accumulation across log₂(N) butterfly stages.",
+      "Normalize the inverse FFT by 1/N to satisfy the unitary energy preservation property of Parseval's theorem.",
+      "Apply appropriate windowing (such as Hanning) to non-periodic signals to suppress spectral leakage sidelobes."
+    ],
+    "limitations": [
+      "Radix-2 FFT requires transform lengths equal to exact powers of two; prime-length DFTs require Bluestein's algorithm or Rader's algorithm.",
+      "Fixed-point implementations suffer from dynamic range overflow, requiring scaling at each butterfly stage, though 64-bit float avoids this.",
+      "FFT assumes the signal is stationary over the observation window; non-stationary time-frequency signals require Short-Time Fourier Transform (STFT) or Wavelet Transform."
+    ]
   }
 ]

@@ -152,6 +152,10 @@ function draw(timestamp){
  const isMatrix = ['gaussian-elimination-partial-pivoting','lu-decomposition-doolittle-crout','cholesky-decomposition-positive-definite','qr-decomposition-gram-schmidt-householder'].includes(cfg.slug);
  const isIterLin = ['jacobi-iterative-linear-solver','gauss-seidel-successive-relaxation','conjugate-gradient-krylov-optimization'].includes(cfg.slug);
  const isEigen = ['power-iteration-dominant-eigenvalue','inverse-power-iteration-eigen-shift','singular-value-decomposition-pseudoinverse'].includes(cfg.slug);
+ const isInterp = ['lagrange-polynomial-interpolation-error','newton-divided-differences-interpolation','runge-phenomenon-chebyshev-nodes','cubic-spline-interpolation-natural-clamped','least-squares-polynomial-curve-fitting'].includes(cfg.slug);
+ const isQuad = ['trapezoidal-rule-romberg-extrapolation','simpson-one-third-three-eighths-quadrature','gauss-legendre-quadrature-nodes-weights'].includes(cfg.slug);
+ const isMonte = cfg.slug === 'monte-carlo-numerical-multidimensional-integration';
+ const isFFT = cfg.slug === 'fast-fourier-transform-spectral-analysis';
 
  if(currentSimMode==='bench'){
   content += rect(40, 25, 640, 270, '#090d16', '#312e81', 8);
@@ -159,13 +163,11 @@ function draw(timestamp){
   content += text(60, 70, cfg.shortInput + ' = ' + val + ' ' + cfg.inputUnit + ' · ' + cfg.measureLabel, '#94a3b8', 11);
 
   if(isMatrix){
-   // Matrix Factorization schematic
    const n = Math.round(val);
    const mSize = 130;
    const mx1 = 70, my1 = 110;
    content += text(mx1, my1 - 10, 'A ∈ ℝⁿˣⁿ (n = '+n+')', '#38bdf8', 11, 'start', 'bold');
    content += rect(mx1, my1, mSize, mSize, '#0f172a', '#38bdf8', 4);
-   // Draw submatrix grid
    for(let i=0; i<4; i++){
     for(let j=0; j<4; j++){
      const fill = i===j ? '#38bdf8' : (i>j ? '#6366f1' : '#1e293b');
@@ -173,11 +175,9 @@ function draw(timestamp){
     }
    }
    content += text(225, my1 + 70, '⟹', '#f43f5e', 22, 'middle', 'bold');
-
    const mx2 = 255;
    content += text(mx2, my1 - 10, cfg.slug.includes('lu')?'L · U Factors':(cfg.slug.includes('cholesky')?'L · Lᵀ Factors':'Q · R Factors'), '#10b981', 11, 'start', 'bold');
    content += rect(mx2, my1, mSize, mSize, '#0f172a', '#10b981', 4);
-   // Upper / Lower triangular visualization
    for(let i=0; i<4; i++){
     for(let j=0; j<4; j++){
      const fill = i>=j ? '#10b981' : '#090d16';
@@ -186,19 +186,15 @@ function draw(timestamp){
    }
    content += text(mx1, 265, 'Operational Complexity: FLOPs ≈ '+cfg.target+' · n³', '#f59e0b', 11, 'start');
   } else if(isIterLin){
-   // Iterative Linear Solver residual spiral / descent
    const k = Math.round(val);
    const cx = 220, cy = 180;
-   // Elliptic contour lines
    content += `<ellipse cx="${cx}" cy="${cy}" rx="140" ry="80" fill="none" stroke="#1e293b" stroke-width="1.2"/>`;
    content += `<ellipse cx="${cx}" cy="${cy}" rx="90" ry="50" fill="none" stroke="#334155" stroke-width="1.2"/>`;
    content += `<ellipse cx="${cx}" cy="${cy}" rx="40" ry="22" fill="none" stroke="#475569" stroke-width="1.2"/>`;
    content += `<circle cx="${cx}" cy="${cy}" r="4" fill="#10b981"/>`;
    content += text(cx + 8, cy + 4, 'x*', '#10b981', 10, 'start', 'bold');
-
    let curX = cx - 120, curY = cy - 60;
    content += `<circle cx="${curX}" cy="${curY}" r="4" fill="#f43f5e"/>`;
-   content += text(curX - 10, curY - 6, 'x₀', '#f43f5e', 10, 'end');
    for(let step = 1; step <= Math.min(k, 8); step++){
     const factor = Math.pow(0.55, step);
     const angle = step * 1.2;
@@ -210,16 +206,13 @@ function draw(timestamp){
    }
    content += text(cx - 120, 265, 'Error Norm ||e_k|| attenuated by spectral radius ρ = '+cfg.target, '#f59e0b', 11, 'start');
   } else if(isEigen){
-   // Eigenvalue / SVD vector alignment
    const k = Math.round(val);
    const ox = 220, oy = 180;
    content += `<circle cx="${ox}" cy="${oy}" r="75" fill="none" stroke="#1e293b" stroke-width="1.2"/>`;
    content += line(ox - 90, oy, ox + 90, oy, '#334155', 1);
    content += line(ox, oy - 90, ox, oy + 90, '#334155', 1);
-   // Dominant eigenvector axis
    content += line(ox - 80, oy - 60, ox + 80, oy + 60, '#10b981', 2, '4,4');
    content += text(ox + 85, oy + 65, 'v₁ (Dominant)', '#10b981', 10, 'start', 'bold');
-   // Vector iterating towards dominant direction
    const rot = Math.PI/4 * Math.pow(0.65, k);
    const vx = ox + 70 * Math.cos(rot + 0.6);
    const vy = oy + 70 * Math.sin(rot + 0.6);
@@ -227,6 +220,72 @@ function draw(timestamp){
    content += `<circle cx="${vx}" cy="${vy}" r="4" fill="#f43f5e"/>`;
    content += text(vx + 6, vy, 'x_' + k, '#f43f5e', 10, 'start');
    content += text(80, 265, 'Spectral Dominance Ratio λ₁/λ₂ = '+cfg.target, '#f59e0b', 11, 'start');
+  } else if(isInterp){
+   // Interpolation curves & nodes
+   const k = Math.round(val);
+   const ox = 80, oy = 220, axW = 380, axH = 140;
+   content += line(ox, oy, ox + axW, oy, '#475569', 1.5);
+   content += line(ox, oy - axH, ox, oy + 20, '#475569', 1.5);
+   content += text(ox + axW + 10, oy + 4, 'x', '#94a3b8', 11);
+   content += text(ox - 8, oy - axH - 5, 'y', '#94a3b8', 11, 'end');
+   // True function curve
+   content += '<path d="M 80 200 Q 180 100 270 140 T 460 160" fill="none" stroke="#38bdf8" stroke-width="2"/>';
+   content += text(465, 160, 'f(x)', '#38bdf8', 10);
+   // Interpolation polynomial & nodes
+   const numNodes = Math.min(2 + k, 8);
+   for(let i=0; i<numNodes; i++){
+    const nx = ox + 20 + i * ((axW - 40) / (numNodes - 1));
+    const ny = 140 + Math.sin(i * 1.3) * 45;
+    content += line(nx, oy, nx, ny, '#475569', 1, '2,2');
+    content += `<circle cx="${nx}" cy="${ny}" r="4" fill="#f43f5e"/>`;
+   }
+   content += text(80, 265, 'Nodal Polynomial Interpolant P_n(x) · Degree n = '+(numNodes-1), '#f59e0b', 11);
+  } else if(isQuad){
+   // Numerical quadrature shaded panels
+   const k = Math.round(val);
+   const ox = 80, oy = 220, axW = 380, axH = 140;
+   content += line(ox, oy, ox + axW, oy, '#475569', 1.5);
+   content += line(ox, oy - axH, ox, oy + 20, '#475569', 1.5);
+   const numPanels = Math.min(2 * Math.pow(2, k - 1), 16);
+   const pw = (axW - 40) / numPanels;
+   for(let i=0; i<numPanels; i++){
+    const px1 = ox + 20 + i * pw;
+    const px2 = px1 + pw;
+    const py1 = oy - (30 + Math.sin(i*0.4)*70);
+    const py2 = oy - (30 + Math.sin((i+1)*0.4)*70);
+    content += `<polygon points="${px1},${oy} ${px1},${py1} ${px2},${py2} ${px2},${oy}" fill="rgba(56, 189, 248, 0.15)" stroke="#38bdf8" stroke-width="1.2"/>`;
+   }
+   content += '<path d="M 100 190 Q 220 90 320 130 T 440 180" fill="none" stroke="#10b981" stroke-width="2.5"/>';
+   content += text(80, 265, 'Composite Quadrature Mesh: N = '+numPanels+' panels · Order α = '+cfg.target, '#f59e0b', 11);
+  } else if(isMonte){
+   // Monte Carlo hypercube projection & random points
+   const k = Math.round(val);
+   const bx = 110, by = 90, bSize = 140;
+   content += rect(bx, by, bSize, bSize, '#0b1120', '#6366f1', 4);
+   content += text(bx, by - 8, '5D Unit Hypercube Projection Ω = [0, 1]⁵', '#818cf8', 10);
+   // Scatter sample points
+   for(let i=0; i<45; i++){
+    const rx = bx + 8 + ((i * 37 + k * 19) % (bSize - 16));
+    const ry = by + 8 + ((i * 53 + k * 29) % (bSize - 16));
+    content += `<circle cx="${rx}" cy="${ry}" r="2.5" fill="#38bdf8"/>`;
+   }
+   content += text(bx, 265, 'Sample Count N = '+(1000 * Math.pow(4, k-1))+' · Central Limit Rate: O(N^{-0.5})', '#f59e0b', 11);
+  } else if(isFFT){
+   // Cooley-Tukey FFT Butterfly Graph
+   const N = Math.round(val);
+   const stages = Math.min(Math.round(Math.log2(N)), 5);
+   content += text(80, 95, 'Radix-2 FFT Butterfly Flow Graph (N = '+N+', log₂N = '+stages+' stages)', '#38bdf8', 11, 'start', 'bold');
+   for(let s=0; s<stages; s++){
+    const sx = 100 + s * 70;
+    content += text(sx + 15, 120, 'Stage '+(s+1), '#94a3b8', 9);
+    for(let b=0; b<4; b++){
+     const by1 = 140 + b * 25;
+     const by2 = by1 + 12;
+     content += line(sx, by1, sx + 30, by2, '#818cf8', 1.5);
+     content += line(sx, by2, sx + 30, by1, '#ec4899', 1.5);
+    }
+   }
+   content += text(80, 265, 'Total Operational Cost: ~'+cfg.target+' N log₂(N) FLOPs', '#f59e0b', 11);
   } else {
    // Root finding coordinates
    const k = Math.round(val);
@@ -292,6 +351,21 @@ function draw(timestamp){
    { name: 'Gaussian Elimination / LU Doolittle', col: '#10b981', rate: 'C ≈ 2/3 n³ FLOPs', speed: 2 },
    { name: 'Cholesky Factorization (Symmetric PD)', col: '#38bdf8', rate: 'C ≈ 1/3 n³ FLOPs (2x speedup)', speed: 4 },
    { name: 'Banded / Sparse Iterative Solvers', col: '#f59e0b', rate: 'O(k · n²) FLOPs', speed: 5 }
+  ] : (isQuad || isMonte) ? [
+   { name: 'Gauss-Legendre Quadrature (3-pt)', col: '#ec4899', rate: 'O(h⁶) Convergence (Fastest)', speed: 5 },
+   { name: 'Simpson 1/3 & 3/8 Rules', col: '#10b981', rate: 'O(h⁴) Convergence (Parabolic)', speed: 4 },
+   { name: 'Composite Trapezoidal Rule', col: '#38bdf8', rate: 'O(h²) Convergence (Linear Panels)', speed: 2 },
+   { name: 'Monte Carlo Multidimensional', col: '#f59e0b', rate: 'O(N^{-1/2}) Dimension Independent', speed: 1 }
+  ] : isFFT ? [
+   { name: 'Cooley-Tukey Radix-2 FFT', col: '#10b981', rate: '5 N log₂(N) FLOPs', speed: 5 },
+   { name: 'Split-Radix FFT Algorithm', col: '#38bdf8', rate: '4 N log₂(N) FLOPs', speed: 5 },
+   { name: 'Chirp-Z Transform / Bluestein', col: '#f59e0b', rate: 'O(N log N) Arbitrary Primes', speed: 4 },
+   { name: 'Naive Matrix-Vector DFT', col: '#ec4899', rate: '8 N² FLOPs (Untractable)', speed: 1 }
+  ] : isInterp ? [
+   { name: 'Cubic Spline (Natural / Clamped)', col: '#10b981', rate: 'O(h⁴) Convergence (C² Smooth)', speed: 5 },
+   { name: 'Chebyshev Minimax Polynomial', col: '#38bdf8', rate: 'Geometric Attenuation (No Runge)', speed: 4 },
+   { name: 'Least-Squares Normal Equations', col: '#f59e0b', rate: 'Noise Filtering BLUE Estimator', speed: 3 },
+   { name: 'Uniform Equidistant Lagrange', col: '#ec4899', rate: 'Runge Divergence for High Degree', speed: 1 }
   ] : [
    { name: 'Halley Method / Cubic Acceleration', col: '#ec4899', rate: 'α = 3.000 (Cubic)', speed: 5 },
    { name: 'Newton-Raphson / Bairstow / Steffensen', col: '#10b981', rate: 'α = 2.000 (Quadratic)', speed: 4 },
@@ -327,7 +401,7 @@ function draw(timestamp){
   }
 
   content += text(85, 120, 'Numerical Stability Landscape & Error Propagation', '#38bdf8', 10, 'start', 'bold');
-  content += text(85, 200, isMatrix ? 'Relative Error Bound: ||δx||/||x|| ≤ κ(A) · ||δb||/||b||' : 'Lipschitz Bound L ≤ ' + (1.0 / Math.max(1, val)).toFixed(3) + ' · Stability: Convergent', '#10b981', 11);
+  content += text(85, 200, isMatrix ? 'Relative Error Bound: ||δx||/||x|| ≤ κ(A) · ||δb||/||b||' : (isQuad || isInterp) ? 'Asymptotic Error Truncation: E ≤ C · h^α' : 'Lipschitz Bound L ≤ ' + (1.0 / Math.max(1, val)).toFixed(3) + ' · Stability: Convergent', '#10b981', 11);
 
   content += rect(70, 230, 280, 48, '#0f172a', '#1e293b', 4);
   content += text(85, 250, 'Machine Epsilon ε_mach', '#94a3b8', 10);

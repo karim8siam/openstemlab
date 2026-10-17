@@ -25,7 +25,19 @@ const PARAMS = {
   'inverse-power-iteration-eigen-shift': { type: 'order', alpha: 3.000, lnC: -0.9163, x0: -1.0000, ref: 3.000 },
   'qr-decomposition-gram-schmidt-householder': { type: 'cubic_ops', coeff: 4.0/3.0, ref: 1.333 },
   'singular-value-decomposition-pseudoinverse': { type: 'linear_step', slope: 25.000, ref: 25.000 },
-  'conjugate-gradient-krylov-optimization': { type: 'linear_step', slope: 0.600, ref: 0.600 }
+  'conjugate-gradient-krylov-optimization': { type: 'linear_step', slope: 0.600, ref: 0.600 },
+
+  // Group III: Interpolation, Approximation & Quadrature
+  'lagrange-polynomial-interpolation-error': { type: 'order_h', alpha: 4.000, lnC: -1.5000, ref: 4.000 },
+  'newton-divided-differences-interpolation': { type: 'linear_step', slope: 0.1667, ref: 0.1667 },
+  'runge-phenomenon-chebyshev-nodes': { type: 'linear_step', slope: 0.500, ref: 0.500 },
+  'cubic-spline-interpolation-natural-clamped': { type: 'order_h', alpha: 4.000, lnC: -1.5000, ref: 4.000 },
+  'least-squares-polynomial-curve-fitting': { type: 'linear_step', slope: 2.500, ref: 2.500 },
+  'trapezoidal-rule-romberg-extrapolation': { type: 'order_h', alpha: 2.000, lnC: -1.5000, ref: 2.000 },
+  'simpson-one-third-three-eighths-quadrature': { type: 'order_h', alpha: 4.000, lnC: -1.5000, ref: 4.000 },
+  'gauss-legendre-quadrature-nodes-weights': { type: 'order_h', alpha: 6.000, lnC: -1.5000, ref: 6.000 },
+  'monte-carlo-numerical-multidimensional-integration': { type: 'linear_step', slope: 0.500, ref: 0.500 },
+  'fast-fourier-transform-spectral-analysis': { type: 'fft_ops', coeff: 5.000, ref: 5.000 }
 };
 
 function predict(slug, input){
@@ -34,13 +46,31 @@ function predict(slug, input){
   if (!p) throw Error('Unknown Mathematics experiment predict: ' + slug);
 
   if (p.type === 'cubic_ops') {
-    // Dimension n in [10, 60]
     const valid = inp >= 10.0 && inp <= 60.0;
     const n = Math.max(10, Math.min(60, inp));
     const x = round((n * n * n) / 1000.0, 3);
     const y = round(p.coeff * x, 3);
     const raw = y;
     return { raw, ideal: raw, period: n, x, y, valid };
+  }
+
+  if (p.type === 'fft_ops') {
+    const valid = inp >= 64.0 && inp <= 2048.0;
+    const N = Math.max(64, Math.min(2048, inp));
+    const x = round((N * Math.log2(N)) / 1000.0, 3);
+    const y = round(p.coeff * x, 3);
+    const raw = y;
+    return { raw, ideal: raw, period: N, x, y, valid };
+  }
+
+  if (p.type === 'order_h') {
+    const valid = inp >= 1.0 && inp <= 10.0;
+    const step = Math.max(1, Math.min(10, Math.round(inp)));
+    const cur_x = Math.log(0.20) - (step - 1) * Math.LN2;
+    const x = round(cur_x, 4);
+    const y = round(p.alpha * x + p.lnC, 4);
+    const raw = round(Math.exp(y), 6);
+    return { raw, ideal: raw, period: step, x, y, valid };
   }
 
   if (p.type === 'bisection') {
@@ -75,7 +105,7 @@ function predict(slug, input){
     const valid = inp >= 1.0 && inp <= 10.0;
     const step = Math.max(1, Math.min(10, Math.round(inp)));
     const x = step;
-    const y = round(p.slope * x, 3);
+    const y = round(p.slope * x, 4);
     const raw = y;
     return { raw, ideal: raw, period: step, x, y, valid };
   }

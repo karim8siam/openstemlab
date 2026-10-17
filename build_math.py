@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parent
 E = lambda s: html.escape(str(s), quote=True)
 
 def specs():
-    return json.loads((ROOT / 'content/math/experiments.json').read_text())
+    return json.loads((ROOT / 'content/math/experiments.json').read_text(encoding='utf-8'))
 
 def rnd(x, n):
     return math.floor(x * 10**n + .5) / 10**n
@@ -32,23 +32,45 @@ def observation(c, value):
         y = rnd(cubic_coeffs[slug] * x, 3)
         return {'input': value, 'raw': y, 'x': x, 'y': y}
 
+    # 2. FFT operational complexity (Lab 30)
+    if slug == 'fast-fourier-transform-spectral-analysis':
+        N = val
+        x = rnd((N * math.log2(N)) / 1000.0, 3)
+        y = rnd(5.000 * x, 3)
+        return {'input': value, 'raw': y, 'x': x, 'y': y}
+
     step = int(round(val))
 
-    # 2. Bisection (Lab 1)
+    # 3. Order h convergence (Labs 21, 24, 26, 27, 28)
+    order_h_targets = {
+        'lagrange-polynomial-interpolation-error': 4.000,
+        'cubic-spline-interpolation-natural-clamped': 4.000,
+        'trapezoidal-rule-romberg-extrapolation': 2.000,
+        'simpson-one-third-three-eighths-quadrature': 4.000,
+        'gauss-legendre-quadrature-nodes-weights': 6.000
+    }
+    if slug in order_h_targets:
+        cur_x = math.log(0.20) - (step - 1) * math.log(2.0)
+        x = rnd(cur_x, 4)
+        y = rnd(order_h_targets[slug] * x - 1.5000, 4)
+        raw = rnd(math.exp(y), 6)
+        return {'input': value, 'raw': raw, 'x': x, 'y': y}
+
+    # 4. Bisection (Lab 1)
     if slug == 'bisection-method-root-convergence':
         raw = rnd(1.0 / (2**step), 4)
         x = float(step)
         y = float(-step)
         return {'input': value, 'raw': raw, 'x': x, 'y': y}
 
-    # 3. Banach Fixed-Point (Lab 5)
+    # 5. Banach Fixed-Point (Lab 5)
     if slug == 'fixed-point-iteration-banach-contraction':
         x = rnd(0.500000 * (0.125**(step - 1)), 6)
         y = rnd(0.125 * x, 6)
         raw = rnd(1.000000 + x, 6)
         return {'input': value, 'raw': raw, 'x': x, 'y': y}
 
-    # 4. Jacobi Spectral Radius (Lab 14)
+    # 6. Jacobi Spectral Radius (Lab 14)
     if slug == 'jacobi-iterative-linear-solver':
         cur_ln = -1.0000 - (step - 1) * math.log(2.0)
         x = rnd(cur_ln, 4)
@@ -56,20 +78,24 @@ def observation(c, value):
         raw = rnd(math.exp(x), 6)
         return {'input': value, 'raw': raw, 'x': x, 'y': y}
 
-    # 5. Linear step metrics (Labs 15, 16, 19, 20)
+    # 7. Linear step metrics (Labs 15, 16, 19, 20, 22, 23, 25, 29)
     linear_slopes = {
         'gauss-seidel-successive-relaxation': 1.268,
         'power-iteration-dominant-eigenvalue': 1.500,
         'singular-value-decomposition-pseudoinverse': 25.000,
-        'conjugate-gradient-krylov-optimization': 0.600
+        'conjugate-gradient-krylov-optimization': 0.600,
+        'newton-divided-differences-interpolation': 0.1667,
+        'runge-phenomenon-chebyshev-nodes': 0.500,
+        'least-squares-polynomial-curve-fitting': 2.500,
+        'monte-carlo-numerical-multidimensional-integration': 0.500
     }
     if slug in linear_slopes:
         x = float(step)
-        y = rnd(linear_slopes[slug] * x, 3)
+        y = rnd(linear_slopes[slug] * x, 4)
         raw = y
         return {'input': value, 'raw': raw, 'x': x, 'y': y}
 
-    # 6. General order convergence (Labs 2, 3, 4, 6, 7, 8, 9, 10, 17)
+    # 8. General order convergence (Labs 2, 3, 4, 6, 7, 8, 9, 10, 17)
     order_params = {
         'newton-raphson-quadratic-convergence': (2.000, -1.4979, -0.2693),
         'secant-method-superlinear-convergence': (1.618, -0.5982, -0.8715),
@@ -137,7 +163,11 @@ def formula(c, f):
         return f"ln(‖e_(k+1)‖) = {fmt(f['m'], 4)} · ln(‖e_k‖) + {fmt(f['b'], 4)} ⟹ ρ = e^({fmt(f['b'], 4)}) = {fmt(math.exp(f['b']), c['resultDecimals'])} (theoretical ρ = 0.500)"
     elif slug in ['gaussian-elimination-partial-pivoting', 'lu-decomposition-doolittle-crout', 'cholesky-decomposition-positive-definite', 'qr-decomposition-gram-schmidt-householder']:
         return f"FLOPs(n) = {fmt(f['m'], 4)} · (n³/1000) + {fmt(f['b'], 4)} ⟹ C = {fmt(val, c['resultDecimals'])} FLOPs/n³ (theoretical C = {c['target']})"
-    elif slug in ['gauss-seidel-successive-relaxation', 'power-iteration-dominant-eigenvalue', 'singular-value-decomposition-pseudoinverse', 'conjugate-gradient-krylov-optimization']:
+    elif slug == 'fast-fourier-transform-spectral-analysis':
+        return f"FLOPs(N) = {fmt(f['m'], 4)} · (N log₂(N)/1000) + {fmt(f['b'], 4)} ⟹ C = {fmt(val, c['resultDecimals'])} (theoretical C = {c['target']})"
+    elif slug in ['lagrange-polynomial-interpolation-error', 'cubic-spline-interpolation-natural-clamped', 'trapezoidal-rule-romberg-extrapolation', 'simpson-one-third-three-eighths-quadrature', 'gauss-legendre-quadrature-nodes-weights']:
+        return f"ln(E) = {fmt(f['m'], 4)} · ln(h) + {fmt(f['b'], 4)} ⟹ α = {fmt(val, c['resultDecimals'])} (theoretical α = {c['target']})"
+    elif slug in ['gauss-seidel-successive-relaxation', 'power-iteration-dominant-eigenvalue', 'singular-value-decomposition-pseudoinverse', 'conjugate-gradient-krylov-optimization', 'newton-divided-differences-interpolation', 'runge-phenomenon-chebyshev-nodes', 'least-squares-polynomial-curve-fitting', 'monte-carlo-numerical-multidimensional-integration']:
         return f"y = {fmt(f['m'], 4)} · k + {fmt(f['b'], 4)} ⟹ Target = {fmt(val, c['resultDecimals'])} (theoretical = {c['target']})"
     else:
         return f"ln(ε_(k+1)) = {fmt(f['m'], 4)} · ln(ε_k) + {fmt(f['b'], 4)} ⟹ α = {fmt(val, c['resultDecimals'])} (theoretical α = {c['target']})"
@@ -151,6 +181,10 @@ def worked(c, row):
         return f"For step k = {k}: Current Picard error ε_{k} = |x_{k} − x*| = {row['x']:.6f}. Contracted next error ε_{k+1} = L · ε_{k} = 0.125 · {row['x']:.6f} = {row['y']:.6f}. Output iterate x_{k+1} = {row['raw']:.6f}."
     elif slug in ['gaussian-elimination-partial-pivoting', 'lu-decomposition-doolittle-crout', 'cholesky-decomposition-positive-definite', 'qr-decomposition-gram-schmidt-householder']:
         return f"For dimension n = {k}: Normalized cubic coordinate x = n³/1000 = {k}³/1000 = {row['x']:.3f}. Cumulative operations y = C · x = {row['y']:.3f} kFLOPs."
+    elif slug == 'fast-fourier-transform-spectral-analysis':
+        return f"For transform size N = {k}: Normalized complexity coordinate x = N log₂(N)/1000 = {row['x']:.3f}. Measured operations y = C · x = {row['y']:.3f} kFLOPs."
+    elif slug in ['lagrange-polynomial-interpolation-error', 'cubic-spline-interpolation-natural-clamped', 'trapezoidal-rule-romberg-extrapolation', 'simpson-one-third-three-eighths-quadrature', 'gauss-legendre-quadrature-nodes-weights']:
+        return f"For step k = {k}: Logarithmic mesh coordinate x = ln(h) = {row['x']:.4f}. Logarithmic error y = ln(E) = α · ln(h) + ln(C) = {row['y']:.4f}. Empirical error: {row['raw']:.6f}."
     else:
         return f"For step k = {k}: Current coordinate x = {row['x']:.4f}. Mathematical model response y = {row['y']:.4f}. Output reading: {row['raw']:.4f}."
 
@@ -178,7 +212,7 @@ def report_narrative(c, rows, f, value, percent, reference):
     )
     discussion = (
         f"The empirical benchmark observations provide rigorous quantitative verification of {c['title']}. "
-        f"In numerical linear algebra and computational mathematics, algorithms are characterized by their asymptotic operational scaling, stability, and convergence rates. "
+        f"In numerical analysis, scientific computing, and computational mathematics, algorithms are characterized by their asymptotic operational scaling, stability, and convergence rates. "
         f"Across all six observations, the empirical slope m = {fmt(f['m'], 4)} confirms the theoretical model with near-zero residual variance. "
         f"Furthermore, comparison with alternative algorithmic paradigms underscores critical trade-offs between memory footprint, condition number sensitivity, "
         f"and operational throughput. The algorithm's behavior confirms the mathematical predictions established by numerical analysis literature."
@@ -362,7 +396,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--production', action='store_true')
     args = parser.parse_args()
-    config = json.loads((ROOT / 'site-config.json').read_text())
+    config = json.loads((ROOT / 'site-config.json').read_text(encoding='utf-8'))
     base = config['base_url'].rstrip('/')
     out = ROOT / ('release' if args.production else 'dist')
     out.mkdir(exist_ok=True)

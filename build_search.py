@@ -142,7 +142,17 @@ def experiment_index(experiments):
     'inverse-power-iteration-eigen-shift': 'inverse power iteration shifted inverse iteration rayleigh quotient iteration cubic convergence eigenvalue shift targeting condition number wielandt acceleration',
     'qr-decomposition-gram-schmidt-householder': 'qr decomposition modified gram schmidt householder reflections unitary orthogonal matrix upper triangular least squares orthogonalization flop complexity 4/3 n3',
     'singular-value-decomposition-pseudoinverse': 'singular value decomposition svd moore penrose pseudoinverse condition number matrix rank low rank approximation frobenius norm 2-norm spectral conditioning',
-    'conjugate-gradient-krylov-optimization': 'conjugate gradient method cg krylov subspace positive definite optimization residual orthogonal search directions a-conjugate energy norm quadratic form'}
+    'conjugate-gradient-krylov-optimization': 'conjugate gradient method cg krylov subspace positive definite optimization residual orthogonal search directions a-conjugate energy norm quadratic form',
+    'lagrange-polynomial-interpolation-error': 'lagrange polynomial interpolation cardinal basis functions uniform error convergence lebesgue constant barycentric formula weierstrass runge phenomenon mesh refinement',
+    'newton-divided-differences-interpolation': 'newton divided differences triangular tableau interpolation horner nested multiplication derivative relation mean value theorem basis polynomials',
+    'runge-phenomenon-chebyshev-nodes': 'runge phenomenon chebyshev nodes roots of first kind minimax polynomial lebesgue constant edge oscillation bernstein ellipse arcsine distribution',
+    'cubic-spline-interpolation-natural-clamped': 'cubic spline interpolation piecewise polynomials c2 continuity tridiagonal matrix thomas algorithm natural clamped boundary conditions holladay minimum curvature',
+    'least-squares-polynomial-curve-fitting': 'least squares polynomial curve fitting normal equations gram matrix vandermonde design matrix linear regression cholesky qr decomposition gauss markov',
+    'trapezoidal-rule-romberg-extrapolation': 'composite trapezoidal rule romberg extrapolation richardson extrapolation euler maclaurin summation bernoulli numbers numerical quadrature asymptotic error expansion',
+    'simpson-one-third-three-eighths-quadrature': 'simpson one third rule three eighths rule parabolic quadrature composite simpson newton cotes peano error kernel algebraic precision degree 3',
+    'gauss-legendre-quadrature-nodes-weights': 'gauss legendre quadrature orthogonal polynomials legendre roots christoffel weights golub welsch jacobi matrix degree 2n-1 algebraic precision',
+    'monte-carlo-numerical-multidimensional-integration': 'monte carlo multidimensional integration central limit theorem standard error curse of dimensionality pseudorandom mersenne twister variance reduction quasi-monte carlo',
+    'fast-fourier-transform-spectral-analysis': 'fast fourier transform fft cooley tukey radix-2 decimation in time butterfly computation bit reversal permutation twiddle factors spectral leakage'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):
