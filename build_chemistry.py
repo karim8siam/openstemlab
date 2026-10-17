@@ -70,6 +70,13 @@ def observation(c,value):
   x=h
   y=raw
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='surface-tension-stalagmometry':
+  n_drops=float(value)
+  m_single=0.10040
+  raw=rnd(n_drops * m_single, 4)
+  x=n_drops
+  y=raw
+  return {'input':value,'raw':raw,'x':x,'y':y}
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fit(rows):
@@ -118,6 +125,12 @@ def estimate(c,f):
   eta_est=(const_geom / f['m']) * 1000.0
   se=(const_geom / (f['m'] * f['m'])) * f['slopeSE'] * 1000.0
   return eta_est, se, 1.0020
+ elif slug=='surface-tension-stalagmometry':
+  g=9.80665
+  r=0.00350
+  phi=0.6150
+  k_tip=g / (2.0 * math.pi * r * phi)
+  return f['m']*k_tip, f['slopeSE']*k_tip, 72.80
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fmt(v,n=5):
@@ -146,6 +159,9 @@ def formula(c,f):
   const_geom=6.006263e-5
   eta_calc=(const_geom / f['m']) * 1000.0
   return f"η = K_geom / m_slope = {const_geom:.6e} / {fmt(f['m'],6)} × 1000 = {fmt(eta_calc,4)} mPa·s; Intercept Q₀ = {fmt(f['b'],4)} mL/min"
+ elif slug=='surface-tension-stalagmometry':
+  k_tip=9.80665 / (2.0 * math.pi * 0.00350 * 0.6150)
+  return f"γ = m_slope · K_tip = {fmt(f['m'],6)} × {k_tip:.2f} = {fmt(f['m']*k_tip,2)} mN/m; Intercept m₀ = {fmt(f['b'],6)} g"
  return ""
 
 def worked(c,row):
@@ -303,6 +319,27 @@ def worked(c,row):
    f"extracts the hydraulic conductance slope m_slope = 0.05995 mL/(min·cm), inverting to isolate the absolute "
    f"dynamic viscosity η = 1.0018 mPa·s with R² = 1.00000, confirming the Hagen-Poiseuille law."
   )
+ elif slug=='surface-tension-stalagmometry':
+  n=row['input']
+  m_tot=row['raw']
+  m_single=m_tot / n
+  g=9.80665
+  r=0.00350
+  phi=0.6150
+  w_drop=m_single / 1000.0 * g
+  gamma_single=w_drop / (2.0 * math.pi * r * phi) * 1000.0
+  v_drop=(m_single / 0.9982) * 1000.0
+  return (
+   f"Stalagmometer Capillary Tip Radius: r_ext = 3.500 mm = 0.00350 m; Fluid: Pure Deionized Water at 20.0 °C.\n"
+   f"Collected Droplet Count: N = {int(n)} drops; Cumulative Droplet Mass: m_total = {m_tot:.4f} g.\n"
+   f"Single Droplet Gravimetric Mass: m_drop = m_total / N = {m_tot:.4f} g / {int(n)} = {m_single:.5f} g/drop.\n"
+   f"Single Droplet Volume: V = m_drop / ρ = {m_single:.5f} g / 0.9982 g/cm³ = {m_single/0.9982:.5f} cm³ = {v_drop:.2f} mm³.\n"
+   f"Dimensionless Shape Factor: r / V^(1/3) = 3.500 mm / ({v_drop:.2f} mm³)^(1/3) = 0.7526; Harkins-Jordan Factor φ = 0.6150.\n"
+   f"Single-Trial Dynamic Surface Tension: γ = (m_drop · g) / (2π · r · φ) = ({m_single/1000.0:.6f} × 9.807) / (2π × 0.00350 × 0.6150) × 1000 = {gamma_single:.2f} mN/m.\n"
+   f"Verification: Across the full six-point series from 10 to 60 drops, ordinary least-squares regression "
+   f"extracts the single-drop mass slope m_slope = 0.10040 g/drop, scaling by K_tip = 725.11 N/(m·kg) to isolate "
+   f"the surface tension γ = 72.80 mN/m with R² = 1.00000, confirming Tate's law with Harkins-Jordan correction."
+  )
  return ""
 
 def uncertainty_text(c):
@@ -448,6 +485,23 @@ def uncertainty_text(c):
    "and kinetic energy dissipation contributes less than 0.20% across the operating range (Re ≤ 88.7). "
    "Ordinary least-squares linear regression across six independent hydrostatic heads (10.0 to 35.0 cm) yields an empirical slope of "
    "m_slope = 0.05995 mL/(min·cm) with an ideal coefficient of determination R² = 1.00000, isolating the absolute dynamic viscosity η = 1.0018 mPa·s within 0.016% of the CIPM reference."
+  )
+ elif slug=='surface-tension-stalagmometry':
+  return (
+   "In drop-weight stalagmometry governed by Tate's modified law m_total = [ (2π · r · γ · φ) / g ] · N + m₀, "
+   "analytical measurement uncertainty is partitioned into distinct mechanical, thermal, and interfacial components: "
+   "(1) Stalagmometer Tip Radius Accuracy: The external ground-glass tip is measured using an optical measuring microscope to r = 3.500 ± 0.002 mm (δr / r = 0.057%). "
+   "Because surface tension scales inversely with r (γ ∝ 1/r), this contributes a systematic geometric uncertainty of only ±0.04 mN/m. "
+   "(2) Harkins-Jordan Factor Plateau Stability: At r / V^(1/3) = 0.7526, the Harkins-Jordan function φ(r/V^{1/3}) resides in a broad, nearly horizontal plateau "
+   "where the derivative ∂φ/∂(r/V^{1/3}) ≈ 0. A 2% variation in droplet volume shifts φ by less than 0.08%, imparting extraordinary robustness against droplet sizing. "
+   "(3) Thermostatic Jacket Control: Liquid water exhibits a negative temperature coefficient ∂γ/∂T ≈ -0.151 mN/(m·°C) at 20.0 °C. "
+   "The circulating thermostatic water mantle maintains 20.0 ± 0.05 °C, restricting thermal surface tension drift to < ±0.008 mN/m (0.011%). "
+   "(4) Evaporative Loss Prevention: Droplets detach directly into a narrow-mouth, ground-glass stoppered weighing bottle. "
+   "Gravimetric evaporation trials verify that vapor loss is less than 0.0002 g over a 10-minute collection interval (<0.005% of 4.0 g). "
+   "(5) Quasi-Static Detachment Kinetics: Throttling flow to 1 drop every 8 to 10 seconds suppresses hydrodynamic inertial forces (We = ρ v² r / γ < 10⁻⁴), "
+   "ensuring pure capillary pinch-off without jetting. "
+   "Ordinary least-squares linear regression across six independent drop counts (10 to 60 drops) yields an empirical slope of "
+   "m_slope = 0.10040 g/drop with an ideal coefficient of determination R² = 1.00000, isolating the absolute surface tension γ = 72.80 mN/m with zero residual offset."
   )
  return ""
 
@@ -817,6 +871,47 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"The experimental viscosity confirms the CIPM thermodynamic reference value (1.0020 mPa·s) with a percentage difference of {percent:.4f}%. "
    "The study confirmed the validity of the fourth-power radius scaling in Poiseuille flow, proved the stability of laminar streamlines at low Reynolds numbers, "
    "and demonstrated that multi-point hydrostatic regression provides a primary, standard-free method for fluid viscosity metrology."
+  )
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='surface-tension-stalagmometry':
+  abstract=(
+   f"Six precision drop-weight stalagmometry trials were conducted using ultra-pure deionized water at T = 20.0 ± 0.05 °C (293.15 K) "
+   f"across detached droplet counts from N = {int(rows[0]['input'])} to N = {int(rows[-1]['input'])} drops using a calibrated Traube stalagmometer "
+   f"(external tip radius r = 3.500 mm, Harkins-Jordan correction factor φ = 0.6150). "
+   f"Cumulative detached droplet masses ranged from {rows[0]['raw']:.4f} g to {rows[-1]['raw']:.4f} g, collected at a quasi-static detachment rate "
+   f"of 1 drop every 8–10 seconds inside a stoppered weighing bottle. "
+   f"Ordinary least-squares linear regression of cumulative mass against drop count yielded an empirical single-drop mass slope of "
+   f"{fmt(f['m'],6)} g/drop, extracting an absolute surface tension of γ = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} "
+   f"with an intercept of {fmt(f['b'],c['resultDecimals'])} g and an ideal coefficient of determination R² = 1.00000, "
+   f"matching the authoritative IAPWS reference standard (72.80 mN/m) with a percentage difference of {percent:.4f}%."
+  )
+  graph_choice=(
+   f"The linear regression models the modified Tate detachment equation m_total = [ (2π · r · γ · φ) / g ] · N + m₀, "
+   f"where N represents the integer count of detached droplets, m_total represents the cumulative gravimetric mass in g, "
+   f"and m₀ represents the initial weighing bottle tare offset in g (theoretically m₀ = 0.0000 g). "
+   f"Multiplying the regression slope m_slope by K_tip = g / (2π · r · φ) = 725.11 N/(m·kg) directly isolates the "
+   f"absolute surface tension in {c['resultUnit']}, while constant tare residues are absorbed into m₀."
+  )
+  discussion=(
+   "The experimental observations provide rigorous quantitative verification of Interfacial Thermodynamics, Tate's Law of Capillary Detachment, and the Harkins-Jordan Hydrodynamic Correction. "
+   "In liquid interfacial physics, surface tension arises from the unbalanced cohesive intermolecular forces pulling surface molecules into the bulk liquid phase. "
+   "During the growth of a pendent drop at the razor-flat circular stalagmometer tip, the downward gravitational weight increases until it overcomes the upward surface tension force. "
+   "Crucially, high-speed fluid mechanics dictates that when the capillary neck pinches off via Rayleigh-Plateau instability, approximately 38.5% of the droplet volume "
+   "remains behind on the glass tip. "
+   "Incorporating the Harkins-Jordan factor φ = 0.6150 (derived for the dimensionless shape ratio r / V^{1/3} = 0.7526) completely compensates for this incomplete detachment. "
+   "Across all six drop count determinations from 10 to 60 drops, cumulative mass scaled in strictly linear proportion to drop count. "
+   "The ordinary least-squares regression line m_total = 0.10040 · N + 0.0000 g yielded an ideal coefficient of determination R² = 1.00000. "
+   "Scaling by K_tip extracted an absolute surface tension of γ = 72.80 mN/m, in perfect agreement with the international reference standard for pure water at 20.0 °C. "
+   "Throttling the flow to 8–10 seconds per drop ensured quasi-static detachment, and acid cleaning eliminated trace surfactant films that would otherwise depress surface tension."
+  )
+  conclusion=(
+   "This laboratory investigation successfully determined the absolute liquid surface tension of ultra-pure water at 20.0 °C using precision drop-weight stalagmometry. "
+   f"Through systematic multi-drop gravimetric determinations across counts from N = {int(rows[0]['input'])} to {int(rows[-1]['input'])}, we extracted an absolute "
+   f"surface tension of γ = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with a fit standard error of "
+   f"{fmt(se*c['resultScale'])} {c['resultUnit']} and an ideal coefficient of determination R² = 1.00000. "
+   f"The observed surface tension confirms the IAPWS thermodynamic reference value (72.80 mN/m) with a percentage difference of {percent:.4f}%. "
+   "The investigation verified Tate's law, proved the necessity of the Harkins-Jordan hydrodynamic detachment correction, "
+   "and demonstrated that multi-point gravimetric regression insulates interfacial measurements from container taring and transfer biases."
   )
   return abstract, graph_choice, discussion, conclusion
  return "","","",""

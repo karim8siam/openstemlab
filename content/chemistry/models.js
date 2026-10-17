@@ -73,6 +73,14 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:1.0,x,y,valid:h>=10.0&&h<=35.0};
  }
+ if(slug==='surface-tension-stalagmometry'){
+  const n_drops=Number(input);
+  const m_single=0.10040;
+  const raw=round(n_drops * m_single, 4);
+  const x=n_drops;
+  const y=raw;
+  return {raw,ideal:raw,period:1.0,x,y,valid:n_drops>=10&&n_drops<=60};
+ }
  throw Error('Unknown Chemistry experiment predict: '+slug);
 }
 
@@ -109,6 +117,10 @@ function reading(slug,input,raw){
   y=Number(raw);
  }
  if(slug==='liquid-viscosity-poiseuille'){
+  x=Number(input);
+  y=Number(raw);
+ }
+ if(slug==='surface-tension-stalagmometry'){
   x=Number(input);
   y=Number(raw);
  }
@@ -176,6 +188,15 @@ function estimate(slug,f){
   const eta_est=(const_geom / f.m) * 1000.0;
   const se=(const_geom / (f.m * f.m)) * f.slopeSE * 1000.0;
   return {value:eta_est,se:se,reference:1.0020};
+ }
+ if(slug==='surface-tension-stalagmometry'){
+  const g=9.80665;
+  const r=0.00350;
+  const phi=0.6150;
+  const k_tip=g / (2.0 * Math.PI * r * phi);
+  const gamma_est=f.m * k_tip;
+  const se=f.slopeSE * k_tip;
+  return {value:gamma_est,se:se,reference:72.80};
  }
  throw Error('Unknown Chemistry experiment estimate: '+slug);
 }

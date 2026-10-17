@@ -35,6 +35,9 @@ function update(){
  }else if(cfg.slug==='liquid-viscosity-poiseuille'){
   $('liveState').textContent='Ready to establish '+p.input.toFixed(1)+' cm hydrostatic head across capillary.';
   message('Set hydrostatic head Δh, equilibrate at 20.0 °C, purge bubbles & record flow rate.');
+ }else if(cfg.slug==='surface-tension-stalagmometry'){
+  $('liveState').textContent='Ready to collect '+p.input.toFixed(0)+' drops from Traube stalagmometer tip.';
+  message('Set drop count N, throttle needle valve to 8–10 s/drop, collect into weighing bottle & weigh.');
  }else{
   $('liveState').textContent='Ready to dispense '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+' of liquid.';
   message('Adjust '+cfg.shortInput+' V, then weigh the dispensed aliquot.');
@@ -62,6 +65,7 @@ $('measure').onclick=async()=>{
  if(cfg.slug==='chemical-reactions-copper-cycle') msgStart='Dissolving in HNO₃, precipitating Cu(OH)₂, dehydrating to CuO, dissolving in H₂SO₄, reducing with Zn, washing & desiccation…';
  if(cfg.slug==='empirical-formula-magnesium-oxide') msgStart='Igniting magnesium ribbon, throttling aerosol smoke, digesting nitride with hot water, calcining at 850 °C…';
  if(cfg.slug==='liquid-viscosity-poiseuille') msgStart='Equilibrating jacket at 20.0 °C, establishing constant overflow head, timing effluent discharge…';
+ if(cfg.slug==='surface-tension-stalagmometry') msgStart='Forming quasi-static pendent drops at 20.0 °C, detaching at razor tip, collecting into stoppered bottle…';
  message(msgStart);
  await new Promise(resolve=>setTimeout(resolve,400));
  const raw=prediction.raw;
@@ -89,6 +93,9 @@ $('measure').onclick=async()=>{
  }else if(cfg.slug==='liquid-viscosity-poiseuille'){
   $('liveState').textContent='Volumetric capillary discharge: '+raw.toFixed(3)+' mL/min at Δh = '+p.input.toFixed(1)+' cm.';
   message('Poiseuille flow stabilized: discharge rate '+raw.toFixed(3)+' mL/min under '+p.input.toFixed(1)+' cm head (Re < 90, laminar). Record in notebook.');
+ }else if(cfg.slug==='surface-tension-stalagmometry'){
+  $('liveState').textContent='Collected '+p.input.toFixed(0)+' drops: net mass '+raw.toFixed(4)+' g.';
+  message('Drop-weight stalagmometry complete: '+p.input.toFixed(0)+' drops = '+raw.toFixed(4)+' g (m_drop = '+(raw/p.input).toFixed(5)+' g/drop). Record in notebook.');
  }else{
   $('liveState').textContent='Analytical balance stabilized: '+raw.toFixed(cfg.rawDecimals)+' g net mass.';
   message('Gravimetric measurement complete: '+raw.toFixed(cfg.rawDecimals)+' '+cfg.rawUnit+' for '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+'. Record in notebook.');
@@ -282,6 +289,18 @@ function draw(t){
    return;
   }
   $('apparatusDiagram').innerHTML=drawPoiseuilleBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='surface-tension-stalagmometry'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawStalagCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawStalagSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawStalagBenchView(p,rawVal);
   return;
  }
  if(currentSimMode==='compare'){
@@ -2336,5 +2355,260 @@ function drawPoiseuilleSandboxView(p,rawVal){
  });
 
  svg+=text(360,305,'Laminar Invariant: Reynolds number Re = '+reynolds.toFixed(1)+' guarantees pure Poiseuille streamline shear.','#789c80',9);
+ return svg;
+}
+
+
+// ======================================================================
+// CHEMISTRY LAB 09: SURFACE TENSION & DROP-WEIGHT STALAGMOMETRY
+// ======================================================================
+function drawStalagBenchView(p,rawVal){
+ const n_drops=p.input;
+ const m_tot=rawVal;
+ const m_drop=m_tot/n_drops;
+ const v_drop=(m_drop/0.9982)*1000.0;
+ const r_V=(3.50/Math.cbrt(v_drop));
+
+ let svg='<defs>';
+ svg+='<linearGradient id="dropGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#0284c7" stop-opacity=".75"/><stop offset="50%" stop-color="#38bdf8" stop-opacity=".95"/><stop offset="100%" stop-color="#0284c7" stop-opacity=".8"/></linearGradient>';
+ svg+='<linearGradient id="stalagGlass" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#ffffff" stop-opacity=".25"/><stop offset="15%" stop-color="#ffffff" stop-opacity=".05"/><stop offset="85%" stop-color="#ffffff" stop-opacity=".08"/><stop offset="100%" stop-color="#ffffff" stop-opacity=".3"/></linearGradient>';
+ svg+='<linearGradient id="jacketBlue" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#38bdf8" stop-opacity=".15"/><stop offset="100%" stop-color="#0284c7" stop-opacity=".1"/></linearGradient>';
+ svg+='</defs><rect width="720" height="320" fill="#08140c"/>';
+
+ svg+=text(360,20,'TRAUBE DROP-WEIGHT STALAGMOMETER: SURFACE TENSION (20.0 °C THERMOSTATED)','#86efac',12);
+
+ // Table surface
+ svg+='<rect x="0" y="275" width="720" height="45" fill="#132419" stroke="#1f3b2a" stroke-width="1"/>';
+ svg+='<line x1="0" y1="275" x2="720" y2="275" stroke="#2d523b" stroke-width="2"/>';
+
+ // Retort Stand & Clamps (Left: x = 40 to 120)
+ svg+='<rect x="40" y="260" width="85" height="15" rx="3" fill="#334155" stroke="#0f172a"/>';
+ svg+='<rect x="78" y="30" width="8" height="230" fill="#475569" stroke="#1e293b"/>';
+ // Clamps
+ svg+='<rect x="70" y="70" width="85" height="8" rx="2" fill="#64748b"/>';
+ svg+='<rect x="70" y="160" width="85" height="8" rx="2" fill="#64748b"/>';
+
+
+ // --- Stalagmometer Assembly (x = 135 to 225) ---
+ const sX=160;
+ // Top Needle Valve & Rubber Aspirator
+ svg+='<rect x="'+(sX-8)+'" y="35" width="16" height="18" rx="2" fill="#334155" stroke="#475569"/>';
+ svg+='<circle cx="'+sX+'" cy="30" r="8" fill="#f97316"/>';
+ svg+='<text x="'+(sX+14)+'" y="45" fill="#f97316" font-size="7">PTFE Needle Valve (8-10 s/drop)</text>';
+
+ // Outer Circulating Water Jacket
+ const jX=sX-22,jY=55,jW=44,jH=145;
+ svg+='<rect x="'+jX+'" y="'+jY+'" width="'+jW+'" height="'+jH+'" rx="8" fill="url(#jacketBlue)" stroke="#38bdf8" stroke-width="1.2"/>';
+ svg+='<text x="'+(jX-8)+'" y="'+(jY+20)+'" text-anchor="end" fill="#38bdf8" font-size="7">Bath (20°C)</text>';
+ svg+='<text x="'+(jX-8)+'" y="'+(jY+jH-15)+'" text-anchor="end" fill="#38bdf8" font-size="7">Circulator In</text>';
+
+ // Stalagmometer glass stem & central bulb
+ svg+='<rect x="'+(sX-4)+'" y="52" width="8" height="35" fill="url(#stalagGlass)" stroke="#64748b" stroke-width="0.8"/>';
+ // Upper Bulb
+ svg+='<ellipse cx="'+sX+'" cy="115" rx="14" ry="24" fill="url(#stalagGlass)" stroke="#64748b" stroke-width="1"/>';
+ // Liquid inside bulb
+ svg+='<ellipse cx="'+sX+'" cy="118" rx="12" ry="20" fill="url(#dropGrad)" fill-opacity=".7"/>';
+ // Etched ring marks (fiducial lines)
+ svg+='<line x1="'+(sX-10)+'" y1="88" x2="'+(sX+10)+'" y2="88" stroke="#ffffff" stroke-width="1"/>';
+ svg+='<line x1="'+(sX-10)+'" y1="142" x2="'+(sX+10)+'" y2="142" stroke="#ffffff" stroke-width="1"/>';
+
+ // Lower capillary stem
+ svg+='<rect x="'+(sX-3)+'" y="140" width="6" height="60" fill="url(#stalagGlass)" stroke="#64748b" stroke-width="0.8"/>';
+ svg+='<rect x="'+(sX-1)+'" y="140" width="2" height="60" fill="url(#dropGrad)"/>';
+
+ // Precision Ground Razor Tip (external radius r = 3.500 mm, diameter 7.0 mm)
+ const tipY=200,tipW=20;
+ svg+='<rect x="'+(sX-tipW/2)+'" y="'+tipY+'" width="'+tipW+'" height="4" fill="#94a3b8" stroke="#475569" stroke-width="1"/>';
+ svg+='<line x1="'+(sX-tipW/2)+'" y1="'+(tipY+4)+'" x2="'+(sX+tipW/2)+'" y2="'+(tipY+4)+'" stroke="#facc15" stroke-width="1.8"/>';
+ svg+='<text x="'+(sX-tipW/2-4)+'" y="'+(tipY+4)+'" text-anchor="end" fill="#facc15" font-size="7.5" font-weight="bold">r = 3.500 mm</text>';
+
+ // Forming Pendent Droplet & Neck Pinch-off
+ svg+='<path d="M'+(sX-7)+' '+(tipY+4)+' Q'+(sX-4)+' '+(tipY+12)+' '+(sX-8)+' '+(tipY+18)+' Q'+sX+' '+(tipY+28)+' '+(sX+8)+' '+(tipY+18)+' Q'+(sX+4)+' '+(tipY+12)+' '+(sX+7)+' '+(tipY+4)+' Z" fill="url(#dropGrad)"/>';
+ if(busy){
+  // Detaching drop in mid-air + satellite drop
+  svg+='<circle cx="'+sX+'" cy="'+(tipY+36)+'" r="1.5" fill="#38bdf8"/>'; // satellite droplet
+  svg+='<path d="M'+(sX-6)+' '+(tipY+46)+' Q'+sX+' '+(tipY+42)+' '+(sX+6)+' '+(tipY+46)+' Q'+(sX+7)+' '+(tipY+54)+' '+sX+' '+(tipY+58)+' Q'+(sX-7)+' '+(tipY+54)+' '+(sX-6)+' '+(tipY+46)+' Z" fill="url(#dropGrad)"/>';
+ }
+
+ // Stoppered glass weighing bottle catching droplets (x = 135 to 185, y = 225 to 275)
+ const wbX=sX-22,wbY=226,wbW=44,wbH=48;
+ svg+='<rect x="'+wbX+'" y="'+wbY+'" width="'+wbW+'" height="'+wbH+'" rx="4" fill="url(#stalagGlass)" stroke="#64748b" stroke-width="1"/>';
+ // Liquid accumulating in weighing bottle
+ const collH=Math.min(32, Math.max(6, (n_drops/60.0)*28));
+ svg+='<rect x="'+(wbX+2)+'" y="'+(wbY+wbH-collH)+'" width="'+(wbW-4)+'" height="'+collH+'" rx="2" fill="url(#dropGrad)" fill-opacity=".75"/>';
+ svg+='<text x="'+sX+'" y="'+(wbY+wbH-8)+'" text-anchor="middle" fill="#ffffff" font-size="7.5" font-weight="bold">'+n_drops.toFixed(0)+' Drops</text>';
+
+
+ // --- 2. Four-Decimal Analytical Balance (Right: x = 280 to 690) ---
+ const balX=280,balY=90,balW=410,balH=180;
+ // Granite block
+ svg+='<rect x="'+(balX-10)+'" y="260" width="'+(balW+20)+'" height="15" rx="3" fill="#1e293b" stroke="#0f172a"/>';
+ // Main balance housing
+ svg+='<rect x="'+balX+'" y="'+balY+'" width="'+balW+'" height="'+balH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+
+ // Draft shield enclosure
+ const dX=balX+18,dY=balY+14,dW=balW-36,dH=95;
+ svg+='<rect x="'+dX+'" y="'+dY+'" width="'+dW+'" height="'+dH+'" rx="4" fill="#061209" stroke="#334155" stroke-width="1.2"/>';
+
+ // Weighing Pan & Bottle Replica inside Draft Chamber
+ const panCx=dX+75,panCy=dY+dH-10;
+ svg+='<rect x="'+(panCx-35)+'" y="'+panCy+'" width="70" height="6" rx="2" fill="#94a3b8" stroke="#475569"/>';
+ svg+='<rect x="'+(panCx-5)+'" y="'+(panCy+6)+'" width="10" height="6" fill="#64748b"/>';
+ // Bottle on pan
+ svg+='<rect x="'+(panCx-16)+'" y="'+(panCy-30)+'" width="32" height="30" rx="3" fill="url(#stalagGlass)" stroke="#64748b"/>';
+ svg+='<rect x="'+(panCx-14)+'" y="'+(panCy-14)+'" width="28" height="14" rx="2" fill="url(#dropGrad)" fill-opacity=".75"/>';
+
+ // Data Readout Display inside Draft Chamber (right side)
+ svg+='<rect x="'+(panCx+55)+'" y="'+(dY+10)+'" width="200" height="75" rx="4" fill="#051009" stroke="#162e1e"/>';
+ svg+='<text x="'+(panCx+65)+'" y="'+(dY+26)+'" fill="#789c80" font-size="7.5" font-weight="bold">QUASI-STATIC METROLOGY</text>';
+ svg+='<text x="'+(panCx+65)+'" y="'+(dY+40)+'" fill="#cbd5e1" font-size="7.5">Tip Radius: r = 3.500 mm</text>';
+ svg+='<text x="'+(panCx+65)+'" y="'+(dY+53)+'" fill="#cbd5e1" font-size="7.5">Harkins-Jordan: φ = 0.6150 (r/V⅓ = 0.753)</text>';
+ svg+='<text x="'+(panCx+65)+'" y="'+(dY+66)+'" fill="#facc15" font-size="7.5" font-family="monospace">m_drop = '+(m_drop).toFixed(5)+' g/drop</text>';
+ svg+='<text x="'+(panCx+65)+'" y="'+(dY+79)+'" fill="#86efac" font-size="8" font-family="monospace" font-weight="bold">γ = 72.80 mN/m (Water at 20.0 °C)</text>';
+
+ // Analytical LCD Display Screen (Bottom of Balance)
+ const lcdX=balX+30,lcdY=balY+120,lcdW=balW-60,lcdH=45;
+ svg+='<rect x="'+lcdX+'" y="'+lcdY+'" width="'+lcdW+'" height="'+lcdH+'" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1.5"/>';
+ svg+='<circle cx="'+(lcdX+16)+'" cy="'+(lcdY+22)+'" r="4" fill="'+(busy?'#eab308':'#48bb78')+'"/>';
+ svg+='<text x="'+(lcdX+26)+'" y="'+(lcdY+18)+'" fill="#789c80" font-size="7.5">STABLE</text>';
+ svg+='<text x="'+(lcdX+26)+'" y="'+(lcdY+30)+'" fill="#789c80" font-size="7.5">NET TARE</text>';
+
+ const dispVal=measurement?m_tot.toFixed(4):(busy?(rawVal*0.75).toFixed(4):'0.0000');
+ svg+='<text x="'+(lcdX+lcdW-20)+'" y="'+(lcdY+30)+'" text-anchor="end" fill="#86efac" font-size="20" font-family="monospace" font-weight="bold">'+dispVal+' g</text>';
+
+ svg+=text(360,305,'Tate Formulation with Harkins-Jordan: W = 2π·r·γ·φ; Incomplete neck detachment (φ = 0.615) is rigorously compensated.','#789c80',8.5);
+ return svg;
+}
+
+function drawStalagCompareView(p,rawVal){
+ let svg='<rect x="0" y="0" width="720" height="320" fill="#08140c"/>';
+ svg+=text(360,24,'COMPARATIVE TENSIOMETRY METROLOGY: INTERFACIAL MEASUREMENT TECHNIQUES','#86efac',12);
+
+ const cards=[
+  {
+   title:'1. Drop-Weight Stalagmometry',
+   sub:'Quasi-Static Gravimetric Detachment (Our Lab)',
+   color:'#86efac',
+   border:'#254d33',
+   items:[
+    'Principle: Tate law with Harkins-Jordan hydrodynamic correction',
+    'Equation: γ = (m_drop · g) / [2π · r · φ(r/V⅓)]',
+    'Geometry: Optically ground razor-sharp circular tip (r = 3.500 mm)',
+    'Correction: φ = 0.6150 compensates for residual neck stub on tip',
+    'Precision: ±0.1% to ±0.2% absolute surface tension accuracy',
+    'Primary advantage: Robust glassware, vibration-tolerant, small volume',
+    'Limitation: Requires slow detachment (8-10 s/drop) to avoid inertia'
+   ]
+  },
+  {
+   title:'2. Du Noüy Platinum Ring',
+   sub:'Torsion Wire Meniscus Detachment',
+   color:'#38bdf8',
+   border:'#1e3a5f',
+   items:[
+    'Principle: Maximum detachment pull on submerged Pt-Ir wire ring',
+    'Equation: γ = [F_max / (4π · R_ring)] · F_Zuidema-Waters',
+    'Geometry: Thin circular platinum ring (R ≈ 9.55 mm, r_wire ≈ 0.18 mm)',
+    'Correction: Complex empirical ring factors (F = 0.75 to 1.05)',
+    'Precision: ±0.2% to ±0.5% with certified tensiometer calibration',
+    'Primary advantage: Fast, automated, measures liquid-liquid interfaces',
+    'Limitation: Wire ring must remain perfectly planar; fragile to warping'
+   ]
+  },
+  {
+   title:'3. Wilhelmy Plate / Capillary Rise',
+   sub:'Wetted Plate Force & Meniscus Height',
+   color:'#fde047',
+   border:'#5a4814',
+   items:[
+    'Principle: Vertical capillary pull on sandblasted Pt plate (θ = 0°)',
+    'Equation: Wilhelmy: γ = F / (2 · w); Capillary: γ = (r · h · Δρ · g) / 2',
+    'Geometry: Thin roughened platinum plate or precision glass bore',
+    'Correction: Zero empirical factor required if complete wetting (θ = 0°)',
+    'Precision: Premier absolute benchmark for Langmuir dynamic films',
+    'Primary advantage: Continuous real-time dynamic monolayer tracking',
+    'Limitation: Acute sensitivity to surface dust and contact angle errors'
+   ]
+  }
+ ];
+
+ cards.forEach((c,idx)=>{
+  const x=25+idx*230,y=46,w=210,h=242;
+  svg+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="6" fill="#0d1f14" stroke="'+c.border+'" stroke-width="1.5"/>';
+  svg+='<rect x="'+(x+8)+'" y="'+(y+8)+'" width="'+(w-16)+'" height="32" rx="4" fill="#051009"/>';
+  svg+='<text x="'+(x+w/2)+'" y="'+(y+22)+'" text-anchor="middle" fill="'+c.color+'" font-size="9.5" font-weight="bold">'+c.title+'</text>';
+  svg+='<text x="'+(x+w/2)+'" y="'+(y+34)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5">'+c.sub+'</text>';
+
+  c.items.forEach((item,ii)=>{
+   const iy=y+54+ii*26;
+   svg+='<circle cx="'+(x+16)+'" cy="'+(iy-3)+'" r="2" fill="'+c.color+'"/>';
+   svg+='<foreignObject x="'+(x+24)+'" y="'+(iy-10)+'" width="'+(w-32)+'" height="26"><p xmlns="http://www.w3.org/1999/xhtml" style="font-size:7.5px;color:#cbd5e1;line-height:1.2;margin:0">'+item+'</p></foreignObject>';
+  });
+ });
+
+ svg+=text(360,305,'Comparison: Stalagmometry measures drop mass; Du Noüy measures ring pull; Wilhelmy measures wetted plate force.','#789c80',9);
+ return svg;
+}
+
+function drawStalagSandboxView(p,rawVal){
+ const n_drops=p.input;
+ const m_tot=rawVal;
+ const m_drop=m_tot/n_drops;
+ const v_drop=(m_drop/0.9982)*1000.0;
+ const r_V=(3.50/Math.cbrt(v_drop));
+
+ let svg='<rect x="0" y="0" width="720" height="320" fill="#08140c"/>';
+ svg+=text(360,22,'PENDENT DROP HYDRODYNAMIC PINCH-OFF & HARKINS-JORDAN CORRECTION','#86efac',12);
+
+ // Left Panel: Drop Neck Rupture Anatomy
+ const lX=25,lY=46,lW=340,lH=230;
+ svg+='<rect x="'+lX+'" y="'+lY+'" width="'+lW+'" height="'+lH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg+='<text x="'+(lX+lW/2)+'" y="'+(lY+18)+'" text-anchor="middle" fill="#86efac" font-size="10" font-weight="bold">RAYLEIGH-PLATEAU NECK PINCH-OFF ANATOMY</text>';
+
+ // Capillary tip outline
+ const cx=lX+85,cy=lY+45;
+ svg+='<rect x="'+(cx-20)+'" y="'+cy+'" width="40" height="8" fill="#94a3b8" stroke="#475569"/>';
+ svg+='<text x="'+(cx+26)+'" y="'+(cy+7)+'" fill="#facc15" font-size="7.5">Tip Radius r = 3.50 mm</text>';
+
+ // Residual liquid stub remaining on tip (38.5% of volume)
+ svg+='<path d="M'+(cx-18)+' '+(cy+8)+' Q'+cx+' '+(cy+22)+' '+(cx+18)+' '+(cy+8)+' Z" fill="#38bdf8" fill-opacity=".4" stroke="#38bdf8" stroke-dasharray="2,2"/>';
+ svg+='<text x="'+(cx+24)+'" y="'+(cy+20)+'" fill="#94a3b8" font-size="7">Residual Stub (38.5% volume stays)</text>';
+
+ // Detaching primary drop (61.5% of volume, phi = 0.615)
+ svg+='<path d="M'+(cx-16)+' '+(cy+40)+' Q'+cx+' '+(cy+30)+' '+(cx+16)+' '+(cy+40)+' Q'+(cx+18)+' '+(cy+65)+' '+cx+' '+(cy+72)+' Q'+(cx-18)+' '+(cy+65)+' '+(cx-16)+' '+(cy+40)+' Z" fill="#0284c7" stroke="#38bdf8" stroke-width="1.2"/>';
+ svg+='<circle cx="'+cx+'" cy="'+(cy+28)+'" r="2" fill="#38bdf8"/>'; // Satellite drop
+ svg+='<text x="'+(cx+24)+'" y="'+(cy+55)+'" fill="#38bdf8" font-size="7.5" font-weight="bold">Primary Detached Drop (61.5%)</text>';
+ svg+='<text x="'+(cx+24)+'" y="'+(cy+66)+'" fill="#789c80" font-size="7">φ = W_det / W_ideal = 0.6150</text>';
+
+ // Data summary card on left panel
+ svg+='<rect x="'+(lX+15)+'" y="'+(lY+145)+'" width="'+(lW-30)+'" height="70" rx="4" fill="#051009" stroke="#162e1e"/>';
+ svg+='<text x="'+(lX+25)+'" y="'+(lY+160)+'" fill="#789c80" font-size="7.5" font-weight="bold">DIMENSIONLESS SCALING PARAMETERS</text>';
+ svg+='<text x="'+(lX+25)+'" y="'+(lY+174)+'" fill="#cbd5e1" font-size="7.5">Single Drop Volume: V = '+(v_drop).toFixed(2)+' mm³ = '+(v_drop/1000).toFixed(5)+' mL</text>';
+ svg+='<text x="'+(lX+25)+'" y="'+(lY+188)+'" fill="#facc15" font-size="7.5" font-family="monospace">Characteristic Shape: r / V⅓ = 3.50 / '+(Math.cbrt(v_drop)).toFixed(2)+' = 0.7526</text>';
+ svg+='<text x="'+(lX+25)+'" y="'+(lY+202)+'" fill="#86efac" font-size="8" font-family="monospace" font-weight="bold">Harkins-Jordan Factor: φ(0.7526) = 0.6150 (Optimal Plateau)</text>';
+
+
+ // Right Panel: Systematic Error & Interfacial Sensitivity Audit
+ const rX=380,rY=46,rW=315,rH=230;
+ svg+='<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg+='<text x="'+(rX+rW/2)+'" y="'+(rY+18)+'" text-anchor="middle" fill="#86efac" font-size="10" font-weight="bold">INTERFACIAL SENSITIVITY & ERROR AUDIT</text>';
+
+ const errItems=[
+  {label:'Tate Detachment Factor (φ)',desc:'φ = 0.6150 compensates for incomplete neck snap',val:'Exact +62.6% Tate Correction',col:'#48bb78'},
+  {label:'Detachment Rate (<5 s/drop)',desc:'Fast dripping introduces inertial momentum push',val:'Prevented: 8-10 s/drop',col:'#38bdf8'},
+  {label:'Surfactant Contamination (-)',desc:'Trace organics concentrate at surface (Gibbs excess)',val:'Prevented by chromic acid',col:'#f87171'},
+  {label:'Temperature Drift (T)',desc:'∂γ/∂T ≈ -0.151 mN/(m·°C) near 20.0 °C',val:'Thermostated ±0.05 °C',col:'#fbbf24'},
+  {label:'OLS Slope Insulation (★)',desc:'Weighing bottle tare drift absorbed into m₀',val:'Slope = 0.1004 g/drop Unbiased',col:'#86efac'}
+ ];
+
+ errItems.forEach((ei,idx)=>{
+  const ey=rY+30+idx*39;
+  svg+='<rect x="'+(rX+8)+'" y="'+ey+'" width="'+(rW-16)+'" height="33" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg+='<text x="'+(rX+14)+'" y="'+(ey+12)+'" fill="'+ei.col+'" font-size="7.5" font-weight="bold">'+ei.label+'</text>';
+  svg+='<text x="'+(rX+14)+'" y="'+(ey+25)+'" fill="#94a3b8" font-size="6.8">'+ei.desc+'</text>';
+  svg+='<text x="'+(rX+rW-14)+'" y="'+(ey+12)+'" text-anchor="end" fill="'+ei.col+'" font-size="7.5" font-family="monospace">'+ei.val+'</text>';
+ });
+
+ svg+=text(360,305,'Plateau Invariant: Operating at r/V⅓ = 0.7526 insulates Harkins-Jordan factor against droplet volume shifts.','#789c80',9);
  return svg;
 }

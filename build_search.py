@@ -78,7 +78,8 @@ def experiment_index(experiments):
     'volatile-liquid-molar-mass':'molar mass volatile liquid dumas method vapor density cyclohexane boiling water bath pinhole air buoyancy pycnometry ideal gas equation of state van der waals',
     'chemical-reactions-copper-cycle':'chemical reactions copper cycle conservation of mass redox metathesis precipitation dehydration neutralization single displacement gravimetric recovery percentage yield lavoisier stoichiometry tenorite',
     'empirical-formula-magnesium-oxide':'empirical formula magnesium oxide crucible thermal oxidation meker burner porcelain constant mass proust definite proportions dalton magnesium nitride hydrolysis ammonia steam rocksalt lattice',
-    'liquid-viscosity-poiseuille':'liquid dynamic viscosity hagen poiseuille capillary flow hydrostatic head water jacket newton shear stress laminar reynolds number ostwald falling sphere rotational couette'}
+    'liquid-viscosity-poiseuille':'liquid dynamic viscosity hagen poiseuille capillary flow hydrostatic head water jacket newton shear stress laminar reynolds number ostwald falling sphere rotational couette',
+    'surface-tension-stalagmometry':'surface tension drop weight stalagmometry traube tate law harkins jordan correction rayleigh plateau neck pinch off du nouy ring wilhelmy plate capillary rise interfacial thermodynamics'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):
