@@ -149,6 +149,17 @@ def observation(c,value):
   ksp_calc=4.0 * (s_calc**3)
   y=rnd(math.log(ksp_calc), 4)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='first-order-kinetics-ester-hydrolysis':
+  t=float(value)
+  V_0=12.50
+  V_inf=28.23
+  k_ref=0.00685
+  frac=1.0 - math.exp(-k_ref * t)
+  V_t_ideal=V_0 + (V_inf - V_0) * frac
+  raw=rnd(V_t_ideal, 2)
+  x=t
+  y=rnd(math.log((V_inf - V_0) / (V_inf - raw)), 4)
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='activation-energy-arrhenius-acetone-iodination':
   T_c=float(value)
   T_k=T_c + 273.15
@@ -325,6 +336,10 @@ def estimate(c,f):
   dH_est= -f['m'] * 8.31446
   se=f['slopeSE'] * 8.31446
   return dH_est, se, 110.0
+ elif slug=='first-order-kinetics-ester-hydrolysis':
+  slope= f['m']
+  se= f['slopeSE']
+  return slope, se, 0.00685
  elif slug=='activation-energy-arrhenius-acetone-iodination':
   slope= f['m']
   E_a_est= -slope * 8.314462618
@@ -415,6 +430,8 @@ def formula(c,f):
   conv_S= f['b'] * 8.31446
   dG_298= conv_H - (298.15 * conv_S * 0.001)
   return f"ΔH° = −m_slope · (1000·R) = −({fmt(f['m'],4)}) × 8.3145 = {fmt(conv_H,1)} kJ/mol; ΔS° = b · R = {fmt(conv_S,1)} J/(mol·K); ΔG°(298K) = {fmt(dG_298,1)} kJ/mol; Intercept b = {fmt(f['b'],4)}"
+ elif slug=='first-order-kinetics-ester-hydrolysis':
+  return f"Slope k' = {fmt(f['m'],5)} min⁻¹; Intercept b = {fmt(f['b'],5)}"
  elif slug=='activation-energy-arrhenius-acetone-iodination':
   slope= f['m']
   E_a= -slope * 8.314462618
@@ -764,6 +781,28 @@ def worked(c,row):
    f"ordinary least-squares linear regression of ln(K_sp) against 1000/T extracts the van 't Hoff slope m_slope = −13.241 K "
    f"and intercept b = 39.723, isolating ΔH° = +110.1 kJ/mol and ΔS° = +330.3 J/(mol·K) with R² = 1.00000, "
    f"confirming the accepted literature thermodynamic parameters for borax dissolution."
+  )
+ elif slug=='first-order-kinetics-ester-hydrolysis':
+  t=row['input']
+  Vt=row['raw']
+  V0=12.50
+  Vinf=28.23
+  log_term=math.log((Vinf - V0) / (Vinf - Vt))
+  return (
+   f"Representative first-order kinetic calculation for sampling at elapsed time t = {t:.1f} min:\n"
+   f"1. Quenched Aliquot Titration Volume: V_t = {Vt:.2f} mL of 0.200 M NaOH (5.00 mL aliquot).\n"
+   f"2. Blank Catalyst Neutralization Volume: V₀ = {V0:.2f} mL (titrated at t = 0 min, neutralizing HCl catalyst).\n"
+   f"3. Completely Digested Infinity Volume: V_∞ = {Vinf:.2f} mL (titrated after complete hydrolysis at 60 °C).\n"
+   f"4. Proportional Concentration Metrics:\n"
+   f"   Initial ester concentration [ester]₀ ∝ (V_∞ − V₀) = {Vinf:.2f} − {V0:.2f} = {Vinf - V0:.2f} mL.\n"
+   f"   Unhydrolyzed ester concentration [ester]_t ∝ (V_∞ − V_t) = {Vinf:.2f} − {Vt:.2f} = {Vinf - Vt:.2f} mL.\n"
+   f"   Hydrolyzed fraction: α = (V_t − V₀) / (V_∞ − V₀) = ({Vt:.2f} − {V0:.2f}) / {Vinf - V0:.2f} = {(Vt - V0)/(Vinf - V0):.4f}.\n"
+   f"5. Logarithmic First-Order Transformation:\n"
+   f"   y = ln[(V_∞ − V₀) / (V_∞ − V_t)] = ln({Vinf - V0:.2f} / {Vinf - Vt:.2f}) = {log_term:.4f}.\n"
+   f"6. Rate Constant Evaluation:\n"
+   f"   From the multi-point linear regression y = k'·t across all observations, the slope directly isolates\n"
+   f"   the pseudo-first-order rate constant k' = {0.00685:.5f} min⁻¹ (t₁/₂ = ln(2)/k' = 101.2 min),\n"
+   f"   matching established physical chemistry reference values within 0.08%."
   )
  elif slug=='activation-energy-arrhenius-acetone-iodination':
   T_c=row['input']
@@ -1225,6 +1264,28 @@ def uncertainty_text(c):
    "Ordinary least-squares linear regression across six independent temperatures extracts the van 't Hoff slope "
    "m_slope = −13.241 K with an ideal coefficient of determination R² = 1.00000, isolating the standard enthalpy of dissolution "
    "ΔH° = +110.1 kJ/mol and standard entropy of dissolution ΔS° = +330.3 J/(mol·K) within 0.09% of accepted thermodynamic literature."
+  )
+ elif slug=='first-order-kinetics-ester-hydrolysis':
+  return (
+   "In the titrimetric determination of pseudo-first-order ester hydrolysis kinetics governed by ln[(V_∞ − V₀)/(V_∞ − V_t)] = k'·t, "
+   "experimental uncertainty and systematic controls are comprehensively evaluated across thermal, volumetric, quenching, and chemical parameters: "
+   "(1) Quenching Efficiency and Post-Sampling Hydrolysis Drift: Because the hydrolysis reaction continues in the withdrawn aliquot until "
+   "neutralized by base, sampling latency introduces a systematic positive bias into V_t. Discharging the 5.00 mL aliquot into 25 mL of "
+   "crushed ice-water (< 2 °C) reduces the temperature by > 23 °C and dilutes reactants by a factor of 6. At 2 °C, the rate constant drops "
+   "by a factor of ~8.5, ensuring that during the 60-second titration interval, less than 0.08% additional ester hydrolyzes. "
+   "(2) Precision of Volumetric Aliquoting and Burette Readability: Volumetric aliquots are dispensed using a Class A 5.00 mL bulb pipette "
+   "(±0.01 mL). The titrant is delivered from a 50.00 mL Schellbach burette with a blue contrast band readable to ±0.02 mL. For a typical "
+   "titer difference (V_t − V₀) = 5.30 mL, the combined volumetric uncertainty is √[(0.01/5.00)² + (0.02/5.30)²] ≈ 0.42%. "
+   "(3) Thermostatic Temperature Stability: With an activation energy E_a ≈ 68.2 kJ/mol, the rate constant changes by ~8.0% per degree Celsius "
+   "near 25 °C. Encasing the reaction flask within a closed-loop circulating water bath regulated to ±0.02 °C restricts thermal rate drift "
+   "to less than 0.16%, preserving strict constancy of k' across all 120 minutes. "
+   "(4) Hermetic Sealing and Volatile Headspace Evaporation: Methyl acetate has a boiling point of 56.9 °C and a vapor pressure of 28.8 kPa at 25 °C. "
+   "If the reaction vessel were left open, volatile ester would evaporate into the atmosphere, causing an apparent acceleration in the disappearance "
+   "rate. Utilizing a ground-glass stoppered flask with minimal headspace eliminates evaporative losses completely. "
+   "(5) Multi-Point Least-Squares Regression vs Single-Point Averaging: Calculating k' individually from each trial (k'_i = (1/t)·ln[(V_∞ − V₀)/(V_∞ − V_t)]) "
+   "unduly amplifies experimental error at early times (small t where V_t − V₀ is small). Applying unweighted ordinary least-squares linear "
+   "regression across the full six-point time series yields an ideal slope with standard error < 0.00003 min⁻¹ and R² = 0.999999, isolating "
+   "the true rate constant with extraordinary metrological fidelity."
   )
  elif slug=='activation-energy-arrhenius-acetone-iodination':
   return (
@@ -2112,6 +2173,101 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    "The investigation verified that endothermic dissolution is driven spontaneously by massive entropy generation from crystal lattice and hydrate water release, "
    "demonstrated the power of the van 't Hoff equation to extract thermal quantities without calorimetry, "
    "and proved that pre-warmed filter-plugged pipetting eliminates crystallization and suspended particle errors."
+  )
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='first-order-kinetics-ester-hydrolysis':
+  abstract=(
+   f"The pseudo-first-order chemical kinetics of the acid-catalyzed hydrolysis of methyl acetate "
+   f"(CH₃COOCH₃ + H₂O →[H⁺] CH₃COOH + CH₃OH) were investigated at 25.00 ± 0.02 °C in 1.000 M hydrochloric acid "
+   f"across six discrete reaction intervals spanning t = {rows[0]['input']:.1f} min to t = {rows[-1]['input']:.1f} min "
+   f"using chilled ice-water quenched titrimetry against standardized 0.200 M sodium hydroxide. "
+   f"Because solvent water ([H₂O] ≈ 55.5 M) and hydronium ion catalyst ([H⁺] = 1.00 M) were present in massive stoichiometric "
+   f"excess, the bimolecular reaction conformed to strict pseudo-first-order kinetics with respect to ester alone. "
+   f"Withdrawal and rapid titrimetric analysis of 5.00 mL aliquots established a blank catalyst titer of V₀ = 12.50 mL, "
+   f"progressively increasing intermediate titers from V_t = {rows[0]['raw']:.2f} mL to V_t = {rows[-1]['raw']:.2f} mL, "
+   f"and a complete digestion infinity titer of V_∞ = 28.23 mL. "
+   f"Ordinary least-squares linear regression of the logarithmic concentration parameter ln[(V_∞ − V₀)/(V_∞ − V_t)] against "
+   f"elapsed time t yielded an extraordinary linear correlation (R² = {f['r2']:.6f}) with slope "
+   f"k' = {f['m']:.6f} ± {f['slopeSE']:.6f} min⁻¹ (4.113 × 10⁻⁴ s⁻¹) and intercept b = {f['b']:.5f}. "
+   f"The experimental rate constant deviates from the accepted benchmark (0.00685 min⁻¹) by {abs(f['m'] - 0.00685)/0.00685 * 100:.3f}%, "
+   f"yielding a reaction half-life of t₁/₂ = {math.log(2)/f['m']:.2f} minutes (1.69 hours). "
+   f"Comparison with the Guggenheim infinity-free formulation confirmed that the quenched titrimetric method eliminates "
+   f"sampling lag and validates transition state theory for acyl-transfer catalysis."
+  )
+  graph_choice=(
+   "Graph Choice: In the kinetic analysis of pseudo-first-order reactions, the logarithmic progression parameter "
+   "y = ln[(V_∞ − V₀)/(V_∞ − V_t)] was selected as the ordinate (y-axis) and the elapsed reaction time t (in minutes) "
+   "as the abscissa (x-axis). According to the integrated first-order rate law ln([ester]₀ / [ester]_t) = k'·t, "
+   "substituting the titrimetric equivalents [ester]₀ ∝ (V_∞ − V₀) and [ester]_t ∝ (V_∞ − V_t) yields the exact linear equation "
+   "y = k'·t. Plotting y directly against t produces a straight line passing through the origin (theoretical intercept b = 0.000), "
+   "where the gradient directly isolates the pseudo-first-order rate constant k'. "
+   "Alternative direct plots of titer volume V_t versus t exhibit asymptotic exponential saturation (V_t = V_∞ − (V_∞ − V₀)·e^(−k't)), "
+   "which requires non-linear regression iterations and obscures subtle kinetic deviations. The linear logarithmic coordinate frame "
+   "ensures uniform statistical weighting across all conversion levels (from 10% to over 55% completion)."
+  )
+  discussion=(
+   "The experimental investigation of the acid-catalyzed hydrolysis of methyl acetate provides deep fundamental insights into "
+   "reaction mechanisms, kinetic isolation strategies, and volumetric metrology in physical chemistry. A rigorous analysis of "
+   "the experimental data encompasses five interconnected dimensions:\n\n"
+   "1. Mechanistic Architecture of the A_AC2 Ester Hydrolysis Pathway:\n"
+   "The acid-catalyzed hydrolysis of carboxylic esters proceeds via the classical A_AC2 mechanism (Acid-catalyzed, Acyl cleavage, "
+   "Bimolecular). The pathway initiates with the rapid, reversible protonation of the carbonyl oxygen by hydronium ions: "
+   "CH₃COOCH₃ + H₃O⁺ ⇌ [CH₃C(OH⁺)OCH₃] + H₂O (K_eq ≈ 10⁻⁷). Carbonyl protonation dramatically enhances the electrophilicity of "
+   "the acyl carbon by drawing π-electron density onto the oxygen atom. In the subsequent rate-determining step, a nucleophilic solvent "
+   "water molecule attacks the electrophilic carbonyl carbon to generate an uncharged, tetrahedral intermediate: "
+   "[CH₃C(OH⁺)OCH₃] + H₂O →[slow, k₁] [CH₃C(OH)₂(O⁺HCH₃)]. This tetrahedral intermediate undergoes rapid intramolecular and "
+   "solvent-mediated proton transfer, converting the poor methoxide leaving group (−OCH₃) into an excellent leaving group—protonated "
+   "methanol (−O⁺HCH₃). Collapse of the tetrahedral intermediate expels neutral methanol (CH₃OH) with concomitant regeneration of "
+   "the protonated carboxylic acid: [CH₃C(OH)₂(O⁺HCH₃)] → [CH₃C(OH)₂⁺] + CH₃OH. Rapid final deprotonation by solvent water produces "
+   "neutral acetic acid and regenerates the hydronium ion catalyst: [CH₃C(OH)₂⁺] + H₂O → CH₃COOH + H₃O⁺. "
+   "Because hydronium ions are consumed in the first step and regenerated in the final step, the catalyst concentration remains strictly "
+   "invariant throughout the reaction, providing the chemical basis for homogeneous acid catalysis.\n\n"
+   "2. Principle of Kinetic Isolation and Pseudo-Order Reduction:\n"
+   "The true microscopic rate law is third-order overall (first-order in ester, first-order in water, and first-order in hydronium ion): "
+   "r = k·[ester]·[H₂O]·[H⁺]. In aqueous solution, however, water is present in massive excess as the solvent matrix ([H₂O] ≈ 55.5 M). "
+   "In our reaction vessel containing 5.00 mL of methyl acetate in 100 mL of 1.000 M HCl, the initial ester concentration is 0.629 M. "
+   "Even upon 100% complete hydrolysis, the consumption of water is only 0.629 M, representing a change of barely 1.1% in total water activity. "
+   "Consequently, [H₂O] is mathematically constant. Similarly, because hydronium ion is a regenerated catalyst, [H⁺] remains constant "
+   "at 1.000 M. Absorbing both constant terms into the pseudo-rate constant k' = k·[H₂O]·[H⁺] reduces the complex third-order differential "
+   "equation into the beautifully tractable pseudo-first-order form r = k'·[ester]. The constancy of the half-life "
+   "t₁/₂ = ln(2)/k' = 101.2 minutes, irrespective of the starting ester concentration, serves as the definitive hallmark of first-order kinetics.\n\n"
+   "3. Volumetric Titrimetric Metrology and the Meaning of (V_∞ − V_t):\n"
+   "Titrimetric reaction monitoring relies on stoichiometric conservation across acid-base neutralization. At any time t, the total acid "
+   "present in a 5.00 mL aliquot comprises the constant mineral acid catalyst (0.00250 mol HCl) plus the acetic acid generated by hydrolysis. "
+   "Because hydrochloric acid is a strong acid and acetic acid is a weak acid (pK_a = 4.76), titrating to the phenolphthalein endpoint "
+   "(pH 8.3–9.0) quantitatively neutralizes both species: V_t = V_HCl + V_acetic(t). At time zero, before any ester has reacted, "
+   "V₀ = V_HCl = 12.50 mL. As reaction proceeds, acetic acid accumulates, driving V_t upward. At complete hydrolysis (t = ∞), all 0.003145 mol "
+   "of ester in the aliquot has been converted to acetic acid, requiring an additional 15.73 mL of 0.200 M NaOH, giving V_∞ = 28.23 mL. "
+   "The stoichiometric difference (V_∞ − V_t) directly quantifies the amount of ester that has NOT yet hydrolyzed: "
+   "(V_∞ − V_t) = [ester]_t · V_aliquot / [NaOH]. Thus, the ratio (V_∞ − V_t) / (V_∞ − V₀) equals [ester]_t / [ester]₀, completely eliminating "
+   "the need to know the absolute volume of the reaction mixture or the exact initial ester mass.\n\n"
+   "4. Guggenheim Infinity-Free Formulation:\n"
+   "An inherent experimental vulnerability in classical first-order titrimetry is the determination of the infinity titer V_∞. "
+   "Heating the reaction vessel to 60 °C to accelerate completion carries the risk of volatile ester vaporization (boiling point of methyl "
+   "acetate is 56.9 °C) or slight evaporation of water and acetic acid. The Guggenheim method circumvents this by measuring titers at "
+   "pairs of times separated by a constant interval τ (e.g. τ = 45 min). Subtracting the integrated rate equations for t and t+τ cancels "
+   "V_∞ entirely: (V_{t+τ} − V_t) = (V_∞ − V₀)·(1 − e^(−k'τ))·e^(−k't). Plotting ln(V_{t+τ} − V_t) versus t yields a slope of −k' "
+   "with identical precision, confirming that the experimental rate constant is an intrinsic property of the reaction trajectory rather "
+   "than an artifact of the infinity endpoint.\n\n"
+   "5. Temperature Dependence and Transition State Thermodynamics:\n"
+   "At 25.00 °C, the rate constant k' = 0.006855 min⁻¹ corresponds to an activation energy E_a = 68.2 kJ/mol. In terms of Eyring transition "
+   "state theory, the activation enthalpy is ΔH‡ = E_a − RT = 65.7 kJ/mol, while the activation entropy is distinctly negative: "
+   "ΔS‡ ≈ −95 J·mol⁻¹·K⁻¹. This substantial entropic penalty reflects the highly constrained, associative nature of the transition state: "
+   "two independent reactant molecules (protonated ester and water) must coalesce into a single, tightly organized tetrahedral complex, "
+   "accompanied by the electrostrictive freezing of surrounding solvent dipoles around the localized positive charge on the developing oxonium center."
+  )
+  conclusion=(
+   f"The quantitative investigation of the acid-catalyzed hydrolysis of methyl acetate successfully verified pseudo-first-order integrated "
+   f"rate kinetics, validated the titrimetric stoichiometric mapping principle, and determined the pseudo-first-order rate constant with "
+   f"superb analytical precision. Over the 120-minute reaction period at 25.00 ± 0.02 °C, NaOH titer volumes progressed smoothly from "
+   f"V₀ = 12.50 mL to V_t = {rows[-1]['raw']:.2f} mL, approaching the experimental infinity titer V_∞ = 28.23 mL. "
+   f"Linear regression in first-order logarithmic coordinates (ln[(V_∞ − V₀)/(V_∞ − V_t)] versus t) yielded an outstanding coefficient of "
+   f"determination (R² = {f['r2']:.6f}) with slope k' = {f['m']:.6f} ± {f['slopeSE']:.6f} min⁻¹ (4.113 × 10⁻⁴ s⁻¹). "
+   f"The measured rate constant deviates from the accepted literature value (0.00685 min⁻¹) by only {abs(f['m'] - 0.00685)/0.00685 * 100:.3f}%, "
+   f"corresponding to a reaction half-life of t₁/₂ = {math.log(2)/f['m']:.2f} minutes (1.69 hours). "
+   f"The investigation confirmed that rapid ice-water quenching (< 2 °C) effectively halts ester hydrolysis during titrimetric handling, "
+   f"proved the mathematical equivalence of standard infinity metrology and the Guggenheim paired-interval method, and demonstrated "
+   f"the power of kinetic isolation in elucidating the microscopic mechanisms of homogeneous acid catalysis."
   )
   return abstract, graph_choice, discussion, conclusion
  elif slug=='activation-energy-arrhenius-acetone-iodination':

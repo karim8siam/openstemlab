@@ -160,6 +160,18 @@ function predict(slug,input){
   const y=round(Math.log(ksp_calc), 4);
   return {raw,ideal:raw,period:1.0,x,y,valid:t>=30.0&&t<=55.0};
  }
+ if(slug==='first-order-kinetics-ester-hydrolysis'){
+  const t=Number(input);
+  const V_0=12.50;
+  const V_inf=28.23;
+  const k_ref=0.00685;
+  const frac=1.0 - Math.exp(-k_ref * t);
+  const V_t_ideal=V_0 + (V_inf - V_0) * frac;
+  const raw=round(V_t_ideal, 2);
+  const x=t;
+  const y=round(Math.log((V_inf - V_0) / (V_inf - raw)), 4);
+  return {raw,ideal:raw,period:1.0,x,y,valid:t>=10.0&&t<=120.0};
+ }
  if(slug==='activation-energy-arrhenius-acetone-iodination'){
   const T_c=Number(input);
   const T_k=T_c + 273.15;
@@ -331,6 +343,14 @@ function reading(slug,input,raw){
   const s_calc=V / 20.0;
   const ksp_calc=4.0 * Math.pow(s_calc, 3);
   y=round(Math.log(ksp_calc), 4);
+ }
+ if(slug==='first-order-kinetics-ester-hydrolysis'){
+  const t=Number(input);
+  const raw_val=Number(raw);
+  const V_0=12.50;
+  const V_inf=28.23;
+  x=t;
+  y=round(Math.log((V_inf - V_0) / (V_inf - raw_val)), 4);
  }
  if(slug==='activation-energy-arrhenius-acetone-iodination'){
   const T_c=Number(input);
@@ -511,6 +531,11 @@ function estimate(slug,f){
   const dH_est= -f.m * 8.31446;
   const se= f.slopeSE * 8.31446;
   return {value:dH_est,se:se,reference:110.0};
+ }
+ if(slug==='first-order-kinetics-ester-hydrolysis'){
+  const slope= f.m;
+  const se= f.slopeSE;
+  return {value:slope,se:se,reference:0.00685};
  }
  if(slug==='activation-energy-arrhenius-acetone-iodination'){
   const slope= f.m;

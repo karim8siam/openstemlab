@@ -66,12 +66,24 @@ function update(){
  }else if(cfg.slug==='gibbs-free-energy-solubility-van-t-hoff'){
   $('liveState').textContent='Ready to equilibrate saturated borax slurry at '+p.input.toFixed(1)+' °C.';
   message('Equilibrate borax flask, pre-warm filter pipette, draw 5.00 mL aliquot & titrate with 0.50 M HCl.');
+ }else if(cfg.slug==='first-order-kinetics-ester-hydrolysis'){
+  $('liveState').textContent='Ready to sample reaction aliquot at elapsed time t = '+p.input.toFixed(1)+' min.';
+  message('Set reaction elapsed time t, withdraw 5.00 mL aliquot, quench in ice water & titrate with 0.200 M NaOH.');
  }else if(cfg.slug==='activation-energy-arrhenius-acetone-iodination'){
   $('liveState').textContent='Ready to equilibrate optical cuvette at '+p.input.toFixed(1)+' °C.';
   message('Set bath temperature T, equilibrate cuvette, inject 1.00 mM I₂ & record decolorization time Δt.');
  }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
   $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
   message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='first-order-kinetics-ester-hydrolysis'){
+  const t = p.input;
+  const Vt = raw;
+  const V0 = 12.50;
+  const Vinf = 28.23;
+  const frac = (Vt - V0) / (Vinf - V0);
+  const log_val = Math.log((Vinf - V0) / (Vinf - Vt));
+  $('liveState').textContent='Phenolphthalein endpoint reached: V_t = '+Vt.toFixed(2)+' mL (Hydrolysis = '+(frac*100).toFixed(1)+'%).';
+  message('Titration complete: V_t = '+Vt.toFixed(2)+' mL (ln term = '+log_val.toFixed(4)+', t = '+t.toFixed(1)+' min). Record in notebook.');
  }else if(cfg.slug==='activation-energy-arrhenius-acetone-iodination'){
   const T_c = p.input;
   const dt = raw;
@@ -94,7 +106,19 @@ function update(){
   const k_sec = k_prime / 0.0800;
   $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
   message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
- }else if(cfg.slug==='activation-energy-arrhenius-acetone-iodination'){
+ }else if(cfg.slug==='first-order-kinetics-ester-hydrolysis'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawEsterCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawEsterSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawEsterBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='activation-energy-arrhenius-acetone-iodination'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawArrheniusCompareView(p,rawVal);
    return;
@@ -8706,5 +8730,263 @@ function drawArrheniusSandboxView(p, rawVal){
  svg += '<text x="'+(mX+30)+'" y="'+(mY+202)+'" fill="#facc15" font-size="11" font-family="monospace" font-weight="bold">f = '+f_boltzmann.toExponential(4)+' ('+(f_boltzmann*1e15).toFixed(2)+' per 10¹⁵ collisions)</text>';
 
  svg += text(360, 312, 'Transition State Invariant: Negative activation entropy (ΔS‡ = −62.4 J/(mol·K)) reflects solvent electrostrictive immobilisation.', '#789c80', 8.5);
+ return svg;
+}
+
+
+// ======================================================================
+// LAB 23: PSEUDO-FIRST-ORDER KINETICS: ACID HYDROLYSIS OF METHYL ACETATE
+// ======================================================================
+
+function drawEsterBenchView(p, rawVal){
+ const t = (p && p.input) ? p.input : 30.0;
+ const V_0 = 12.50;
+ const V_inf = 28.23;
+ const k_ref = 0.00685;
+ const frac_ideal = 1.0 - Math.exp(-k_ref * t);
+ const Vt = rawVal !== null ? rawVal : (V_0 + (V_inf - V_0) * frac_ideal);
+ const frac = (Vt - V_0) / (V_inf - V_0);
+ const log_term = Math.log((V_inf - V_0) / (V_inf - Vt));
+ const k_calc = log_term / t;
+ const t_half = Math.log(2.0) / k_ref;
+
+ let svg = header('Quenched Titrimetric Bench & Automated Schellbach Burette Console', 'CH₃COOCH₃ + H₂O ⟶[H⁺] CH₃COOH + CH₃OH | Pseudo-First-Order k\' = 0.00685 min⁻¹ (t₁/₂ = 101.2 min)');
+
+ // Background Lab Bench
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // --- LEFT: THERMOSTATIC REACTION FLASK & ICE QUENCH STATION (x: 35, y: 60, w: 240, h: 225) ---
+ const rX = 35, rY = 60, rW = 240, rH = 225;
+ svg += '<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(rX+8)+'" y="'+(rY+8)+'" width="'+(rW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(rX+rW/2)+'" y="'+(rY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">THERMOSTATIC BATH & QUENCH STATION</text>';
+
+ // 25.0 °C Circulating Bath Body
+ svg += '<rect x="'+(rX+15)+'" y="'+(rY+40)+'" width="100" height="125" rx="6" fill="#0f172a" stroke="#0284c7" stroke-width="1.5"/>';
+ svg += '<text x="'+(rX+65)+'" y="'+(rY+55)+'" text-anchor="middle" fill="#38bdf8" font-size="7.5" font-weight="bold">25.00 ± 0.02 °C</text>';
+
+ // Glass Reaction Flask inside bath
+ svg += '<path d="M '+(rX+55)+' '+(rY+65)+' L '+(rX+75)+' '+(rY+65)+' L '+(rX+75)+' '+(rY+85)+' L '+(rX+95)+' '+(rY+145)+' Q '+(rX+95)+' '+(rY+155)+' '+(rX+80)+' '+(rY+155)+' L '+(rX+50)+' '+(rY+155)+' Q '+(rX+35)+' '+(rY+155)+' '+(rX+35)+' '+(rY+145)+' L '+(rX+55)+' '+(rY+85)+' Z" fill="#0369a1" fill-opacity="0.2" stroke="#cbd5e1" stroke-width="1.5"/>';
+ svg += '<rect x="'+(rX+60)+'" y="'+(rY+148)+'" width="10" height="3" rx="1.5" fill="#ffffff"/>'; // stirrer
+ svg += '<text x="'+(rX+65)+'" y="'+(rY+115)+'" text-anchor="middle" fill="#bae6fd" font-size="6.5">100 mL HCl</text>';
+ svg += '<text x="'+(rX+65)+'" y="'+(rY+125)+'" text-anchor="middle" fill="#facc15" font-size="6">+ 5 mL Ester</text>';
+
+ // Ice-Water Quench Beaker (< 2 °C)
+ const qX = rX + 130, qY = rY + 65, qW = 90, qH = 100;
+ svg += '<rect x="'+qX+'" y="'+qY+'" width="'+qW+'" height="'+qH+'" rx="4" fill="#0284c7" fill-opacity="0.15" stroke="#94a3b8" stroke-width="1.5"/>';
+ svg += '<rect x="'+(qX+5)+'" y="'+(qY+30)+'" width="'+(qW-10)+'" height="'+(qH-35)+'" rx="2" fill="#38bdf8" fill-opacity="0.3"/>';
+ // Ice cubes in beaker
+ svg += '<rect x="'+(qX+12)+'" y="'+(qY+45)+'" width="14" height="14" rx="2" fill="#e0f2fe" fill-opacity="0.8" stroke="#38bdf8"/>';
+ svg += '<rect x="'+(qX+35)+'" y="'+(qY+55)+'" width="16" height="16" rx="2" fill="#e0f2fe" fill-opacity="0.8" stroke="#38bdf8"/>';
+ svg += '<rect x="'+(qX+60)+'" y="'+(qY+42)+'" width="15" height="15" rx="2" fill="#e0f2fe" fill-opacity="0.8" stroke="#38bdf8"/>';
+ svg += '<text x="'+(qX+qW/2)+'" y="'+(qY+22)+'" text-anchor="middle" fill="#bae6fd" font-size="7.5" font-weight="bold">ICE QUENCH (< 2 °C)</text>';
+ svg += '<text x="'+(qX+qW/2)+'" y="'+(qY+88)+'" text-anchor="middle" fill="#ffffff" font-size="6.5" font-weight="bold">Aliquot Frozen</text>';
+
+ svg += '<text x="'+(rX+rW/2)+'" y="'+(rY+rH-12)+'" text-anchor="middle" fill="#94a3b8" font-size="7">Hydrolysis arrested via rapid dilution & chilling</text>';
+
+ // --- CENTER: SCHELLBACH BURETTE & TITRATION ERlenmeyer FLASK (x: 290, y: 60, w: 200, h: 225) ---
+ const bX = 290, bY = 60, bW = 200, bH = 225;
+ svg += '<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(bX+8)+'" y="'+(bY+8)+'" width="'+(bW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(bX+bW/2)+'" y="'+(bY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">0.200 M NaOH TITRATION STATION</text>';
+
+ // 50 mL Schellbach Glass Burette Tube
+ const buX = bX + 45, buY = bY + 36, buW = 14, buH = 110;
+ svg += '<rect x="'+buX+'" y="'+buY+'" width="'+buW+'" height="'+buH+'" fill="#0f172a" stroke="#cbd5e1" stroke-width="1.2"/>';
+ svg += '<line x1="'+(buX+buW/2)+'" y1="'+buY+'" x2="'+(buX+buW/2)+'" y2="'+(buY+buH)+'" stroke="#0284c7" stroke-width="1.5"/>'; // Schellbach stripe
+ // Meniscus liquid level inside burette
+ const liqHeight = (Vt / 50.0) * (buH - 20);
+ svg += '<rect x="'+(buX+2)+'" y="'+(buY+liqHeight)+'" width="'+(buW-4)+'" height="'+(buH-liqHeight)+'" fill="#38bdf8" fill-opacity="0.4"/>';
+ svg += '<line x1="'+(buX+buW)+'" y1="'+(buY+liqHeight)+'" x2="'+(buX+buW+15)+'" y2="'+(buY+liqHeight)+'" stroke="#facc15" stroke-width="1.5"/>';
+ svg += '<text x="'+(buX+buW+18)+'" y="'+(buY+liqHeight+3)+'" fill="#facc15" font-size="7" font-family="monospace" font-weight="bold">'+Vt.toFixed(2)+' mL</text>';
+
+ // Titration Erlenmeyer Flask below burette
+ const efX = bX + 22, efY = bY + 155;
+ svg += '<path d="M '+(efX+20)+' '+efY+' L '+(efX+35)+' '+efY+' L '+(efX+50)+' '+(efY+45)+' Q '+(efX+50)+' '+(efY+52)+' '+(efX+40)+' '+(efY+52)+' L '+(efX+15)+' '+(efY+52)+' Q '+(efX+5)+' '+(efY+52)+' '+(efX+5)+' '+(efY+45)+' Z" fill="#ec4899" fill-opacity="0.35" stroke="#cbd5e1" stroke-width="1.5"/>';
+ svg += '<circle cx="'+(efX+27)+'" cy="'+(efY+40)+'" r="3" fill="#ffffff"/>'; // stir bar
+ svg += '<text x="'+(efX+27)+'" y="'+(efY+35)+'" text-anchor="middle" fill="#fbcfe8" font-size="6.5" font-weight="bold">Pink Endpoint</text>';
+
+ // Readout Card on Right side of Center Console
+ svg += '<rect x="'+(bX+90)+'" y="'+(bY+45)+'" width="100" height="160" rx="5" fill="#020b05" stroke="#162e1e"/>';
+ svg += '<text x="'+(bX+140)+'" y="'+(bY+60)+'" text-anchor="middle" fill="#4ade80" font-size="7" font-weight="bold">TITRIMETRIC METRICS</text>';
+
+ const metRows = [
+  {l: 'Elapsed t', v: t.toFixed(1)+' min', c: '#38bdf8'},
+  {l: 'Titer V_t', v: Vt.toFixed(2)+' mL', c: '#facc15'},
+  {l: 'Blank V₀', v: V_0.toFixed(2)+' mL', c: '#94a3b8'},
+  {l: 'Infinity V_∞', v: V_inf.toFixed(2)+' mL', c: '#94a3b8'},
+  {l: 'Conversion α', v: (frac*100).toFixed(1)+'%', c: '#4ade80'},
+  {l: 'ln Term', v: log_term.toFixed(4), c: '#f87171'},
+  {l: 'Est. k\'', v: (k_calc*1e3).toFixed(3)+' ×10⁻³', c: '#4ade80'}
+ ];
+
+ metRows.forEach((r, idx)=>{
+  const my = bY + 75 + idx * 18;
+  svg += '<text x="'+(bX+98)+'" y="'+my+'" fill="#94a3b8" font-size="6.5">'+r.l+'</text>';
+  svg += '<text x="'+(bX+182)+'" y="'+my+'" text-anchor="end" fill="'+r.c+'" font-size="7" font-family="monospace" font-weight="bold">'+r.v+'</text>';
+ });
+
+ // --- RIGHT: FIRST-ORDER LINEAR INTEGRATED PLOT (x: 505, y: 60, w: 180, h: 225) ---
+ const pX = 505, pY = 60, pW = 180, pH = 225;
+ svg += '<rect x="'+pX+'" y="'+pY+'" width="'+pW+'" height="'+pH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(pX+8)+'" y="'+(pY+8)+'" width="'+(pW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(pX+pW/2)+'" y="'+(pY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">FIRST-ORDER KINETIC PLOT</text>';
+
+ // Mini Cartesian coordinate frame
+ const axX = pX + 25, axY = pY + 42, axW = 135, axH = 130;
+ svg += '<rect x="'+axX+'" y="'+axY+'" width="'+axW+'" height="'+axH+'" fill="#040d07" stroke="#162e1e"/>';
+ svg += '<line x1="'+axX+'" y1="'+(axY+axH)+'" x2="'+(axX+axW)+'" y2="'+(axY+axH)+'" stroke="#334155" stroke-width="1"/>';
+ svg += '<line x1="'+axX+'" y1="'+axY+'" x2="'+axX+'" y2="'+(axY+axH)+'" stroke="#334155" stroke-width="1"/>';
+
+ // Regression line from (0,0) to (120, 0.822)
+ svg += '<line x1="'+axX+'" y1="'+(axY+axH)+'" x2="'+(axX+axW-15)+'" y2="'+(axY+15)+'" stroke="#4ade80" stroke-width="1.8"/>';
+
+ // Standard observation points
+ const stdPoints = [
+  {t: 15.0, raw: 14.04}, {t: 30.0, raw: 15.42}, {t: 45.0, raw: 16.67},
+  {t: 60.0, raw: 17.80}, {t: 90.0, raw: 19.74}, {t: 120.0, raw: 21.32}
+ ];
+
+ stdPoints.forEach(pt=>{
+  const px = axX + (pt.t / 135.0) * axW;
+  const logVal = Math.log((V_inf - V_0) / (V_inf - pt.raw));
+  const py = (axY + axH) - (logVal / 0.95) * axH;
+  const isCur = Math.abs(pt.t - t) < 2.0;
+  svg += '<circle cx="'+px+'" cy="'+py+'" r="'+(isCur?4.5:2.5)+'" fill="'+(isCur?'#facc15':'#38bdf8')+'" stroke="'+(isCur?'#ef4444':'none')+'" stroke-width="1.2"/>';
+ });
+
+ svg += '<text x="'+(axX+axW/2)+'" y="'+(axY+axH+12)+'" text-anchor="middle" fill="#94a3b8" font-size="6.5">Elapsed Time t (min) ⟶</text>';
+ svg += '<text x="'+(axX+8)+'" y="'+(axY+14)+'" fill="#4ade80" font-size="6.5" font-weight="bold">Slope k\' = 0.00685 min⁻¹</text>';
+ svg += '<text x="'+(pX+pW/2)+'" y="'+(pY+pH-10)+'" text-anchor="middle" fill="#facc15" font-size="7.5" font-weight="bold">t₁/₂ = 101.2 min (R² = 1.000)</text>';
+
+ svg += text(360, 312, 'Pseudo-first-order ester hydrolysis: water in massive excess ([H₂O] ≈ 55.5 M) collapses rate law to r = k\'[ester].', '#789c80', 8.5);
+ return svg;
+}
+
+function drawEsterCompareView(p, rawVal){
+ const t = (p && p.input) ? p.input : 30.0;
+ let svg = header('Comparative Kinetic Regimes: Acid Catalyst Strength & Reaction Half-Life', 'Hydrolysis Trajectories in 0.500 M HCl vs 1.000 M HCl | Linear Proportionality of k\' with [H⁺]');
+
+ // Background Lab Bench
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ const regimes = [
+  {name: 'Flask A: 0.500 M HCl Catalyst', acid: 0.500, k: 0.003425, t_half: 202.4, col: '#38bdf8', x: 35},
+  {name: 'Flask B: 1.000 M HCl Catalyst', acid: 1.000, k: 0.006850, t_half: 101.2, col: '#4ade80', x: 370}
+ ];
+
+ regimes.forEach(reg=>{
+  const bX = reg.x, bY = 60, bW = 315, bH = 225;
+  svg += '<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+  svg += '<rect x="'+(bX+8)+'" y="'+(bY+8)+'" width="'+(bW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+  svg += '<text x="'+(bX+bW/2)+'" y="'+(bY+22)+'" text-anchor="middle" fill="'+reg.col+'" font-size="8.5" font-weight="bold">'+reg.name+'</text>';
+
+  // Unreacted Ester Decay Curve Box
+  const cX = bX + 15, cY = bY + 38, cW = 285, cH = 95;
+  svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="4" fill="#040d07" stroke="#162e1e"/>';
+  svg += '<line x1="'+cX+'" y1="'+(cY+cH-15)+'" x2="'+(cX+cW-10)+'" y2="'+(cY+cH-15)+'" stroke="#334155" stroke-width="1"/>';
+  svg += '<line x1="'+(cX+20)+'" y1="'+cY+'" x2="'+(cX+20)+'" y2="'+(cY+cH-15)+'" stroke="#334155" stroke-width="1"/>';
+
+  // Exponential decay curve
+  let pathD = 'M '+(cX+20)+' '+(cY+12);
+  for(let curT=0; curT<=120; curT+=5){
+   const cxPos = cX + 20 + (curT / 120.0) * (cW - 35);
+   const remFrac = Math.exp(-reg.k * curT);
+   const cyPos = (cY + cH - 15) - remFrac * (cH - 27);
+   pathD += ' L '+cxPos+' '+cyPos;
+  }
+  svg += '<path d="'+pathD+'" fill="none" stroke="'+reg.col+'" stroke-width="2"/>';
+
+  // Current time point marker
+  const curFrac = Math.exp(-reg.k * t);
+  const curX = cX + 20 + (t / 120.0) * (cW - 35);
+  const curY = (cY + cH - 15) - curFrac * (cH - 27);
+  svg += '<circle cx="'+curX+'" cy="'+curY+'" r="4" fill="#facc15" stroke="#ef4444" stroke-width="1.2"/>';
+
+  svg += '<text x="'+(cX+25)+'" y="'+(cY+18)+'" fill="#94a3b8" font-size="6.5">[ester]₀ = 0.629 M</text>';
+  svg += '<text x="'+(cX+cW-15)+'" y="'+(cY+cH-20)+'" text-anchor="end" fill="#facc15" font-size="6.8" font-weight="bold">t = '+t.toFixed(0)+' min: '+(curFrac*100).toFixed(1)+'% rem.</text>';
+
+  // Metric table
+  const rows = [
+   {l: 'Catalyst Acid [H⁺]', v: reg.acid.toFixed(3)+' M HCl'},
+   {l: 'Pseudo-1st Order k\'', v: (reg.k*1e3).toFixed(3)+' × 10⁻³ min⁻¹'},
+   {l: 'Reaction Half-Life t₁/₂', v: reg.t_half.toFixed(1)+' minutes ('+(reg.t_half/60).toFixed(2)+' h)'},
+   {l: 'Relative Reaction Velocity', v: (reg.acid === 0.500 ? '1.00× (Baseline)' : '2.00× (Linear Scaling)')}
+  ];
+
+  rows.forEach((r, idx)=>{
+   const ry = bY + 142 + idx * 19;
+   svg += '<rect x="'+(bX+15)+'" y="'+ry+'" width="'+(bW-30)+'" height="16" rx="3" fill="#051009" stroke="#162e1e"/>';
+   svg += '<text x="'+(bX+22)+'" y="'+(ry+11)+'" fill="#94a3b8" font-size="6.5">'+r.l+'</text>';
+   svg += '<text x="'+(bX+bW-22)+'" y="'+(ry+11)+'" text-anchor="end" fill="'+reg.col+'" font-size="7" font-family="monospace" font-weight="bold">'+r.v+'</text>';
+  });
+ });
+
+ svg += text(360, 312, 'Catalytic Invariant: Doubling hydronium ion concentration from 0.500 M to 1.000 M exactly doubles k\' (t₁/₂ halves).', '#789c80', 8.5);
+ return svg;
+}
+
+function drawEsterSandboxView(p, rawVal){
+ const t = (p && p.input) ? p.input : 30.0;
+ const V_0 = 12.50;
+ const V_inf = 28.23;
+ const k_ref = 0.00685;
+ const tau = 45.0; // Guggenheim constant shift interval
+ const Vt = V_0 + (V_inf - V_0) * (1.0 - Math.exp(-k_ref * t));
+ const Vt_tau = V_0 + (V_inf - V_0) * (1.0 - Math.exp(-k_ref * (t + tau)));
+ const diff_gugg = Vt_tau - Vt;
+ const log_gugg = Math.log(diff_gugg);
+
+ let svg = header('Guggenheim Infinity-Free Metrology & Polarimetric Alternative Explorer', 'Direct Determination of k\' without High-Temperature Digestion (V_∞ Independence)');
+
+ // Background Lab Bench
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // --- LEFT: GUGGENHEIM PAIRED-INTERVAL MATHEMATICAL ANALYSIS (x: 35, y: 60, w: 320, h: 225) ---
+ const gX = 35, gY = 60, gW = 320, gH = 225;
+ svg += '<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(gX+8)+'" y="'+(gY+8)+'" width="'+(gW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(gX+gW/2)+'" y="'+(gY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">GUGGENHEIM PAIRED-INTERVAL METHOD (τ = 45 min)</text>';
+
+ // Guggenheim Formula Display Box
+ svg += '<rect x="'+(gX+15)+'" y="'+(gY+38)+'" width="'+(gW-30)+'" height="60" rx="4" fill="#040d07" stroke="#162e1e"/>';
+ svg += '<text x="'+(gX+25)+'" y="'+(gY+54)+'" fill="#38bdf8" font-size="7.5" font-weight="bold">Guggenheim Invariant:</text>';
+ svg += '<text x="'+(gX+25)+'" y="'+(gY+70)+'" fill="#facc15" font-size="8.5" font-family="monospace" font-weight="bold">ln(V_{t+τ} − V_t) = −k\'·t + ln[(V_∞ − V₀)(1 − e^(−k\'τ))]</text>';
+ svg += '<text x="'+(gX+25)+'" y="'+(gY+86)+'" fill="#94a3b8" font-size="6.8">V_∞ cancels completely: eliminates 60 °C digestion artifact.</text>';
+
+ // Guggenheim Simulation Data Table
+ const guggRows = [
+  {t1: 't = '+t.toFixed(0)+' min (V_t = '+Vt.toFixed(2)+' mL)', t2: 't+τ = '+(t+tau).toFixed(0)+' min (V = '+Vt_tau.toFixed(2)+' mL)'},
+  {t1: 'Difference ΔV_τ = '+(diff_gugg).toFixed(3)+' mL', t2: 'ln(ΔV_τ) = '+log_gugg.toFixed(4)},
+  {t1: 'Guggenheim Slope m = −0.00685 min⁻¹', t2: 'Isolated k\' = 0.00685 min⁻¹ (Exact)'}
+ ];
+
+ guggRows.forEach((r, idx)=>{
+  const gy = gY + 110 + idx * 32;
+  svg += '<rect x="'+(gX+15)+'" y="'+gy+'" width="'+(gW-30)+'" height="26" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg += '<text x="'+(gX+22)+'" y="'+(gy+12)+'" fill="#86efac" font-size="6.8">'+r.t1+'</text>';
+  svg += '<text x="'+(gX+22)+'" y="'+(gy+22)+'" fill="#facc15" font-size="6.8" font-family="monospace">'+r.t2+'</text>';
+ });
+
+ // --- RIGHT: POLARIMETRIC & CONDUCTOMETRIC SENSING BENCH (x: 365, y: 60, w: 320, h: 225) ---
+ const sX = 365, sY = 60, sW = 320, sH = 225;
+ svg += '<rect x="'+sX+'" y="'+sY+'" width="'+sW+'" height="'+sH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(sX+8)+'" y="'+(sY+8)+'" width="'+(sW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(sX+sW/2)+'" y="'+(sY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">IN-SITU POLARIMETRIC & CONDUCTOMETRIC SENSING</text>';
+
+ const cards = [
+  {title: '1. In-Situ Polarimetric Inversion (Optical Angle α_t)', desc: 'Applicable to optically active ester homologs (e.g. menthyl acetate). Measures optical rotation angle α_t in jacketed cell without sampling or quenching.', col: '#38bdf8', y: sY + 38},
+  {title: '2. High-Frequency Conductometric Tracking', desc: 'Monitors progressive replacement of fast hydronium ions (λ₀ = 350 S·cm²/mol) by acetate ions (λ₀ = 41 S·cm²/mol). Delivers millisecond continuous data.', col: '#4ade80', y: sY + 98},
+  {title: '3. Spectrophotometric UV Carbonyl Blue-Shift', desc: 'Monitors the disappearance of the ester n⟶π* carbonyl absorption band at 215 nm relative to the carboxylate product band.', col: '#facc15', y: sY + 158}
+ ];
+
+ cards.forEach(c=>{
+  svg += '<rect x="'+(sX+15)+'" y="'+c.y+'" width="'+(sW-30)+'" height="52" rx="4" fill="#051009" stroke="#162e1e"/>';
+  svg += '<text x="'+(sX+22)+'" y="'+(c.y+15)+'" fill="'+c.col+'" font-size="7.5" font-weight="bold">'+c.title+'</text>';
+  svg += '<text x="'+(sX+22)+'" y="'+(c.y+29)+'" fill="#cbd5e1" font-size="6.8">'+c.desc.slice(0, 52)+'</text>';
+  svg += '<text x="'+(sX+22)+'" y="'+(c.y+42)+'" fill="#94a3b8" font-size="6.5">'+c.desc.slice(52)+'</text>';
+ });
+
+ svg += text(360, 312, 'Metrological Invariant: Guggenheim paired-interval regression cancels V_∞ entirely, isolating k\' with zero digestion bias.', '#789c80', 8.5);
  return svg;
 }
