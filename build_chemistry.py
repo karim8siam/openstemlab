@@ -49,6 +49,12 @@ def observation(c,value):
   x=v
   y=raw
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='chemical-reactions-copper-cycle':
+  m_init=float(value)
+  raw=rnd(m_init * 1.0000, 4)
+  x=m_init
+  y=raw
+  return {'input':value,'raw':raw,'x':x,'y':y}
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fit(rows):
@@ -87,6 +93,8 @@ def estimate(c,f):
   P=1.000
   conv=(R * T) / P
   return f['m']*conv, f['slopeSE']*conv, 84.161
+ elif slug=='chemical-reactions-copper-cycle':
+  return f['m'], f['slopeSE'], 1.0000
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fmt(v,n=5):
@@ -106,6 +114,8 @@ def formula(c,f):
  elif slug=='volatile-liquid-molar-mass':
   conv=(82.0574 * 373.15) / 1.000
   return f"M_vapor = m_slope · (R · T_bath / P_atm) = {fmt(f['m'],6)} × {conv:.2f} = {fmt(f['m']*conv,2)} g/mol; Tare intercept m₀ = {fmt(f['b'],6)} g"
+ elif slug=='chemical-reactions-copper-cycle':
+  return f"Recovery_Cu = m_slope · 100% = {fmt(f['m'],6)} × 100 = {fmt(f['m']*100.0,2)}%; Tare/transfer intercept m₀ = {fmt(f['b'],6)} g"
  return ""
 
 def worked(c,row):
@@ -204,6 +214,27 @@ def worked(c,row):
    f"Verification: Across the full six-point series from 125.0 to 375.0 mL, ordinary least-squares regression "
    f"extracts the empirical slope m_slope = 0.0027485 g/mL, multiplying by (R·T/P = 30619.7) to isolate M = 84.16 g/mol with R² = 1.00000."
   )
+ elif slug=='chemical-reactions-copper-cycle':
+  m_init=row['input']
+  m_rec=row['raw']
+  n_init=m_init / 63.546
+  n_rec=m_rec / 63.546
+  pct=(m_rec / m_init) * 100.0
+  return (
+   f"Initial Metallic Copper Sample: m_initial = {m_init:.4f} g; Molar Mass M(Cu) = 63.546 g/mol.\n"
+   f"Initial Copper Mole Quantity: n(Cu)_initial = {m_init:.4f} g / 63.546 g/mol = {n_init:.6f} mol.\n"
+   f"Five-Step Stoichiometric Transformation Sequence:\n"
+   f"  1. Oxidation: Cu(s) + 4HNO₃(aq) ⟶ Cu(NO₃)₂(aq) + 2NO₂(g)↑ + 2H₂O(l)  [n(Cu²⁺) = {n_init:.6f} mol]\n"
+   f"  2. Precipitation: Cu(NO₃)₂(aq) + 2NaOH(aq) ⟶ Cu(OH)₂(s)↓ + 2NaNO₃(aq)  [n(Cu(OH)₂) = {n_init:.6f} mol]\n"
+   f"  3. Thermal Dehydration: Cu(OH)₂(s) ⟶ CuO(s) + H₂O(l) (at 90 °C)  [n(CuO) = {n_init:.6f} mol]\n"
+   f"  4. Neutralization: CuO(s) + H₂SO₄(aq) ⟶ CuSO₄(aq) + H₂O(l)  [n(CuSO₄) = {n_init:.6f} mol]\n"
+   f"  5. Single Displacement: CuSO₄(aq) + Zn(s) ⟶ Cu(s)↓ + ZnSO₄(aq); excess Zn digested with 6 M HCl.\n"
+   f"Recovered Metallic Copper Mass: m_recovered = {m_rec:.4f} g; Mole Quantity: n(Cu)_recovered = {n_rec:.6f} mol.\n"
+   f"Single-Trial Gravimetric Recovery Percentage: Yield = (m_recovered / m_initial) × 100% = ({m_rec:.4f} / {m_init:.4f}) × 100% = {pct:.2f}%.\n"
+   f"Verification: Across the full six-point series from 0.20 to 0.70 g of Cu, ordinary least-squares regression "
+   f"extracts the empirical recovery slope m_slope = 1.00000 g/g with an ideal coefficient of determination R² = 1.00000, "
+   f"confirming 100.00% marginal mass recovery and demonstrating quantitative conservation of mass."
+  )
  return ""
 
 def uncertainty_text(c):
@@ -298,6 +329,23 @@ def uncertainty_text(c):
    "giving a compressibility factor Z ≈ 0.985 that slightly shifts uncorrected molar mass by ~1.5%. "
    "Ordinary least-squares linear regression across six independent bulb volumes (125.0 to 375.0 mL) extracts the empirical slope m_slope = 0.0027485 g/mL with a standard error "
    "SE(m) < 1.0 × 10⁻⁶ and an ideal coefficient of determination R² = 1.00000, isolating the experimental molar mass M = 84.16 g/mol within 0.003% of the true formula weight."
+  )
+ elif slug=='chemical-reactions-copper-cycle':
+  return (
+   "In cyclic inorganic transformations and mass conservation metrology, the gravimetric recovery is governed by m_recovered = m_slope · m_initial + m₀. "
+   "A rigorous multi-step analytical uncertainty budget evaluates variance contributions across each chemical phase: "
+   "(1) Analytical Balance Gravimetric Resolution: The four-decimal electromagnetic force restoration balance provides readability to ±0.0001 g "
+   "and repeatability of ±0.00015 g. For copper sample masses between 0.2000 g and 0.7000 g, the relative weighing uncertainty is δm / m ≈ 0.00015 / 0.4500 ≈ 3.3 × 10⁻⁴ (0.033%), "
+   "confirming high analytical weighing precision. "
+   "(2) Cumulative Mechanical Transfer Losses: Across five successive synthetic procedures involving decantation, washings, and vacuum filtration through ashless paper, "
+   "microparticulate loss is held to < 0.5 mg through meticulous rubber policeman wall rinsing. In multi-point linear regression, any constant transfer residue is "
+   "absorbed directly into the baseline intercept m₀, leaving the slope m_slope completely unbiased. "
+   "(3) Granular Zinc Digestion Completeness: Unreacted metallic zinc (atomic weight 65.38 g/mol) is digested with 6 M HCl until hydrogen gas evolution ceases completely "
+   "(E° = +0.76 V). Residual entrapped zinc would introduce a positive mass artifact (+1.029 g per gram of zinc replacing copper). "
+   "(4) Solvent Displacement & Desiccation Control: Rinsing the spongy copper cake sequentially with boiling deionized water, 95% ethanol, and reagent-grade acetone displaces "
+   "capillary water. Vacuum desiccation at ambient temperature prevents high-temperature aerial oxidation of copper powder to cuprous oxide (Cu₂O) or cupric oxide (CuO). "
+   "Ordinary least-squares linear regression across six independent copper loadings (0.20 to 0.70 g) extracts the empirical slope m_slope = 1.00000 g/g with a standard error "
+   "SE(m) < 1.0 × 10⁻⁶ and an ideal coefficient of determination R² = 1.00000, isolating 100.00% mass recovery."
   )
  return ""
 
@@ -544,6 +592,48 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"The experimental value confirms the theoretical molecular weight of cyclohexane (84.161 g/mol) with a percentage error of {percent:.4f}%. "
    "The investigation validated the ideal gas equation of state, evaluated van der Waals real-gas non-ideality, "
    "and proved that multi-point linear regression represents a powerful analytical strategy for eliminating tare and transfer biases in gas gravimetry."
+  )
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='chemical-reactions-copper-cycle':
+  abstract=(
+   f"Six quantitative Copper Cycle trials were performed across initial metallic copper loadings from m_initial = {rows[0]['input']:.2f} g to {rows[-1]['input']:.2f} g. "
+   f"Each sample was processed through a closed five-reaction sequence: oxidation with concentrated HNO₃ to Cu(NO₃)₂, precipitation with 3.0 M NaOH to Cu(OH)₂, "
+   f"thermal dehydration at 90 °C to CuO, dissolution with 3.0 M H₂SO₄ to CuSO₄, and single displacement reduction with granular zinc back to elemental metallic copper. "
+   f"Following hydrochloric acid digestion of excess zinc, solvent washing with ethanol and acetone, and vacuum desiccation, recovered copper masses ranged from "
+   f"{rows[0]['raw']:.4f} g to {rows[-1]['raw']:.4f} g. "
+   f"Ordinary least-squares linear regression of recovered copper mass against initial copper mass yielded an empirical recovery slope of "
+   f"{fmt(f['m'],6)} g/g (corresponding to an experimental recovery of {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']}) "
+   f"with an intercept of {fmt(f['b'],c['resultDecimals'])} g and an ideal coefficient of determination R² = 1.00000, "
+   f"confirming the Law of Conservation of Mass with a percentage difference of {percent:.4f}%."
+  )
+  graph_choice=(
+   f"The linear regression models the stoichiometric mass conservation relation m_recovered = (Recovery / 100) · m_initial + m₀, "
+   f"where m_initial represents the initial polished copper wire mass in g, m_recovered represents the desiccated recovered metallic copper mass in g, "
+   f"and m₀ represents the transfer/tare baseline offset in g (theoretically m₀ = 0.0000 g). "
+   f"The regression slope m_slope directly represents the marginal recovery efficiency (d(m_rec) / d(m_init)), "
+   f"scaling by 100 to yield {c['resultUnit']} recovery while remaining completely immune to constant filter paper taring biases."
+  )
+  discussion=(
+   "The experimental findings provide rigorous quantitative validation of the Law of Conservation of Mass and the stoichiometric integrity of multi-step inorganic synthesis. "
+   "Throughout the five diverse chemical transformations—spanning exothermic redox oxidation, metathesis hydroxide precipitation, solid-state endothermic dehydration, "
+   "acid-base neutralization, and galvanic single displacement—the copper atoms underwent dramatic shifts in coordination geometry, color, and phase: "
+   "from salmon-pink metallic crystal to emerald-green [Cu(H₂O)₆]²⁺, sky-blue gelatinous Cu(OH)₂, dense black monoclinic CuO, royal-blue tetrahedral/octahedral CuSO₄, "
+   "and finally back to spongy red-brown metallic copper. "
+   "Despite the complexity of five consecutive manipulations, ordinary least-squares regression across six independent loadings (0.20 g to 0.70 g) "
+   "demonstrated perfect linearity (R² = 1.00000) with a slope of m_slope = 1.00000 g/g. "
+   "This outcome validates Lavoisier's foundational principle: atoms are rearranged into novel chemical bonds and crystalline structures, but the total elemental mass "
+   "is strictly conserved. "
+   "The thermal dehydration step (converting Cu(OH)₂ to granular CuO) was instrumental in preventing colloidal pore-clogging during subsequent handling, "
+   "and the addition of 6 M HCl successfully digested all excess sacrificial zinc metal without attacking the more noble metallic copper."
+  )
+  conclusion=(
+   "This laboratory investigation successfully demonstrated the quantitative execution of the Copper Cycle and confirmed the Law of Conservation of Mass. "
+   f"Across initial copper sample masses spanning {rows[0]['input']:.2f} g to {rows[-1]['input']:.2f} g, we isolated recovered copper with an empirical slope of "
+   f"m_slope = {fmt(f['m'],6)} g/g, establishing an experimental recovery of {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} "
+   f"with a standard error of {fmt(se*c['resultScale'])} {c['resultUnit']} and an ideal coefficient of determination R² = 1.00000. "
+   f"The observed recovery exhibits an absolute percentage difference of {percent:.4f}% from the theoretical 100.00% mass conservation limit. "
+   "The study confirmed that multi-point linear regression provides superior analytical reliability in multi-step chemical syntheses by isolating "
+   "marginal stoichiometric yields from systematic background transfer offsets."
   )
   return abstract, graph_choice, discussion, conclusion
  return "","","",""

@@ -49,6 +49,13 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:1.0,x,y,valid:v>=125.0&&v<=375.0};
  }
+ if(slug==='chemical-reactions-copper-cycle'){
+  const m_init=Number(input);
+  const raw=round(m_init * 1.0000, 4);
+  const x=m_init;
+  const y=raw;
+  return {raw,ideal:raw,period:1.0,x,y,valid:m_init>=0.20&&m_init<=0.70};
+ }
  throw Error('Unknown Chemistry experiment predict: '+slug);
 }
 
@@ -73,6 +80,10 @@ function reading(slug,input,raw){
   y=Number(raw);
  }
  if(slug==='volatile-liquid-molar-mass'){
+  x=Number(input);
+  y=Number(raw);
+ }
+ if(slug==='chemical-reactions-copper-cycle'){
   x=Number(input);
   y=Number(raw);
  }
@@ -125,6 +136,9 @@ function estimate(slug,f){
   const M_est=(f.m * R * T) / P;
   const se=(f.slopeSE * R * T) / P;
   return {value:M_est,se:se,reference:84.161};
+ }
+ if(slug==='chemical-reactions-copper-cycle'){
+  return {value:f.m,se:f.slopeSE,reference:1.0000};
  }
  throw Error('Unknown Chemistry experiment estimate: '+slug);
 }

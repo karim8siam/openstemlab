@@ -26,6 +26,9 @@ function update(){
  }else if(cfg.slug==='volatile-liquid-molar-mass'){
   $('liveState').textContent='Ready to vaporize liquid in calibrated '+p.input.toFixed(1)+' mL Dumas bulb.';
   message('Set Dumas bulb volume V_flask, then vaporize, flush air, condense & weigh.');
+ }else if(cfg.slug==='chemical-reactions-copper-cycle'){
+  $('liveState').textContent='Ready to cycle '+p.input.toFixed(2)+' g copper wire through 5 reactions.';
+  message('Set initial copper mass m_initial, then run cyclic reactions, isolate, wash & dry.');
  }else{
   $('liveState').textContent='Ready to dispense '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+' of liquid.';
   message('Adjust '+cfg.shortInput+' V, then weigh the dispensed aliquot.');
@@ -50,6 +53,7 @@ $('measure').onclick=async()=>{
  if(cfg.slug==='limiting-reactant-precipitation') msgStart='Adding Na₂SO₄ dropwise at 85 °C, digesting, filtering through Gooch crucible, drying to constant mass…';
  if(cfg.slug==='molar-volume-ideal-gas') msgStart='Inverting eudiometer, diffusing 6 M HCl, evolving H₂ gas, leveling menisci…';
  if(cfg.slug==='volatile-liquid-molar-mass') msgStart='Immersing Dumas bulb at 100 °C, flushing air through pinhole, condensing & weighing…';
+ if(cfg.slug==='chemical-reactions-copper-cycle') msgStart='Dissolving in HNO₃, precipitating Cu(OH)₂, dehydrating to CuO, dissolving in H₂SO₄, reducing with Zn, washing & desiccation…';
  message(msgStart);
  await new Promise(resolve=>setTimeout(resolve,400));
  const raw=prediction.raw;
@@ -68,6 +72,9 @@ $('measure').onclick=async()=>{
  }else if(cfg.slug==='volatile-liquid-molar-mass'){
   $('liveState').textContent='Condensed vapor mass: '+raw.toFixed(4)+' g in '+p.input.toFixed(1)+' mL bulb.';
   message('Vapor density determination complete: condensed '+raw.toFixed(4)+' g vapor in '+p.input.toFixed(1)+' mL flask. Record in notebook.');
+ }else if(cfg.slug==='chemical-reactions-copper-cycle'){
+  $('liveState').textContent='Desiccated recovered metallic copper: '+raw.toFixed(4)+' g.';
+  message('Copper cycle complete: recovered '+raw.toFixed(4)+' g pure Cu from '+p.input.toFixed(2)+' g wire (100.00% yield). Record in notebook.');
  }else{
   $('liveState').textContent='Analytical balance stabilized: '+raw.toFixed(cfg.rawDecimals)+' g net mass.';
   message('Gravimetric measurement complete: '+raw.toFixed(cfg.rawDecimals)+' '+cfg.rawUnit+' for '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+'. Record in notebook.');
@@ -225,6 +232,18 @@ function draw(t){
    return;
   }
   $('apparatusDiagram').innerHTML=drawDumasBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='chemical-reactions-copper-cycle'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawCopperCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawCopperSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawCopperBenchView(p,rawVal);
   return;
  }
  if(currentSimMode==='compare'){
@@ -1505,3 +1524,252 @@ function drawDumasSandboxView(p,rawVal){
  return svg;
 }
 
+
+
+// ======================================================================
+// CHEMISTRY LAB 06: THE COPPER CYCLE (MASS CONSERVATION)
+// ======================================================================
+function drawCopperBenchView(p,rawVal){
+ const m_init=p.input;
+ const m_rec=rawVal;
+ const n_moles=m_init/63.546;
+
+ let svg='<defs>';
+ svg+='<linearGradient id="cuNitrateGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#10b981" stop-opacity=".7"/><stop offset="100%" stop-color="#059669" stop-opacity=".9"/></linearGradient>';
+ svg+='<linearGradient id="cuHydroxideGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#38bdf8" stop-opacity=".8"/><stop offset="100%" stop-color="#0284c7" stop-opacity=".95"/></linearGradient>';
+ svg+='<linearGradient id="cuOxideGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#27272a" stop-opacity=".95"/><stop offset="100%" stop-color="#09090b" stop-opacity=".98"/></linearGradient>';
+ svg+='<linearGradient id="cuSulfateGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#3b82f6" stop-opacity=".8"/><stop offset="100%" stop-color="#1d4ed8" stop-opacity=".95"/></linearGradient>';
+ svg+='<linearGradient id="cuMetalGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f97316"/><stop offset="50%" stop-color="#ea580c"/><stop offset="100%" stop-color="#9a3412"/></linearGradient>';
+ svg+='<linearGradient id="glassWall" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#ffffff" stop-opacity=".2"/><stop offset="10%" stop-color="#ffffff" stop-opacity=".04"/><stop offset="90%" stop-color="#ffffff" stop-opacity=".06"/><stop offset="100%" stop-color="#ffffff" stop-opacity=".25"/></linearGradient>';
+ svg+='</defs><rect width="720" height="320" fill="#08140c"/>';
+
+ svg+=text(360,20,'QUANTITATIVE FIVE-STEP CHEMICAL TRANSFORMATION CYCLE: COPPER CONSERVATION','#86efac',12);
+
+ // Table surface
+ svg+='<rect x="0" y="275" width="720" height="45" fill="#132419" stroke="#1f3b2a" stroke-width="1"/>';
+ svg+='<line x1="0" y1="275" x2="720" y2="275" stroke="#2d523b" stroke-width="2"/>';
+
+ // Draw 5 Reaction Stations
+ const stations=[
+  {num:'1',label:'HNO₃ Oxidation',formula:'Cu ⟶ Cu(NO₃)₂',color:'#10b981',grad:'url(#cuNitrateGrad)',sub:'Brown NO₂↑ gas'},
+  {num:'2',label:'NaOH Metathesis',formula:'Cu²⁺ ⟶ Cu(OH)₂↓',color:'#38bdf8',grad:'url(#cuHydroxideGrad)',sub:'Gelatinous sky blue'},
+  {num:'3',label:'Thermal Dehyd.',formula:'Cu(OH)₂ ⟶ CuO↓',color:'#a1a1aa',grad:'url(#cuOxideGrad)',sub:'Granular black at 90°C'},
+  {num:'4',label:'H₂SO₄ Leaching',formula:'CuO ⟶ CuSO₄',color:'#60a5fa',grad:'url(#cuSulfateGrad)',sub:'Royal blue solution'},
+  {num:'5',label:'Zn Reduction',formula:'Cu²⁺ ⟶ Cu(s)↓',color:'#fb923c',grad:'url(#cuMetalGrad)',sub:'Spongy copper isolated'}
+ ];
+
+ stations.forEach((st,idx)=>{
+  const bx=20+idx*104,bw=92,by=42,bh=158;
+  // Card container
+  svg+='<rect x="'+bx+'" y="'+by+'" width="'+bw+'" height="'+bh+'" rx="5" fill="#0b1a10" stroke="#1f3b2a" stroke-width="1.2"/>';
+  // Step badge
+  svg+='<rect x="'+(bx+6)+'" y="'+(by+6)+'" width="20" height="14" rx="3" fill="#162e1e"/>';
+  svg+='<text x="'+(bx+16)+'" y="'+(by+17)+'" text-anchor="middle" fill="#86efac" font-size="9" font-weight="bold">'+st.num+'</text>';
+  svg+='<text x="'+(bx+30)+'" y="'+(by+17)+'" fill="#cbd5e1" font-size="8" font-weight="bold">'+st.label+'</text>';
+  svg+='<text x="'+(bx+bw/2)+'" y="'+(by+30)+'" text-anchor="middle" fill="'+st.color+'" font-size="7.5" font-family="monospace">'+st.formula+'</text>';
+
+  // Miniature Beaker
+  const bkX=bx+18,bkY=by+38,bkW=56,bkH=68;
+  svg+='<rect x="'+bkX+'" y="'+bkY+'" width="'+bkW+'" height="'+bkH+'" rx="3" fill="url(#glassWall)" stroke="#4b7055" stroke-width="1"/>';
+  // Beaker lip
+  svg+='<ellipse cx="'+(bkX+bkW/2)+'" cy="'+bkY+'" rx="'+(bkW/2)+'" ry="3" fill="none" stroke="#789c80" stroke-width="1"/>';
+  // Solution / Precipitate inside beaker
+  const fillH=idx===2?42:(idx===4?38:46);
+  svg+='<rect x="'+(bkX+2)+'" y="'+(bkY+bkH-fillH)+'" width="'+(bkW-4)+'" height="'+fillH+'" rx="2" fill="'+st.grad+'"/>';
+
+  if(idx===0){
+   // NO2 gas bubbles / fumes rising
+   svg+='<circle cx="'+(bkX+20)+'" cy="'+(bkY+28)+'" r="3.5" fill="#ca8a04" fill-opacity=".8"/>';
+   svg+='<circle cx="'+(bkX+36)+'" cy="'+(bkY+18)+'" r="4.5" fill="#b45309" fill-opacity=".7"/>';
+   svg+='<circle cx="'+(bkX+28)+'" cy="'+(bkY+8)+'" r="5.5" fill="#9a3412" fill-opacity=".6"/>';
+  }else if(idx===1){
+   // Gelatinous precipitate flakes
+   for(let f=0;f<5;f++){
+    svg+='<ellipse cx="'+(bkX+12+f*8)+'" cy="'+(bkY+bkH-12-((f*7)%20))+'" rx="4" ry="2" fill="#7dd3fc" fill-opacity=".9"/>';
+   }
+  }else if(idx===2){
+   // Dense black particles settled + heat waves underneath
+   for(let p=0;p<8;p++){
+    svg+='<circle cx="'+(bkX+10+p*5)+'" cy="'+(bkY+bkH-6-((p*3)%10))+'" r="2.5" fill="#000000"/>';
+   }
+   svg+='<path d="M'+(bkX+10)+' '+(bkY+bkH+6)+' Q'+(bkX+18)+' '+(bkY+bkH+2)+' '+(bkX+26)+' '+(bkY+bkH+6)+' Q'+(bkX+34)+' '+(bkY+bkH+10)+' '+(bkX+42)+' '+(bkY+bkH+6)+'" fill="none" stroke="#ef4444" stroke-width="1.5"/>';
+  }else if(idx===3){
+   // Clear royal blue solution
+   svg+='<rect x="'+(bkX+6)+'" y="'+(bkY+bkH-fillH+4)+'" width="6" height="30" fill="#93c5fd" fill-opacity=".4" rx="2"/>';
+  }else if(idx===4){
+   // Spongy reddish copper cake at bottom + bubbles
+   svg+='<rect x="'+(bkX+6)+'" y="'+(bkY+bkH-16)+'" width="'+(bkW-12)+'" height="14" rx="2" fill="url(#cuMetalGrad)"/>';
+   svg+='<circle cx="'+(bkX+22)+'" cy="'+(bkY+bkH-22)+'" r="2" fill="#ffffff" fill-opacity=".7"/>';
+   svg+='<circle cx="'+(bkX+34)+'" cy="'+(bkY+bkH-30)+'" r="1.8" fill="#ffffff" fill-opacity=".7"/>';
+  }
+
+  // Description footer
+  svg+='<text x="'+(bx+bw/2)+'" y="'+(by+122)+'" text-anchor="middle" fill="#94a3b8" font-size="7">'+st.sub+'</text>';
+
+  // Status pill
+  svg+='<rect x="'+(bx+8)+'" y="'+(by+132)+'" width="'+(bw-16)+'" height="18" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg+='<text x="'+(bx+bw/2)+'" y="'+(by+144)+'" text-anchor="middle" fill="#86efac" font-size="7.5" font-family="monospace">Cu: '+(idx<4?'100% In System':'100% Isolated')+'</text>';
+
+  // Reaction arrow connecting to next station
+  if(idx<4){
+   svg+='<path d="M'+(bx+bw)+' '+(by+bh/2)+' L'+(bx+bw+12)+' '+(by+bh/2)+'" stroke="#38a169" stroke-width="2" stroke-dasharray="2,2"/>';
+   svg+='<polygon points="'+(bx+bw+12)+','+(by+bh/2-3)+' '+(bx+bw+16)+','+(by+bh/2)+' '+(bx+bw+12)+','+(by+bh/2+3)+'" fill="#38a169"/>';
+  }
+ });
+
+ // Analytical Pan & Quantitative Readout Banner (Bottom)
+ const panX=20,panY=210,panW=680,panH=58;
+ svg+='<rect x="'+panX+'" y="'+panY+'" width="'+panW+'" height="'+panH+'" rx="6" fill="#0a190e" stroke="#22422c" stroke-width="1.5"/>';
+
+ // Initial mass badge
+ svg+='<rect x="'+(panX+15)+'" y="'+(panY+10)+'" width="145" height="38" rx="4" fill="#051009" stroke="#162e1e"/>';
+ svg+='<text x="'+(panX+25)+'" y="'+(panY+24)+'" fill="#789c80" font-size="8" font-weight="bold">INITIAL COPPER WIRE</text>';
+ svg+='<text x="'+(panX+25)+'" y="'+(panY+40)+'" fill="#f97316" font-size="13" font-family="monospace" font-weight="bold">m₀ = '+m_init.toFixed(4)+' g</text>';
+
+ // Stoichiometric mole conservation
+ svg+='<rect x="'+(panX+175)+'" y="'+(panY+10)+'" width="165" height="38" rx="4" fill="#051009" stroke="#162e1e"/>';
+ svg+='<text x="'+(panX+185)+'" y="'+(panY+24)+'" fill="#789c80" font-size="8" font-weight="bold">MOLAR QUANTITY [M=63.546]</text>';
+ svg+='<text x="'+(panX+185)+'" y="'+(panY+40)+'" fill="#38bdf8" font-size="12" font-family="monospace" font-weight="bold">n(Cu) = '+n_moles.toFixed(5)+' mol</text>';
+
+ // Final recovered mass badge
+ svg+='<rect x="'+(panX+355)+'" y="'+(panY+10)+'" width="155" height="38" rx="4" fill="#051009" stroke="#162e1e"/>';
+ svg+='<text x="'+(panX+365)+'" y="'+(panY+24)+'" fill="#789c80" font-size="8" font-weight="bold">RECOVERED PURE COPPER</text>';
+ svg+='<text x="'+(panX+365)+'" y="'+(panY+40)+'" fill="#86efac" font-size="13" font-family="monospace" font-weight="bold">m_rec = '+m_rec.toFixed(4)+' g</text>';
+
+ // Recovery % & Conservation status
+ svg+='<rect x="'+(panX+525)+'" y="'+(panY+10)+'" width="140" height="38" rx="4" fill="#051009" stroke="#22543d"/>';
+ svg+='<text x="'+(panX+535)+'" y="'+(panY+24)+'" fill="#86efac" font-size="8" font-weight="bold">STOICHIOMETRIC YIELD</text>';
+ svg+='<text x="'+(panX+535)+'" y="'+(panY+40)+'" fill="#48bb78" font-size="13" font-family="monospace" font-weight="bold">Yield = 100.00%</text>';
+
+ svg+=text(360,305,'Conservation Metrology: Cu ⟶ Cu(NO₃)₂ ⟶ Cu(OH)₂ ⟶ CuO ⟶ CuSO₄ ⟶ Cu (100.00% Recovery).','#789c80',8.5);
+ return svg;
+}
+
+function drawCopperCompareView(p,rawVal){
+ let svg='<rect x="0" y="0" width="720" height="320" fill="#08140c"/>';
+ svg+=text(360,24,'COMPARATIVE EXTRACTIVE & REFINING METALLURGY: COPPER PROCESSING ROUTES','#86efac',12);
+
+ const cards=[
+  {
+   title:'1. Cyclic Hydrometallurgy',
+   sub:'Aqueous Closed Cycle (Our Protocol)',
+   color:'#86efac',
+   border:'#254d33',
+   items:[
+    'Principle: Sequential aqueous redox, metathesis & dehydration',
+    'Reactions: HNO₃ oxid. ⟶ NaOH ppt ⟶ Dehyd. ⟶ H₂SO₄ ⟶ Zn red.',
+    'Energy & Temp: Ambient to 90 °C (low carbon/energy demand)',
+    'Theoretical Yield: 100.00% closed-loop stoichiometric conservation',
+    'Selectivity: Eliminates iron & zinc via acidic extraction',
+    'Primary advantage: Rigorous quantitative proof of mass conservation',
+    'Limitation: Multi-step transfers require meticulous wall rinsing'
+   ]
+  },
+  {
+   title:'2. Pyrometallurgical Smelting',
+   sub:'Flash Furnace Carbothermal Smelting',
+   color:'#fb923c',
+   border:'#5a3014',
+   items:[
+    'Principle: High-temperature oxidation of chalcopyrite (CuFeS₂)',
+    'Reactions: 2CuFeS₂ + 2.5O₂ ⟶ Cu₂S·FeS (matte) + FeO + 2SO₂',
+    'Energy & Temp: 1250 °C to 1350 °C in oxygen-enriched blast furnace',
+    'Theoretical Yield: 95% to 98% copper recovered into blister cake',
+    'Selectivity: Produces 98.5% crude blister copper (requires refining)',
+    'Primary advantage: Massive industrial capacity (millions of tons/yr)',
+    'Limitation: Massive SO₂ emissions, slag disposal, huge energy demand'
+   ]
+  },
+  {
+   title:'3. Electrolytic Refining',
+   sub:'Acidic CuSO₄ Electrorefining (Cathode)',
+   color:'#38bdf8',
+   border:'#1e3a5f',
+   items:[
+    'Principle: Anodic dissolution & cathodic deposition of Cu²⁺ ions',
+    'Reactions: Cu(blister anode) ⟶ Cu²⁺ + 2e⁻ ⟶ Cu(pure cathode)',
+    'Energy & Temp: 55 °C to 65 °C; electrical power ~300 kWh/ton',
+    'Theoretical Yield: >99.5% cathode current efficiency (Faraday's law)',
+    'Selectivity: Produces 99.99% Grade A electrolytic copper cathode',
+    'Primary advantage: Precious metals (Au, Ag, Pt) drop as anode slime',
+    'Limitation: Requires pre-smelted copper anodes and high DC power'
+   ]
+  }
+ ];
+
+ cards.forEach((c,idx)=>{
+  const x=25+idx*230,y=46,w=210,h=242;
+  svg+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="6" fill="#0d1f14" stroke="'+c.border+'" stroke-width="1.5"/>';
+  svg+='<rect x="'+(x+8)+'" y="'+(y+8)+'" width="'+(w-16)+'" height="32" rx="4" fill="#051009"/>';
+  svg+='<text x="'+(x+w/2)+'" y="'+(y+22)+'" text-anchor="middle" fill="'+c.color+'" font-size="9.5" font-weight="bold">'+c.title+'</text>';
+  svg+='<text x="'+(x+w/2)+'" y="'+(y+34)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5">'+c.sub+'</text>';
+
+  c.items.forEach((item,ii)=>{
+   const iy=y+54+ii*26;
+   svg+='<circle cx="'+(x+16)+'" cy="'+(iy-3)+'" r="2" fill="'+c.color+'"/>';
+   svg+='<foreignObject x="'+(x+24)+'" y="'+(iy-10)+'" width="'+(w-32)+'" height="26"><p xmlns="http://www.w3.org/1999/xhtml" style="font-size:7.5px;color:#cbd5e1;line-height:1.2;margin:0">'+item+'</p></foreignObject>';
+  });
+ });
+
+ svg+=text(360,305,'Comparison: Hydrometallurgy conserves atom mass in closed cycles; Pyrometallurgy processes high-volume ore.','#789c80',9);
+ return svg;
+}
+
+function drawCopperSandboxView(p,rawVal){
+ const m_init=p.input;
+ const m_rec=rawVal;
+ let svg='<rect x="0" y="0" width="720" height="320" fill="#08140c"/>';
+ svg+=text(360,22,'MASS CONSERVATION BUDGET & MULTI-STEP REACTION EFFICIENCY: COPPER CYCLE','#86efac',12);
+
+ // Left Plot: Stage-by-Stage Copper Mass Conservation (0 to 5)
+ const pX=50,pY=48,pW=395,pH=225;
+ svg+='<rect x="'+pX+'" y="'+pY+'" width="'+pW+'" height="'+pH+'" fill="#061209" stroke="#1f3b28" rx="4"/>';
+
+ const stages=['Start (Cu)','Step 1 (NO₃)','Step 2 (OH)','Step 3 (CuO)','Step 4 (SO₄)','Step 5 (Cu)'];
+ const barW=36;
+
+ stages.forEach((stg,idx)=>{
+  const cx=pX+35+idx*60;
+  const h=(m_init/0.80)*170;
+  const by=pY+pH-h-25;
+
+  // Background guide line
+  svg+='<line x1="'+cx+'" y1="'+pY+'" x2="'+cx+'" y2="'+(pY+pH)+'" stroke="#132418" stroke-width="1"/>';
+  // Mass bar
+  const col=idx===0?'#f97316':(idx===5?'#48bb78':'#38bdf8');
+  svg+='<rect x="'+(cx-barW/2)+'" y="'+by+'" width="'+barW+'" height="'+h+'" rx="3" fill="'+col+'" fill-opacity=".85" stroke="'+col+'" stroke-width="1"/>';
+  // Mass label on bar
+  svg+='<text x="'+cx+'" y="'+(by-6)+'" text-anchor="middle" fill="#f8fafc" font-size="8" font-family="monospace">'+m_init.toFixed(3)+'g</text>';
+  // X axis label
+  svg+='<text x="'+cx+'" y="'+(pY+pH-8)+'" text-anchor="middle" fill="#789c80" font-size="7.5">'+stg+'</text>';
+ });
+
+ // Conservation boundary line across all bars
+ const idealY=pY+pH-((m_init/0.80)*170)-25;
+ svg+='<line x1="'+(pX+15)+'" y1="'+idealY+'" x2="'+(pX+pW-15)+'" y2="'+idealY+'" stroke="#facc15" stroke-width="1.8" stroke-dasharray="3,3"/>';
+ svg+='<text x="'+(pX+pW-18)+'" y="'+(idealY-4)+'" text-anchor="end" fill="#facc15" font-size="8">100.00% Theoretical Invariant</text>';
+
+ // Right Panel: Systematic Error Sensitivity & Yield Perturbations
+ const rX=460,rY=48,rW=235,rH=225;
+ svg+='<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="5" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg+='<text x="'+(rX+rW/2)+'" y="'+(rY+18)+'" text-anchor="middle" fill="#86efac" font-size="10" font-weight="bold">ANALYTICAL SENSITIVITY AUDIT</text>';
+
+ const errItems=[
+  {label:'Residual Zinc Metal (+)',desc:'Unreacted Zn in spongy Cu falsely inflates yield',val:'+2.0% per 10 mg Zn',col:'#f87171'},
+  {label:'Transfer Decantation (-)',desc:'Loss of CuO/Cu during decant or beaker wall rinse',val:'-1.0% per 5 mg Cu',col:'#fbbf24'},
+  {label:'Surface Oxidation (+)',desc:'Hot drying in air oxidizes Cu ⟶ CuO (+25.2% O)',val:'Prevented by ethanol/desicc.',col:'#38bdf8'},
+  {label:'Colloidal Passing (-)',desc:'Cu(OH)₂ bypassing filter paper without dehydration',val:'Prevented by 90°C heating',col:'#a78bfa'},
+  {label:'OLS Slope Insulation (★)',desc:'Constant transfer losses absorbed into intercept m₀',val:'Slope = 1.0000 g/g Unbiased',col:'#48bb78'}
+ ];
+
+ errItems.forEach((ei,idx)=>{
+  const ey=rY+32+idx*38;
+  svg+='<rect x="'+(rX+8)+'" y="'+ey+'" width="'+(rW-16)+'" height="32" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg+='<text x="'+(rX+14)+'" y="'+(ey+12)+'" fill="'+ei.col+'" font-size="7.5" font-weight="bold">'+ei.label+'</text>';
+  svg+='<text x="'+(rX+14)+'" y="'+(ey+24)+'" fill="#94a3b8" font-size="6.8">'+ei.desc+'</text>';
+  svg+='<text x="'+(rX+rW-14)+'" y="'+(ey+12)+'" text-anchor="end" fill="'+ei.col+'" font-size="7.5" font-family="monospace">'+ei.val+'</text>';
+ });
+
+ svg+=text(360,305,'Mass Budget: OLS regression slope m_slope = 1.0000 g/g insulates true stoichiometry against transfer offsets.','#789c80',9);
+ return svg;
+}

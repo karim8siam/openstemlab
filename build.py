@@ -86,5 +86,8 @@ ET.ElementTree(urlset).write(out/'sitemap.xml',encoding='utf-8',xml_declaration=
 (out/'robots.txt').write_text('User-agent: *\nAllow: /\n\nSitemap: '+base+'/sitemap.xml\n')
 print(('Production' if args.production else 'Local noindex')+' build: '+str(out)+'; '+str(len(seen_paths))+' sitemap URLs for '+base)
 
+from branding import apply_brand
+apply_brand(out)
+
 from package_public_source import package_public_source
 package_public_source(out)

@@ -75,7 +75,8 @@ def experiment_index(experiments):
     'hydrate-stoichiometric-composition':'gravimetric stoichiometry hydrated salts thermal dehydration water crystallization empirical formula copper sulfate pentahydrate crucible desiccator tga jahn teller crystal field',
     'limiting-reactant-precipitation':'limiting reactant gravimetric stoichiometry precipitation barium sulfate percentage yield ostwald ripening von weimarn supersaturation gooch crucible silver nitrate test buchner vacuum filtration',
     'molar-volume-ideal-gas':'molar volume ideal gas eudiometer acid metal displacement magnesium hydrogen gas dalton partial pressure water vapor pressure leveling cylinder stp avogadro van der waals',
-    'volatile-liquid-molar-mass':'molar mass volatile liquid dumas method vapor density cyclohexane boiling water bath pinhole air buoyancy pycnometry ideal gas equation of state van der waals'}
+    'volatile-liquid-molar-mass':'molar mass volatile liquid dumas method vapor density cyclohexane boiling water bath pinhole air buoyancy pycnometry ideal gas equation of state van der waals',
+    'chemical-reactions-copper-cycle':'chemical reactions copper cycle conservation of mass redox metathesis precipitation dehydration neutralization single displacement gravimetric recovery percentage yield lavoisier stoichiometry tenorite'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):
