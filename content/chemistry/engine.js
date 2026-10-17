@@ -14,8 +14,16 @@ function update(){
  $('readingValue').textContent='—';
  $('recordReading').disabled=true;
  $('measure').disabled=busy;
- $('liveState').textContent=cfg.slug==='hydrate-stoichiometric-composition'?'Ready to calcine crucible containing '+p.input.toFixed(1)+' g hydrate.':'Ready to dispense '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+' of liquid.';
- message(cfg.slug==='hydrate-stoichiometric-composition'?'Adjust initial hydrate mass, then calcine to constant mass.':'Adjust '+cfg.shortInput+' V, then weigh the dispensed aliquot.');
+ if(cfg.slug==='hydrate-stoichiometric-composition'){
+  $('liveState').textContent='Ready to calcine crucible containing '+p.input.toFixed(1)+' g hydrate.';
+  message('Adjust initial hydrate mass, then calcine to constant mass.');
+ }else if(cfg.slug==='limiting-reactant-precipitation'){
+  $('liveState').textContent='Ready to deliver '+p.input.toFixed(1)+' mL of 0.1000 M Na₂SO₄ into excess BaCl₂.';
+  message('Adjust sulfate volume V, then precipitate, digest, filter & weigh.');
+ }else{
+  $('liveState').textContent='Ready to dispense '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+' of liquid.';
+  message('Adjust '+cfg.shortInput+' V, then weigh the dispensed aliquot.');
+ }
  draw(performance.now());
 }
 
@@ -31,14 +39,25 @@ $('measure').onclick=async()=>{
  const p=params(),prediction=model.predict(cfg.slug,p.input);
  if(!prediction.valid){message('Select a valid '+cfg.shortInput+' between '+cfg.min+' and '+cfg.max+' '+cfg.inputUnit+'.',true);return;}
  busy=true;$('measure').disabled=true;$('recordReading').disabled=true;$('independent').disabled=true;$('independentNumber').disabled=true;
- message(cfg.slug==='hydrate-stoichiometric-composition'?'Heating crucible at 250 °C and evolving steam…':'Dispensing '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+' into tared beaker…');
+ let msgStart='Dispensing '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+' into tared beaker…';
+ if(cfg.slug==='hydrate-stoichiometric-composition') msgStart='Heating crucible at 250 °C and evolving steam…';
+ if(cfg.slug==='limiting-reactant-precipitation') msgStart='Adding Na₂SO₄ dropwise at 85 °C, digesting, filtering through Gooch crucible, drying to constant mass…';
+ message(msgStart);
  await new Promise(resolve=>setTimeout(resolve,400));
  const raw=prediction.raw;
  measurement=model.reading(cfg.slug,p.input,raw);
  busy=false;$('independent').disabled=false;$('independentNumber').disabled=false;$('measure').disabled=false;$('recordReading').disabled=false;
  $('readingValue').textContent=raw.toFixed(cfg.rawDecimals)+' '+cfg.rawUnit;
- $('liveState').textContent=cfg.slug==='hydrate-stoichiometric-composition'?'Crucible cooled in desiccator: '+raw.toFixed(4)+' g water evolved.':'Analytical balance stabilized: '+raw.toFixed(cfg.rawDecimals)+' g net mass.';
- message(cfg.slug==='hydrate-stoichiometric-composition'?'Calcination complete: evolved '+raw.toFixed(4)+' g H₂O from '+p.input.toFixed(1)+' g hydrate. Record in notebook.':'Gravimetric measurement complete: '+raw.toFixed(cfg.rawDecimals)+' '+cfg.rawUnit+' for '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+'. Record in notebook.');
+ if(cfg.slug==='hydrate-stoichiometric-composition'){
+  $('liveState').textContent='Crucible cooled in desiccator: '+raw.toFixed(4)+' g water evolved.';
+  message('Calcination complete: evolved '+raw.toFixed(4)+' g H₂O from '+p.input.toFixed(1)+' g hydrate. Record in notebook.');
+ }else if(cfg.slug==='limiting-reactant-precipitation'){
+  $('liveState').textContent='Isolated dry BaSO₄ precipitate: '+raw.toFixed(4)+' g.';
+  message('Gravimetric precipitation complete: isolated '+raw.toFixed(4)+' g BaSO₄ from '+p.input.toFixed(1)+' mL sulfate. Record in notebook.');
+ }else{
+  $('liveState').textContent='Analytical balance stabilized: '+raw.toFixed(cfg.rawDecimals)+' g net mass.';
+  message('Gravimetric measurement complete: '+raw.toFixed(cfg.rawDecimals)+' '+cfg.rawUnit+' for '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+'. Record in notebook.');
+ }
  draw(performance.now());
 };
 
@@ -156,6 +175,18 @@ function draw(t){
    return;
   }
   $('apparatusDiagram').innerHTML=drawHydrateBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='limiting-reactant-precipitation'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawLimitingCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawLimitingSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawLimitingBenchView(p,rawVal);
   return;
  }
  if(currentSimMode==='compare'){
@@ -630,4 +661,266 @@ function drawHydrateSandboxView(p,rawVal){
 
 update();
 renderResults();
+
+// ======================================================================
+// CHEMISTRY LAB 03: LIMITING REACTANTS & GRAVIMETRIC PRECIPITATION
+// ======================================================================
+function drawLimitingBenchView(p,rawVal){
+ const v=p.input;
+ const m_ppt=rawVal;
+ let svg='<defs>';
+ svg+='<linearGradient id="flaskGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#ffffff" stop-opacity=".15"/><stop offset="30%" stop-color="#ffffff" stop-opacity=".05"/><stop offset="80%" stop-color="#38bdf8" stop-opacity=".08"/><stop offset="100%" stop-color="#ffffff" stop-opacity=".2"/></linearGradient>';
+ svg+='<linearGradient id="buretteGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#bae6fd" stop-opacity=".3"/><stop offset="50%" stop-color="#e0f2fe" stop-opacity=".1"/><stop offset="100%" stop-color="#bae6fd" stop-opacity=".35"/></linearGradient>';
+ svg+='<linearGradient id="pptCake" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f8fafc"/><stop offset="50%" stop-color="#e2e8f0"/><stop offset="100%" stop-color="#cbd5e1"/></linearGradient>';
+ svg+='<linearGradient id="heatPlate" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#334155"/><stop offset="100%" stop-color="#0f172a"/></linearGradient>';
+ svg+='<filter id="glow"><feGaussianBlur stdDeviation="2" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+ svg+='</defs>';
+
+ // Background bench layout
+ svg+='<rect x="0" y="0" width="720" height="320" fill="#08140c"/>';
+ svg+='<line x1="20" y1="280" x2="700" y2="280" stroke="#1f3b28" stroke-width="2"/>';
+
+ // Header banner
+ svg+=text(360,20,'GRAVIMETRIC PRECIPITATION & VACUUM FILTRATION: Ba²⁺(aq) + SO₄²⁻(aq) ⟶ BaSO₄(s)↓','#86efac',11);
+
+ // 1. LEFT STATION: Precision Burette & Heated Digestion Reaction
+ const bX=110,bY=32;
+ svg+='<rect x="'+(bX-45)+'" y="30" width="5" height="250" fill="#64748b"/>';
+ svg+='<rect x="'+(bX-65)+'" y="276" width="45" height="6" rx="2" fill="#475569"/>';
+ svg+='<rect x="'+(bX-45)+'" y="80" width="40" height="6" fill="#94a3b8"/>';
+ svg+='<circle cx="'+(bX-5)+'" cy="83" r="5" fill="#cbd5e1"/>';
+
+ // Glass Burette
+ svg+='<rect x="'+(bX-7)+'" y="'+bY+'" width="14" height="130" fill="url(#buretteGrad)" stroke="#7dd3fc" stroke-width="1.2"/>';
+ const menY=bY+15+(v/24.0)*85;
+ svg+='<rect x="'+(bX-6)+'" y="'+menY+'" width="12" height="'+(bY+130-menY)+'" fill="#0284c7" fill-opacity=".35"/>';
+ svg+='<path d="M'+(bX-6)+' '+menY+' Q'+bX+' '+(menY+3)+' '+(bX+6)+' '+menY+'" fill="none" stroke="#38bdf8" stroke-width="1.2"/>';
+ for(let gy=bY+15;gy<=bY+120;gy+=10){
+  svg+='<line x1="'+(bX+1)+'" y1="'+gy+'" x2="'+(bX+6)+'" y2="'+gy+'" stroke="#bae6fd" stroke-width="0.8"/>';
+ }
+ svg+='<polygon points="'+(bX-7)+','+(bY+130)+' '+(bX+7)+','+(bY+130)+' '+(bX+3)+','+(bY+144)+' '+(bX-3)+','+(bY+144)+'" fill="#cbd5e1"/>';
+ svg+='<rect x="'+(bX-8)+'" y="'+(bY+134)+'" width="16" height="5" rx="1.5" fill="#ef4444"/>';
+ svg+='<line x1="'+bX+'" y1="'+(bY+144)+'" x2="'+bX+'" y2="'+(bY+154)+'" stroke="#7dd3fc" stroke-width="1.5"/>';
+
+ if(busy){
+  svg+='<circle cx="'+bX+'" cy="'+(bY+162)+'" r="2" fill="#38bdf8" filter="url(#glow)"/>';
+  svg+='<circle cx="'+bX+'" cy="'+(bY+172)+'" r="1.5" fill="#38bdf8"/>';
+ }
+
+ // Hotplate Magnetic Stirrer
+ const hpX=bX-50,hpY=240,hpW=100,hpH=38;
+ svg+='<rect x="'+hpX+'" y="'+hpY+'" width="'+hpW+'" height="'+hpH+'" rx="4" fill="url(#heatPlate)" stroke="#475569" stroke-width="1.2"/>';
+ svg+='<rect x="'+(hpX+6)+'" y="'+(hpY+8)+'" width="36" height="20" rx="2" fill="#020617" stroke="#1e293b"/>';
+ svg+='<text x="'+(hpX+24)+'" y="'+(hpY+22)+'" text-anchor="middle" fill="#ef4444" font-size="8" font-family="monospace">85.0°C</text>';
+ svg+='<circle cx="'+(hpX+60)+'" cy="'+(hpY+18)+'" r="7" fill="#64748b"/>';
+ svg+='<text x="'+(hpX+80)+'" y="'+(hpY+22)+'" text-anchor="middle" fill="#86efac" font-size="7">300 rpm</text>';
+
+ // Reaction Beaker
+ const bkX=bX-35,bkY=175,bkW=70,bkH=65;
+ svg+='<rect x="'+bkX+'" y="'+bkY+'" width="'+bkW+'" height="'+bkH+'" rx="2" fill="url(#flaskGrad)" stroke="#94a3b8" stroke-width="1.2"/>';
+ const liqH=42;
+ svg+='<rect x="'+(bkX+1)+'" y="'+(bkY+bkH-liqH)+'" width="'+(bkW-2)+'" height="'+liqH+'" fill="#0284c7" fill-opacity=".15"/>';
+ for(let i=0;i<18;i++){
+  const px=bkX+8+(i*13)%(bkW-16);
+  const py=bkY+bkH-8-((i*17)%(liqH-12));
+  svg+='<circle cx="'+px+'" cy="'+py+'" r="1.8" fill="#f8fafc" fill-opacity=".85"/>';
+ }
+ svg+='<rect x="'+(bX-10)+'" y="'+(bkY+bkH-7)+'" width="20" height="5" rx="2.5" fill="#f1f5f9" stroke="#94a3b8"/>';
+ svg+='<text x="'+bX+'" y="295" text-anchor="middle" fill="#94a3b8" font-size="9" font-weight="bold">1. DIGESTION BEAKER (85 °C)</text>';
+
+ // 2. MIDDLE STATION: Vacuum Buchner / Gooch Filtration Manifold
+ const fX=330,fY=150;
+ svg+='<path d="M'+(fX-14)+' '+(fY+24)+' L'+(fX-12)+' '+(fY+45)+' L'+(fX-42)+' '+(fY+120)+' Q'+fX+' '+(fY+126)+' '+(fX+42)+' '+(fY+120)+' L'+(fX+12)+' '+(fY+45)+' L'+(fX+14)+' '+(fY+24)+' Z" fill="url(#flaskGrad)" stroke="#64748b" stroke-width="1.2"/>';
+ svg+='<line x1="'+(fX+12)+'" y1="'+(fY+42)+'" x2="'+(fX+28)+'" y2="'+(fY+38)+'" stroke="#64748b" stroke-width="4"/>';
+ svg+='<path d="M'+(fX+28)+' '+(fY+38)+' Q'+(fX+50)+' '+(fY+32)+' '+(fX+65)+' '+(fY+70)+'" fill="none" stroke="#d97706" stroke-width="3.5" stroke-linecap="round"/>';
+ svg+='<text x="'+(fX+75)+'" y="'+(fY+65)+'" fill="#fbbf24" font-size="7.5">VACUUM (−20 kPa)</text>';
+
+ svg+='<polygon points="'+(fX-15)+','+(fY+22)+' '+(fX+15)+','+(fY+22)+' '+(fX+12)+','+(fY+32)+' '+(fX-12)+','+(fY+32)+'" fill="#020617" stroke="#334155"/>';
+
+ const crX=fX-18,crY=fY-14,crW=36,crH=36;
+ svg+='<path d="M'+crX+' '+crY+' L'+(crX+4)+' '+(crY+crH)+' L'+(crX+crW-4)+' '+(crY+crH)+' L'+(crX+crW)+' '+crY+' Z" fill="#1e293b" stroke="#94a3b8" stroke-width="1.2"/>';
+ svg+='<line x1="'+(crX+5)+'" y1="'+(crY+crH-8)+'" x2="'+(crX+crW-5)+'" y2="'+(crY+crH-8)+'" stroke="#64748b" stroke-dasharray="2,1.5" stroke-width="2"/>';
+ const cakeH=3+(v/24.0)*8;
+ svg+='<rect x="'+(crX+6)+'" y="'+(crY+crH-8-cakeH)+'" width="'+(crW-12)+'" height="'+cakeH+'" fill="url(#pptCake)" rx="1.5"/>';
+ svg+='<rect x="'+(fX-3.5)+'" y="'+(crY+crH)+'" width="7" height="35" fill="url(#buretteGrad)" stroke="#7dd3fc" stroke-width="0.8"/>';
+
+ svg+='<path d="M'+(fX-34)+' '+(fY+105)+' Q'+fX+' '+(fY+110)+' '+(fX+34)+' '+(fY+105)+' L'+(fX+40)+' '+(fY+118)+' Q'+fX+' '+(fY+125)+' '+(fX-40)+' '+(fY+118)+' Z" fill="#38bdf8" fill-opacity=".25"/>';
+
+ const ttX=fX+75,ttY=fY+110;
+ svg+='<rect x="'+ttX+'" y="'+ttY+'" width="14" height="45" rx="7" fill="url(#flaskGrad)" stroke="#94a3b8"/>';
+ svg+='<rect x="'+(ttX+1.5)+'" y="'+(ttY+18)+'" width="11" height="24" rx="5" fill="#38bdf8" fill-opacity=".2"/>';
+ svg+='<text x="'+(ttX+7)+'" y="'+(ttY+32)+'" text-anchor="middle" fill="#4ade80" font-size="6.5" font-weight="bold">AgNO₃ ✓</text>';
+ svg+='<text x="'+(ttX+7)+'" y="'+(ttY+62)+'" text-anchor="middle" fill="#86efac" font-size="7">0.0 ppm Cl⁻</text>';
+
+ svg+='<text x="'+fX+'" y="295" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">2. GOOCH VACUUM FILTRATION</text>';
+
+ // 3. RIGHT STATION: 4-Decimal Analytical Balance
+ const abX=540,abY=120,abW=145,abH=150;
+ svg+='<rect x="'+abX+'" y="'+abY+'" width="'+abW+'" height="'+abH+'" rx="4" fill="#0f172a" fill-opacity=".7" stroke="#334155" stroke-width="1.5"/>';
+ svg+='<rect x="'+(abX+5)+'" y="'+(abY+5)+'" width="'+(abW-10)+'" height="85" fill="#ffffff" fill-opacity=".04" stroke="#475569" stroke-width="1"/>';
+ const panX=abX+abW/2;
+ svg+='<rect x="'+(panX-25)+'" y="'+(abY+70)+'" width="50" height="4" fill="#e2e8f0" stroke="#94a3b8"/>';
+ svg+='<rect x="'+(panX-3)+'" y="'+(abY+74)+'" width="6" height="16" fill="#64748b"/>';
+
+ const cbX=panX-14,cbY=abY+45;
+ svg+='<path d="M'+cbX+' '+cbY+' L'+(cbX+3)+' '+(cbY+25)+' L'+(cbX+25)+' '+(cbY+25)+' L'+(cbX+28)+' '+cbY+' Z" fill="#1e293b" stroke="#cbd5e1" stroke-width="1.2"/>';
+ svg+='<rect x="'+(cbX+5)+' " y="'+(cbY+16)+'" width="18" height="7" fill="url(#pptCake)" rx="1"/>';
+
+ const conY=abY+95;
+ svg+='<rect x="'+(abX+10)+'" y="'+conY+'" width="'+(abW-20)+'" height="'+(abH-105)+'" rx="3" fill="#020617" stroke="#1e293b"/>';
+ svg+='<rect x="'+(abX+16)+'" y="'+(conY+6)+'" width="'+(abW-32)+'" height="24" rx="2" fill="#061c10" stroke="#14532d"/>';
+ const dispText=m_ppt>0?m_ppt.toFixed(4)+' g':'0.0000 g';
+ svg+='<text x="'+(abX+abW-22)+'" y="'+(conY+23)+'" text-anchor="end" fill="#4ade80" font-size="12" font-family="monospace" font-weight="bold">'+dispText+'</text>';
+ svg+='<text x="'+(abX+20)+'" y="'+(conY+14)+'" fill="#15803d" font-size="6">TARE NET</text>';
+
+ svg+='<text x="'+(abX+20)+'" y="'+(conY+38)+'" fill="#94a3b8" font-size="7">Product: BaSO₄ (dry)</text>';
+ svg+='<text x="'+(abX+abW-20)+'" y="'+(conY+38)+'" text-anchor="end" fill="#86efac" font-size="7">Yield: 100.0%</text>';
+
+ svg+='<text x="'+panX+'" y="295" text-anchor="middle" fill="#4ade80" font-size="9" font-weight="bold">3. ANALYTICAL BALANCE (±0.1 mg)</text>';
+
+ svg+=text(360,312,'Quantitative Metathesis: Limiting SO₄²⁻ governs isolated dry BaSO₄ mass. All excess Ba²⁺ remains dissolved.','#789c80',8.5);
+ return svg;
+}
+
+function drawLimitingCompareView(p,rawVal){
+ let svg='<rect x="0" y="0" width="720" height="320" fill="#08140c"/>';
+ svg+=text(360,24,'ANALYTICAL METROLOGY COMPARISON: QUANTITATIVE SULFATE DETERMINATION','#86efac',12);
+
+ const cards=[
+  {
+   title:'1. Gravimetric Precipitation',
+   sub:'Classical Absolute Primary Method',
+   color:'#86efac',
+   border:'#254d33',
+   items:[
+    'Principle: Ba²⁺ + SO₄²⁻ ⟶ BaSO₄(s)↓',
+    'Mass isolated via sintered glass Gooch crucible',
+    'Primary method: No calibration standards needed',
+    'Analytical Precision: ±0.0001 g (±0.1 mg)',
+    'Dynamic Range: 10 mg to 5.0 g sulfate',
+    'Analysis Time: 90–120 minutes (digestion/drying)',
+    'Systematic Biases: Coprecipitation, slight K_sp loss'
+   ]
+  },
+  {
+   title:'2. Turbidimetric Titration',
+   sub:'Optical Rayleigh-Gans Scattering',
+   color:'#38bdf8',
+   border:'#1e3a5f',
+   items:[
+    'Principle: 90° light scattering by micro-crystallites',
+    'Optical scatter intensity: I_scatter ∝ [SO₄²⁻]',
+    'Secondary method: Requires matrix-matched calibration',
+    'Analytical Precision: ±1.5% to ±3.0% RSD',
+    'Dynamic Range: 1.0 mg/L to 40 mg/L (ppm)',
+    'Analysis Time: 1 to 3 minutes per sample',
+    'Systematic Biases: Particle ripening, stirring speed'
+   ]
+  },
+  {
+   title:'3. ICP-OES Emission',
+   sub:'Inductively Coupled Argon Plasma',
+   color:'#fde047',
+   border:'#5a4814',
+   items:[
+    'Principle: Atomic emission lines (S: 180.7 nm, Ba: 455.4 nm)',
+    'Thermal atomization & ionization at 7000–8000 K',
+    'Instrumental method: Multi-element calibration curve',
+    'Analytical Precision: ±0.5% to ±1.0% RSD',
+    'Dynamic Range: 5 μg/L to 100 mg/L (ppb to ppm)',
+    'Analysis Time: 30 seconds per injection',
+    'Systematic Biases: Plasma drift, spectral interferences'
+   ]
+  }
+ ];
+
+ cards.forEach((c,idx)=>{
+  const x=25+idx*230,y=46,w=210,h=242;
+  svg+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="6" fill="#0d1f14" stroke="'+c.border+'" stroke-width="1.5"/>';
+  svg+='<rect x="'+(x+8)+'" y="'+(y+8)+'" width="'+(w-16)+'" height="32" rx="4" fill="#051009"/>';
+  svg+='<text x="'+(x+w/2)+'" y="'+(y+22)+'" text-anchor="middle" fill="'+c.color+'" font-size="9.5" font-weight="bold">'+c.title+'</text>';
+  svg+='<text x="'+(x+w/2)+'" y="'+(y+34)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5">'+c.sub+'</text>';
+
+  c.items.forEach((item,ii)=>{
+   const iy=y+54+ii*26;
+   svg+='<circle cx="'+(x+16)+'" cy="'+(iy-3)+'" r="2" fill="'+c.color+'"/>';
+   svg+='<foreignObject x="'+(x+24)+'" y="'+(iy-10)+'" width="'+(w-32)+'" height="26"><p xmlns="http://www.w3.org/1999/xhtml" style="font-size:7.5px;color:#cbd5e1;line-height:1.2;margin:0">'+item+'</p></foreignObject>';
+  });
+ });
+
+ svg+=text(360,305,'Comparison: Classical gravimetry provides absolute primary SI traceability without calibration curve drift.','#789c80',9);
+ return svg;
+}
+
+function drawLimitingSandboxView(p,rawVal){
+ const v=p.input;
+ const m_ppt=rawVal;
+ let svg='<rect x="0" y="0" width="720" height="320" fill="#08140c"/>';
+ svg+=text(360,22,'STOICHIOMETRIC RESPONSE & EQUIVALENCE PLATEAU: Ba²⁺ + SO₄²⁻ ⟶ BaSO₄↓','#86efac',12);
+
+ // Left Plot: Precipitate mass vs added Na2SO4 volume (0 to 40 mL)
+ const pX=55,pY=48,pW=420,pH=225;
+ svg+='<rect x="'+pX+'" y="'+pY+'" width="'+pW+'" height="'+pH+'" fill="#061209" stroke="#1f3b28" rx="4"/>';
+
+ const mapX=vol=>pX+(vol/40.0)*pW;
+ const mapY=mass=>pY+pH-(mass/0.85)*pH;
+
+ // Draw Equivalence zone line at V = 30.0 mL (3.00 mmol)
+ const eqX=mapX(30.0);
+ svg+='<line x1="'+eqX+'" y1="'+pY+'" x2="'+eqX+'" y2="'+(pY+pH)+'" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,3"/>';
+ svg+='<text x="'+eqX+'" y="'+(pY+15)+'" text-anchor="middle" fill="#ef4444" font-size="8" font-weight="bold">EQUIVALENCE POINT (V = 30.0 mL)</text>';
+
+ // Linear stoichiometric line (0 to 30 mL) and plateau line (30 to 40 mL)
+ const p0=[mapX(0),mapY(0)];
+ const pEq=[mapX(30.0),mapY(0.7002)];
+ const pEnd=[mapX(40.0),mapY(0.7002)];
+ svg+='<polyline points="'+p0[0]+','+p0[1]+' '+pEq[0]+','+pEq[1]+' '+pEnd[0]+','+pEnd[1]+'" fill="none" stroke="#38bdf8" stroke-width="2.5"/>';
+
+ // Grid lines & labels
+ [10,20,30,40].forEach(vol=>{
+  svg+='<line x1="'+mapX(vol)+'" y1="'+pY+'" x2="'+mapX(vol)+'" y2="'+(pY+pH)+'" stroke="#16291c" stroke-width="1"/>';
+  svg+='<text x="'+mapX(vol)+'" y="'+(pY+pH+14)+'" text-anchor="middle" fill="#789c80" font-size="8.5">'+vol+' mL</text>';
+ });
+ [0.2,0.4,0.6,0.8].forEach(mass=>{
+  svg+='<line x1="'+pX+'" y1="'+mapY(mass)+'" x2="'+(pX+pW)+'" y2="'+mapY(mass)+'" stroke="#16291c" stroke-width="1"/>';
+  svg+='<text x="'+(pX-6)+'" y="'+(mapY(mass)+3)+'" text-anchor="end" fill="#789c80" font-size="8.5">'+mass.toFixed(1)+' g</text>';
+ });
+
+ // Shaded regimes
+ svg+='<text x="'+(pX+110)+'" y="'+(pY+pH-40)+'" text-anchor="middle" fill="#38bdf8" font-size="8.5" font-weight="bold">SULFATE LIMITING (Linear)</text>';
+ svg+='<text x="'+(pX+110)+'" y="'+(pY+pH-28)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5">m = 0.02334 · V_SO₄</text>';
+ svg+='<text x="'+(eqX+45)+'" y="'+(mapY(0.7002)-10)+'" text-anchor="middle" fill="#fde047" font-size="8.5" font-weight="bold">BARIUM LIMITING (Plateau)</text>';
+ svg+='<text x="'+(eqX+45)+'" y="'+(mapY(0.7002)+14)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5">m_max = 0.7002 g</text>';
+
+ // Active current operating point
+ const curX=mapX(v);
+ const curY=mapY(m_ppt);
+ svg+='<circle cx="'+curX+'" cy="'+curY+'" r="6" fill="#4ade80" stroke="#08140c" stroke-width="2"/>';
+ svg+='<circle cx="'+curX+'" cy="'+curY+'" r="9" fill="none" stroke="#4ade80" stroke-width="1.2" stroke-opacity=".6"/>';
+ svg+='<line x1="'+curX+'" y1="'+curY+'" x2="'+curX+'" y2="'+(pY+pH)+'" stroke="#4ade80" stroke-dasharray="2,2"/>';
+
+ // Right Sidebar: Stoichiometric Balance & Baryte Crystallography
+ const sX=490,sY=48,sW=205,sH=225;
+ svg+='<rect x="'+sX+'" y="'+sY+'" width="'+sW+'" height="'+sH+'" rx="5" fill="#101e14" stroke="#254d33" stroke-width="1.5"/>';
+ svg+='<text x="'+(sX+sW/2)+'" y="'+(sY+18)+'" text-anchor="middle" fill="#86efac" font-size="9.5" font-weight="bold">STOICHIOMETRIC STATUS</text>';
+ svg+='<line x1="'+(sX+15)+'" y1="'+(sY+25)+'" x2="'+(sX+sW-15)+'" y2="'+(sY+25)+'" stroke="#1f3b28"/>';
+
+ const n_SO4=(0.1000*v);
+ const n_Ba_init=3.000;
+ const n_Ba_rem=Math.max(0,n_Ba_init-n_SO4);
+ svg+='<text x="'+(sX+12)+'" y="'+(sY+42)+'" fill="#94a3b8" font-size="8">Initial Ba²⁺ Aliquot: 3.000 mmol</text>';
+ svg+='<text x="'+(sX+12)+'" y="'+(sY+57)+'" fill="#38bdf8" font-size="8">Delivered SO₄²⁻: '+n_SO4.toFixed(3)+' mmol</text>';
+ svg+='<text x="'+(sX+12)+'" y="'+(sY+72)+'" fill="#fde047" font-size="8">Excess Ba²⁺ in soln: '+n_Ba_rem.toFixed(3)+' mmol</text>';
+ svg+='<text x="'+(sX+12)+'" y="'+(sY+87)+'" fill="#4ade80" font-size="8">Precipitated BaSO₄: '+n_SO4.toFixed(3)+' mmol</text>';
+
+ svg+='<rect x="'+(sX+10)+'" y="'+(sY+98)+'" width="'+(sW-20)+'" height="32" rx="3" fill="#061209" stroke="#1f3b28"/>';
+ svg+='<text x="'+(sX+sW/2)+'" y="'+(sY+112)+'" text-anchor="middle" fill="#86efac" font-size="7.5">Limiting Reagent Condition:</text>';
+ svg+='<text x="'+(sX+sW/2)+'" y="'+(sY+124)+'" text-anchor="middle" fill="#38bdf8" font-size="8.5" font-family="monospace">SO₄²⁻ IS LIMITING (100% Yield)</text>';
+
+ svg+='<text x="'+(sX+sW/2)+'" y="'+(sY+148)+'" text-anchor="middle" fill="#86efac" font-size="9" font-weight="bold">BARYTE LATTICE (Pnma)</text>';
+ svg+='<foreignObject x="'+(sX+10)+'" y="'+(sY+154)+'" width="'+(sW-20)+'" height="60"><p xmlns="http://www.w3.org/1999/xhtml" style="font-size:7px;color:#a0aec0;line-height:1.3;margin:0">BaSO₄ crystallizes in the orthorhombic baryte structure where each Ba²⁺ cation is coordinated by 12 oxygen atoms from neighboring tetrahedral SO₄²⁻ anions, providing immense thermodynamic lattice enthalpy (ΔH_lat = −2469 kJ/mol) and insoluble stability.</p></foreignObject>';
+
+ svg+=text(360,305,'Sandbox: Beyond 30.0 mL, Ba²⁺ becomes limiting and precipitate mass plateaus at 0.7002 g.','#789c80',9);
+ return svg;
+}
 

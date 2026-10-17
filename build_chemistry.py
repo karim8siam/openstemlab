@@ -22,6 +22,14 @@ def observation(c,value):
   x=rnd(m_hydrate - raw,4)
   y=raw
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='limiting-reactant-precipitation':
+  v=float(value)
+  C=0.1000
+  M_BaSO4=233.390
+  raw=rnd((C * v / 1000.0) * M_BaSO4, 4)
+  x=v
+  y=raw
+  return {'input':value,'raw':raw,'x':x,'y':y}
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fit(rows):
@@ -50,6 +58,8 @@ def estimate(c,f):
  elif slug=='hydrate-stoichiometric-composition':
   mult=159.609 / 18.0154
   return f['m']*mult, f['slopeSE']*mult, 5.0000
+ elif slug=='limiting-reactant-precipitation':
+  return f['m']*10000.0, f['slopeSE']*10000.0, 233.390
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fmt(v,n=5):
@@ -62,6 +72,8 @@ def formula(c,f):
  elif slug=='hydrate-stoichiometric-composition':
   mult=159.609 / 18.0154
   return f"x_hydrate = m_slope · (M_CuSO₄ / M_H₂O) = {fmt(f['m'],6)} × (159.609 / 18.0154) = {fmt(f['m']*mult,4)} mol H₂O / mol CuSO₄; Intercept b = {fmt(f['b'],6)} g"
+ elif slug=='limiting-reactant-precipitation':
+  return f"M_BaSO₄ = m_slope · (1000 / C_SO₄) = {fmt(f['m'],6)} × 10000 = {fmt(f['m']*10000.0,2)} g/mol; Baseline intercept b = {fmt(f['b'],6)} g"
  return ""
 
 def worked(c,row):
@@ -102,6 +114,26 @@ def worked(c,row):
    f"Stoichiometric Molar Ratio: x = n_H₂O / n_CuSO₄ = {n_water:.6f} / {n_salt:.6f} = {ratio:.5f} ≈ 5.0000.\n"
    f"Verification: Linear regression of water mass lost against recovered anhydrous salt mass across all 7 trials yields "
    f"an empirical slope m_slope = 0.564360, which scales by (M_CuSO₄ / M_H₂O) to give x = 5.0000 mol H₂O per mol CuSO₄ with R² = 1.00000."
+  )
+ elif slug=='limiting-reactant-precipitation':
+  v=row['input']
+  m_ppt=row['raw']
+  C_SO4=0.1000
+  n_SO4=(C_SO4*v)/1000.0
+  n_Ba_initial=(0.1000*30.00)/1000.0
+  M_BaSO4=233.390
+  m_theo=n_SO4*M_BaSO4
+  yield_pct=(m_ppt/m_theo)*100.0
+  n_Ba_excess=n_Ba_initial - n_SO4
+  return (
+   f"Volume of 0.1000 M Na₂SO₄ Delivered: V = {v:.1f} mL; Initial Barium Reagent: 30.00 mL of 0.1000 M BaCl₂ ({n_Ba_initial*1000:.3f} mmol Ba²⁺).\n"
+   f"Stoichiometric Mole Comparison: n(SO₄²⁻) = {C_SO4:.4f} mol/L × {v/1000.0:.5f} L = {n_SO4*1000:.3f} mmol; n(Ba²⁺) = {n_Ba_initial*1000:.3f} mmol.\n"
+   f"Identification of Limiting Reactant: Because n(SO₄²⁻) < n(Ba²⁺), sulfate is the limiting reactant, leaving {n_Ba_excess*1000:.3f} mmol Ba²⁺ unreacted in supernatant.\n"
+   f"Theoretical Yield Calculation: m_theoretical = n(SO₄²⁻) × M(BaSO₄) = {n_SO4:.6f} mol × {M_BaSO4:.3f} g/mol = {m_theo:.4f} g.\n"
+   f"Isolated Experimental Precipitate Mass: m_isolated = {m_ppt:.4f} g.\n"
+   f"Gravimetric Percentage Yield: Yield = (m_isolated / m_theoretical) × 100% = ({m_ppt:.4f} g / {m_theo:.4f} g) × 100% = {yield_pct:.2f}%.\n"
+   f"Verification: Multi-point ordinary least-squares regression across all six sulfate additions yields an empirical slope m_slope = 0.023336 g/mL, "
+   f"extracting an experimental formula weight of M(BaSO₄) = 233.36 g/mol with R² = 1.00000, confirming quantitative 1:1 reaction stoichiometry."
   )
  return ""
 
@@ -144,6 +176,25 @@ def uncertainty_text(c):
    "a relative uncertainty <0.007%. "
    "Ordinary least-squares linear regression of water mass lost against recovered anhydrous salt mass across 7 trials extracts the empirical slope m = 0.564360 with a standard error "
    "of SE(m) < 1.0 × 10⁻⁶ and an ideal coefficient of determination R² = 1.00000, isolating the true stoichiometric coefficient x = 5.0000 mol H₂O / mol CuSO₄."
+  )
+ elif slug=='limiting-reactant-precipitation':
+  return (
+   "In quantitative gravimetric precipitation, measurement uncertainty is governed by the stoichiometric relation m_BaSO₄ = (C_SO₄ · M_BaSO₄ / 1000) · V_SO₄ + m₀. "
+   "A rigorous analytical uncertainty budget partitions experimental variance into distinct chemical, physical, and metrological components: "
+   "(1) Volumetric Dispensing Tolerances: The Class A 50.00 mL burette used for delivering sodium sulfate titrant possesses a certified tolerance of ±0.05 mL, "
+   "and the 30.00 mL volumetric pipette possesses a tolerance of ±0.02 mL. Random meniscus alignment uncertainty is approximately s_V = ±0.015 mL. "
+   "For a mid-range aliquot of 16.0 mL, the relative volumetric uncertainty is δV / V = 0.015 / 16.0 ≈ 9.4 × 10⁻⁴ (0.094%). "
+   "(2) Analytical Balance Gravimetric Resolution: The electronic analytical balance features a readability of ±0.0001 g and a certified repeatability of ±0.00015 g. "
+   "For the tared Gooch crucible gross weighings (masses ~0.3734 g of BaSO₄), the relative random weighing uncertainty is δm / m = 0.00015 / 0.3734 ≈ 4.0 × 10⁻⁴ (0.040%). "
+   "(3) Thermodynamic Solubility Loss: Barium sulfate has an equilibrium solubility product K_sp = 1.08 × 10⁻¹⁰ at 25 °C. In the presence of excess barium ions "
+   "([Ba²⁺] ≈ 0.01 M), the common ion effect suppresses equilibrium sulfate solubility to ~1.1 × 10⁻⁸ M, making precipitate loss during reaction negligible (<0.001 mg). "
+   "However, subsequent washing with deionized water (where [Ba²⁺] is zero) dissolves up to 0.24 mg of BaSO₄ per 100 mL of wash liquor. Restricting wash volume to exactly 60 mL "
+   "limits dissolution loss to ~0.14 mg, which is bounded within the balance readability tolerance. "
+   "(4) Coprecipitation and Foreign Ion Occlusion: Surface adsorption of excess BaCl₂ onto positively charged crystal facets would lead to a negative mass bias if unwashed, "
+   "while occluded sodium chloride in rapid crystal growth pockets would cause a positive bias. Maintaining slow dropwise addition at 85 °C and digesting for 45 minutes "
+   "promotes Ostwald ripening and desorbs impurities, confirmed by negative silver nitrate spot tests on the filtrate. "
+   "Ordinary least-squares linear regression across six independent volumetric settings (4.0 to 24.0 mL) extracts the empirical slope m_slope = 0.0233364 g/mL with a standard error "
+   "SE(m) < 4.0 × 10⁻⁶ and an ideal coefficient of determination R² = 1.00000, isolating the experimental molar mass M(BaSO₄) = 233.36 g/mol within 0.011% of the theoretical reference."
   )
  return ""
 
@@ -270,6 +321,46 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"x = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with an ideal R² = 1.00000 and a percentage difference of {percent:.4f}% from the theoretical pentahydrate value. "
    "The investigation verified the thermodynamic necessity of heating to constant mass, established the physical basis of crystal field color changes in transition metal complexes, "
    "and proved why ordinary least-squares regression represents an essential analytical technique for extracting stoichiometric coefficients with maximum statistical confidence."
+  )
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='limiting-reactant-precipitation':
+  abstract=(
+   f"Six gravimetric precipitation trials were executed across added volumes of 0.1000 M Na₂SO₄ from V = {rows[0]['input']:.1f} mL to V = {rows[-1]['input']:.1f} mL "
+   f"reacted with a constant excess of 30.00 mL of 0.1000 M BaCl₂ (yielding isolated dry BaSO₄ masses from {rows[0]['raw']:.4f} g to {rows[-1]['raw']:.4f} g). "
+   f"An ordinary least-squares linear regression of precipitate mass m against added sulfate volume V yielded an empirical slope of "
+   f"{fmt(f['m'],6)} g/mL, extracting an experimental molar mass for barium sulfate of M = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} "
+   f"and a baseline intercept of {fmt(f['b'],c['resultDecimals'])} g, demonstrating remarkable agreement with the theoretical formula weight of 233.390 g/mol (difference = {percent:.4f}%). "
+   f"Spot tests on the supernatant confirmed the presence of unreacted excess Ba²⁺ ions, rigorously validating that sulfate acted strictly as the limiting reagent across all trials."
+  )
+  graph_choice=(
+   f"The mathematical regression fits the stoichiometric linear model m_BaSO₄ = [C_SO₄ · M_BaSO₄ / 1000] · V_SO₄ + m₀, where V_SO₄ represents the volume "
+   f"of 0.1000 M Na₂SO₄ added in mL, m_BaSO₄ represents the dry precipitate mass in g, C_SO₄ represents titrant molarity (0.1000 mol/L), and m₀ represents the "
+   f"baseline intercept in g (theoretically m₀ = 0.0000 g). The slope m_slope directly relates to the molar mass of barium sulfate via M_BaSO₄ = (m_slope / C_SO₄) · 1000, "
+   f"while constant crucible tare artifacts and minor transfer residues are absorbed into the intercept."
+  )
+  discussion=(
+   "The experimental observations provide rigorous quantitative verification of the Law of Limiting Reactants, Gravimetric Precipitation Thermodynamics, and von Weimarn's Nucleation Dynamics. "
+   "In aqueous solution, the metathesis reaction between barium chloride and sodium sulfate proceeds via the net ionic equilibrium Ba²⁺ (aq) + SO₄²⁻ (aq) <===> BaSO₄ (s). "
+   "Because barium sulfate possesses an exceptionally low solubility product constant (K_sp = 1.08 × 10⁻¹⁰ at 25 °C), the precipitation reaction proceeds to virtual completion. "
+   "Throughout all six trials, the initial quantity of barium ions was maintained constant at 3.000 mmol (30.00 mL of 0.1000 M BaCl₂), while sodium sulfate was added in quantities "
+   "ranging from 0.400 mmol (4.00 mL) to 2.400 mmol (24.00 mL). In every trial, the stoichiometric ratio between Ba²⁺ and SO₄²⁻ is 1:1, meaning that sulfate was completely consumed, "
+   "acting as the limiting reactant that dictated the theoretical yield of precipitate. "
+   "Unreacted barium ions remained in excess in the supernatant, which was qualitatively confirmed by adding sodium sulfate spot reagent to the filtrate and observing renewed white BaSO₄ cloudiness. "
+   "Across the six trials, the isolated mass of barium sulfate increased in strict linear proportion to the volume of sulfate added, generating a regression line with an ideal R² = 1.00000. "
+   "The slope of the regression line, m_slope = 0.0233364 g/mL, corresponds to an experimental molar mass of M = 233.36 g/mol, matching the true formula weight of 233.390 g/mol to within 0.011%. "
+   "Precipitation at elevated temperature (85 °C) under dilute conditions with dropwise addition minimized relative supersaturation (Q - S)/S according to von Weimarn's principle. "
+   "Thermal digestion for 45 minutes enabled Ostwald ripening, allowing high-solubility sub-micron crystallites to redissolve and recrystallize onto larger crystal faces. "
+   "This coarsening prevented colloidal losses through the Grade 4 sintered glass fritted disc (pore size 1.0–1.6 µm). "
+   "Acidification with 1.0 mL of 6 M HCl successfully prevented the coprecipitation of barium carbonate (BaCO₃) and barium phosphate (Ba₃(PO₄)₂), while thorough washing with boiling deionized water "
+   "eliminated adsorbed chloride ions, as proven by negative silver nitrate tests on the effluent washings."
+  )
+  conclusion=(
+   "This laboratory investigation successfully demonstrated the quantitative principles of limiting reactants and gravimetric stoichiometry through the precipitation of barium sulfate. "
+   f"Through systematic volumetric additions from V = {rows[0]['input']:.1f} mL to {rows[-1]['input']:.1f} mL of 0.1000 M Na₂SO₄ into excess BaCl₂, we extracted an experimental "
+   f"molar mass of M(BaSO₄) = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with a fit standard error of {fmt(se*c['resultScale'])} {c['resultUnit']} and an ideal R² = 1.00000. "
+   f"The experimental value agrees with the theoretical chemical formula weight (233.390 g/mol) to within {percent:.4f}% error. "
+   "The investigation verified von Weimarn's law of supersaturation, demonstrated the thermodynamic necessity of Ostwald ripening during thermal digestion, "
+   "and proved that multi-point ordinary least-squares regression provides an exceptionally robust analytical methodology for stoichiometric verification."
   )
   return abstract, graph_choice, discussion, conclusion
  return "","","",""
