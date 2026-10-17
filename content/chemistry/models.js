@@ -100,6 +100,16 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:1.0,x,y,valid:n>=0.020&&n<=0.070};
  }
+ if(slug==='hess-law-magnesium-calorimetry'){
+  const m=Number(input);
+  const M_Mg=24.305;
+  const C_eff=0.44365;
+  const dH1=462.00;
+  const raw=round((dH1 * m) / (M_Mg * C_eff), 3);
+  const x=m;
+  const y=raw;
+  return {raw,ideal:raw,period:1.0,x,y,valid:m>=0.100&&m<=0.350};
+ }
  throw Error('Unknown Chemistry experiment predict: '+slug);
 }
 
@@ -148,6 +158,10 @@ function reading(slug,input,raw){
   y=Number(raw);
  }
  if(slug==='solution-calorimetry-neutralization'){
+  x=Number(input);
+  y=Number(raw);
+ }
+ if(slug==='hess-law-magnesium-calorimetry'){
   x=Number(input);
   y=Number(raw);
  }
@@ -237,6 +251,16 @@ function estimate(slug,f){
   const dH_est= -f.m * C_eff;
   const se=f.slopeSE * C_eff;
   return {value:dH_est,se:se,reference:-55.84};
+ }
+ if(slug==='hess-law-magnesium-calorimetry'){
+  const M_Mg=24.305;
+  const C_eff=0.44365;
+  const dH1_est= -f.m * M_Mg * C_eff;
+  const dH2= -146.00;
+  const dH3= -285.83;
+  const dHf_est= dH1_est - dH2 + dH3;
+  const se= f.slopeSE * M_Mg * C_eff;
+  return {value:dHf_est,se:se,reference:-601.83};
  }
  throw Error('Unknown Chemistry experiment estimate: '+slug);
 }

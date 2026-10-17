@@ -81,7 +81,8 @@ def experiment_index(experiments):
     'liquid-viscosity-poiseuille':'liquid dynamic viscosity hagen poiseuille capillary flow hydrostatic head water jacket newton shear stress laminar reynolds number ostwald falling sphere rotational couette',
     'surface-tension-stalagmometry':'surface tension drop weight stalagmometry traube tate law harkins jordan correction rayleigh plateau neck pinch off du nouy ring wilhelmy plate capillary rise interfacial thermodynamics',
     'colligative-freezing-point-depression':'colligative properties freezing point depression cryoscopy beckmann differential thermometer cyclohexane biphenyl raoult law chemical potential plastic crystal supercooling latent heat fusion ebulliometry osmometry',
-    'solution-calorimetry-neutralization':'solution calorimetry enthalpy of neutralization acid base dewar dewar flask thermistor thermochemistry hess law heat of reaction hydronium hydroxide strong acid strong base adiabatic temperature rise cooling curve heat capacity'}
+    'solution-calorimetry-neutralization':'solution calorimetry enthalpy of neutralization acid base dewar dewar flask thermistor thermochemistry hess law heat of reaction hydronium hydroxide strong acid strong base adiabatic temperature rise cooling curve heat capacity',
+    'hess-law-magnesium-calorimetry':'hess law thermochemistry magnesium oxide enthalpy of formation calorimetry dewar state function thermochemical cycle regnault pfaundler adiabatic extrapolation heat of reaction enthalpy change standard enthalpy'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):

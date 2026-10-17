@@ -44,6 +44,9 @@ function update(){
  }else if(cfg.slug==='solution-calorimetry-neutralization'){
   $('liveState').textContent='Ready to neutralize '+p.input.toFixed(3)+' mol H3O+/OH- in 100 mL solution.';
   message('Set stoichiometric moles n, dispense 50 mL acid & 50 mL base, seal Dewar & log temperature rise ΔT.');
+ }else if(cfg.slug==='hess-law-magnesium-calorimetry'){
+  $('liveState').textContent='Ready to dissolve '+p.input.toFixed(3)+' g Mg ribbon in 100 mL 1.0 M HCl.';
+  message('Set magnesium mass m_Mg, abrade ribbon, charge into Dewar & monitor exothermic rise ΔT₁.');
  }else{
   $('liveState').textContent='Ready to dispense '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+' of liquid.';
   message('Adjust '+cfg.shortInput+' V, then weigh the dispensed aliquot.');
@@ -74,6 +77,7 @@ $('measure').onclick=async()=>{
  if(cfg.slug==='surface-tension-stalagmometry') msgStart='Forming quasi-static pendent drops at 20.0 °C, detaching at razor tip, collecting into stoppered bottle…';
  if(cfg.slug==='colligative-freezing-point-depression') msgStart='Cooling in ice bath, stirring at 60 strokes/min, supercooling & extrapolating plateau…';
  if(cfg.slug==='solution-calorimetry-neutralization') msgStart='Dispensing base into Dewar, sealing lid, stirring at 200 rpm, logging exothermic adiabatic curve…';
+ if(cfg.slug==='hess-law-magnesium-calorimetry') msgStart='Dropping polished Mg ribbon into 1.0 M HCl, sealing lid, vigorous H2 evolution & logging ΔT₁…';
  message(msgStart);
  await new Promise(resolve=>setTimeout(resolve,400));
  const raw=prediction.raw;
@@ -110,6 +114,13 @@ $('measure').onclick=async()=>{
  }else if(cfg.slug==='solution-calorimetry-neutralization'){
   $('liveState').textContent='Neutralization complete: ΔT = '+raw.toFixed(3)+' °C for '+p.input.toFixed(3)+' mol reacted.';
   message('Calorimetric measurement complete: ΔT = '+raw.toFixed(3)+' °C (q_rxn = '+(0.44365*raw).toFixed(3)+' kJ, ΔH = '+(-0.44365*raw/p.input).toFixed(2)+' kJ/mol). Record in notebook.');
+ }else if(cfg.slug==='hess-law-magnesium-calorimetry'){
+  const q_cal = 0.44365 * raw;
+  const n_Mg = p.input / 24.305;
+  const dH1 = -q_cal / n_Mg;
+  const dHf = dH1 - (-146.0) + (-285.83);
+  $('liveState').textContent='Reaction complete: ΔT₁ = '+raw.toFixed(3)+' °C for '+p.input.toFixed(3)+' g Mg.';
+  message('Calorimetric dissolution complete: ΔT₁ = '+raw.toFixed(3)+' °C (ΔH₁ = '+dH1.toFixed(1)+' kJ/mol, Hess ΔH_f°[MgO] = '+dHf.toFixed(1)+' kJ/mol). Record in notebook.');
  }else{
   $('liveState').textContent='Analytical balance stabilized: '+raw.toFixed(cfg.rawDecimals)+' g net mass.';
   message('Gravimetric measurement complete: '+raw.toFixed(cfg.rawDecimals)+' '+cfg.rawUnit+' for '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+'. Record in notebook.');
@@ -339,6 +350,18 @@ function draw(t){
    return;
   }
   $('apparatusDiagram').innerHTML=drawCalorimetryBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='hess-law-magnesium-calorimetry'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawHessCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawHessSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawHessBenchView(p,rawVal);
   return;
  }
  if(currentSimMode==='compare'){
@@ -3184,5 +3207,305 @@ function drawCalorimetrySandboxView(p, rawVal){
  });
 
  svg += text(360, 305, 'Thermodynamic Invariant: Adiabatic extrapolation recovers true zero-leakage chemical enthalpy rise.', '#789c80', 8.5);
+ return svg;
+}
+
+
+// --- LAB 12: HESS'S LAW CALORIMETRY (ENTHALPY OF FORMATION OF MgO) ---
+
+function drawHessBenchView(p, rawVal){
+ const m = (p && p.input) ? p.input : 0.200;
+ const M_Mg = 24.305;
+ const C_eff = 0.44365;
+ const dt = rawVal !== null ? rawVal : (462.00 * m / (M_Mg * C_eff));
+ const T_init = 25.000;
+ const T_max = T_init + dt;
+ const n_Mg = m / M_Mg;
+ const q_rxn = C_eff * dt;
+ const dH1 = -q_rxn / n_Mg;
+ const dH2 = -146.00;
+ const dH3 = -285.83;
+ const dHf = dH1 - dH2 + dH3;
+
+ let svg = '';
+ svg += '<rect x="0" y="0" width="720" height="320" fill="#051009"/>';
+ svg += text(360, 24, 'HESS THERMOCHEMICAL CYCLE: ENTHALPY OF FORMATION OF MAGNESIUM OXIDE', '#4ade80', 13);
+ svg += text(360, 39, 'Reaction 1: Mg(s) + 2 HCl(aq) -> MgCl2(aq) + H2(g) | Hess Target: Mg(s) + 1/2 O2(g) -> MgO(s)', '#94a3b8', 9);
+
+ // --- LEFT PANEL: VACUUM DEWAR REACTION CELL WITH H2 EVOLUTION ---
+ const dX = 140, dY = 70;
+ // Outer protective jacket
+ svg += '<rect x="'+(dX-65)+'" y="'+(dY+20)+'" width="130" height="180" rx="8" fill="#1e293b" stroke="#334155" stroke-width="2"/>';
+ svg += '<text x="'+dX+'" y="'+(dY+190)+'" text-anchor="middle" fill="#64748b" font-size="7.5">Vacuum-Jacketed Reaction Cell</text>';
+
+ // Silvered vacuum jacket
+ svg += '<path d="M '+(dX-52)+' '+(dY+30)+' L '+(dX-52)+' '+(dY+165)+' Q '+(dX-52)+' '+(dY+175)+' '+(dX-42)+' '+(dY+175)+' L '+(dX+42)+' '+(dY+175)+' Q '+(dX+52)+' '+(dY+175)+' '+(dX+52)+' '+(dY+30)+'" fill="none" stroke="#94a3b8" stroke-width="5" stroke-opacity="0.4"/>';
+ svg += '<path d="M '+(dX-46)+' '+(dY+30)+' L '+(dX-46)+' '+(dY+160)+' Q '+(dX-46)+' '+(dY+168)+' '+(dX-38)+' '+(dY+168)+' L '+(dX+38)+' '+(dY+168)+' Q '+(dX+46)+' '+(dY+168)+' '+(dX+46)+' '+(dY+30)+'" fill="#0b1712" stroke="#38bdf8" stroke-width="1.5"/>';
+
+ // Liquid fill (100 mL 1.0 M HCl)
+ const liqTop = dY + 90;
+ svg += '<path d="M '+(dX-44)+' '+liqTop+' L '+(dX-44)+' '+(dY+158)+' Q '+(dX-44)+' '+(dY+166)+' '+(dX-36)+' '+(dY+166)+' L '+(dX+36)+' '+(dY+166)+' Q '+(dX+44)+' '+(dY+166)+' '+(dX+44)+' '+liqTop+' Z" fill="#0284c7" fill-opacity="0.3"/>';
+ svg += '<ellipse cx="'+dX+'" cy="'+liqTop+'" rx="44" ry="4" fill="#38bdf8" fill-opacity="0.4"/>';
+ svg += '<text x="'+dX+'" y="'+(liqTop+24)+'" text-anchor="middle" fill="#bae6fd" font-size="7.5" font-weight="bold">100.0 mL 1.0 M HCl(aq)</text>';
+
+ // Evolving H2 bubbles rising through acid
+ const bubbles = [
+  {bx: dX - 18, by: liqTop + 55, r: 2.2},
+  {bx: dX - 8,  by: liqTop + 38, r: 3.0},
+  {bx: dX - 22, by: liqTop + 25, r: 2.5},
+  {bx: dX + 12, by: liqTop + 48, r: 2.8},
+  {bx: dX + 6,  by: liqTop + 30, r: 3.2},
+  {bx: dX + 22, by: liqTop + 20, r: 2.0}
+ ];
+ bubbles.forEach(b=>{
+  svg += '<circle cx="'+b.bx+'" cy="'+b.by+'" r="'+b.r+'" fill="#bae6fd" fill-opacity="0.7" stroke="#38bdf8" stroke-width="0.8"/>';
+ });
+ svg += '<text x="'+(dX-20)+'" y="'+(liqTop+42)+'" fill="#e0f2fe" font-size="6.5">H2(g) ↑</text>';
+
+ // Dissolving Mg ribbon segments at bottom
+ svg += '<rect x="'+(dX-18)+'" y="'+(dY+158)+'" width="12" height="3" rx="1" fill="#e2e8f0" stroke="#94a3b8"/>';
+ svg += '<rect x="'+(dX+6)+'" y="'+(dY+160)+'" width="10" height="3" rx="1" fill="#cbd5e1" stroke="#94a3b8"/>';
+ svg += '<text x="'+dX+'" y="'+(dY+170)+'" text-anchor="middle" fill="#cbd5e1" font-size="6.5">Polished Mg Ribbon</text>';
+
+ // Insulated PTFE lid with vent port
+ svg += '<rect x="'+(dX-60)+'" y="'+(dY+15)+'" width="120" height="18" rx="3" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1.5"/>';
+ svg += '<text x="'+(dX-40)+'" y="'+(dY+27)+'" fill="#1e293b" font-size="7" font-weight="bold">PTFE LID</text>';
+
+ // H2 Gas Vent Tube
+ svg += '<rect x="'+(dX+32)+'" y="'+(dY-5)+'" width="6" height="22" fill="#94a3b8"/>';
+ svg += '<path d="M '+(dX+35)+' '+(dY-5)+' Q '+(dX+45)+' '+(dY-18)+' '+(dX+65)+' '+(dY-16)+'" fill="none" stroke="#94a3b8" stroke-width="2"/>';
+ svg += '<text x="'+(dX+70)+'" y="'+(dY-14)+'" fill="#38bdf8" font-size="6.5">Fume Hood Vent</text>';
+
+ // Motorized Stirrer
+ svg += '<rect x="'+(dX-5)+'" y="'+(dY-12)+'" width="4" height="145" fill="#94a3b8"/>';
+ svg += '<rect x="'+(dX-12)+'" y="'+(dY+130)+'" width="18" height="7" rx="2" fill="#64748b"/>';
+ // Stirrer motor
+ svg += '<rect x="'+(dX-14)+'" y="'+(dY-24)+'" width="22" height="14" rx="2" fill="#475569" stroke="#334155"/>';
+ svg += '<text x="'+(dX-3)+'" y="'+(dY-14)+'" text-anchor="middle" fill="#f8fafc" font-size="6">200rpm</text>';
+
+ // Digital Thermistor probe
+ svg += '<rect x="'+(dX+16)+'" y="'+(dY+5)+'" width="3" height="130" rx="1" fill="#f59e0b"/>';
+ svg += '<circle cx="'+(dX+17)+'" cy="'+(dY+135)+'" r="2.8" fill="#ef4444"/>';
+ svg += '<path d="M '+(dX+17)+' '+(dY+5)+' Q '+(dX+28)+' '+(dY-18)+' '+(dX+75)+' '+(dY-20)+'" fill="none" stroke="#f59e0b" stroke-width="1.5"/>';
+
+
+ // --- RIGHT PANEL: DIGITAL THERMOMETER & THERMOCHEMICAL AUDIT ---
+ const rX = 260, rY = 55, rW = 435, rH = 240;
+ svg += '<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+
+ // Thermistor Display Readout
+ svg += '<rect x="'+(rX+15)+'" y="'+(rY+12)+'" width="200" height="72" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1.2"/>';
+ svg += '<text x="'+(rX+25)+'" y="'+(rY+26)+'" fill="#86efac" font-size="8" font-weight="bold">DIGITAL THERMISTOR (REACTION 1)</text>';
+ svg += '<text x="'+(rX+25)+'" y="'+(rY+56)+'" fill="#facc15" font-size="22" font-family="monospace" font-weight="bold">'+T_max.toFixed(3)+' °C</text>';
+ svg += '<text x="'+(rX+140)+'" y="'+(rY+44)+'" fill="#94a3b8" font-size="7.5">T_init = '+T_init.toFixed(3)+' °C</text>';
+ svg += '<text x="'+(rX+140)+'" y="'+(rY+56)+'" fill="#ef4444" font-size="7.5" font-weight="bold">ΔT₁ = +'+dt.toFixed(3)+' °C</text>';
+ svg += '<text x="'+(rX+140)+'" y="'+(rY+68)+'" fill="#38bdf8" font-size="7">±0.001 °C Res.</text>';
+
+ // Mini Reaction Thermogram Profile
+ const cX = rX + 225, cY = rY + 12, cW = 195, cH = 72;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1.2"/>';
+ svg += '<text x="'+(cX+8)+'" y="'+(cY+12)+'" fill="#94a3b8" font-size="7">Dissolution Thermogram (Pre/Reaction/Post)</text>';
+ // baseline
+ svg += '<line x1="'+(cX+12)+'" y1="'+(cY+56)+'" x2="'+(cX+48)+'" y2="'+(cY+56)+'" stroke="#38bdf8" stroke-width="1.5"/>';
+ // rapid rise
+ const peakY = cY + 56 - Math.min(42, dt * 2.7);
+ svg += '<path d="M '+(cX+48)+' '+(cY+56)+' Q '+(cX+56)+' '+(cY+56)+' '+(cX+72)+' '+peakY+'" fill="none" stroke="#ef4444" stroke-width="2"/>';
+ // cooling tail
+ svg += '<path d="M '+(cX+72)+' '+peakY+' L '+(cX+185)+' '+(peakY+8)+'" fill="none" stroke="#f59e0b" stroke-width="1.5"/>';
+ svg += '<text x="'+(cX+185)+'" y="'+(peakY-3)+'" text-anchor="end" fill="#facc15" font-size="6.8" font-weight="bold">Extrapolated ΔT₁ = '+dt.toFixed(3)+' °C</text>';
+
+ // Thermochemical State Matrix Grid
+ const gY = rY + 92;
+ const metrics = [
+  {label: 'Magnesium Ribbon Mass m', val: m.toFixed(4) + ' g (' + (n_Mg*1000).toFixed(2) + ' mmol)', col: '#86efac', sub: 'n_Mg = m / 24.305 g/mol'},
+  {label: 'Dissolution Enthalpy ΔH₁', val: dH1.toFixed(2) + ' kJ/mol', col: '#ef4444', sub: 'Mg + 2HCl -> MgCl2 + H2'},
+  {label: 'Standard Oxide ΔH₂ & Water ΔH₃', val: 'ΔH₂ = −146.00 | ΔH₃ = −285.83', col: '#38bdf8', sub: 'MgO dissolution & H2O formation'},
+  {label: 'Hess Formation Enthalpy ΔH_f°[MgO]', val: dHf.toFixed(2) + ' kJ/mol', col: '#facc15', sub: 'ΔH_f° = ΔH₁ − ΔH₂ + ΔH₃ (Lit: −601.83)'}
+ ];
+
+ metrics.forEach((mi, idx)=>{
+  const mx = rX + 15 + (idx % 2) * 205;
+  const my = gY + Math.floor(idx / 2) * 52;
+  svg += '<rect x="'+mx+'" y="'+my+'" width="195" height="46" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1"/>';
+  svg += '<text x="'+(mx+10)+'" y="'+(my+13)+'" fill="#94a3b8" font-size="7">'+mi.label+'</text>';
+  svg += '<text x="'+(mx+10)+'" y="'+(my+28)+'" fill="'+mi.col+'" font-size="9" font-weight="bold">'+mi.val+'</text>';
+  svg += '<text x="'+(mx+10)+'" y="'+(my+39)+'" fill="#64748b" font-size="6.5">'+mi.sub+'</text>';
+ });
+
+ // Bottom Verification Banner
+ svg += '<rect x="'+(rX+15)+'" y="'+(rY+200)+'" width="405" height="30" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1"/>';
+ svg += '<text x="'+(rX+217)+'" y="'+(rY+218)+'" text-anchor="middle" fill="#4ade80" font-size="8.2" font-family="monospace" font-weight="bold">Hess Law Invariant: ΔH_f° = −m_slope·(10.783) + 146.00 − 285.83 = −601.82 kJ/mol (R² = 1.000)</text>';
+
+ svg += text(360, 310, 'Hess's Law couples solution calorimetry with standard thermochemical cycles to isolate formation enthalpies.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawHessCompareView(p, rawVal){
+ let svg = '';
+ svg += '<rect x="0" y="0" width="720" height="320" fill="#051009"/>';
+ svg += text(360, 24, 'THERMOCHEMICAL ROUTES TO MAGNESIUM OXIDE ENTHALPY', '#4ade80', 13);
+ svg += text(360, 39, 'Hess Solution Cycle vs Direct Elemental Combustion vs Born-Haber Lattice Energy', '#94a3b8', 9);
+
+ const cards = [
+  {
+   title: '1. Hess Solution Cycle (★)',
+   sub: 'Room-Temperature Calorimetry',
+   color: '#4ade80',
+   border: '#166534',
+   items: [
+    'Cycle: ΔH_f° = ΔH₁(Mg) − ΔH₂(MgO) + ΔH₃(H₂O)',
+    'Temperature: Room temperature (25.0 °C ambient)',
+    'Safety: Controlled, non-explosive, gentle H2 evolution',
+    'Stoichiometry: 100% complete dissolution in excess acid',
+    'Apparatus: Low-cost Dewar flask + digital thermistor',
+    'Accuracy: Multi-point regression R² = 1.000, error <0.02%'
+   ]
+  },
+  {
+   title: '2. Direct Elemental Combustion',
+   sub: 'Mg(s) + 1/2 O2(g) -> MgO(s)',
+   color: '#ef4444',
+   border: '#7f1d1d',
+   items: [
+    'Reaction: Blinding, violent exothermic combustion',
+    'Flame Temperature: T > 2800 °C (blinding UV emission)',
+    'Physical Hazard: Severe burns, aerosolized white smoke',
+    'Calorimetry Failure: Violent boiling & massive radiative loss',
+    'Side Reaction: Forms magnesium nitride (3 Mg + N2 -> Mg3N2)',
+    'Verdict: Impossible to measure directly in solution calorimeters'
+   ]
+  },
+  {
+   title: '3. Born-Haber Lattice Cycle',
+   sub: 'Microscopic Ionic Bonding Cycle',
+   color: '#facc15',
+   border: '#854d0e',
+   items: [
+    'Cycle Steps: Sublimation + Ionization + Dissociation + EA + Lattice',
+    'Sublimation of Mg(s): ΔH_sub = +147 kJ/mol',
+    '1st + 2nd Ionization: IE₁ + IE₂ = +2189 kJ/mol',
+    'O2 Dissociation + EA: 1/2 D_O2 + EA₁ + EA₂ = +897 kJ/mol',
+    'Lattice Energy U_L: Highly exothermic U_L = −3840 kJ/mol',
+    'Result: Sums to ΔH_f°[MgO] = −601 kJ/mol from fundamental physics'
+   ]
+  }
+ ];
+
+ cards.forEach((c, idx)=>{
+  const x = 20 + idx * 230, y = 50, w = 220, h = 240;
+  svg += '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="6" fill="#0d1f14" stroke="'+c.border+'" stroke-width="1.5"/>';
+  svg += '<rect x="'+(x+8)+'" y="'+(y+8)+'" width="'+(w-16)+'" height="34" rx="4" fill="#051009"/>';
+  svg += '<text x="'+(x+w/2)+'" y="'+(y+22)+'" text-anchor="middle" fill="'+c.color+'" font-size="9" font-weight="bold">'+c.title+'</text>';
+  svg += '<text x="'+(x+w/2)+'" y="'+(y+35)+'" text-anchor="middle" fill="#94a3b8" font-size="7">'+c.sub+'</text>';
+
+  c.items.forEach((item, ii)=>{
+   const iy = y + 54 + ii * 29;
+   svg += '<circle cx="'+(x+14)+'" cy="'+(iy-3)+'" r="2" fill="'+c.color+'"/>';
+   svg += '<foreignObject x="'+(x+22)+'" y="'+(iy-10)+'" width="'+(w-28)+'" height="29"><p xmlns="http://www.w3.org/1999/xhtml" style="font-size:7.2px;color:#cbd5e1;line-height:1.2;margin:0">'+item+'</p></foreignObject>';
+  });
+ });
+
+ svg += text(360, 305, 'Thermodynamic Invariant: Hess's law bridges macroscopic bench calorimetry with microscopic lattice energy cycles.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawHessSandboxView(p, rawVal){
+ const m = (p && p.input) ? p.input : 0.200;
+ const M_Mg = 24.305;
+ const C_eff = 0.44365;
+ const dt = rawVal !== null ? rawVal : (462.00 * m / (M_Mg * C_eff));
+ const n_Mg = m / M_Mg;
+ const q_rxn = C_eff * dt;
+ const dH1 = -q_rxn / n_Mg;
+ const dH2 = -146.00;
+ const dH3 = -285.83;
+ const dHf = dH1 - dH2 + dH3;
+
+ let svg = '';
+ svg += '<rect x="0" y="0" width="720" height="320" fill="#051009"/>';
+ svg += text(360, 24, 'HESS STATE FUNCTION ENTHALPY LEVEL DIAGRAM & ERROR AUDIT', '#4ade80', 13);
+ svg += text(360, 39, 'Path Independence of Enthalpy (∮ dH = 0) and Adiabatic Midpoint Correction', '#94a3b8', 9);
+
+ // --- LEFT PANEL: ENTHALPY LEVEL DIAGRAM ---
+ const lX = 25, lY = 50, lW = 390, lH = 240;
+ svg += '<rect x="'+lX+'" y="'+lY+'" width="'+lW+'" height="'+lH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+18)+'" text-anchor="middle" fill="#86efac" font-size="9.5" font-weight="bold">THERMODYNAMIC ENTHALPY LEVELS (kJ/mol)</text>';
+
+ const eX = lX + 40, eW = 310;
+ // Vertical Enthalpy Axis
+ svg += '<line x1="'+eX+'" y1="'+(lY+35)+'" x2="'+eX+'" y2="'+(lY+205)+'" stroke="#94a3b8" stroke-width="1.5"/>';
+ svg += '<polygon points="'+eX+','+(lY+30)+' '+(eX-4)+','+(lY+40)+' '+(eX+4)+','+(lY+40)+'" fill="#94a3b8"/>';
+ svg += '<text x="'+(eX-8)+'" y="'+(lY+120)+'" text-anchor="middle" transform="rotate(-90 '+(eX-8)+' '+(lY+120)+')" fill="#94a3b8" font-size="7.5">Standard Enthalpy H° (kJ)</text>';
+
+ // Levels
+ // Level 0: Elements [Mg(s) + 2 HCl(aq) + 1/2 O2(g)] (Top datum: H = 0)
+ const y0 = lY + 50;
+ svg += '<line x1="'+(eX+10)+'" y1="'+y0+'" x2="'+(eX+eW)+'" y2="'+y0+'" stroke="#38bdf8" stroke-width="2"/>';
+ svg += '<text x="'+(eX+15)+'" y="'+(y0-4)+'" fill="#38bdf8" font-size="7.5" font-weight="bold">Mg(s) + 2 HCl(aq) + 1/2 O₂(g) [Initial Elements]</text>';
+ svg += '<text x="'+(eX+eW)+'" y="'+(y0-4)+'" text-anchor="end" fill="#94a3b8" font-size="7">H = 0 kJ</text>';
+
+ // Level 1: Intermediate 1 [MgCl2(aq) + H2(g) + 1/2 O2(g)] (After Reaction 1: -462 kJ)
+ const y1 = lY + 115;
+ svg += '<line x1="'+(eX+10)+'" y1="'+y1+'" x2="'+(eX+eW)+'" y2="'+y1+'" stroke="#ef4444" stroke-width="2"/>';
+ svg += '<text x="'+(eX+15)+'" y="'+(y1-4)+'" fill="#ef4444" font-size="7.5" font-weight="bold">MgCl₂(aq) + H₂(g) + 1/2 O₂(g) [Post-Reaction 1]</text>';
+ svg += '<text x="'+(eX+eW)+'" y="'+(y1-4)+'" text-anchor="end" fill="#f87171" font-size="7">ΔH₁ = '+dH1.toFixed(1)+' kJ</text>';
+
+ // Arrow 1: ΔH1 downwards
+ svg += '<line x1="'+(eX+50)+'" y1="'+(y0+2)+'" x2="'+(eX+50)+'" y2="'+(y1-2)+'" stroke="#ef4444" stroke-width="1.8"/>';
+ svg += '<polygon points="'+(eX+50)+','+y1+' '+(eX+46)+','+(y1-8)+' '+(eX+54)+','+(y1-8)+'" fill="#ef4444"/>';
+ svg += '<text x="'+(eX+56)+'" y="'+((y0+y1)/2+3)+'" fill="#ef4444" font-size="7">ΔH₁ = −462.0 kJ</text>';
+
+ // Level 2: Intermediate 2 [MgCl2(aq) + H2O(l)] (After Reaction 3: -462 - 285.8 = -747.8 kJ)
+ const y2 = lY + 165;
+ svg += '<line x1="'+(eX+10)+'" y1="'+y2+'" x2="'+(eX+eW)+'" y2="'+y2+'" stroke="#f59e0b" stroke-width="2"/>';
+ svg += '<text x="'+(eX+15)+'" y="'+(y2-4)+'" fill="#f59e0b" font-size="7.5" font-weight="bold">MgCl₂(aq) + H₂O(l) [Deep Solution State]</text>';
+
+ // Arrow 3: ΔH3 downwards
+ svg += '<line x1="'+(eX+140)+'" y1="'+(y1+2)+'" x2="'+(eX+140)+'" y2="'+(y2-2)+'" stroke="#f59e0b" stroke-width="1.8"/>';
+ svg += '<polygon points="'+(eX+140)+','+y2+' '+(eX+136)+','+(y2-8)+' '+(eX+144)+','+(y2-8)+'" fill="#f59e0b"/>';
+ svg += '<text x="'+(eX+146)+'" y="'+((y1+y2)/2+3)+'" fill="#f59e0b" font-size="7">ΔH₃ = −285.8 kJ</text>';
+
+ // Level 3: Target Product [MgO(s) + 2 HCl(aq)] (Step up from Level 2 by -ΔH2 = +146 kJ: -747.8 + 146 = -601.8 kJ)
+ const y3 = lY + 140;
+ svg += '<line x1="'+(eX+160)+'" y1="'+y3+'" x2="'+(eX+eW)+'" y2="'+y3+'" stroke="#4ade80" stroke-width="2.5"/>';
+ svg += '<text x="'+(eX+170)+'" y="'+(y3-4)+'" fill="#4ade80" font-size="7.5" font-weight="bold">MgO(s) + 2 HCl(aq) [Target Formation State]</text>';
+
+ // Arrow 2: -ΔH2 upwards
+ svg += '<line x1="'+(eX+230)+'" y1="'+(y2-2)+'" x2="'+(eX+230)+'" y2="'+(y3+2)+'" stroke="#38bdf8" stroke-width="1.8"/>';
+ svg += '<polygon points="'+(eX+230)+','+y3+' '+(eX+226)+','+(y3+8)+' '+(eX+234)+','+(y3+8)+'" fill="#38bdf8"/>';
+ svg += '<text x="'+(eX+236)+'" y="'+((y2+y3)/2+3)+'" fill="#38bdf8" font-size="7">−ΔH₂ = +146.0 kJ</text>';
+
+ // Target Direct Formation Arrow (from Level 0 directly to Level 3)
+ svg += '<path d="M '+(eX+290)+' '+(y0+2)+' L '+(eX+290)+' '+(y3-2)+'" stroke="#facc15" stroke-width="2.5" stroke-dasharray="3,2"/>';
+ svg += '<polygon points="'+(eX+290)+','+y3+' '+(eX+286)+','+(y3-8)+' '+(eX+294)+','+(y3-8)+'" fill="#facc15"/>';
+ svg += '<text x="'+(eX+285)+'" y="'+((y0+y3)/2+3)+'" text-anchor="end" fill="#facc15" font-size="7.5" font-weight="bold">ΔH_f°[MgO] = −601.8 kJ</text>';
+
+ // Bottom cycle formula
+ svg += '<rect x="'+(lX+15)+'" y="'+(lY+198)+'" width="'+(lW-30)+'" height="32" rx="3" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+218)+'" text-anchor="middle" fill="#86efac" font-size="8.2" font-family="monospace" font-weight="bold">∮ dH = ΔH₁ + ΔH₃ − ΔH₂ − ΔH_f° = 0 => ΔH_f° = −601.82 kJ/mol</text>';
+
+
+ // --- RIGHT PANEL: SOURCES OF BIAS & MITIGATION AUDIT ---
+ const rX = 425, rY = 50, rW = 275, rH = 240;
+ svg += '<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<text x="'+(rX+rW/2)+'" y="'+(rY+18)+'" text-anchor="middle" fill="#86efac" font-size="9.5" font-weight="bold">SOURCES OF BIAS & SYSTEM AUDIT</text>';
+
+ const lossItems = [
+  {label: 'Magnesium Surface Oxide', desc: 'Emery cloth polishing removes unreactive MgO/Mg(OH)2', val: 'Passivation eliminated', col: '#4ade80'},
+  {label: 'H2 Evaporative Carry-Out', desc: 'Vapor swept with gas carries ~18 J (<0.27% of total)', val: 'Linear in slope m', col: '#38bdf8'},
+  {label: 'Regnault-Pfaundler Correction', desc: 'Newton cooling extrapolated to 63.2% reaction time', val: '+0.12 °C Restored', col: '#4ade80'},
+  {label: 'Dewar Vacuum Jacket', desc: 'Silvered walls reflect radiative heat transfer', val: 'k = 0.0008 s⁻¹', col: '#86efac'},
+  {label: 'Multi-Point OLS Regression', desc: 'Intercept absorbs baseline drift & zero errors', val: 'R² = 1.00000 Unbiased', col: '#facc15'}
+ ];
+
+ lossItems.forEach((li, idx)=>{
+  const ly = rY + 30 + idx * 40;
+  svg += '<rect x="'+(rX+8)+'" y="'+ly+'" width="'+(rW-16)+'" height="34" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg += '<text x="'+(rX+14)+'" y="'+(ly+12)+'" fill="'+li.col+'" font-size="7.5" font-weight="bold">'+li.label+'</text>';
+  svg += '<text x="'+(rX+14)+'" y="'+(ly+25)+'" fill="#94a3b8" font-size="6.8">'+li.desc+'</text>';
+  svg += '<text x="'+(rX+rW-14)+'" y="'+(ly+12)+'" text-anchor="end" fill="'+li.col+'" font-size="7.5" font-family="monospace">'+li.val+'</text>';
+ });
+
+ svg += text(360, 305, 'Thermodynamic Invariant: Enthalpy state function eliminates kinetic and combustion path hazards.', '#789c80', 8.5);
  return svg;
 }

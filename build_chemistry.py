@@ -94,6 +94,15 @@ def observation(c,value):
   x=n
   y=raw
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='hess-law-magnesium-calorimetry':
+  m=float(value)
+  M_Mg=24.305
+  C_eff=0.44365
+  dH1=462.00
+  raw=rnd((dH1 * m) / (M_Mg * C_eff), 3)
+  x=m
+  y=raw
+  return {'input':value,'raw':raw,'x':x,'y':y}
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fit(rows):
@@ -159,6 +168,15 @@ def estimate(c,f):
   dH_est= -f['m'] * C_eff
   se=f['slopeSE'] * C_eff
   return dH_est, se, -55.84
+ elif slug=='hess-law-magnesium-calorimetry':
+  M_Mg=24.305
+  C_eff=0.44365
+  dH1_est= -f['m'] * M_Mg * C_eff
+  dH2= -146.00
+  dH3= -285.83
+  dHf_est= dH1_est - dH2 + dH3
+  se=f['slopeSE'] * M_Mg * C_eff
+  return dHf_est, se, -601.83
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fmt(v,n=5):
@@ -196,6 +214,12 @@ def formula(c,f):
  elif slug=='solution-calorimetry-neutralization':
   conv= -f['m'] * 0.44365
   return f"ΔH_neut = −m_slope · C_eff = −{fmt(f['m'],4)} × 0.44365 = {fmt(conv,2)} kJ/mol; Intercept ΔT₀ = {fmt(f['b'],4)} °C"
+ elif slug=='hess-law-magnesium-calorimetry':
+  M_Mg=24.305
+  C_eff=0.44365
+  dH1= -f['m'] * M_Mg * C_eff
+  dHf= dH1 - (-146.00) + (-285.83)
+  return f"ΔH₁ = −m_slope · M_Mg · C_eff = −{fmt(f['m'],4)} × 10.783 = {fmt(dH1,2)} kJ/mol; ΔH_f°[MgO] = ΔH₁ − ΔH₂ + ΔH₃ = {fmt(dHf,2)} kJ/mol; Intercept ΔT₀ = {fmt(f['b'],4)} °C"
  return ""
 
 def worked(c,row):
@@ -412,6 +436,34 @@ def worked(c,row):
    f"linear regression extracts the thermometric slope m_slope = 125.87 °C/mol, scaling via ΔH_neut = −m_slope · C_eff to isolate "
    f"the molar enthalpy of neutralization ΔH_neut = −55.84 kJ/mol with R² = 1.00000, confirming the standard thermodynamic value."
   )
+ elif slug=='hess-law-magnesium-calorimetry':
+  m=row['input']
+  dt=row['raw']
+  M_Mg=24.305
+  C_eff=0.44365
+  n_Mg=m / M_Mg
+  q_cal=C_eff * dt
+  dH1_single= -q_cal / n_Mg
+  dH2= -146.00
+  dH3= -285.83
+  dHf_single= dH1_single - dH2 + dH3
+  return (
+   f"Calorimeter System Heat Capacity: C_eff = m_soln·c_p + C_cal = 101.5 g × 4.10 J/(g·K) + 27.5 J/K = 443.65 J/K = 0.44365 kJ/K.\n"
+   f"Reaction Reactants: 100.00 mL of standardized 1.000 M HCl(aq) with polished magnesium metal mass m_Mg = {m:.4f} g.\n"
+   f"Magnesium Stoichiometric Moles: n_Mg = m_Mg / M_Mg = {m:.4f} g / 24.305 g/mol = {n_Mg:.6f} mol Mg.\n"
+   f"Corrected Adiabatic Temperature Rise: ΔT₁ = T_max − T_initial = {dt:.3f} °C (Regnault-Pfaundler extrapolated).\n"
+   f"Thermal Energy Absorbed by Calorimeter: q_cal = C_eff · ΔT₁ = 0.44365 kJ/K × {dt:.3f} K = {q_cal:.4f} kJ = {q_cal*1000.0:.1f} J.\n"
+   f"Reaction 1 Thermal Energy Evolved: q_rxn = −q_cal = −{q_cal:.4f} kJ.\n"
+   f"Reaction 1 Molar Enthalpy: ΔH₁ = q_rxn / n_Mg = −{q_cal:.4f} kJ / {n_Mg:.6f} mol = {dH1_single:.2f} kJ/mol.\n"
+   f"Hess Thermochemical Cycle Combination: Target reaction Mg(s) + 1/2 O₂(g) -> MgO(s) is synthesized as Reaction 1 − Reaction 2 + Reaction 3:\n"
+   f"  ΔH₁ [Mg(s) + 2 HCl(aq) -> MgCl₂(aq) + H₂(g)] = {dH1_single:.2f} kJ/mol;\n"
+   f"  ΔH₂ [MgO(s) + 2 HCl(aq) -> MgCl₂(aq) + H₂O(l)] = {dH2:.2f} kJ/mol;\n"
+   f"  ΔH₃ [H₂(g) + 1/2 O₂(g) -> H₂O(l)] = {dH3:.2f} kJ/mol.\n"
+   f"Single-Trial Enthalpy of Formation: ΔH_f°[MgO] = ΔH₁ − ΔH₂ + ΔH₃ = {dH1_single:.2f} − ({dH2:.2f}) + ({dH3:.2f}) = {dHf_single:.2f} kJ/mol.\n"
+   f"Verification: Across the full six-point series from 0.100 to 0.350 g of magnesium, ordinary least-squares "
+   f"linear regression extracts the thermometric slope m_slope = 42.845 °C/g, scaling via ΔH₁ = −m_slope · M_Mg · C_eff to yield "
+   f"ΔH₁ = −461.99 kJ/mol, combining via Hess's law to isolate the standard molar enthalpy of formation ΔH_f°[MgO(s)] = −601.82 kJ/mol with R² = 1.00000."
+  )
  return ""
 
 def uncertainty_text(c):
@@ -610,6 +662,27 @@ def uncertainty_text(c):
    "and standardized against primary standard potassium hydrogen phthalate (KHP) to ±0.0008 M (δM/M = 0.08%). The combined quadrature uncertainty in reaction moles n is δn/n = 0.13%. "
    "Ordinary least-squares linear regression across six independent neutralization quantities (0.020 to 0.070 mol) extracts the empirical slope "
    "m_slope = 125.87 °C/mol with an ideal coefficient of determination R² = 1.00000, isolating the standard enthalpy of neutralization ΔH_neut = −55.84 kJ/mol within 0.007% of the reference thermodynamic value."
+  )
+ elif slug=='hess-law-magnesium-calorimetry':
+  return (
+   "In thermochemical determinations of the standard enthalpy of formation of magnesium oxide governed by Hess's law "
+   "ΔH_f°[MgO] = ΔH₁ − ΔH₂ + ΔH₃ = −[ (M_Mg · C_eff) / m ] · ΔT₁ − ΔH₂ + ΔH₃, "
+   "experimental measurement uncertainty is evaluated across thermodynamic, thermal, gravimetric, chemical, and physical contributions: "
+   "(1) High-Precision Thermistor Resolution: The digital thermistor probe samples temperature at 2 Hz with an instrument resolution of ±0.001 °C "
+   "and a calibrated absolute accuracy of ±0.005 °C. For adiabatic temperature rises spanning 4.285 °C to 14.996 °C, the relative thermometric uncertainty "
+   "is δ(ΔT₁) / ΔT₁ ≈ 0.002 / 9.64 ≈ 2.1 × 10⁻⁴ (0.021%), demonstrating excellent signal-to-noise ratio in thermal acquisition. "
+   "(2) Regnault-Pfaundler Heat-Leak Extrapolation: Because heat escapes from the quasi-adiabatic Dewar during the rapid dissolution period (rate constant k ≈ 0.0008 s⁻¹), "
+   "extrapolating the post-period exponential Newton cooling curve backward to the 63.2% reaction midpoint restores 0.06 to 0.18 °C of thermal loss, "
+   "suppressing uncorrected environmental cooling bias to less than ±0.005 °C (<0.05%). "
+   "(3) Gravimetry & Surface Purity of Magnesium Ribbon: Polished magnesium strips (0.1000 to 0.3500 g) were weighed to ±0.0001 g on an analytical balance (δm/m = 0.03% to 0.10%). "
+   "Thorough abrasive polishing with emery cloth eliminates surface passivating oxide and hydroxide films (which would otherwise suppress ΔT₁ due to the lower heat of dissolution of MgO). "
+   "(4) Hydrogen Gas Vapor-Carryout Correction: The vigorous dissolution of magnesium evolves H₂(g) bubbles that escape through the calorimeter lid vent. "
+   "The gas carries a tiny equilibrium vapor pressure of water and HCl vapor (P_H2O ≈ 24 mmHg at 25 °C), causing an evaporative heat loss of ~18 J across 0.35 g Mg (<0.27% of total heat). "
+   "Crucially, because this vapor carry-out scales in direct linear proportion to moles of H₂ evolved, it is seamlessly absorbed into the linear regression slope m_slope. "
+   "(5) Calorimeter Heat Capacity Calibration: Total calorimeter effective heat capacity (C_eff = 443.65 ± 0.8 J/K) was calibrated via electrical Joule heating and standardized acid-base neutralization, "
+   "contributing a systematic uncertainty of δC_eff / C_eff ≈ 0.18%. "
+   "Ordinary least-squares linear regression across six independent magnesium masses (0.100 to 0.350 g) extracts the empirical slope "
+   "m_slope = 42.845 °C/g with an ideal coefficient of determination R² = 1.00000, isolating ΔH₁ = −461.99 kJ/mol and ΔH_f°[MgO(s)] = −601.82 kJ/mol within 0.0018% of the accepted literature value."
   )
  return ""
 
@@ -1102,6 +1175,56 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"The observed thermodynamic enthalpy confirms the accepted literature value (−55.84 kJ/mol) with a percentage difference of {percent:.4f}%. "
    "The investigation verified that strong acid-base neutralization is an invariant exothermic process governed by water formation, demonstrated the rigorous application of calorimeter water equivalents, "
    "and proved that multi-point calorimetric regression provides supreme thermochemical precision free from single-trial initial baseline biases."
+  )
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='hess-law-magnesium-calorimetry':
+  abstract=(
+   f"Six precision constant-pressure solution calorimetry trials were conducted in a vacuum-jacketed Dewar calorimeter "
+   f"(calorimeter heat capacity C_cal = 27.5 J/K, total system effective heat capacity C_eff = 0.44365 kJ/K) across polished magnesium ribbon charges "
+   f"from m = {rows[0]['input']:.3f} g to {rows[-1]['input']:.3f} g dissolving in 100.00 mL of standardized 1.000 M hydrochloric acid at 25.0 °C. "
+   f"Under motorized paddle stirring at 200 rpm, measured adiabatic temperature rises ranged from ΔT₁ = {rows[0]['raw']:.3f} °C to {rows[-1]['raw']:.3f} °C, "
+   f"corrected for non-adiabatic Newton cooling losses via Regnault-Pfaundler midpoint extrapolation. "
+   f"Ordinary least-squares linear regression of temperature rise ΔT₁ against magnesium metal mass m yielded an empirical thermometric slope of "
+   f"{fmt(f['m'],4)} °C/g, extracting a molar enthalpy of magnesium dissolution of ΔH₁ = −461.99 kJ/mol. "
+   f"Coupling this value with the standardized dissolution of magnesium oxide powder (ΔH₂ = −146.00 kJ/mol) and the standard enthalpy of formation of liquid water "
+   f"(ΔH₃ = −285.83 kJ/mol) according to Hess's Law of Constant Heat Summation yielded an experimental standard molar enthalpy of formation of "
+   f"ΔH_f°[MgO(s)] = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with a fit standard error of {fmt(se*c['resultScale'])} {c['resultUnit']} "
+   f"and an ideal coefficient of determination R² = 1.00000, confirming the accepted literature thermodynamic benchmark (reference ΔH_f° = −601.83 kJ/mol) with a percentage difference of {percent:.4f}%."
+  )
+  graph_choice=(
+   f"The mathematical regression models the first-law calorimetric relation ΔT₁ = [ |ΔH₁| / (M_Mg · C_eff) ] · m + ΔT₀, "
+   f"where m represents the weighed mass of pure magnesium ribbon in g, ΔT₁ represents the corrected adiabatic temperature rise in °C, "
+   f"M_Mg = 24.305 g/mol is the molar mass of magnesium, C_eff = 0.44365 kJ/K is the total effective system heat capacity, and ΔT₀ represents the baseline drift intercept in °C (theoretically ΔT₀ = 0.000 °C). "
+   f"Multiplying the regression slope m_slope by −(M_Mg · C_eff) directly isolates the molar enthalpy of reaction ΔH₁ in kJ/mol, "
+   f"which algebraically combines through the Hess thermochemical cycle ΔH_f°[MgO] = ΔH₁ − ΔH₂ + ΔH₃ to yield the standard formation enthalpy in {c['resultUnit']}."
+  )
+  discussion=(
+   "The experimental observations provide rigorous quantitative verification of Hess's Law of Constant Heat Summation, the State Function Nature of Enthalpy, and Inorganic Thermochemistry. "
+   "Direct synthesis of magnesium oxide via elemental combustion in oxygen gas (Mg(s) + 1/2 O₂(g) -> MgO(s)) generates violent flame temperatures exceeding 2800 °C, "
+   "blinding radiant luminescence, and thick aerosolized smoke, precluding accurate constant-pressure solution calorimetry. "
+   "By invoking the First Law of Thermodynamics, enthalpy H = U + PV is established as a state function whose line integral over any closed cyclic path is identically zero: ∮ dH = 0. "
+   "Consequently, the standard formation enthalpy is accessible through an indirect thermodynamic cycle consisting of three clean, well-controlled reactions at 25 °C: "
+   "(1) Mg(s) + 2 HCl(aq) -> MgCl₂(aq) + H₂(g) [ΔH₁]; "
+   "(2) MgO(s) + 2 HCl(aq) -> MgCl₂(aq) + H₂O(l) [ΔH₂ = −146.00 kJ/mol]; and "
+   "(3) H₂(g) + 1/2 O₂(g) -> H₂O(l) [ΔH₃ = −285.83 kJ/mol]. "
+   "Reversing Reaction 2 and summing with Reactions 1 and 3 cancels the intermediate aqueous magnesium chloride, hydrochloric acid, gaseous hydrogen, and liquid water species completely, "
+   "leaving the target formation reaction with ΔH_f°[MgO] = ΔH₁ − ΔH₂ + ΔH₃. "
+   "Across all six magnesium charges from 0.100 g to 0.350 g, the adiabatic temperature rise exhibited flawless linear proportionality to dissolved metal mass. "
+   "The ordinary least-squares regression line ΔT₁ = 42.845 · m + 0.0003 °C yielded an ideal coefficient of determination R² = 1.00000. "
+   "Inverting this empirical slope isolated an experimental reaction enthalpy of ΔH₁ = −461.99 kJ/mol. "
+   "Substituting this into the Hess thermochemical summation yielded ΔH_f°[MgO(s)] = −461.99 − (−146.00) + (−285.83) = −601.82 kJ/mol, "
+   "matching the accepted thermodynamic standard of −601.83 kJ/mol to within 0.0018%. "
+   "The multi-point linear regression strategy was instrumental in isolating the chemical signal from potential physical artifacts: mechanical stirring friction was absorbed into the baseline drift, "
+   "and minor non-adiabatic heat leakage to the environment was eliminated via Regnault-Pfaundler exponential cooling extrapolation."
+  )
+  conclusion=(
+   "This laboratory investigation successfully determined the standard molar enthalpy of formation of solid magnesium oxide via solution calorimetry and Hess's Law. "
+   f"Through systematic thermometric measurements across magnesium metal charges from {rows[0]['input']:.3f} g to {rows[-1]['input']:.3f} g in a calibrated vacuum-jacketed Dewar calorimeter, we extracted an "
+   f"experimental formation enthalpy of ΔH_f°[MgO(s)] = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with a fit standard error of "
+   f"{fmt(se*c['resultScale'])} {c['resultUnit']} and an ideal coefficient of determination R² = 1.00000. "
+   f"The observed thermodynamic formation enthalpy confirms the accepted literature standard (−601.83 kJ/mol) with a percentage difference of {percent:.4f}%. "
+   "The investigation verified that enthalpy is an invariant path-independent state function, validated the power of thermochemical cycles to measure extreme or hazardous reaction energetics indirectly, "
+   "and proved that multi-point calorimetric regression delivers unmatched thermochemical accuracy free from single-point zero-datum and cooling leakage errors."
   )
   return abstract, graph_choice, discussion, conclusion
  return "","","",""
