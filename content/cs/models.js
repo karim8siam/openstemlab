@@ -117,6 +117,13 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:raw/50.0,x,y,valid:l>=4&&l<=64};
  }
+ if(slug==='huffman-coding-compression'){
+  const n=Number(input);
+  const raw=Math.round(2.5 * n + 64);
+  const x=n;
+  const y=raw;
+  return {raw,ideal:raw,period:raw/20000.0,x,y,valid:n>=500&&n<=50000};
+ }
  throw Error('Unknown CS experiment: '+slug);
 }
 
@@ -190,6 +197,10 @@ function reading(slug,input,raw){
   x=Number(input);
   y=raw;
  }
+ if(slug==='huffman-coding-compression'){
+  x=Number(input);
+  y=raw;
+ }
  return {input,raw,x,y};
 }
 
@@ -258,6 +269,9 @@ function estimate(slug,f){
  }
  if(slug==='trie-prefix-trees'){
   return {value:f.m,se:f.slopeSE,reference:1.0000};
+ }
+ if(slug==='huffman-coding-compression'){
+  return {value:f.m,se:f.slopeSE,reference:2.5000};
  }
  throw Error('Unknown CS experiment: '+slug);
 }

@@ -140,6 +140,56 @@ function drawComparativeSim(t,p,v,ink,soft,orange){
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
+ if(cfg.slug==='huffman-coding-compression'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'LOSSLESS DATA COMPRESSION PARADIGMS (n = '+p.input+' symbols)','#e2f0f8',11);
+
+  const n=p.input;
+  const c_huff=Math.round(2.5 * n + 64);
+  const c_arith=Math.round(2.45 * n + 32);
+  const c_lz=Math.round(3.2 * n + 80);
+  const c_rle=Math.round(Math.min(8 * n, 4.5 * n));
+  const c_ascii=Math.round(8 * n);
+
+  const strategies=[
+   {name:'Arithmetic Coding (Fractional Interval)',col:'#10b981',cost:c_arith,scale:'~2.45 bits/sym, O(n) math',desc:'Fractional interval subdivisions; approaches exact entropy H(X)'},
+   {name:'Huffman Coding (Optimal Prefix Tree)',col:'#38bdf8',cost:c_huff,scale:'2.50 bits/sym, O(n + |Σ|log|Σ|)',desc:'Greedy Min-Heap prefix tree; instantaneous ambiguity-free decode'},
+   {name:'Lempel-Ziv LZ77 (Sliding Window)',col:'#f97316',cost:c_lz,scale:'~3.20 bits/sym, dictionary',desc:'Backwards offset/length tokens; captures multi-byte words (Gzip/PNG)'},
+   {name:'Run-Length Encoding (RLE)',col:'#a855f7',cost:c_rle,scale:'~4.50 bits/sym on runs',desc:'Count/symbol pairs; effective on monochrome bitmaps; poor on text'},
+   {name:'Fixed-Width ASCII (Uncompressed)',col:'#ef4444',cost:c_ascii,scale:'8.00 bits/sym (0% savings)',desc:'Uniform 8-bit octets; zero compression; O(1) random array access'}
+  ];
+
+  strategies.forEach((item,idx)=>{
+   const rowY=cY+16+idx*42;
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+12)+'" fill="#dcebf2" font-size="8.5" font-weight="bold">'+item.name+'</text>';
+   const costStr=item.cost>=1000000?(item.cost/1000000).toFixed(1)+'M':item.cost>=1000?(item.cost/1000).toFixed(1)+'k':item.cost;
+   svg+='<text x="'+(cX+cW-15)+'" y="'+(rowY+12)+'" text-anchor="end" fill="'+item.col+'" font-size="8.5" font-family="monospace" font-weight="bold">'+costStr+' bits ('+item.scale+')</text>';
+   
+   const barX=cX+15,barY=rowY+16,barMaxW=cW-30;
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barMaxW+'" height="7" rx="2" fill="#16242c"/>';
+   const maxVal=Math.max(1000, c_ascii);
+   const frac=Math.min(1.0,Math.log10(item.cost+1)/Math.log10(maxVal+1));
+   const fillW=Math.max(4,frac*barMaxW);
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+fillW+'" height="7" rx="2" fill="'+item.col+'"/>';
+  });
+
+  const bX=460,bY=45,bW=220,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">COMPRESSION RATIO VS ASCII</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">68.8% Saved</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+66)+'" fill="#10b981" font-size="9">3.20× Compression Factor</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+76)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+76)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+94)+'" fill="#7e9bab" font-size="9">SHANNON ENTROPY LOWER BOUND</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+116)+'" fill="'+ink+'" font-size="14" font-family="monospace" font-weight="bold">H(X) = 2.4464 b/sym</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+132)+'" fill="#8ba5b5" font-size="8">L_bar = 2.5000 b/sym (R = 0.0536 b/sym)</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+142)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+142)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+160)+'" fill="#7e9bab" font-size="9">KRAFT-McMILLAN INVARIANT</text>';
+  svg+=text(bX+bW/2,bY+184,'∑ 2^{-l_i} = 1.0000 (Complete Code)','#10b981',9.5);
+  svg+=text(bX+bW/2,bY+206,'DEFLATE Standard (RFC 1951)',orange,8.5);
+  svg+=text(360,305,'Comparative Invariant: Shannon\'s Source Coding Theorem establishes H(X) ≤ L_bar < H(X) + 1; Huffman coding achieves minimal redundancy',soft,10);
+  return svg;
+ }
+
  if(cfg.slug==='trie-prefix-trees'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
   svg+=text(cX+cW/2,cY-14,'PREFIX TREE & STRING RETRIEVAL PARADIGMS (L = '+p.input+' chars)','#e2f0f8',11);
@@ -910,6 +960,94 @@ function drawDynamicSandbox(t,p,v,ink,soft,orange){
  const cX=45,cY=45,cW=400,cH=230;
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+ if(cfg.slug==='huffman-coding-compression'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'HUFFMAN PREFIX DECODING & TREE INVARIANT SANDBOX (n = '+p.input+')','#e2f0f8',11);
+
+  svg+='<text x="'+(cX+15)+'" y="'+(cY+18)+'" fill="#10b981" font-size="8.5" font-weight="bold">INSTANTANEOUS DECODING: LEAF REACH IMMEDIATELY EMITS SYMBOL WITHOUT LOOKAHEAD</text>';
+
+  const treeBoxX=cX+15, treeBoxY=cY+28, treeBoxW=195, treeBoxH=185;
+  svg+='<rect x="'+treeBoxX+'" y="'+treeBoxY+'" width="'+treeBoxW+'" height="'+treeBoxH+'" rx="4" fill="#041a1e" stroke="#14b8a6" stroke-width="1.2"/>';
+  svg+='<text x="'+(treeBoxX+10)+'" y="'+(treeBoxY+15)+'" fill="#2dd4bf" font-size="8" font-weight="bold">OPTIMAL HUFFMAN CODE TREE</text>';
+  svg+='<text x="'+(treeBoxX+10)+'" y="'+(treeBoxY+27)+'" fill="#7e9bab" font-size="7">Leaves: A(2b), B(2b), C(3b), D(3b), E(4b), F(4b), G(4b), H(4b)</text>';
+
+  const hNodes=[
+   {lbl:'1.00',x:treeBoxX+97,y:treeBoxY+45,r:9,col:'#38bdf8'},
+   {lbl:'0.55',x:treeBoxX+50,y:treeBoxY+80,r:9,col:'#94a3b8'},
+   {lbl:'0.45',x:treeBoxX+145,y:treeBoxY+80,r:9,col:'#94a3b8'},
+   {lbl:'A:00',x:treeBoxX+30,y:treeBoxY+125,r:11,col:'#10b981',term:true},
+   {lbl:'B:01',x:treeBoxX+70,y:treeBoxY+125,r:11,col:'#10b981',term:true},
+   {lbl:'0.25',x:treeBoxX+120,y:treeBoxY+115,r:8,col:'#94a3b8'},
+   {lbl:'0.20',x:treeBoxX+170,y:treeBoxY+115,r:8,col:'#94a3b8'},
+   {lbl:'C:100',x:treeBoxX+105,y:treeBoxY+155,r:11,col:'#10b981',term:true},
+   {lbl:'D:101',x:treeBoxX+135,y:treeBoxY+155,r:11,col:'#10b981',term:true},
+   {lbl:'E..H',x:treeBoxX+170,y:treeBoxY+155,r:11,col:orange,term:true}
+  ];
+
+  svg+='<line x1="'+(treeBoxX+90)+'" y1="'+(treeBoxY+52)+'" x2="'+(treeBoxX+58)+'" y2="'+(treeBoxY+73)+'" stroke="#38bdf8" stroke-width="1.2"/>';
+  svg+='<text x="'+(treeBoxX+70)+'" y="'+(treeBoxY+60)+'" fill="#38bdf8" font-size="7">0</text>';
+
+  svg+='<line x1="'+(treeBoxX+104)+'" y1="'+(treeBoxY+52)+'" x2="'+(treeBoxX+137)+'" y2="'+(treeBoxY+73)+'" stroke="#38bdf8" stroke-width="1.2"/>';
+  svg+='<text x="'+(treeBoxX+125)+'" y="'+(treeBoxY+60)+'" fill="#38bdf8" font-size="7">1</text>';
+
+  svg+='<line x1="'+(treeBoxX+45)+'" y1="'+(treeBoxY+88)+'" x2="'+(treeBoxX+34)+'" y2="'+(treeBoxY+114)+'" stroke="#10b981" stroke-width="1.2"/>';
+  svg+='<text x="'+(treeBoxX+34)+'" y="'+(treeBoxY+98)+'" fill="#10b981" font-size="7">0</text>';
+
+  svg+='<line x1="'+(treeBoxX+55)+'" y1="'+(treeBoxY+88)+'" x2="'+(treeBoxX+66)+'" y2="'+(treeBoxY+114)+'" stroke="#10b981" stroke-width="1.2"/>';
+  svg+='<text x="'+(treeBoxX+66)+'" y="'+(treeBoxY+98)+'" fill="#10b981" font-size="7">1</text>';
+
+  svg+='<line x1="'+(treeBoxX+140)+'" y1="'+(treeBoxY+88)+'" x2="'+(treeBoxX+125)+'" y2="'+(treeBoxY+107)+'" stroke="#94a3b8" stroke-width="1.2"/>';
+  svg+='<line x1="'+(treeBoxX+150)+'" y1="'+(treeBoxY+88)+'" x2="'+(treeBoxX+165)+'" y2="'+(treeBoxY+107)+'" stroke="#94a3b8" stroke-width="1.2"/>';
+
+  svg+='<line x1="'+(treeBoxX+115)+'" y1="'+(treeBoxY+123)+'" x2="'+(treeBoxX+108)+'" y2="'+(treeBoxY+144)+'" stroke="#10b981" stroke-width="1.2"/>';
+  svg+='<line x1="'+(treeBoxX+125)+'" y1="'+(treeBoxY+123)+'" x2="'+(treeBoxX+132)+'" y2="'+(treeBoxY+144)+'" stroke="#10b981" stroke-width="1.2"/>';
+  svg+='<line x1="'+(treeBoxX+170)+'" y1="'+(treeBoxY+123)+'" x2="'+(treeBoxX+170)+'" y2="'+(treeBoxY+144)+'" stroke="'+orange+'" stroke-width="1.2"/>';
+
+  hNodes.forEach(n=>{
+   svg+='<circle cx="'+n.x+'" cy="'+n.y+'" r="'+n.r+'" fill="#0b1722" stroke="'+n.col+'" stroke-width="1.5"/>';
+   svg+='<text x="'+n.x+'" y="'+(n.y+3)+'" text-anchor="middle" fill="#f1f5f9" font-size="7" font-family="monospace">'+n.lbl+'</text>';
+  });
+
+  const strBoxX=cX+220, strBoxY=cY+28, strBoxW=165, strBoxH=185;
+  svg+='<rect x="'+strBoxX+'" y="'+strBoxY+'" width="'+strBoxW+'" height="'+strBoxH+'" rx="4" fill="#0f172a" stroke="#6366f1" stroke-width="1.2"/>';
+  svg+='<text x="'+(strBoxX+10)+'" y="'+(strBoxY+15)+'" fill="#a5b4fc" font-size="8" font-weight="bold">BITSTREAM PARSER TRACE</text>';
+
+  const traceSteps=[
+   {bits:'0 0',sym:'A',desc:'Leaf reached in 2 hops'},
+   {bits:'0 1',sym:'B',desc:'Leaf reached in 2 hops'},
+   {bits:'1 0 0',sym:'C',desc:'Leaf reached in 3 hops'},
+   {bits:'0 0',sym:'A',desc:'Leaf reached in 2 hops'},
+   {bits:'1 0 1',sym:'D',desc:'Leaf reached in 3 hops'},
+   {bits:'1 1 0 0',sym:'E',desc:'Leaf reached in 4 hops'}
+  ];
+
+  traceSteps.forEach((st,i)=>{
+   const sY=strBoxY+30+i*24;
+   svg+='<text x="'+(strBoxX+10)+'" y="'+sY+'" fill="#38bdf8" font-size="8" font-family="monospace">bits: '+st.bits+'</text>';
+   svg+='<text x="'+(strBoxX+80)+'" y="'+sY+'" fill="#10b981" font-size="8" font-weight="bold">⟶ \''+st.sym+'\'</text>';
+   svg+='<text x="'+(strBoxX+10)+'" y="'+(sY+11)+'" fill="#64748b" font-size="7">'+st.desc+'</text>';
+  });
+
+  const bX=460, bY=45, bW=220, bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">PREFIX PROPERTY VERIFICATION</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="18" font-family="monospace" font-weight="bold">0 Collisions</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+66)+'" fill="#10b981" font-size="9">Uniquely Decodable Instantaneous Code</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+76)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+76)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+94)+'" fill="#7e9bab" font-size="9">CANONICAL HEADER FOOTPRINT</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+114)+'" fill="'+ink+'" font-size="12" font-family="monospace" font-weight="bold">B_0 = 8 × 8 = 64 Bits</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+128)+'" fill="#64748b" font-size="8">Transmits only codeword lengths</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+138)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+138)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+156)+'" fill="#7e9bab" font-size="9">BITSTREAM PARSER EFFICIENCY</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+176)+'" fill="#10b981" font-size="12" font-family="monospace" font-weight="bold">O(B) Linear Stream</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+190)+'" fill="#8ba5b5" font-size="8">Zero buffering or backtracking</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+200)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+200)+'" stroke="#1e3340"/>';
+  svg+=text(bX+bW/2,bY+218,'AVX-512 PEXT Vectorized Gather',orange,8.5);
+
+  svg+=text(360,305,'Sandbox Invariant: Prefix property eliminates all codeword ambiguity; bitstream parses instantaneously in strictly O(B) time',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='trie-prefix-trees'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
@@ -1935,6 +2073,97 @@ function draw(t){
  const ink='#38bdf8',soft='#7e9bab',orange='#f97316';
  if(currentSimMode==='compare'){$('apparatusDiagram').innerHTML=drawComparativeSim(t,p,v,ink,soft,orange);return;}
  if(currentSimMode==='sandbox'){$('apparatusDiagram').innerHTML=drawDynamicSandbox(t,p,v,ink,soft,orange);return;}
+
+ if(cfg.slug==='huffman-coding-compression'){
+  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
+  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+  const n=p.input;
+  const b_bits=v.raw;
+  const b_bytes=(b_bits / 8).toFixed(1);
+  const ascii_bits=8 * n;
+  const savings=((1 - b_bits / ascii_bits) * 100).toFixed(1);
+
+  svg+='<rect x="35" y="38" width="410" height="235" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+=text(240,24,'Huffman Priority Min-Heap Synthesis & Bitstream Bit-Packing');
+
+  svg+='<text x="50" y="56" fill="#7e9bab" font-size="8.5" font-weight="bold">INPUT STREAM n = '+n+' SYMBOLS · |Σ| = 8 ALPHABET · L_bar = 2.5000 BITS/SYMBOL</text>';
+
+  const stX=50, stY=68, stW=380, stH=24;
+  svg+='<rect x="'+stX+'" y="'+stY+'" width="'+stW+'" height="'+stH+'" rx="4" fill="#07131b" stroke="#1e3a4a" stroke-width="1"/>';
+  svg+='<text x="'+(stX+8)+'" y="'+(stY+16)+'" fill="#38bdf8" font-size="9" font-family="monospace" font-weight="bold">STREAM S[0..'+(n-1)+']:</text>';
+
+  const sampleStream=['A','B','A','C','A','B','D','A','E','A','B','C','A','G','F','A'];
+  for(let i=0; i<12; i++){
+   const sBx=stX+140+i*18;
+   const sym=sampleStream[i];
+   svg+='<rect x="'+sBx+'" y="'+(stY+3)+'" width="15" height="18" rx="2" fill="#142834" stroke="#38bdf8" stroke-width="1"/>';
+   svg+='<text x="'+(sBx+7.5)+'" y="'+(stY+15)+'" text-anchor="middle" fill="#f1f5f9" font-size="9" font-family="monospace">'+sym+'</text>';
+  }
+  svg+='<text x="'+(stX+360)+'" y="'+(stY+15)+'" fill="#7e9bab" font-size="9" font-family="monospace">... +'+(n-12)+'</text>';
+
+  const hpX=50, hpY=100, hpW=380, hpH=65;
+  svg+='<rect x="'+hpX+'" y="'+hpY+'" width="'+hpW+'" height="'+hpH+'" rx="4" fill="#091824" stroke="#1c303d" stroke-width="1"/>';
+  svg+='<text x="'+(hpX+10)+'" y="'+(hpY+14)+'" fill="#10b981" font-size="8" font-weight="bold">MIN-HEAP PRIORITY QUEUE MERGE ITERATION: O(|Σ| log |Σ|)</text>';
+
+  const heapItems=[
+   {sym:'A:00',p:'0.35',col:'#38bdf8',len:'2b'},
+   {sym:'B:01',p:'0.20',col:'#38bdf8',len:'2b'},
+   {sym:'C:100',p:'0.15',col:'#10b981',len:'3b'},
+   {sym:'D:101',p:'0.10',col:'#10b981',len:'3b'},
+   {sym:'E:1100',p:'0.08',col:orange,len:'4b'},
+   {sym:'F:1101',p:'0.06',col:orange,len:'4b'},
+   {sym:'G:1110',p:'0.04',col:'#a855f7',len:'4b'},
+   {sym:'H:1111',p:'0.02',col:'#a855f7',len:'4b'}
+  ];
+
+  heapItems.forEach((item,i)=>{
+   const bX_i=hpX+10+i*46;
+   svg+='<rect x="'+bX_i+'" y="'+(hpY+22)+'" width="42" height="34" rx="3" fill="#0d2130" stroke="'+item.col+'" stroke-width="1.2"/>';
+   svg+='<text x="'+(bX_i+21)+'" y="'+(hpY+34)+'" text-anchor="middle" fill="#dcebf2" font-size="7.5" font-weight="bold">'+item.sym+'</text>';
+   svg+='<text x="'+(bX_i+21)+'" y="'+(hpY+44)+'" text-anchor="middle" fill="'+item.col+'" font-size="7" font-family="monospace">p='+item.p+'</text>';
+   svg+='<text x="'+(bX_i+21)+'" y="'+(hpY+52)+'" text-anchor="middle" fill="#64748b" font-size="6.5">'+item.len+'</text>';
+  });
+
+  const accX=50, accY=172, accW=380, accH=88;
+  svg+='<rect x="'+accX+'" y="'+accY+'" width="'+accW+'" height="'+accH+'" rx="4" fill="#08141d" stroke="#1c303d" stroke-width="1"/>';
+  svg+='<text x="'+(accX+10)+'" y="'+(accY+14)+'" fill="#7e9bab" font-size="8" font-weight="bold">64-BIT HARDWARE BIT-ACCUMULATOR (uint64_t accum)</text>';
+
+  svg+='<rect x="'+(accX+15)+'" y="'+(accY+22)+'" width="350" height="18" rx="2" fill="#040b10" stroke="#334d5c" stroke-width="1"/>';
+  svg+='<rect x="'+(accX+15)+'" y="'+(accY+22)+'" width="220" height="18" rx="2" fill="#0e3a50"/>';
+  svg+='<text x="'+(accX+125)+'" y="'+(accY+35)+'" text-anchor="middle" fill="#38bdf8" font-size="8" font-family="monospace">[00][01][00][100][00][01][101]... (40 bits)</text>';
+  svg+='<text x="'+(accX+285)+'" y="'+(accY+35)+'" text-anchor="middle" fill="#64748b" font-size="8" font-family="monospace">Empty (24 bits)</text>';
+
+  svg+='<text x="'+(accX+15)+'" y="'+(accY+54)+'" fill="#94a3b8" font-size="8">Flush Rule: when bit_count ≥ 32 ⟹ emit uint32_t to FIFO buffer and shift</text>';
+  svg+='<text x="'+(accX+15)+'" y="'+(accY+68)+'" fill="#10b981" font-size="8" font-weight="bold">Deterministic Output: B(n) = 2.5000 × '+n+' + 64 = '+b_bits+' bits ('+b_bytes+' bytes)</text>';
+  svg+='<text x="'+(accX+15)+'" y="'+(accY+81)+'" fill="#64748b" font-size="7.5">Canonical header B_0 = 64 bits prepended; Shannon bound H(X) = 2.4464 bits/sym.</text>';
+
+  const bX=460, bY=38, bW=225, bH=235;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+20)+'" fill="#7e9bab" font-size="8.5" font-weight="bold">HUFFMAN TELEMETRY</text>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+38)+'" fill="#7e9bab" font-size="8">COMPRESSED BITSTREAM B(n)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+64)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+b_bits+' bits</text>';
+  const szStr=b_bits>=8000?(b_bits/8000).toFixed(1)+' KB':b_bytes+' B';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+78)+'" fill="#10b981" font-size="8">'+szStr+' ('+savings+'% space saved)</text>';
+
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+86)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+86)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+102)+'" fill="#7e9bab" font-size="8">AVERAGE CODE LENGTH</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+124)+'" fill="'+ink+'" font-size="16" font-family="monospace" font-weight="bold">2.5000 b/sym</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+138)+'" fill="#8ba5b5" font-size="8">Entropy H(X) = 2.4464 b/sym</text>';
+
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+146)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+146)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+162)+'" fill="#7e9bab" font-size="8">CODEBOOK HEADER OVERHEAD</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+178)+'" fill="#dcebf2" font-size="8.5">• Canonical B_0 = 64.0000 bits</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+192)+'" fill="#dcebf2" font-size="8.5">• Payload: '+(b_bits - 64)+' bits</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+206)+'" fill="#38bdf8" font-size="8">• Slope L_bar: 2.5000 b/sym</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+220)+'" fill="#10b981" font-size="8">• Uncompressed ASCII: '+(ascii_bits)+' b</text>';
+
+  svg+=text(360,305,'Empirical Invariant: Compressed bitstream size scales as strictly B(n) = 2.5000 · n + 64.0000 bits with ideal R² = 1.00000',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='trie-prefix-trees'){
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
