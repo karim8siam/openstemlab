@@ -13,6 +13,15 @@ function rect(x, y, w, h, fill='#000', stroke='none', strokeWidth=0, rx=0){
 function circle(cx, cy, r, fill='#000', stroke='none', strokeWidth=0){
  return '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="'+fill+'"'+(stroke!=='none'?' stroke="'+stroke+'" stroke-width="'+strokeWidth+'"':'')+'/>';
 }
+function line(x1, y1, x2, y2, stroke='#94a3b8', strokeWidth=1, dash=''){
+ return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+stroke+'" stroke-width="'+strokeWidth+'"'+(dash?' stroke-dasharray="'+dash+'"':'')+'/>';
+}
+function ellipse(cx, cy, rx, ry, fill='#000', stroke='none', strokeWidth=0){
+ return '<ellipse cx="'+cx+'" cy="'+cy+'" rx="'+rx+'" ry="'+ry+'" fill="'+fill+'"'+(stroke!=='none'?' stroke="'+stroke+'" stroke-width="'+strokeWidth+'"':'')+'/>';
+}
+function path(d, fill='none', stroke='none', strokeWidth=0){
+ return '<path d="'+d+'" fill="'+fill+'"'+(stroke!=='none'?' stroke="'+stroke+'" stroke-width="'+strokeWidth+'"':'')+'/>';
+}
 
 let rows=[],measurement=null,busy=false,clearPending=false;
 try{const saved=JSON.parse(localStorage.getItem('openstemlab-'+cfg.slug+'-v1')||'[]');if(Array.isArray(saved))rows=saved.filter(r=>r&&Number.isFinite(r.input)&&r.input>=cfg.min&&r.input<=cfg.max&&Number.isFinite(r.raw)&&r.raw>0).slice(0,100).map(r=>model.reading(cfg.slug,r.input,r.raw));}catch{}
@@ -85,6 +94,18 @@ function update(){
    return;
   }
   $('apparatusDiagram').innerHTML=drawEnzymeKineticsBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='colloidal-gold-nanoparticles-mie-scattering'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawGoldNanoCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawGoldNanoSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawGoldNanoBenchView(p,rawVal);
   return;
  }
  if(cfg.slug==='surface-excess-concentration-gibbs-adsorption'){
@@ -396,7 +417,23 @@ function update(){
   const dA_dt = v0_uM * 0.0185;
   $('liveState').textContent='Photometric trace recorded: v₀ = '+v0_uM.toFixed(2)+' μM/min (dA/dt = '+(dA_dt/1000).toFixed(4)+' AU/min).';
   message('Assay complete: v₀ = '+v0_uM.toFixed(2)+' μM/min (1/v₀ = '+inv_v0.toFixed(2)+' min/mM, 1/[S] = '+inv_s.toFixed(2)+' mM⁻¹). Record in notebook.');
- }else if(cfg.slug==='surface-excess-concentration-gibbs-adsorption'){
+ }else if(cfg.slug==='colloidal-gold-nanoparticles-mie-scattering'){
+  const d_nm = p.input;
+  const lam = raw.toFixed(1);
+  const red_shift = (raw - 512.6).toFixed(1);
+  $('liveState').textContent='UV-Vis extinction peak: d = '+d_nm.toFixed(1)+' nm, λ_max = '+lam+' nm (Retardation shift Δλ = +'+red_shift+' nm).';
+  message('LSPR extinction peak recorded on spectrophotometer. Record λ_max in notebook.');
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawGoldNanoCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawGoldNanoSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawGoldNanoBenchView(p,rawVal);
+  return;
+}else if(cfg.slug==='surface-excess-concentration-gibbs-adsorption'){
   const c_conc = p.input;
   const gam = raw.toFixed(2);
   const ln_c = Math.log(c_conc).toFixed(3);
@@ -16859,6 +16896,358 @@ function drawGibbsSandboxView(p, rawVal) {
   svg += rect(460, ty, 235, 30, (t % 2 === 0) ? '#090d16' : '#1e293b', 'none', 0, 3);
   svg += text(470, ty + 12, thermo[t].k, '#facc15', 6.5, 'start', 'bold');
   svg += text(470, ty + 24, thermo[t].v, '#cbd5e1', 6.5, 'start');
+ }
+
+ return svg;
+}
+
+
+// ======================================================================
+// LAB 50: COLLOIDAL GOLD NANOPARTICLES & MIE SCATTERING LSPR
+// ======================================================================
+
+function drawGoldNanoBenchView(p, rawVal) {
+ var d = Number(p.input) || 20.0;
+ var lam = (rawVal !== null && rawVal !== undefined) ? rawVal : (512.60 + 0.440 * d);
+ var shift = (lam - 512.60).toFixed(1);
+
+ // Colloid color gradient depending on size (10 nm bright ruby red -> 60 nm purplish wine)
+ var colloidColor = '#b22222';
+ var colorName = 'Ruby Red';
+ if (d <= 12.0) { colloidColor = '#dc2626'; colorName = 'Bright Ruby-Red'; }
+ else if (d <= 22.0) { colloidColor = '#b91c1c'; colorName = 'Brilliant Ruby'; }
+ else if (d <= 35.0) { colloidColor = '#991b1b'; colorName = 'Deep Ruby'; }
+ else if (d <= 50.0) { colloidColor = '#831843'; colorName = 'Crimson-Purple'; }
+ else { colloidColor = '#701a75'; colorName = 'Purplish-Wine'; }
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a0f1d');
+
+ // Title header
+ svg += text(360, 18, 'MIE SCATTERING & LSPR SPECTROPHOTOMETER: COLLOIDAL GOLD', '#38bdf8', 11, 'middle', 'bold');
+ svg += text(360, 32, 'Turkevich Citrate Colloid (25.0 °C) | Core Diameter d = ' + d.toFixed(1) + ' nm | LSPR Peak λ_max = ' + lam.toFixed(1) + ' nm (Δλ = +' + shift + ' nm)', '#94a3b8', 8.5, 'middle');
+
+ // LEFT PANEL: Turkevich Reflux & Dual-Beam Spectrophotometer (x: 15 to 345)
+ svg += rect(15, 42, 330, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(180, 58, 'TURKEVICH REFLUX & DUAL-BEAM OPTICS', '#38bdf8', 9.5, 'middle', 'bold');
+
+ // Synthesis heating mantle & reflux flask
+ svg += rect(35, 75, 80, 55, '#1e293b', '#475569', 1, 4);
+ svg += rect(42, 82, 66, 18, '#020617', '#334155', 1, 2);
+ svg += text(75, 94, '100.0 °C | 800 rpm', '#facc15', 5.5, 'middle');
+ // Flask and condenser
+ svg += circle(75, 150, 24, colloidColor, '#cbd5e1', 1.5);
+ svg += rect(71, 110, 8, 20, '#64748b', '#cbd5e1', 1);
+ svg += rect(69, 70, 12, 40, 'rgba(56, 189, 248, 0.1)', '#38bdf8', 1); // Allihn condenser
+ svg += text(75, 178, 'Turkevich Sol (' + colorName + ')', '#cbd5e1', 6, 'middle');
+
+ // Dual-Beam Spectrophotometer Block (x: 140 to 330, y: 72 to 240)
+ svg += rect(135, 72, 195, 168, '#020617', '#334155', 1, 5);
+ svg += text(232, 86, 'DOUBLE-BEAM UV-VIS OPTICS', '#38bdf8', 7.5, 'middle', 'bold');
+
+ // Light source (D2/W lamp)
+ svg += circle(155, 115, 10, '#fef08a', '#eab308', 1.5);
+ svg += text(155, 118, 'Lamp', '#854d0e', 5.5, 'middle', 'bold');
+
+ // Monochromator diffraction grating
+ svg += line(165, 115, 185, 115, '#38bdf8', 2);
+ svg += rect(185, 105, 6, 20, '#6366f1', '#a5b4fc', 1);
+ svg += text(188, 132, 'Grating', '#818cf8', 5, 'middle');
+
+ // Beam splitter
+ svg += line(191, 115, 215, 115, '#f43f5e', 1.5);
+ svg += rect(215, 110, 8, 12, '#94a3b8', '#f8fafc', 1);
+ svg += text(219, 104, 'Splitter', '#94a3b8', 5, 'middle');
+
+ // Reference Beam (upper) -> Water cuvette -> Ref Photodiode
+ svg += line(223, 112, 245, 98, '#38bdf8', 1.2, '3,2');
+ svg += rect(245, 90, 16, 20, 'rgba(56, 189, 248, 0.15)', '#38bdf8', 1);
+ svg += text(253, 102, 'H₂O', '#38bdf8', 5.5, 'middle');
+ svg += line(261, 98, 290, 98, '#38bdf8', 1.2, '3,2');
+ svg += rect(290, 92, 14, 14, '#1e293b', '#22c55e', 1);
+ svg += text(297, 101, 'Det 1', '#22c55e', 5, 'middle');
+
+ // Sample Beam (lower) -> Gold sol cuvette -> Sample Photodiode
+ svg += line(223, 118, 245, 135, '#ec4899', 1.5);
+ svg += rect(245, 125, 16, 22, colloidColor, '#fda4af', 1.5);
+ svg += text(253, 138, 'Au', '#ffffff', 6, 'middle', 'bold');
+ svg += line(261, 135, 290, 135, '#ec4899', 1.5);
+ svg += rect(290, 129, 14, 14, '#1e293b', '#22c55e', 1);
+ svg += text(297, 138, 'Det 2', '#22c55e', 5, 'middle');
+
+ // Digital display on spectrophotometer
+ svg += rect(145, 165, 175, 42, '#090d16', '#1e293b', 1, 3);
+ svg += text(155, 179, 'λ_max = ' + lam.toFixed(1) + ' nm', '#38bdf8', 8.5, 'start', 'bold');
+ svg += text(155, 194, 'Absorbance A = 0.852 AU  (10.0 mm Quartz)', '#4ade80', 6.5, 'start');
+ svg += text(155, 203, 'Fröhlich: ε₁(λ) = −2 ε_m = −3.554', '#cbd5e1', 5.5, 'start');
+
+ // Bottom telemetry card in left panel
+ svg += rect(30, 248, 300, 60, '#090d16', '#1e293b', 1, 4);
+ svg += text(40, 263, 'Gold Nanoparticle Core Diameter: d = ' + d.toFixed(1) + ' nm', '#facc15', 7.5, 'start', 'bold');
+ svg += text(40, 277, 'LSPR Resonance Peak: λ_max = ' + lam.toFixed(1) + ' nm (Red-shift: Δλ = +' + shift + ' nm)', '#38bdf8', 7, 'start');
+ svg += text(40, 291, 'Colloid Appearance: ' + colorName + ' (Plasmon absorption in green: ~520 nm)', '#cbd5e1', 6, 'start');
+ svg += text(40, 302, 'Mie Electrodynamic Regime: Phase retardation dipole mode', '#4ade80', 6, 'start');
+
+ // RIGHT PANEL: LSPR Extinction Regression Plot λ_max vs d (x: 360 to 705)
+ svg += rect(360, 42, 345, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(532, 58, 'MIE RETARDATION REGRESSION: λ_max vs d', '#38bdf8', 9.5, 'middle', 'bold');
+
+ // Plot coordinates: x from 410 to 680, y from 225 down to 80
+ var plot_x0 = 410, plot_x1 = 680, plot_y0 = 225, plot_y1 = 80;
+ svg += line(plot_x0, plot_y0, plot_x1, plot_y0, '#64748b', 1.5); // X-axis
+ svg += line(plot_x0, plot_y0, plot_x0, plot_y1, '#64748b', 1.5); // Y-axis
+
+ // X-axis ticks (d: 0 to 70 nm)
+ for (var tick_d = 0; tick_d <= 70; tick_d += 10) {
+  var tx = plot_x0 + (tick_d / 70) * (plot_x1 - plot_x0);
+  svg += line(tx, plot_y0, tx, plot_y0 + 4, '#64748b', 1);
+  svg += text(tx, plot_y0 + 13, tick_d.toString(), '#94a3b8', 6, 'middle');
+ }
+ svg += text((plot_x0 + plot_x1) / 2, plot_y0 + 25, 'Nanoparticle Core Diameter d (nm)', '#94a3b8', 7, 'middle', 'bold');
+
+ // Y-axis ticks (λ: 510 to 545 nm)
+ for (var tick_l = 510; tick_l <= 545; tick_l += 5) {
+  var ty = plot_y0 - ((tick_l - 510) / 35) * (plot_y0 - plot_y1);
+  svg += line(plot_x0 - 4, ty, plot_x0, ty, '#64748b', 1);
+  svg += text(plot_x0 - 7, ty + 3, tick_l.toString(), '#94a3b8', 6, 'end');
+ }
+ svg += text(plot_x0 - 24, (plot_y0 + plot_y1) / 2, 'LSPR λ_max (nm)', '#94a3b8', 7, 'middle', 'bold');
+
+ // Intrinsic dipolar plasmon limit λ₀ = 512.60 nm at d = 0
+ var y_lambda0 = plot_y0 - ((512.60 - 510) / 35) * (plot_y0 - plot_y1);
+ svg += line(plot_x0, y_lambda0, plot_x1, y_lambda0, '#facc15', 1, '3,3');
+ svg += text(plot_x1 - 5, y_lambda0 - 4, 'λ₀ = 512.60 nm (d→0 limit)', '#facc15', 6, 'end');
+
+ // Theoretical regression line: λ = 512.60 + 0.440 * d
+ var line_x_start = plot_x0;
+ var line_y_start = y_lambda0;
+ var line_x_end = plot_x0 + (70 / 70) * (plot_x1 - plot_x0);
+ var line_y_end = plot_y0 - (((512.60 + 0.440 * 70) - 510) / 35) * (plot_y0 - plot_y1);
+ svg += line(line_x_start, line_y_start, line_x_end, line_y_end, '#38bdf8', 2);
+
+ // Standard experimental sample points: [10, 15, 20, 30, 45, 60]
+ var samples = [
+  { d: 10.0, lam: 517.0 },
+  { d: 15.0, lam: 519.2 },
+  { d: 20.0, lam: 521.4 },
+  { d: 30.0, lam: 525.8 },
+  { d: 45.0, lam: 532.4 },
+  { d: 60.0, lam: 539.0 }
+ ];
+
+ for (var i = 0; i < samples.length; i++) {
+  var s = samples[i];
+  var px = plot_x0 + (s.d / 70) * (plot_x1 - plot_x0);
+  var py = plot_y0 - ((s.lam - 510) / 35) * (plot_y0 - plot_y1);
+  svg += circle(px, py, 4, '#ec4899', '#ffffff', 1.5);
+ }
+
+ // Active measurement point highlight
+ var curr_px = plot_x0 + (d / 70) * (plot_x1 - plot_x0);
+ var curr_py = plot_y0 - ((lam - 510) / 35) * (plot_y0 - plot_y1);
+ svg += circle(curr_px, curr_py, 7, 'none', '#4ade80', 2);
+ svg += circle(curr_px, curr_py, 4, '#4ade80', '#ffffff', 1);
+
+ // Bottom telemetry card in right panel
+ svg += rect(375, 260, 315, 48, '#090d16', '#1e293b', 1, 4);
+ svg += text(385, 274, 'Mie Fit: λ_max = 0.440·d + 512.60 nm (R² = 1.0000)', '#4ade80', 7, 'start', 'bold');
+ svg += text(385, 287, 'Intrinsic Dipolar Limit: λ₀ = 512.60 nm | Slope: S = 0.440 nm/nm', '#38bdf8', 6.5, 'start');
+ svg += text(385, 300, 'Fröhlich Resonance: ε₁(512.6 nm) = −2 n_m² = −3.554 (Water, n=1.333)', '#cbd5e1', 6, 'start');
+
+ return svg;
+}
+
+function drawGoldNanoCompareView(p, rawVal) {
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a0f1d');
+
+ svg += text(360, 18, 'MIE EXTINCTION SPECTRA VS NANOPARTICLE SIZE (10–60 NM)', '#38bdf8', 11, 'middle', 'bold');
+ svg += text(360, 32, 'Localized Surface Plasmon Resonance | Bathochromic Shift & Band Broadening', '#94a3b8', 8.5, 'middle');
+
+ // LEFT PANEL: UV-Vis Extinction Spectral Overlay (x: 15 to 355)
+ svg += rect(15, 42, 340, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(185, 58, 'UV-VIS EXTINCTION SPECTRA (400–700 NM)', '#38bdf8', 9.5, 'middle', 'bold');
+
+ // Coordinate box for spectra: x: 55 to 330, y: 75 to 220
+ var sx0 = 55, sx1 = 330, sy0 = 220, sy1 = 75;
+ svg += line(sx0, sy0, sx1, sy0, '#64748b', 1.5);
+ svg += line(sx0, sy0, sx0, sy1, '#64748b', 1.5);
+
+ // X ticks: 400, 500, 600, 700 nm
+ for (var w = 400; w <= 700; w += 50) {
+  var wx = sx0 + ((w - 400) / 300) * (sx1 - sx0);
+  svg += line(wx, sy0, wx, sy0 + 4, '#64748b', 1);
+  svg += text(wx, sy0 + 13, w.toString(), '#94a3b8', 6, 'middle');
+ }
+ svg += text((sx0 + sx1) / 2, sy0 + 25, 'Wavelength λ (nm)', '#94a3b8', 7, 'middle', 'bold');
+
+ // Y ticks: Absorbance A (0.0 to 1.0)
+ for (var a = 0.0; a <= 1.0; a += 0.2) {
+  var ay = sy0 - (a / 1.0) * (sy0 - sy1);
+  svg += line(sx0 - 4, ay, sx0, ay, '#64748b', 1);
+  svg += text(sx0 - 7, ay + 3, a.toFixed(1), '#94a3b8', 6, 'end');
+ }
+ svg += text(sx0 - 24, (sy0 + sy1) / 2, 'Absorbance A', '#94a3b8', 7, 'middle', 'bold');
+
+ // Interband transition region highlight below 500 nm
+ var ib_x = sx0 + ((500 - 400) / 300) * (sx1 - sx0);
+ svg += rect(sx0, sy1, ib_x - sx0, sy0 - sy1, 'rgba(56, 189, 248, 0.04)', 'none', 0);
+ svg += text((sx0 + ib_x) / 2, sy1 + 12, '5d→6sp Interband', '#38bdf8', 5.5, 'middle');
+
+ // Draw 4 representative extinction peaks (Lorentzian/Gaussian approximation):
+ // 1. 10 nm: peak at 517 nm, FWHM = 45 nm, A_max = 0.72 (green '#4ade80')
+ // 2. 20 nm: peak at 521 nm, FWHM = 52 nm, A_max = 0.95 (ruby '#ec4899')
+ // 3. 40 nm: peak at 530 nm, FWHM = 68 nm, A_max = 0.85 (cyan '#38bdf8')
+ // 4. 60 nm: peak at 539 nm, FWHM = 88 nm, A_max = 0.76 (amber '#facc15')
+ var curves = [
+  { d: 10, lam: 517.0, fwhm: 45, maxA: 0.72, col: '#4ade80' },
+  { d: 20, lam: 521.4, fwhm: 52, maxA: 0.95, col: '#ec4899' },
+  { d: 40, lam: 530.2, fwhm: 68, maxA: 0.85, col: '#38bdf8' },
+  { d: 60, lam: 539.0, fwhm: 88, maxA: 0.76, col: '#facc15' }
+ ];
+
+ for (var c = 0; c < curves.length; c++) {
+  var cv = curves[c];
+  var d_path = '';
+  for (var wl = 400; wl <= 700; wl += 5) {
+   var x_pt = sx0 + ((wl - 400) / 300) * (sx1 - sx0);
+   // Interband base absorbance
+   var a_ib = (wl < 500) ? 0.25 * Math.exp(-(wl - 400) / 70) : 0.03;
+   // LSPR peak
+   var a_spr = cv.maxA * (Math.pow(cv.fwhm / 2, 2) / (Math.pow(wl - cv.lam, 2) + Math.pow(cv.fwhm / 2, 2)));
+   var total_A = a_ib + a_spr;
+   var y_pt = sy0 - (total_A / 1.0) * (sy0 - sy1);
+   if (wl === 400) d_path += 'M ' + x_pt.toFixed(1) + ',' + y_pt.toFixed(1);
+   else d_path += ' L ' + x_pt.toFixed(1) + ',' + y_pt.toFixed(1);
+  }
+  svg += path(d_path, 'none', cv.col, 1.8);
+ }
+
+ // Legend below spectra plot
+ svg += rect(30, 255, 310, 48, '#090d16', '#1e293b', 1, 4);
+ for (var k = 0; k < curves.length; k++) {
+  var lx = 40 + (k % 2) * 150;
+  var ly = 268 + Math.floor(k / 2) * 18;
+  svg += circle(lx, ly, 4, curves[k].col);
+  svg += text(lx + 10, ly + 3, 'd = ' + curves[k].d + ' nm (λ = ' + curves[k].lam.toFixed(0) + ' nm)', '#cbd5e1', 6, 'start');
+ }
+
+ // RIGHT PANEL: Analytical Property Table & Turkevich Ratios (x: 370 to 705)
+ svg += rect(370, 42, 335, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(537, 58, 'SIZE-DEPENDENT COLLOIDAL PROPERTIES', '#38bdf8', 9.5, 'middle', 'bold');
+
+ // Table header
+ svg += rect(380, 72, 315, 20, '#1e293b', 'none', 0, 3);
+ svg += text(405, 85, 'Size (d)', '#38bdf8', 6.5, 'middle', 'bold');
+ svg += text(455, 85, 'Citrate:Au', '#38bdf8', 6.5, 'middle', 'bold');
+ svg += text(515, 85, 'Peak λ_max', '#38bdf8', 6.5, 'middle', 'bold');
+ svg += text(580, 85, 'Extinction ε', '#38bdf8', 6.5, 'middle', 'bold');
+ svg += text(655, 85, 'Visual Color', '#38bdf8', 6.5, 'middle', 'bold');
+
+ var tableData = [
+  { d: '10.0 nm', r: '5.0 : 1', lam: '517.0 nm', eps: '1.1 × 10⁸', col: 'Bright Ruby', dot: '#dc2626' },
+  { d: '15.0 nm', r: '4.0 : 1', lam: '519.2 nm', eps: '3.6 × 10⁸', col: 'Ruby-Red', dot: '#b91c1c' },
+  { d: '20.0 nm', r: '3.0 : 1', lam: '521.4 nm', eps: '8.8 × 10⁸', col: 'Brilliant Ruby', dot: '#991b1b' },
+  { d: '30.0 nm', r: '2.0 : 1', lam: '525.8 nm', eps: '3.0 × 10⁹', col: 'Deep Ruby', dot: '#7f1d1d' },
+  { d: '45.0 nm', r: '1.5 : 1', lam: '532.4 nm', eps: '1.1 × 10¹⁰', col: 'Crimson-Purple', dot: '#831843' },
+  { d: '60.0 nm', r: '1.0 : 1', lam: '539.0 nm', eps: '2.6 × 10¹⁰', col: 'Purplish-Wine', dot: '#701a75' }
+ ];
+
+ for (var r = 0; r < tableData.length; r++) {
+  var row_y = 96 + r * 22;
+  var row_bg = (r % 2 === 0) ? '#090d16' : '#1e293b';
+  svg += rect(380, row_y, 315, 20, row_bg, 'none', 0, 2);
+  svg += text(405, row_y + 13, tableData[r].d, '#f8fafc', 6, 'middle');
+  svg += text(455, row_y + 13, tableData[r].r, '#facc15', 6, 'middle');
+  svg += text(515, row_y + 13, tableData[r].lam, '#38bdf8', 6, 'middle', 'bold');
+  svg += text(580, row_y + 13, tableData[r].eps + ' M⁻¹cm⁻¹', '#4ade80', 5.5, 'middle');
+  svg += circle(630, row_y + 10, 4, tableData[r].dot);
+  svg += text(640, row_y + 13, tableData[r].col, '#cbd5e1', 5.5, 'start');
+ }
+
+ // Bottom mechanism takeaway card
+ svg += rect(380, 235, 315, 70, '#090d16', '#1e293b', 1, 4);
+ svg += text(390, 250, 'Turkevich Nucleation Kinetics (LaMer Burst Model):', '#facc15', 7, 'start', 'bold');
+ svg += text(390, 263, '• Higher Citrate:Au ratio (5:1) accelerates burst nucleation, forming smaller seeds (10 nm).', '#cbd5e1', 6, 'start');
+ svg += text(390, 276, '• Lower ratio (1:1) slows nucleation, channeling Au(III) precursor into particle growth (60 nm).', '#cbd5e1', 6, 'start');
+ svg += text(390, 289, '• Electrodynamic retardation explains the monotonic +22.0 nm red shift (517 → 539 nm).', '#38bdf8', 6, 'start');
+ svg += text(390, 300, '• A_spr / A_450 absorbance ratio serves as a universal, concentration-free size metric.', '#4ade80', 6, 'start');
+
+ return svg;
+}
+
+function drawGoldNanoSandboxView(p, rawVal) {
+ var d = Number(p.input) || 20.0;
+ var lam = (rawVal !== null && rawVal !== undefined) ? rawVal : (512.60 + 0.440 * d);
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a0f1d');
+
+ svg += text(360, 18, 'ELECTRODYNAMICS OF LOCALIZED SURFACE PLASMON RESONANCE', '#38bdf8', 11, 'middle', 'bold');
+ svg += text(360, 32, 'Drude Conduction Electron Cloud | Surface Dipole Polarization | Fröhlich Condition', '#94a3b8', 8.5, 'middle');
+
+ // LEFT PANEL: Nanosphere Dipolar Oscillation Model (x: 15 to 355)
+ svg += rect(15, 42, 340, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(185, 58, 'DIPOLAR PLASMON RESONANCE IN GOLD NANOSPHERE', '#38bdf8', 9.5, 'middle', 'bold');
+
+ // Central Gold Nanosphere
+ var sphere_r = 18 + (d / 60) * 24; // scale radius from 22 to 42 px
+ var cx = 185, cy = 160;
+
+ // Displaced electron cloud (semi-transparent blue/cyan shifted to the right)
+ svg += circle(cx + 12, cy, sphere_r, 'rgba(56, 189, 248, 0.25)', '#38bdf8', 1.5);
+ svg += text(cx + sphere_r + 18, cy - 20, 'Displaced Conduction', '#38bdf8', 6, 'start');
+ svg += text(cx + sphere_r + 18, cy - 10, 'Electron Cloud (e⁻)', '#38bdf8', 6, 'start', 'bold');
+
+ // Fixed positive Au+ lattice core
+ svg += circle(cx, cy, sphere_r, '#b45309', '#facc15', 2);
+ svg += text(cx, cy + 3, 'Au⁺ Core', '#ffffff', 7, 'middle', 'bold');
+
+ // Surface charge accumulation signs (+ on left, - on right)
+ for (var k = -2; k <= 2; k++) {
+  var charge_y = cy + k * (sphere_r * 0.35);
+  svg += text(cx - sphere_r + 6, charge_y + 4, '+', '#f43f5e', 8, 'middle', 'bold');
+  svg += text(cx + sphere_r + 8, charge_y + 4, '−', '#38bdf8', 9, 'middle', 'bold');
+ }
+
+ // Incident electromagnetic wave E_0 arrow (pointing left to right)
+ svg += line(50, 100, 110, 100, '#facc15', 2);
+ svg += path('M 105,96 L 115,100 L 105,104 Z', '#facc15', 'none', 0);
+ svg += text(80, 92, 'Incident Light E₀', '#facc15', 6.5, 'middle', 'bold');
+
+ // Restoring force arrow (pointing right to left)
+ svg += line(cx + 20, cy - sphere_r - 12, cx - 20, cy - sphere_r - 12, '#4ade80', 2);
+ svg += path('M cx-15, cy-sphere_r-16 L cx-25, cy-sphere_r-12 L cx-15, cy-sphere_r-8 Z', '#4ade80', 'none', 0);
+ svg += text(cx, cy - sphere_r - 16, 'Coulomb Restoring Force F_res', '#4ade80', 6.5, 'middle', 'bold');
+
+ // Near-field enhancement lines
+ svg += ellipse(cx, cy, sphere_r + 18, sphere_r + 10, 'none', 'rgba(236, 72, 153, 0.4)', 1.5, '4,3');
+ svg += text(cx, cy + sphere_r + 16, 'Near-Field Enhancement |E|²/|E₀|² > 10⁴ (SERS)', '#ec4899', 6, 'middle', 'bold');
+
+ // Bottom telemetry card in left panel
+ svg += rect(30, 255, 310, 48, '#090d16', '#1e293b', 1, 4);
+ svg += text(40, 269, 'Core Diameter: d = ' + d.toFixed(1) + ' nm | Retardation Δφ = 2π(n_m·d)/λ = ' + ((2 * Math.PI * 1.333 * d) / lam).toFixed(3) + ' rad', '#38bdf8', 6.5, 'start');
+ svg += text(40, 282, 'Restoring force constant k_eff decreases with size due to non-uniform phase across d.', '#cbd5e1', 5.5, 'start');
+ svg += text(40, 294, 'Natural resonant frequency ω₀ = √(k/m*) lowers ==> λ_LSPR red-shifts (+0.440 nm/nm).', '#4ade80', 5.5, 'start');
+
+ // RIGHT PANEL: Theoretical Mie & Drude Formulations (x: 370 to 705)
+ svg += rect(370, 42, 335, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(537, 58, 'MIE SCATTERING & DRUDE DIELECTRIC RELATIONS', '#38bdf8', 9.5, 'middle', 'bold');
+
+ var cards = [
+  { t: "1. Fröhlich Resonance Condition", d: "ε₁(ω_LSPR) = −2 ε_m  (Quasi-static dipolar limit)" },
+  { t: "2. Medium Dielectric Constant", d: "Aqueous water: n_m = 1.333 ==> ε_m = n_m² = 1.777 ==> ε₁ = −3.554" },
+  { t: "3. Drude Free Electron Permittivity", d: "ε₁(ω) = 1 − ω_p²/(ω² + γ²)  ==> Strongly negative in visible light" },
+  { t: "4. Dipolar Extinction Cross Section", d: "C_ext = (24π² R³ ε_m^(3/2) / λ) · [ ε₂ / ((ε₁ + 2ε_m)² + ε₂²) ]" },
+  { t: "5. Electrodynamic Phase Retardation", d: "λ_max = λ₀ + S · d = 512.60 nm + (0.440 nm/nm) · d" },
+  { t: "6. Advanced Plasmonic Applications", d: "SERS biosensors, cancer photothermal therapy, optical metamaterials" }
+ ];
+
+ for (var m = 0; m < cards.length; m++) {
+  var cy_pos = 75 + m * 38;
+  svg += rect(380, cy_pos, 315, 32, (m % 2 === 0) ? '#090d16' : '#1e293b', 'none', 0, 3);
+  svg += text(390, cy_pos + 12, cards[m].t, '#facc15', 6.5, 'start', 'bold');
+  svg += text(390, cy_pos + 25, cards[m].d, '#cbd5e1', 6, 'start');
  }
 
  return svg;

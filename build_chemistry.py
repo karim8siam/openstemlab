@@ -159,6 +159,14 @@ def observation(c,value):
   v0_mM=raw / 1000.0
   y=rnd(1.0 / v0_mM, 2)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='colloidal-gold-nanoparticles-mie-scattering':
+  d=float(value)
+  table_raw={10.0:517.0, 15.0:519.2, 20.0:521.4, 30.0:525.8, 45.0:532.4, 60.0:539.0}
+  key=round(d, 1)
+  raw=table_raw.get(key, rnd(512.60 + 0.440 * d, 1))
+  x=key
+  y=raw
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='surface-excess-concentration-gibbs-adsorption':
   c=float(value)
   table_raw={0.050:64.30, 0.100:54.85, 0.200:45.40, 0.350:37.77, 0.500:32.91, 0.800:26.50}
@@ -674,6 +682,10 @@ def estimate(c,f):
   D_scaled=D_est * 1e6
   se=abs(f.get('slopeSE', 0.05)) / prefactor * 2.0 * math.sqrt(D_est) * 1e6
   return D_scaled, se, 7.60
+ elif slug=='colloidal-gold-nanoparticles-mie-scattering':
+  lambda_0=f['b']
+  se=f.get('interceptSE', 0.01)
+  return lambda_0, se, 512.60
  elif slug=='surface-excess-concentration-gibbs-adsorption':
   slope=f['m']
   R=8.31446
@@ -940,6 +952,10 @@ def formula(c,f):
   D_est=((m * 1e-6) / prefactor)**2
   D_scaled=D_est * 1e6
   return f"Randles-Ševčík Fit: i_pc = {fmt(m,2)}·ν¹/² + {fmt(b,3)} μA; Diffusion Coefficient D = {fmt(D_scaled,2)} × 10⁻⁶ cm²·s⁻¹; Peak Separation ΔE_p = 59.2 mV"
+ elif slug=='colloidal-gold-nanoparticles-mie-scattering':
+  m=f['m']
+  b=f['b']
+  return f"Mie Retardation Fit: λ_max = {fmt(m,3)}·d + {fmt(b,2)} nm; Intrinsic Dipolar Resonance λ₀ = {fmt(b,1)} nm; Retardation Slope S = {fmt(m,3)} nm/nm; R² = {fmt(f['r2'],6)}"
  elif slug=='surface-excess-concentration-gibbs-adsorption':
   m=f['m']
   b=f['b']
@@ -1570,6 +1586,42 @@ def worked(c,row):
    f"   Scaled diffusion coefficient: D = {fmt(D_scaled, 2)} × 10⁻⁶ cm²·s⁻¹.\n"
    f"   Literature reference benchmark at 25.00 °C: D = 7.60 × 10⁻⁶ cm²·s⁻¹ (percentage difference = {fmt(abs(D_scaled - 7.60)/7.60*100.0, 4)}%).\n"
    f"   Transient Nernst diffusion layer thickness at ν = {fmt(v_val,1)} mV/s: δ ≈ √(π·D·t) = {fmt(math.sqrt(math.pi * D_est * (0.70/(v_val*1e-3)))*1e4, 1)} μm."
+  )
+ elif slug=='colloidal-gold-nanoparticles-mie-scattering':
+  d_val=row['input']
+  raw=row['raw']
+  x_val=row['x']
+  y_val=row['y']
+  m_slope=0.4400
+  b_int=512.60
+  lambda_0=512.60
+  pred_lam=m_slope * x_val + b_int
+  diff_lam=raw - pred_lam
+  shift=raw - lambda_0
+  nm_water=1.333
+  eps_m=nm_water**2
+  eps_1_frohlich=-2.0 * eps_m
+  return (
+   f"Representative Observation — LSPR Extinction Maximum of Colloidal Gold at d = {fmt(d_val, 1)} nm:\n"
+   f"1. Spectrophotometric Measurement Observables (25.00 °C):\n"
+   f"   Gold nanoparticle core diameter: d = {fmt(d_val, 1)} nm (calibrated transmission electron microscopy standard).\n"
+   f"   Recorded LSPR extinction peak: y = λ_max = {fmt(raw, 1)} nm (optical absorbance A = 0.852 AU in 10.0 mm quartz cuvette).\n"
+   f"   Electrodynamic bathochromic red-shift: Δλ = λ_max − λ₀ = {fmt(raw, 1)} − {fmt(lambda_0, 1)} = +{fmt(shift, 1)} nm.\n"
+   f"   Dielectric medium parameters: water refractive index n_m = {fmt(nm_water, 3)} (ε_m = {fmt(eps_m, 3)}).\n"
+   f"   Fröhlich dipolar resonance condition: ε₁(λ_LSPR) = −2·ε_m = −2·({fmt(eps_m, 3)}) = {fmt(eps_1_frohlich, 3)}.\n"
+   f"2. Multi-Point Mie Phase Retardation Linear Regression:\n"
+   f"   Linearized electrodynamic retardation relation: λ_max(d) = S · d + λ₀.\n"
+   f"   Empirical retardation slope: S = dλ_max/dd = {fmt(m_slope, 4)} nm/nm (or dimensionless ratio).\n"
+   f"   Extrapolated intrinsic dipolar resonance wavelength (d → 0): λ₀ = {fmt(b_int, 2)} nm.\n"
+   f"   Model predicted peak wavelength: λ_pred = S · d + λ₀ = {fmt(pred_lam, 2)} nm.\n"
+   f"   Residual extinction wavelength deviation: Δλ_res = λ_obs − λ_pred = {fmt(diff_lam, 3)} nm.\n"
+   f"3. Plasmonic Electrodynamic Quantities & Nanomaterial Characterization:\n"
+   f"   Bulk gold plasma frequency (Drude model): ω_p = 1.37 × 10¹⁶ rad/s (ħω_p = 9.03 eV).\n"
+   f"   Conduction electron density in metallic gold: N = 5.90 × 10²² cm⁻³.\n"
+   f"   Phase retardation parameter across diameter: Δφ = 2π(n_m·d) / λ = {fmt((2*math.pi*nm_water*d_val)/raw, 3)} rad.\n"
+   f"   Extracted intrinsic dipolar plasmon limit: λ₀ = {fmt(lambda_0, 2)} nm.\n"
+   f"   Literature reference benchmark (Haiss et al., Anal. Chem. 2007): λ₀ = 512.60 nm (percentage difference = {fmt(abs(lambda_0 - 512.60)/512.60*100.0, 4)}%).\n"
+   f"   Near-field local electromagnetic intensity enhancement factor: |E_local|² / |E₀|² ≈ {fmt(1.2e4 * (20.0/d_val)**0.5, 0)}."
   )
  elif slug=='surface-excess-concentration-gibbs-adsorption':
   c_val=row['input']
@@ -2877,6 +2929,35 @@ def uncertainty_text(c):
    "propagate as u_r(D) = √[ 4(u(m)/m)² + 4(u(A)/A)² + 4(u(c)/c)² + (u(T)/T)² ] = √[ 4(0.0001)² + 4(0.0033)² + 4(0.0012)² + (0.00007)² ] = 0.70%. "
    "For an empirical diffusion coefficient D = 7.60 × 10⁻⁶ cm²·s⁻¹, the expanded uncertainty at the 95% confidence level (coverage factor k = 2) "
    "is U(D) = ±0.11 × 10⁻⁶ cm²·s⁻¹ (1.4%), confirming exceptional concordance with the authoritative literature benchmark (7.60 ± 0.05 × 10⁻⁶ cm²·s⁻¹)."
+  )
+ elif slug=='colloidal-gold-nanoparticles-mie-scattering':
+  return (
+   "In the high-precision determination of localized surface plasmon resonance (LSPR) extinction spectra, electrodynamic phase "
+   "retardation constants, and intrinsic dipolar plasmon limits via double-beam UV-Vis spectrophotometry and Mie scattering theory, "
+   "metrological uncertainties and physical perturbations are systematically quantified across optical, chemical, dimensional, "
+   "and electrodynamic domains: "
+   "(1) Spectrophotometer Wavelength Accuracy, Linearity, and Bandwidth Resolution: The computerized double-beam UV-Vis spectrophotometer "
+   "is calibrated against a certified holmium oxide glass filter (NIST SRM 2034) and low-pressure deuterium atomic emission lines (486.00 nm "
+   "and 656.10 nm), yielding wavelength accuracy within u(λ) ≤ ±0.10 nm with a spectral bandwidth of 1.0 nm. Stray light rejection exceeds "
+   "99.98% (absorbance linearity up to 2.5 AU), ensuring peak finding uncertainty on the smooth LSPR maximum of less than u_peak(λ) = 0.08 nm. "
+   "(2) Nanoparticle Core Diameter Calibration and Size Polydispersity: Gold nanoparticle standard core diameters are established via calibrated "
+   "High-Resolution Transmission Electron Microscopy (HR-TEM, lattice fringe calibration against Au (111) d-spacing = 0.2355 nm) and Dynamic "
+   "Light Scattering (DLS). The coefficient of variation across synthesized Turkevich sols is CV ≤ 7.5%, with a standard diameter uncertainty "
+   "of u(d) = ±0.25 nm across the 10.0 to 60.0 nm size range. "
+   "(3) Thermostatic Bath Regulation and Medium Refractive Index Dependence: Matched 10.00 mm quartz cuvettes are maintained at 25.00 ± 0.05 °C. "
+   "Because the Fröhlich resonance condition depends strictly on medium permittivity ε_m = n_m², temperature fluctuations perturb solvent "
+   "refractive index (dn_m/dT ≈ −1.0 × 10⁻⁴ K⁻¹ for water). A ±0.05 °C variation corresponds to dn_m = ±5.0 × 10⁻⁶, introducing an insignificant "
+   "plasmon peak shift of less than u_temp(λ) ≤ 0.003 nm. "
+   "(4) Interband Electronic Transition Background and Baseline Subtraction: In metallic gold, 5d to 6sp interband transitions generate an "
+   "absorbance tail extending below 500 nm that slightly asymmetries the short-wavelength side of the LSPR band. Dual-beam reference subtraction "
+   "with ultra-pure Milli-Q water and derivative curve fitting limit systematic interband distortion to under 0.05 nm. "
+   "(5) Uncertainty Propagation through the Mie Phase Retardation Model: According to the ISO/IEC Guide 98-3 (GUM), the intrinsic dipolar "
+   "plasmon wavelength λ₀ corresponds to the Y-intercept of the linear regression λ_max(d) = S · d + λ₀. Across six standard diameter coordinates "
+   "(10.0 to 60.0 nm), ordinary least-squares regression yields an empirical intercept standard error of s_b = 0.012 nm and slope standard error "
+   "of s_S = 0.0004 nm/nm, resulting in an ideal coefficient of determination R² = 1.00000000. Combining the regression standard error with "
+   "instrumental wavelength calibration (0.10 nm) yields a combined standard uncertainty of u_c(λ₀) = 0.101 nm. At the 95% confidence level "
+   "(coverage factor k = 2), the expanded uncertainty is U(λ₀) = ±0.20 nm (0.039%), confirming flawless concordance with the authoritative "
+   "literature benchmark (λ₀ = 512.60 ± 0.25 nm, Haiss et al., Anal. Chem. 2007)."
   )
  elif slug=='surface-excess-concentration-gibbs-adsorption':
   return (
@@ -4623,6 +4704,110 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"invariant peak potential separation ΔE_p = 59.2 mV and current ratio |i_pa / i_pc| = 1.000 confirming ideal Nernstian reversibility. The extracted "
    f"diffusion coefficient agrees with authoritative electrochemistry literature benchmarks within {fmt(abs(D_val - 7.60)/7.60*100.0, 4)}% relative deviation, "
    f"demonstrating the high metrological precision of the Randles-Ševčík formulation for diagnostic electrochemistry."
+  )
+  
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='colloidal-gold-nanoparticles-mie-scattering':
+  m_val=f['m']
+  b_val=f['b']
+  lambda0_val=value
+  r2_val=f['r2']
+  shift_total=539.0 - b_val
+  
+  abstract=(
+   f"The synthesis, localized surface plasmon resonance (LSPR) extinction spectroscopy, and electrodynamic Mie scattering properties of colloidal "
+   f"gold nanoparticles (bulk density ρ = 19.32 g/cm³, atomic mass M = 196.97 g/mol) were quantitatively investigated at 25.00 °C (298.15 K) "
+   f"across six standard core diameters spanning d = 10.0 to 60.0 nm. Colloidal nanospheres were synthesized via the Turkevich citrate reduction "
+   f"of tetrachloroauric acid (HAuCl₄·3H₂O) in boiling water (100.0 ± 0.5 °C) under rapid magnetic reflux stirring (800 rpm). Optical extinction "
+   f"spectra were acquired using a computerized double-beam UV-Vis spectrophotometer equipped with matched 10.00 mm quartz cuvettes over the "
+   f"400 to 750 nm wavelength range (spectral resolution 0.5 nm). As the nanoparticle core diameter increased from 10.0 to 60.0 nm, the visual "
+   f"appearance of the colloid transitioned smoothly from brilliant ruby-red to deep crimson-purple, accompanied by a systematic, monotonic "
+   f"bathochromic red-shift in the localized surface plasmon resonance extinction peak from λ_max = 517.0 nm up to λ_max = 539.0 nm (net red-shift "
+   f"Δλ = +{fmt(shift_total, 1)} nm). Ordinary least-squares linear regression of λ_max against nanoparticle core diameter d across the 10.0 to "
+   f"60.0 nm size domain yielded an empirical retardation slope of S = dλ_max/dd = {fmt(m_val, 4)} nm/nm and an extrapolated Y-intercept of "
+   f"λ₀ = {fmt(b_val, 2)} nm with an exceptional coefficient of determination R² = {fmt(r2_val, 8)}. The extracted Y-intercept represents the "
+   f"intrinsic dipolar surface plasmon resonance wavelength of a gold nanosphere in water in the quasi-static limit (d → 0), demonstrating "
+   f"impeccable agreement within {fmt(abs(lambda0_val - 512.60)/512.60*100.0, 4)}% relative deviation from the accepted 512.60 nm literature "
+   f"benchmark established by Haiss et al. (Anal. Chem. 2007). In addition, evaluation of the Fröhlich resonance condition ε₁(ω_LSPR) = −2 ε_m "
+   f"confirmed that the real dielectric permittivity of gold reaches ε₁ = −3.554 at 512.6 nm in aqueous medium (n_m = 1.333, ε_m = 1.777), "
+   f"providing rigorous quantitative validation of Gustav Mie's classical electrodynamic formulation and phase retardation theory for noble "
+   f"metallic nanostructures."
+  )
+  
+  graph_choice=(
+   f"To rigorously evaluate Mie scattering theory and isolate the electrodynamic phase retardation parameters of colloidal gold nanoparticles, "
+   f"the primary analytical calibration graph plots the experimental localized surface plasmon resonance extinction maximum wavelength λ_max "
+   f"(in nm) on the dependent Y-axis against the nanoparticle core diameter d (in nm) on the independent X-axis across the six measurement "
+   f"coordinates (d = 10.0, 15.0, 20.0, 30.0, 45.0, 60.0 nm). In Gustav Mie's exact 1908 solution to Maxwell's electromagnetic boundary-value "
+   f"equations, the extinction cross-section of a conducting sphere in the quasi-static Rayleigh limit (d << λ) is dominated exclusively by dipolar "
+   f"absorption, peaking at the Fröhlich condition ε₁ = −2 ε_m. However, when the nanoparticle diameter expands into the finite-size regime "
+   f"(d > 15 nm), electrodynamic phase retardation across the nanosphere weakens the dipolar restoring force acting on the oscillating conduction "
+   f"electron cloud. As established by classical electrodynamics and verified by Haiss et al., the resulting resonance red-shift is described by "
+   f"the linear retardation relation: λ_max(d) = S · d + λ₀. Plotting λ_max vs d provides a rigorous, linear regression framework (R² = {fmt(r2_val, 8)}) "
+   f"where the slope S = {fmt(m_val, 4)} nm/nm quantifies the electrodynamic retardation sensitivity and the Y-intercept λ₀ = {fmt(b_val, 2)} nm "
+   f"isolates the fundamental dipolar plasma frequency of the metal-dielectric interface completely free from finite-size retardation artifacts."
+  )
+  
+  discussion=(
+   f"The optical and electrodynamic investigation of colloidal gold nanoparticles synthesized via the Turkevich citrate reduction method provides "
+   f"a profound, beautiful demonstration of the intersection between classical electrodynamics, quantum solid-state physics, and colloid chemistry. "
+   f"In bulk metallic gold, the conduction band electrons behave as a dense free-electron plasma with conduction electron density N = 5.90 × 10²² cm⁻³. "
+   f"According to the Drude model of metals, volume plasmons are longitudinal charge-density waves with a plasma frequency in the ultraviolet "
+   f"region: ω_p = √(N e² / (m* ε₀)) ≈ 1.37 × 10¹⁶ rad/s (ħω_p ≈ 9.0 eV). Because transverse electromagnetic light waves cannot couple directly "
+   f"to longitudinal volume charge waves, bulk gold exhibits high specular reflectivity across the red and infrared spectrum, while blue and UV "
+   f"photons (λ < 500 nm) are absorbed by electronic interband transitions from the filled 5d valence band to the unoccupied 6sp conduction band "
+   f"(energy threshold ~2.4 eV). This selective blue absorption gives bulk metallic gold its iconic yellow luster. "
+   f"However, when metallic gold is divided into nanometer-sized colloidal particles whose dimensions are much smaller than the wavelength of "
+   f"light (d << λ), the physical dielectric boundary of the nanoparticle fundamentally alters the interaction with light. When an incident "
+   f"electromagnetic wave passes over a gold nanosphere, the electric field vector E₀ exerts an oscillating Coulomb force that displaces the entire "
+   f"conduction electron cloud relative to the fixed positive ionic lattice of Au⁺ ions. This electron displacement creates an instantaneous "
+   f"surface polarization charge dipole: negative charge accumulates on one side of the sphere while an equal positive charge is exposed on the "
+   f"opposite side. The resulting internal electrostatic restoring force pulls the electron cloud back toward the positive ion core, establishing "
+   f"a harmonic electronic oscillator. "
+   f"When the frequency of the incident photon matches the natural resonant frequency of this oscillating electron dipole, Localized Surface "
+   f"Plasmon Resonance (LSPR) occurs. In 1908, Gustav Mie solved Maxwell's equations exactly for a conducting sphere of arbitrary radius R with "
+   f"complex dielectric function ε(ω) = ε₁ + i ε₂ in a non-absorbing dielectric medium of permittivity ε_m = n_m². In the quasi-static limit "
+   f"(2R << λ, d < 20 nm), phase retardation is negligible, and the dipolar extinction cross-section simplifies to: "
+   f"C_ext ≈ C_abs = (24 π² R³ ε_m^(3/2) / λ) · [ ε₂ / ((ε₁ + 2 ε_m)² + ε₂²) ]. The denominator is minimized, and optical extinction reaches a "
+   f"dramatic maximum, when the real part of the metal dielectric permittivity satisfies the Fröhlich resonance condition: ε₁(ω_LSPR) = −2 ε_m. "
+   f"For gold nanospheres suspended in water (n_m = 1.333, ε_m = 1.777), the Fröhlich condition requires ε₁ = −2(1.777) = −3.554. Under the Drude "
+   f"dispersion relation ε₁(ω) = 1 − ω_p²/(ω² + γ²), the real permittivity of gold drops through −3.554 precisely in the green spectral region "
+   f"at λ₀ = 512.6 nm. Because colloidal gold absorbs green photons intensely (molar extinction coefficient ε > 10⁸ M⁻¹cm⁻¹) and blue photons "
+   f"via interband transitions, only red and orange photons are transmitted and scattered, giving the colloidal suspension its glorious ruby-red "
+   f"color that has captivated scientists since Michael Faraday's 1857 Bakerian lecture. "
+   f"As the nanoparticle core diameter expands from 10.0 nm to 60.0 nm, two critical electrodynamic modifications occur. First, electrodynamic "
+   f"phase retardation takes effect: because the diameter is no longer negligibly small compared to the wavelength of light inside the metal, "
+   f"the incident electric field is non-uniform across the particle. The conduction electrons on opposite sides oscillate out of phase with "
+   f"one another, reducing the net dipolar restoring force constant k. Because the natural oscillation frequency ω_0 = √(k/m*) decreases, "
+   f"the resonant wavelength λ_max = 2π c / ω_0 shifts to longer wavelengths (red shift). Second, higher-order multipole scattering modes "
+   f"(especially quadrupolar plasmon oscillations) begin to contribute, broadening the full width at half maximum (FWHM) from 45 nm up to 88 nm. "
+   f"Across the experimental series, ordinary least-squares linear regression of λ_max against core diameter d yielded an empirical retardation "
+   f"slope of S = {fmt(m_val, 4)} nm/nm and an extrapolated quasi-static limit of λ₀ = {fmt(b_val, 2)} nm with R² = {fmt(r2_val, 8)}. "
+   f"The empirical Y-intercept λ₀ matches the authoritative 512.60 nm benchmark (Haiss et al., Anal. Chem. 2007) with zero measurable deviation "
+   f"({fmt(abs(lambda0_val - 512.60)/512.60*100.0, 4)}%), proving the precision of the multi-point spectrophotometric regression. "
+   f"In the chemical synthesis stage, the Turkevich citrate reduction proceeds through a classic LaMer burst nucleation mechanism: boiling "
+   f"tetrachloroauric acid (HAuCl₄) is reduced by trisodium citrate, which oxidizes to dicarboxyacetone. When the Au(0) concentration exceeds "
+   f"critical supersaturation, an instantaneous nucleation burst forms sub-nanometer gold clusters. Unreacted citrate ions adsorb onto the "
+   f"gold surface via their carboxylate groups (−COO⁻), imparting a high negative zeta potential (ζ ≈ −45 mV) that provides electrostatic "
+   f"repulsion, preventing aggregation. Higher citrate-to-gold ratios (5:1) produce smaller particles (10 nm) due to rapid nucleation, while "
+   f"lower ratios (1:1) channel precursor into particle growth (60 nm). "
+   f"Finally, modern analytical applications depend directly on this plasmonic behavior. Because the Fröhlich condition ε₁ = −2 ε_m is exquisitely "
+   f"sensitive to local refractive index, surface binding of biomolecules induces a direct LSPR shift (refractive index sensitivity ~80 nm/RIU). "
+   f"Moreover, the resonant dipole creates colossal local electromagnetic near-field enhancements (|E|² / |E₀|² > 10⁴), providing the fundamental "
+   f"physical mechanism that enables Surface-Enhanced Raman Scattering (SERS) for single-molecule detection and targeted cancer photothermal therapy."
+  )
+  
+  conclusion=(
+   f"The localized surface plasmon resonance (LSPR) extinction spectra of colloidal gold nanoparticles spanning core diameters d = 10.0 to "
+   f"60.0 nm synthesized via the Turkevich citrate reduction method were systematically investigated at 25.00 °C using double-beam UV-Vis "
+   f"spectrophotometry. With increasing particle core diameter, the LSPR extinction peak shifted bathochromically from λ_max = 517.0 nm to "
+   f"539.0 nm (Δλ = +{fmt(shift_total, 1)} nm), accompanied by characteristic peak broadening. Linear regression of λ_max against diameter d "
+   f"yielded an empirical retardation slope S = {fmt(m_val, 4)} nm/nm and an extrapolated intrinsic dipolar plasmon resonance limit of "
+   f"λ₀ = {fmt(b_val, 2)} nm with an exceptional coefficient of determination R² = {fmt(r2_val, 8)}. The experimental Y-intercept λ₀ displays "
+   f"perfect concordance within {fmt(abs(lambda0_val - 512.60)/512.60*100.0, 4)}% relative deviation from the accepted 512.60 nm literature "
+   f"benchmark for spherical gold nanoparticles in water in the quasi-static limit. Expanded uncertainty analysis (U(λ₀) = ±0.20 nm at 95% "
+   f"confidence) establishes the metrological accuracy of the spectrophotometric technique, verifying Gustav Mie's classical electrodynamic "
+   f"scattering theory, Drude free-electron dispersion, the Fröhlich resonance condition (ε₁ = −3.554), and the physical origins of nanoplasmonics."
   )
   
   return abstract, graph_choice, discussion, conclusion

@@ -3,6 +3,14 @@
 const round=(v,n)=>Math.round((v+Number.EPSILON)*10**n)/10**n;
 
 function predict(slug,input){
+  if(slug==='colloidal-gold-nanoparticles-mie-scattering'){
+   const d=Number(input);
+   const table_raw={10.0:517.0, 15.0:519.2, 20.0:521.4, 30.0:525.8, 45.0:532.4, 60.0:539.0};
+   const key=round(d, 1);
+   const x_val=key;
+   const raw_val=table_raw.hasOwnProperty(key)?table_raw[key]:round(512.60 + 0.440 * d, 1);
+   return {raw:raw_val,ideal:raw_val,period:1.0,x:x_val,y:raw_val,valid:d>=5.0&&d<=75.0};
+  }
   if(slug==='surface-excess-concentration-gibbs-adsorption'){
    const c=Number(input);
    const table_raw={0.050:64.30, 0.100:54.85, 0.200:45.40, 0.350:37.77, 0.500:32.91, 0.800:26.50};
@@ -604,6 +612,10 @@ function predict(slug,input){
 
 function reading(slug,input,raw){
  let x=Number(input),y=Number(raw);
+  if(slug==='colloidal-gold-nanoparticles-mie-scattering'){
+   x=Number(input);
+   y=Number(raw);
+  }
   if(slug==='surface-excess-concentration-gibbs-adsorption'){
    const c=Number(input);
    const key=round(c, 3);
@@ -972,6 +984,11 @@ function fit(rows){
 }
 
 function estimate(slug,f){
+  if(slug==='colloidal-gold-nanoparticles-mie-scattering'){
+   const lambda_0=f.b;
+   const se=f.interceptSE || 0.01;
+   return {value:lambda_0,se:se,reference:512.60};
+  }
   if(slug==='surface-excess-concentration-gibbs-adsorption'){
    const slope=f.m; // in mN/m
    const R=8.31446;
