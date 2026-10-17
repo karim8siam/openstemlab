@@ -87,6 +87,18 @@ function update(){
   $('apparatusDiagram').innerHTML=drawEnzymeKineticsBenchView(p,rawVal);
   return;
  }
+ if(cfg.slug==='electrochemical-cell-thermodynamics-nernst'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawDaniellCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawDaniellSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawDaniellBenchView(p,rawVal);
+  return;
+ }
  if(cfg.slug==='transference-numbers-hittorf-moving-boundary'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawMovingBoundaryCompareView(p,rawVal);
@@ -228,7 +240,19 @@ function update(){
   const dA_dt = v0_uM * 0.0185;
   $('liveState').textContent='Photometric trace recorded: v₀ = '+v0_uM.toFixed(2)+' μM/min (dA/dt = '+(dA_dt/1000).toFixed(4)+' AU/min).';
   message('Assay complete: v₀ = '+v0_uM.toFixed(2)+' μM/min (1/v₀ = '+inv_v0.toFixed(2)+' min/mM, 1/[S] = '+inv_s.toFixed(2)+' mM⁻¹). Record in notebook.');
- }else if(cfg.slug==='transference-numbers-hittorf-moving-boundary'){
+ }else if(cfg.slug==='electrochemical-cell-thermodynamics-nernst'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawDaniellCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawDaniellSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawDaniellBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='transference-numbers-hittorf-moving-boundary'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawMovingBoundaryCompareView(p,rawVal);
    return;
@@ -11924,6 +11948,324 @@ function drawMovingBoundarySandboxView(p, rawVal) {
  }
 
  svg += text(360, 314, 'Kohlrausch Condition ensures dynamic boundary stability: c₂/c₁ = (t₊₂/t₊₁) · (z₁/z₂).', '#789c80', 8, 'middle');
+
+ return svg;
+}
+
+// ======================================================================
+// Lab 36: Thermodynamics of Reversible Electrochemical Cells (Daniell Cell)
+// ======================================================================
+
+function drawDaniellBenchView(p, rawVal) {
+ var t = p.input || 25.0;
+ var rawE = rawVal || 1100.02; // in mV
+ var T = t + 273.15;
+ var m_slope = -0.11126;
+ var b_int = 1133.19;
+ var dS = 2 * 96485.3 * (m_slope * 0.001); // -21.47 J/(mol K)
+ var dG = -2 * 96485.3 * (rawE * 0.001) * 0.001; // kJ/mol
+ var dH = dG + T * (dS * 0.001); // -218.67 kJ/mol
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0c131d');
+ svg += '<defs>';
+ svg += '<linearGradient id="bathGrad36" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0284c7" stop-opacity="0.15"/><stop offset="100%" stop-color="#0369a1" stop-opacity="0.35"/></linearGradient>';
+ svg += '<linearGradient id="znSol36" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#94a3b8" stop-opacity="0.2"/><stop offset="100%" stop-color="#cbd5e1" stop-opacity="0.45"/></linearGradient>';
+ svg += '<linearGradient id="cuSol36" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0284c7" stop-opacity="0.45"/><stop offset="100%" stop-color="#0369a1" stop-opacity="0.75"/></linearGradient>';
+ svg += '<linearGradient id="bridgeGrad36" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#facc15" stop-opacity="0.4"/><stop offset="50%" stop-color="#fef08a" stop-opacity="0.2"/><stop offset="100%" stop-color="#facc15" stop-opacity="0.4"/></linearGradient>';
+ svg += '</defs>';
+
+ // Header Banner
+ svg += text(20, 24, 'LABORATORY BENCH: THERMODYNAMICS OF REVERSIBLE DANIELL CELL', '#e2e8f0', 12, 'bold');
+ svg += text(20, 40, 'Zn(s) | 1.0 M ZnSO₄ || 1.0 M CuSO₄ | Cu(s) · Agar-KCl Salt Bridge · PID Water Bath · Digital Electrometer (Z_in > 10¹² Ω)', '#38bdf8', 9);
+
+ // --- LEFT REGION: APPARATUS & THERMOSTATIC BATH (x: 20 to 330) ---
+ // Outer Thermostatic Water Bath Tank (x: 30, y: 55, w: 270, h: 235)
+ svg += rect(30, 55, 270, 235, 'url(#bathGrad36)', '#0284c7', 1.5, 6);
+ svg += text(42, 70, 'Thermostatic Water Bath (' + t.toFixed(1) + ' °C)', '#38bdf8', 7, 'start', 'bold');
+
+ // Water bath level line
+ svg += '<line x1="32" y1="120" x2="298" y2="120" stroke="#38bdf8" stroke-width="1" stroke-dasharray="4,2"/>';
+ svg += text(290, 115, 'H₂O Level', '#7dd3fc', 6, 'end');
+
+ // Left Beaker: 1.000 M ZnSO₄ with Zinc Anode (x: 50, y: 130, w: 95, h: 145)
+ var b1X = 50, b1Y = 130, b1W = 95, b1H = 145;
+ svg += rect(b1X, b1Y, b1W, b1H, '#0f172a', '#94a3b8', 1.2, 4);
+ svg += rect(b1X + 3, b1Y + 30, b1W - 6, b1H - 33, 'url(#znSol36)', 'none', 0, 2);
+ svg += text(b1X + b1W/2, b1Y + b1H - 12, '1.0 M ZnSO₄', '#cbd5e1', 7.5, 'middle', 'bold');
+
+ // Zinc Anode Rod (metallic zinc: grey-silver)
+ svg += rect(b1X + 20, b1Y - 20, 14, b1H, '#64748b', '#cbd5e1', 1.2, 2);
+ svg += text(b1X + 27, b1Y + 50, 'Zn', '#f8fafc', 8, 'middle', 'bold');
+ svg += text(b1X + 27, b1Y - 26, '(−) Anode', '#ef4444', 6.5, 'middle', 'bold');
+
+ // Right Beaker: 1.000 M CuSO₄ with Copper Cathode (x: 185, y: 130, w: 95, h: 145)
+ var b2X = 185, b2Y = 130, b2W = 95, b2H = 145;
+ svg += rect(b2X, b2Y, b2W, b2H, '#0f172a', '#94a3b8', 1.2, 4);
+ svg += rect(b2X + 3, b2Y + 30, b2W - 6, b2H - 33, 'url(#cuSol36)', 'none', 0, 2);
+ svg += text(b2X + b2W/2, b2Y + b2H - 12, '1.0 M CuSO₄', '#38bdf8', 7.5, 'middle', 'bold');
+
+ // Copper Cathode Plate (metallic copper: reddish-brown)
+ svg += rect(b2X + 60, b2Y - 20, 14, b2H, '#b45309', '#f59e0b', 1.2, 2);
+ svg += text(b2X + 67, b2Y + 50, 'Cu', '#fef3c7', 8, 'middle', 'bold');
+ svg += text(b2X + 67, b2Y - 26, '(+) Cathode', '#38bdf8', 6.5, 'middle', 'bold');
+
+ // Inverted U-Tube Agar-KCl Salt Bridge
+ svg += '<path d="M '+(b1X+70)+' '+(b1Y+100)+' L '+(b1X+70)+' '+(b1Y+10)+' Q '+(b1X+70)+' '+(b1Y-5)+' '+(b1X+85)+' '+(b1Y-5)+' L '+(b2X+10)+' '+(b1Y-5)+' Q '+(b2X+25)+' '+(b1Y-5)+' '+(b2X+25)+' '+(b1Y+10)+' L '+(b2X+25)+' '+(b2Y+100)+'" fill="none" stroke="#facc15" stroke-width="12" stroke-linecap="round"/>';
+ svg += '<path d="M '+(b1X+70)+' '+(b1Y+100)+' L '+(b1X+70)+' '+(b1Y+10)+' Q '+(b1X+70)+' '+(b1Y-5)+' '+(b1X+85)+' '+(b1Y-5)+' L '+(b2X+10)+' '+(b1Y-5)+' Q '+(b2X+25)+' '+(b1Y-5)+' '+(b2X+25)+' '+(b1Y+10)+' L '+(b2X+25)+' '+(b2Y+100)+'" fill="none" stroke="#fef08a" stroke-width="6" stroke-linecap="round"/>';
+ svg += text(165, b1Y - 12, '3 M KCl Salt Bridge', '#facc15', 7, 'middle', 'bold');
+
+ // Porous sintered glass frits on salt bridge ends
+ svg += rect(b1X + 64, b1Y + 95, 12, 8, '#e2e8f0', '#94a3b8', 1);
+ svg += rect(b2X + 19, b2Y + 95, 12, 8, '#e2e8f0', '#94a3b8', 1);
+
+ // Pt100 RTD Temperature Sensor probe in water bath
+ svg += rect(150, 75, 4, 130, '#cbd5e1', '#64748b', 1);
+ svg += circle(152, 205, 5, '#ef4444');
+ svg += text(152, 70, t.toFixed(1) + '°C', '#f87171', 6.5, 'middle', 'bold');
+
+ // Wires from electrodes to electrometer
+ svg += '<path d="M '+(b1X+27)+' '+(b1Y-20)+' Q '+(b1X+27)+' 45 320 45" fill="none" stroke="#ef4444" stroke-width="2"/>';
+ svg += '<path d="M '+(b2X+67)+' '+(b2Y-20)+' Q '+(b2X+67)+' 48 320 48" fill="none" stroke="#38bdf8" stroke-width="2"/>';
+
+ // --- RIGHT REGION: DIGITAL ELECTROMETER & LIVE REGRESSION (x: 320 to 700) ---
+ // High-Impedance Digital Electrometer Display (x: 325, y: 55, w: 180, h: 105)
+ var eX = 325, eY = 55, eW = 180, eH = 105;
+ svg += rect(eX, eY, eW, eH, '#131d2e', '#334155', 1.5, 6);
+ svg += rect(eX + 10, eY + 10, eW - 20, 36, '#09131f', '#0284c7', 1, 4);
+ svg += text(eX + eW/2, eY + 28, rawE.toFixed(2) + ' mV', '#38bdf8', 16, 'middle', 'bold');
+ svg += text(eX + eW/2, eY + 40, 'REVERSIBLE CELL EMF (Z_in > 10¹² Ω)', '#94a3b8', 6, 'middle');
+
+ svg += text(eX + 15, eY + 62, 'Operating Temp T: ' + t.toFixed(1) + ' °C (' + T.toFixed(2) + ' K)', '#facc15', 7, 'start', 'bold');
+ svg += text(eX + 15, eY + 76, 'Standard Gibbs Free Energy: ' + dG.toFixed(2) + ' kJ/mol', '#4ade80', 7);
+ svg += text(eX + 15, eY + 90, 'Temp Coeff dE/dT: -0.1113 mV/K', '#cbd5e1', 7);
+ svg += text(eX + 15, eY + 102, 'Liquid Junction Potential: E_j < 0.2 mV', '#7dd3fc', 6.5);
+
+ // Thermodynamic Summary Card (x: 325, y: 170, w: 180, h: 120)
+ var sX = 325, sY = 170, sW = 180, sH = 120;
+ svg += rect(sX, sY, sW, sH, '#131d2e', '#334155', 1.5, 6);
+ svg += text(sX + sW/2, sY + 16, 'STATE FUNCTIONS (298.15 K)', '#818cf8', 7.5, 'middle', 'bold');
+
+ var thermoRows = [
+  ['Standard EMF E°₂₉₈', '1100.02 mV (1.1000 V)'],
+  ['Slope dE/dT', '-0.1113 mV·K⁻¹'],
+  ['Gibbs Free Energy ΔG°', '-212.27 kJ·mol⁻¹'],
+  ['Reaction Entropy ΔS°', '-21.47 J·mol⁻¹·K⁻¹'],
+  ['Reaction Enthalpy ΔH°', '-218.67 kJ·mol⁻¹'],
+  ['Reversible Heat q_rev', '-6.40 kJ·mol⁻¹']
+ ];
+
+ for (var k = 0; k < thermoRows.length; k++) {
+  var ry = sY + 34 + k * 14;
+  svg += text(sX + 12, ry, thermoRows[k][0] + ':', '#94a3b8', 6.5, 'start');
+  svg += text(sX + sW - 12, ry, thermoRows[k][1], '#cbd5e1', 6.5, 'end', 'bold');
+ }
+
+ // Live Regression Plot: E vs T (x: 520, y: 55, w: 185, h: 235)
+ var pX = 555, pY = 75, pW = 140, pH = 175;
+ svg += rect(pX - 35, pY - 20, pW + 45, pH + 50, '#131d2e', '#334155', 1, 6);
+ svg += text(pX + pW/2, pY - 6, 'EMF E vs ABSOLUTE TEMP T', '#38bdf8', 8, 'middle', 'bold');
+
+ // Axes
+ svg += '<line x1="'+pX+'" y1="'+(pY+pH)+'" x2="'+(pX+pW)+'" y2="'+(pY+pH)+'" stroke="#475569" stroke-width="1.2"/>';
+ svg += '<line x1="'+pX+'" y1="'+pY+'" x2="'+pX+'" y2="'+(pY+pH)+'" stroke="#475569" stroke-width="1.2"/>';
+
+ // Grid lines & Axis mapping: T from 285 to 315 K, E from 1097 to 1102 mV
+ var tMin = 285.0, tMax = 315.0;
+ var eMin = 1097.0, eMax = 1102.0;
+ function mapT(val) { return pX + ((val - tMin) / (tMax - tMin)) * pW; }
+ function mapE(val) { return (pY + pH) - ((val - eMin) / (eMax - eMin)) * pH; }
+
+ for (var tk = 290; tk <= 310; tk += 10) {
+  var gx = mapT(tk);
+  svg += '<line x1="'+gx+'" y1="'+pY+'" x2="'+gx+'" y2="'+(pY+pH)+'" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(gx, pY + pH + 12, tk.toString(), '#94a3b8', 6, 'middle');
+ }
+ for (var ek = 1098; ek <= 1102; ek += 1) {
+  var gy = mapE(ek);
+  svg += '<line x1="'+pX+'" y1="'+gy+'" x2="'+(pX+pW)+'" y2="'+gy+'" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(pX - 5, gy + 3, ek.toString(), '#94a3b8', 6, 'end');
+ }
+
+ // Linear fit line: E = -0.11126 * T + 1133.19
+ var lx1 = mapT(285.0), ly1 = mapE(-0.11126 * 285.0 + 1133.19);
+ var lx2 = mapT(315.0), ly2 = mapE(-0.11126 * 315.0 + 1133.19);
+ svg += '<line x1="'+lx1+'" y1="'+ly1+'" x2="'+lx2+'" y2="'+ly2+'" stroke="#38bdf8" stroke-width="2"/>';
+
+ // Sample points
+ var sampleT_K = [288.15, 293.15, 298.15, 303.15, 308.15, 313.15];
+ var sampleE_mV = [1101.13, 1100.58, 1100.02, 1099.46, 1098.91, 1098.35];
+ for (var j = 0; j < sampleT_K.length; j++) {
+  var sx = mapT(sampleT_K[j]);
+  var sy = mapE(sampleE_mV[j]);
+  svg += circle(sx, sy, 3, '#38bdf8', '#ffffff', 1);
+ }
+
+ // Active current temperature point
+ var curX = mapT(T);
+ var curY = mapE(rawE);
+ svg += circle(curX, curY, 5.5, '#ef4444', '#facc15', 1.5);
+ svg += text(curX + 6, curY - 6, t.toFixed(0) + '°C: ' + rawE.toFixed(1) + ' mV', '#fef08a', 6.5, 'start', 'bold');
+
+ // Axis labels
+ svg += text(pX + pW/2, pY + pH + 22, 'Absolute Temp T (K)', '#94a3b8', 6.5, 'middle');
+ svg += '<text x="'+(pX - 22)+'" y="'+(pY + pH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="6.5" transform="rotate(-90 '+(pX-22)+' '+(pY+pH/2)+')">Cell EMF E (mV)</text>';
+
+ svg += text(360, 316, 'Gibbs-Helmholtz Invariant: Slope dE/dT = -0.1113 mV·K⁻¹ yields ΔS° = -21.47 J/(mol·K) and ΔG° = -212.27 kJ/mol with R² = 0.99999.', '#789c80', 8, 'middle');
+
+ return svg;
+}
+
+function drawDaniellCompareView(p, rawVal) {
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0c131d');
+
+ svg += text(20, 24, 'COMPARATIVE METROLOGY: THERMODYNAMIC CHARACTERISTICS OF REVERSIBLE CELLS', '#e2e8f0', 12, 'bold');
+ svg += text(20, 40, 'Daniell Cell vs Weston Normal Cadmium Cell vs Clark Primary Reference Standard', '#38bdf8', 9);
+
+ var panels = [
+  {
+   title: '1. Daniell Cell (1836)',
+   sub: 'Zn | ZnSO₄ || CuSO₄ | Cu',
+   color: '#38bdf8',
+   val: 'E° = 1.1000 V · dE/dT = -0.111 mV/K',
+   pts: [
+    'Clean two-electron displacement reaction (n = 2)',
+    'Moderate negative temperature coefficient',
+    'Standard Gibbs free energy ΔG° = -212.27 kJ/mol',
+    'Standard reaction entropy ΔS° = -21.47 J/(mol·K)'
+   ],
+   x: 20
+  },
+  {
+   title: '2. Weston Cadmium (1893)',
+   sub: 'Cd(Hg) | CdSO₄(sat) || Hg₂SO₄ | Hg',
+   color: '#4ade80',
+   val: 'E = 1.0186 V · dE/dT = -0.041 mV/K',
+   pts: [
+    'International primary voltage standard (1908–1990)',
+    'Ultra-low temperature sensitivity (near zero dE/dT)',
+    'Saturated electrolyte eliminates concentration drift',
+    'Entropy change cancelled by hydrate solubility slope'
+   ],
+   x: 250
+  },
+  {
+   title: '3. Clark Cell (1872)',
+   sub: 'Zn(Hg) | ZnSO₄(sat) || Hg₂SO₄ | Hg',
+   color: '#facc15',
+   val: 'E = 1.4328 V · dE/dT = -1.150 mV/K',
+   pts: [
+    'First recognized primary reference standard (1893)',
+    'High temperature coefficient requires oil bath',
+    'Large negative entropy change (ΔS° ≈ -220 J/(mol·K))',
+    'Superseded by Weston cell due to thermal stability'
+   ],
+   x: 480
+  }
+ ];
+
+ for (var i = 0; i < panels.length; i++) {
+  var pan = panels[i];
+  svg += rect(pan.x, 55, 220, 235, '#131d2e', '#334155', 1, 6);
+  svg += text(pan.x + 110, 78, pan.title, pan.color, 9, 'middle', 'bold');
+  svg += text(pan.x + 110, 92, pan.sub, '#94a3b8', 7, 'middle');
+
+  svg += rect(pan.x + 15, 105, 190, 32, '#09131f', pan.color, 1, 4);
+  svg += text(pan.x + 105, 125, pan.val, pan.color, 8.5, 'middle', 'bold');
+
+  for (var j = 0; j < pan.pts.length; j++) {
+   svg += circle(pan.x + 22, 155 + j * 24, 2.5, pan.color);
+   svg += text(pan.x + 30, 158 + j * 24, pan.pts[j], '#cbd5e1', 6.5, 'start');
+  }
+ }
+
+ svg += text(360, 314, 'Conclusion: The Daniell cell provides the most unambiguous pedagogical and experimental determination of fundamental thermodynamic functions.', '#789c80', 8, 'middle');
+
+ return svg;
+}
+
+function drawDaniellSandboxView(p, rawVal) {
+ var t = p.input || 25.0;
+ var T = t + 273.15;
+ var rawE = rawVal || 1100.02;
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0c131d');
+
+ svg += text(20, 24, 'NERNST EQUATION & GIBBS-HELMHOLTZ ENERGY PARTITION SANDBOX', '#e2e8f0', 12, 'bold');
+ svg += text(20, 40, 'Reversible Work vs Thermal Dissipation · Concentration Ratio ln([Zn²⁺]/[Cu²⁺]) Dependence at ' + T.toFixed(1) + ' K', '#38bdf8', 9);
+
+ // Left: Gibbs-Helmholtz Energy Partition Bar Diagram (x: 20 to 330)
+ var lX = 20, lY = 55, lW = 310, lH = 240;
+ svg += rect(lX, lY, lW, lH, '#131d2e', '#334155', 1, 6);
+ svg += text(lX + lW/2, lY + 18, 'GIBBS-HELMHOLTZ ENERGY PARTITION', '#facc15', 8, 'middle', 'bold');
+
+ // Equation banner
+ svg += rect(lX + 15, lY + 30, lW - 30, 32, '#09131f', '#0284c7', 1, 4);
+ svg += text(lX + lW/2, lY + 50, 'ΔH° = ΔG° + T·ΔS°   ==>   -218.67 = -212.27 + (-6.40) kJ/mol', '#fef08a', 7.5, 'middle', 'bold');
+
+ // Stacked Energy Bars
+ var barY = lY + 80, barW = 240, barH = 35;
+ svg += text(lX + 25, barY + 12, 'Total Enthalpy ΔH° (-218.67 kJ/mol):', '#cbd5e1', 7);
+ svg += rect(lX + 35, barY + 18, barW, barH, '#ef4444', '#b91c1c', 1, 4);
+ svg += text(lX + 35 + barW/2, barY + 40, 'ΔH° = -218.67 kJ/mol (Total Chemical Heat of Reaction)', '#fef2f2', 7.5, 'middle', 'bold');
+
+ // Partition into Electrical Work (ΔG°) and Heat (TΔS°)
+ var gFrac = 212.27 / 218.67; // ~0.9707
+ var gW = barW * gFrac;
+ var sW = barW * (1.0 - gFrac);
+
+ svg += text(lX + 25, barY + 70, 'Partition: Reversible Work ΔG° vs Entropy Dissipation TΔS°:', '#cbd5e1', 7);
+ svg += rect(lX + 35, barY + 78, gW, barH, '#38bdf8', '#0284c7', 1, 3);
+ svg += text(lX + 35 + gW/2, barY + 100, 'ΔG° = -212.27 kJ (97.1% Work)', '#f0f9ff', 7, 'middle', 'bold');
+
+ svg += rect(lX + 35 + gW, barY + 78, sW, barH, '#f59e0b', '#d97706', 1, 3);
+ svg += text(lX + 35 + gW + sW/2, barY + 100, 'q_rev', '#78350f', 6.5, 'middle', 'bold');
+
+ svg += text(lX + lW/2, lY + 225, 'Thermodynamic Efficiency: η_rev = ΔG° / ΔH° = 97.07% at 298.15 K', '#4ade80', 7, 'middle', 'bold');
+
+ // Right: Nernst Concentration Ratio Sensitivity Curve (x: 345 to 700)
+ var rX = 345, rY = 55, rW = 355, rH = 240;
+ svg += rect(rX, rY, rW, rH, '#131d2e', '#334155', 1, 6);
+ svg += text(rX + rW/2, rY + 18, 'NERNST CONCENTRATION DEPENDENCE: E vs log₁₀([Zn²⁺]/[Cu²⁺])', '#38bdf8', 8, 'middle', 'bold');
+
+ var npX = rX + 45, npY = rY + 35, npW = 270, npH = 150;
+ svg += '<line x1="'+npX+'" y1="'+(npY+npH)+'" x2="'+(npX+npW)+'" y2="'+(npY+npH)+'" stroke="#475569" stroke-width="1.2"/>';
+ svg += '<line x1="'+npX+'" y1="'+npY+'" x2="'+npX+'" y2="'+(npY+npH)+'" stroke="#475569" stroke-width="1.2"/>';
+
+ // Nernst line: E = E° - (2.3026 * R * T / 2F) * log_ratio
+ // slope is - (2.3026 * 8.31446 * T) / (2 * 96485.3) * 1000 mV per decade ≈ -29.58 mV at 25 °C
+ var nSlope = (2.3026 * 8.31446 * T * 1000.0) / (2 * 96485.3);
+
+ function nMapX(logR) { return npX + ((logR + 4.0) / 8.0) * npW; } // logR from -4 to +4
+ function nMapY(eVal) { return (npY + npH) - ((eVal - 980.0) / 240.0) * npH; } // E from 980 to 1220 mV
+
+ for (var lr = -4; lr <= 4; lr += 2) {
+  var nX = nMapX(lr);
+  svg += '<line x1="'+nX+'" y1="'+npY+'" x2="'+nX+'" y2="'+(npY+npH)+'" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(nX, npY + npH + 12, lr.toString(), '#94a3b8', 6.5, 'middle');
+ }
+ for (var ev = 1000; ev <= 1200; ev += 50) {
+  var nY = nMapY(ev);
+  svg += '<line x1="'+npX+'" y1="'+nY+'" x2="'+(npX+npW)+'" y2="'+nY+'" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(npX - 5, nY + 3, ev.toString(), '#94a3b8', 6.5, 'end');
+ }
+
+ // Nernst line across logR = -4 to +4
+ var nE1 = rawE - nSlope * (-4.0);
+ var nE2 = rawE - nSlope * (4.0);
+ svg += '<line x1="'+nMapX(-4.0)+'" y1="'+nMapY(nE1)+'" x2="'+nMapX(4.0)+'" y2="'+nMapY(nE2)+'" stroke="#38bdf8" stroke-width="2"/>';
+
+ // Equimolar standard point (logR = 0, E = rawE)
+ var nMidX = nMapX(0.0), nMidY = nMapY(rawE);
+ svg += circle(nMidX, nMidY, 5, '#ef4444', '#facc15', 1.5);
+ svg += text(nMidX + 8, nMidY - 6, 'Standard State (Q = 1): E = ' + rawE.toFixed(2) + ' mV', '#fef08a', 7, 'start', 'bold');
+
+ svg += text(npX + npW/2, npY + npH + 22, 'Reaction Quotient Logarithm: log₁₀([Zn²⁺]/[Cu²⁺])', '#94a3b8', 7, 'middle');
+ svg += '<text x="'+(npX - 24)+'" y="'+(npY + npH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7" transform="rotate(-90 '+(npX-24)+' '+(npY+npH/2)+')">Nernst Potential E (mV)</text>';
+
+ svg += text(360, 314, 'Nernst Slope at ' + t.toFixed(1) + '°C: ' + (-nSlope).toFixed(2) + ' mV per decade of concentration ratio [Zn²⁺]/[Cu²⁺].', '#789c80', 8, 'middle');
 
  return svg;
 }

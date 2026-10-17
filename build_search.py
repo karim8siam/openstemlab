@@ -103,6 +103,7 @@ def experiment_index(experiments):
     'potentiometric-redox-titration-fe-ce': 'potentiometric redox titration iron cerium formal reduction potential nernst equation platinum electrode equivalence point half cell emf',
     'conductometric-titration-strong-weak-acids': 'conductometric titration hydrochloric acid acetic acid sodium hydroxide mixture electrolytic conductivity kohlrausch ionic mobility cell constant dilution correction',
     'debye-huckel-onsager-strong-electrolytes': 'debye huckel onsager limiting law strong electrolytes molar conductivity potassium chloride kcl kohlrausch square root law relaxation effect electrophoretic effect walden rule',
+    'electrochemical-cell-thermodynamics-nernst': 'electrochemical cell thermodynamics daniell cell nernst equation temperature coefficient of emf gibbs free energy enthalpy entropy of reaction salt bridge liquid junction electrometer',
     'transference-numbers-hittorf-moving-boundary': 'transference numbers transport numbers moving boundary hittorf method kohlrausch regulating condition proton hopping grotthuss cadmium anode autogenic boundary',
     'solubility-product-conductometric-silver-halides': 'solubility product ksp silver chloride agcl conductometry van t hoff enthalpy of solution sparingly soluble salts fajans rules limiting molar conductivity',
     'chemical-kinetics-iodine-clock-persulfate':'chemical kinetics iodine clock persulfate iodide reaction order initial rates rate constant thiosulfate starch bronsted bjerrum salt effect transition state photodiode timer'}

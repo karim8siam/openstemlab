@@ -159,6 +159,19 @@ def observation(c,value):
   v0_mM=raw / 1000.0
   y=rnd(1.0 / v0_mM, 2)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='electrochemical-cell-thermodynamics-nernst':
+  t_val=float(value)
+  table_raw={15.0:1101.13, 20.0:1100.58, 25.0:1100.02, 30.0:1099.46, 35.0:1098.91, 40.0:1098.35}
+  table_y={15.0:1101.13, 20.0:1100.58, 25.0:1100.02, 30.0:1099.46, 35.0:1098.91, 40.0:1098.35}
+  key=round(t_val, 1)
+  T=t_val + 273.15
+  if key in table_raw:
+   raw=table_raw[key]
+  else:
+   raw=round(1133.19 - 0.11126 * T, 2)
+  x=T
+  y=table_y.get(key, raw)
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='transference-numbers-hittorf-moving-boundary':
   t_time=float(value)
   table_raw={3.00:77.05, 6.00:154.10, 9.00:231.14, 12.00:308.19, 15.00:385.24, 18.00:462.29}
@@ -491,6 +504,15 @@ def estimate(c,f):
   t_plus=(m * F * c_conc) / (60.0 * 1000.0 * I)
   se=abs(f.get('slopeSE', 0.00005)) * (F * c_conc) / (60.0 * 1000.0 * I)
   return t_plus, se, 0.8260
+ elif slug=='electrochemical-cell-thermodynamics-nernst':
+  m=f['m']
+  b=f['b']
+  F=96485.3
+  n=2
+  E298=m * 298.15 + b
+  dG298= -n * F * (E298 * 0.001) * 0.001
+  se=abs(f.get('slopeSE', 0.0005)) * 298.15 * n * F * 1e-6
+  return dG298, se, -212.27
  elif slug=='solubility-product-conductometric-silver-halides':
   R=8.31446
   dH = -f['m'] * R
@@ -648,6 +670,16 @@ def formula(c,f):
   t_plus=(m * F * c_conc) / (60.0 * 1000.0 * I)
   t_minus=1.0 - t_plus
   return f"Moving Boundary Fit: V = {fmt(m,7)}·t + {fmt(b,6)} cm³ (dV/dt = {fmt(m,5)} cm³·min⁻¹); Cation Transference Number t₊(H⁺) = {fmt(t_plus,4)}; Anion Transference Number t₋(Cl⁻) = {fmt(t_minus,4)}"
+ elif slug=='electrochemical-cell-thermodynamics-nernst':
+  m=f['m']
+  b=f['b']
+  F=96485.3
+  n=2
+  E298=m * 298.15 + b
+  dG298= -n * F * (E298 * 0.001) * 0.001
+  dS298= n * F * (m * 0.001)
+  dH298= dG298 + 298.15 * (dS298 * 0.001)
+  return f"Gibbs-Helmholtz Linear Fit: E(T) = {fmt(m,5)}·T + {fmt(b,2)} mV; dE/dT = {fmt(m,5)} mV·K⁻¹; ΔG°(298K) = {fmt(dG298,2)} kJ·mol⁻¹; ΔS° = {fmt(dS298,2)} J·mol⁻¹·K⁻¹; ΔH° = {fmt(dH298,2)} kJ·mol⁻¹"
  elif slug=='solubility-product-conductometric-silver-halides':
   R=8.31446
   dH = -f['m'] * R
@@ -1102,6 +1134,46 @@ def worked(c,row):
    f"   Anion Transference Number: t₋(Cl⁻) = 1.0000 - t₊ = {fmt(t_minus, 4)} (17.40% of total current).\\n"
    f"   Literature benchmark at 25.00 °C: t₊(H⁺) = 0.8260 (percentage difference = {fmt(abs(t_plus - 0.8260)/0.8260*100.0, 4)}%).\\n"
    f"   Theoretical limiting ratio at infinite dilution: t₊°(H⁺) = λ₊° / Λₘ° = 349.8 / 426.15 = 0.8208."
+  )
+ elif slug=='electrochemical-cell-thermodynamics-nernst':
+  t_val=row['input']
+  raw=row['raw']
+  x=row['x']
+  y=row['y']
+  T=t_val + 273.15
+  F=96485.3
+  n=2
+  m_slope= -0.11126
+  b_int= 1133.19
+  E298=m_slope * 298.15 + b_int
+  dG_single= -n * F * (raw * 0.001) * 0.001
+  dG298= -n * F * (E298 * 0.001) * 0.001
+  dS298= n * F * (m_slope * 0.001)
+  dH298= dG298 + 298.15 * (dS298 * 0.001)
+  return (
+   f"1. Raw Experimental Observables & Operating Coordinates:\n"
+   f"   Cell thermostatic temperature t = {fmt(t_val,1)} °C; Absolute temperature T = {fmt(T,2)} K.\n"
+   f"   Measured reversible equilibrium open-circuit EMF E = {fmt(raw,2)} mV = {fmt(raw*0.001, 5)} V.\n"
+   f"   Measurement conditions: Zero current (electrometer input impedance Z_in > 10¹² Ω).\n"
+   f"\n"
+   f"2. Single-Point Apparent Gibbs Free Energy of Reaction:\n"
+   f"   Electrochemical stoichiometry: Zn(s) + Cu²⁺(aq) ⇌ Zn²⁺(aq) + Cu(s) (n = 2 electrons).\n"
+   f"   Faraday constant: F = 96,485.3 C·mol⁻¹.\n"
+   f"   Single-point free energy: ΔG(T) = -n · F · E = -(2)(96485.3 C·mol⁻¹)({fmt(raw*0.001, 5)} V) = {fmt(dG_single, 2)} kJ·mol⁻¹.\n"
+   f"\n"
+   f"3. Multi-Point Ordinary Least-Squares Linear Regression Across T Coordinates:\n"
+   f"   Linearized thermodynamic equation: E(T) = (∂E/∂T)·T + b.\n"
+   f"   Regression slope (temperature coefficient): m = dE/dT = {fmt(m_slope, 5)} mV·K⁻¹ = {fmt(m_slope*0.001, 7)} V·K⁻¹.\n"
+   f"   Regression Y-intercept: b = {fmt(b_int, 2)} mV.\n"
+   f"   Coefficient of determination: R² = 0.99999.\n"
+   f"\n"
+   f"4. Standard Thermodynamic State Functions Evaluated at 298.15 K (25.00 °C):\n"
+   f"   Fitted Standard Potential: E°₂₉₈ = m·(298.15) + b = {fmt(E298, 2)} mV = {fmt(E298*0.001, 5)} V.\n"
+   f"   Standard Gibbs Free Energy: ΔG° = -n · F · E°₂₉₈ = -(2)(96485.3)({fmt(E298*0.001, 5)}) = {fmt(dG298, 2)} kJ·mol⁻¹.\n"
+   f"   Standard Reaction Entropy: ΔS° = n · F · (dE/dT) = (2)(96485.3)({fmt(m_slope*0.001, 7)}) = {fmt(dS298, 2)} J·mol⁻¹·K⁻¹.\n"
+   f"   Standard Reaction Enthalpy: ΔH° = ΔG° + T·ΔS° = {fmt(dG298, 2)} + (298.15)({fmt(dS298*0.001, 5)}) = {fmt(dH298, 2)} kJ·mol⁻¹.\n"
+   f"   Reversible Thermal Heat: q_rev = T·ΔS° = (298.15)({fmt(dS298*0.001, 5)}) = {fmt(298.15*dS298*0.001, 2)} kJ·mol⁻¹.\n"
+   f"   Thermodynamic Efficiency: η_rev = ΔG° / ΔH° = {fmt(dG298/dH298*100.0, 2)}% of chemical enthalpy converts to electrical work."
   )
  elif slug=='solubility-product-conductometric-silver-halides':
   t=row['input']
@@ -1845,6 +1917,31 @@ def uncertainty_text(c):
    "For an empirical cation transference number t₊ = 0.8260, the expanded uncertainty at the 95% confidence level (coverage factor k = 2) is "
    "U(t₊) = 0.0024 (0.29%), confirming exceptional agreement with the authoritative literature benchmark (0.8260 ± 0.0020) and validating the "
    "metrological supremacy of moving boundary cathetometry."
+  )
+ elif slug=='electrochemical-cell-thermodynamics-nernst':
+  return (
+   "In the high-precision determination of electrochemical cell thermodynamics and the temperature coefficient of EMF, "
+   "metrological uncertainties and physical electroanalytical boundary conditions are rigorously quantified across thermostatic, "
+   "electrometric, liquid junction, and chemical activity domains: "
+   "(1) Microprocessor Thermostatic Water Bath & RTD Metrology: Temperature is maintained across both half-cell vessels within a circulating "
+   "water bath controlled by a proportional-integral-derivative (PID) solid-state thermostat. Thermal stability over 30 minutes is certified "
+   "to ±0.02 °C. Solution temperatures are measured with a calibrated four-wire platinum resistance thermometer (Pt100 RTD) traceable to the "
+   "International Temperature Scale of 1990 (ITS-90) with an absolute uncertainty u(T) = 0.015 K. "
+   "(2) High-Input-Impedance Digital Electrometer: Cell potentials are recorded using an advanced microprocessor-controlled electrometer "
+   "featuring an input impedance Z_in > 10¹² Ω. This restricts circuit current draw to under 1.1 pA, ensuring that ohmic internal IR drops "
+   "(i·R_cell < 0.0005 μV across a 400 Ω cell) and charge-transfer electrode polarization are strictly negligible. The instrument provides a digital "
+   "resolution of 0.01 mV with an expanded calibration uncertainty of ±0.010 mV. "
+   "(3) Liquid Junction Potential Suppression: The 3.0 M KCl in 3.0% agar-agar gel salt bridge maintains electroneutrality between the zinc and "
+   "copper sulfate compartments. Because K⁺ and Cl⁻ ions have nearly identical mobilities (u(K⁺) = 7.62 × 10⁻⁴, u(Cl⁻) = 7.91 × 10⁻⁴ cm²·s⁻¹·V⁻¹), "
+   "the liquid junction potential is suppressed below 0.5 mV. Over the 15 °C to 40 °C test window, the differential temperature drift in junction "
+   "potential contributes an estimated standard uncertainty u(E_j) = 0.025 mV. "
+   "(4) Multi-Point Least-Squares Regression & Covariance Propagation: The temperature coefficient m = dE/dT = -0.11126 mV·K⁻¹ is extracted from "
+   "six discrete temperature coordinates (288.15 K to 313.15 K). The standard error of the slope is s_m = 0.00015 mV·K⁻¹ (relative error 0.13%), "
+   "yielding a coefficient of determination R² = 0.99999. Propagating slope and intercept uncertainties through the thermodynamic equations "
+   "u(ΔG°) = n F u(E°), u(ΔS°) = n F u(m), and u(ΔH°) = √[ u(ΔG°)² + (T u(ΔS°))² ] yields combined standard uncertainties: "
+   "u(ΔG°) = 0.04 kJ·mol⁻¹, u(ΔS°) = 0.03 J·mol⁻¹·K⁻¹, and u(ΔH°) = 0.05 kJ·mol⁻¹. "
+   "At the 95% confidence level (coverage factor k = 2), the expanded uncertainties are U(ΔG°) = ±0.08 kJ·mol⁻¹ (0.04%) and "
+   "U(ΔH°) = ±0.10 kJ·mol⁻¹ (0.05%), confirming sub-0.1% experimental agreement with accepted NIST Standard Reference values."
   )
  elif slug=='solubility-product-conductometric-silver-halides':
   return (
@@ -3126,6 +3223,73 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"electrolysis run, matching the authoritative reference benchmark (0.8260) with a relative deviation of only {fmt(abs(t_plus_val - 0.8260)/0.8260*100.0, 4)}%. "
    f"The quantitative results definitively corroborate the Kohlrausch self-sharpening regulating theory and provide rigorous experimental validation "
    f"of the Grotthuss proton-hopping conduction mechanism in aqueous solutions."
+  )
+  
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='electrochemical-cell-thermodynamics-nernst':
+  m_val=f['m']
+  b_val=f['b']
+  dG_val=value
+  r2_val=f['r2']
+  F=96485.3
+  n=2
+  E298=m_val * 298.15 + b_val
+  dS_val=n * F * (m_val * 0.001)
+  dH_val=dG_val + 298.15 * (dS_val * 0.001)
+  
+  abstract=(
+   f"The thermodynamic functions of the reversible Daniell cell, Zn(s) | 1.000 M ZnSO₄(aq) || 1.000 M CuSO₄(aq) | Cu(s), "
+   f"were investigated across the temperature range 288.15 K to 313.15 K (15.0 °C to 40.0 °C) under open-circuit conditions using an "
+   f"ultra-high-impedance digital electrometer (Z_in > 10¹² Ω). A double-junction agar-gel salt bridge containing 3.0 M KCl was employed "
+   f"to suppress liquid junction potentials below 0.2 mV while maintaining electrolytic continuity between the half-cells. Reversible "
+   f"cell electromotive force (EMF) decreased strictly linearly from 1101.13 mV at 288.15 K to 1098.35 mV at 313.15 K. Ordinary least-squares "
+   f"linear regression of EMF against absolute temperature T yielded a temperature coefficient dE/dT = {fmt(m_val, 5)} mV·K⁻¹ "
+   f"({fmt(m_val*0.001, 7)} V·K⁻¹) and standard potential E°(298.15 K) = {fmt(E298, 2)} mV ({fmt(E298*0.001, 5)} V) with an exceptional "
+   f"coefficient of determination R² = {fmt(r2_val, 5)}. Application of the fundamental Gibbs-Helmholtz relations extracted standard Gibbs "
+   f"free energy ΔG°(298.15 K) = {fmt(dG_val, 2)} ± 0.08 kJ·mol⁻¹, standard reaction entropy ΔS° = {fmt(dS_val, 2)} ± 0.03 J·mol⁻¹·K⁻¹, "
+   f"and standard reaction enthalpy ΔH° = {fmt(dH_val, 2)} ± 0.10 kJ·mol⁻¹. The empirical results match the authoritative NIST benchmark "
+   f"values (-212.27 kJ·mol⁻¹ and -218.67 kJ·mol⁻¹) with a percentage difference of only {fmt(abs(dG_val - (-212.27))/212.27*100.0, 4)}%, "
+   f"corroborating the negative entropy of reaction arising from the differential electrostrictive hydration of zinc and copper cations."
+  )
+  
+  graph_choice=(
+   f"The primary analytical visualization presents the equilibrium cell electromotive force E (in mV) as a function of absolute temperature T (in Kelvin). "
+   f"A linear Cartesian coordinate system is selected based directly on the thermodynamic temperature expansion of cell potential: "
+   f"E(T) = E°₂₉₈ + (∂E/∂T)·(T - 298.15). Over the 25 K temperature interval investigated, the heat capacity change of the reaction (ΔC_p) "
+   f"is negligible, rendering the entropy change ΔS° and the temperature coefficient dE/dT effectively constant. Multi-point linear least-squares "
+   f"regression across all six experimental points confirms near-perfect linearity (R² = {fmt(r2_val, 5)}), enabling direct, highly robust extraction "
+   f"of the slope dE/dT without higher-order polynomial curvature. The regression Y-intercept b = {fmt(b_val, 2)} mV represents the hypothetical "
+   f"extrapolated EMF at absolute zero (b = -ΔH° / nF), confirming the complete consistency of the Gibbs-Helmholtz model."
+  )
+  
+  discussion=(
+   f"The quantitative results demonstrate the remarkable fidelity with which reversible electrochemical cells access fundamental thermodynamic state functions. "
+   f"The standard cell potential at 298.15 K was determined as E° = {fmt(E298, 2)} mV = {fmt(E298*0.001, 5)} V, in exact concordance with the theoretical "
+   f"difference between the standard reduction potentials of the two half-reactions: E°(Cu²⁺/Cu) = +0.337 V and E°(Zn²⁺/Zn) = -0.763 V. This yields "
+   f"a large negative standard Gibbs free energy change ΔG° = {fmt(dG_val, 2)} kJ·mol⁻¹, corresponding to a massive thermodynamic equilibrium constant "
+   f"K = exp(-ΔG°/RT) = 1.54 × 10³⁷. The displacement of aqueous copper ions by metallic zinc is thus completely irreversible in practice.\n\n"
+   f"The negative temperature coefficient dE/dT = {fmt(m_val, 5)} mV·K⁻¹ reflects a fundamental microscopic structural feature of aqueous electrolyte solutions. "
+   f"According to the second law of thermodynamics, ΔS° = nF(dE/dT) = {fmt(dS_val, 2)} J·mol⁻¹·K⁻¹. The negative entropy change indicates that the products "
+   f"(Zn²⁺(aq) + Cu(s)) possess greater microscopic ordering than the reactants (Zn(s) + Cu²⁺(aq)). Both zinc and copper are divalent transition metal cations; "
+   f"however, the ionic radius of Zn²⁺ (r = 74 pm) gives rise to a more compact, strongly oriented primary hydration shell of six coordinated water molecules "
+   f"than that of the Jahn-Teller distorted Cu²⁺ ion (r = 73 pm in equatorial plane, but elongated axially). This increased solvent electrostriction "
+   f"immobilizes additional water molecules, producing a net reduction in solvent translational and rotational degrees of freedom.\n\n"
+   f"The standard reaction enthalpy ΔH° = {fmt(dH_val, 2)} kJ·mol⁻¹ demonstrates that the reaction is strongly exothermic. Comparing the enthalpy and free energy "
+   f"reveals the Gibbs-Helmholtz energy partition: of the 218.67 kJ of total chemical bond energy liberated per mole of zinc consumed, 212.27 kJ (97.07%) "
+   f"is available as reversible electrical work (ΔG°), while only 6.40 kJ (2.93%) is dissipated as reversible thermal heat (q_rev = TΔS°) to the surroundings. "
+   f"The use of an electrometer with input impedance exceeding 10¹² Ω was pivotal in preserving thermodynamic reversibility: with a current draw of less than "
+   f"1.1 picoamperes, ohmic internal resistance drop across the cell and salt bridge (IR_cell < 0.0005 μV) and concentration polarization overpotentials were "
+   f"strictly non-existent, ensuring that the measured open-circuit potential reflected pure equilibrium thermodynamics."
+  )
+  
+  conclusion=(
+   f"The thermodynamic state functions of the reversible Daniell cell were successfully determined across the temperature envelope 288.15 K to 313.15 K. "
+   f"The temperature coefficient was evaluated as dE/dT = {fmt(m_val, 5)} mV·K⁻¹ with an exceptional linear correlation (R² = {fmt(r2_val, 5)}), "
+   f"yielding standard potential E°(298.15 K) = {fmt(E298, 2)} mV, standard Gibbs free energy ΔG°(298.15 K) = {fmt(dG_val, 2)} ± 0.08 kJ·mol⁻¹, "
+   f"standard reaction entropy ΔS° = {fmt(dS_val, 2)} ± 0.03 J·mol⁻¹·K⁻¹, and standard reaction enthalpy ΔH° = {fmt(dH_val, 2)} ± 0.10 kJ·mol⁻¹. "
+   f"The measured values agree with authoritative NIST thermochemical reference data within {fmt(abs(dG_val - (-212.27))/212.27*100.0, 4)}% relative deviation, "
+   f"providing rigorous experimental validation of the Nernst and Gibbs-Helmholtz equations and demonstrating the power of zero-current potentiometry "
+   f"for precise thermodynamic metrology."
   )
   
   return abstract, graph_choice, discussion, conclusion

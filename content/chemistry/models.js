@@ -172,6 +172,17 @@ function predict(slug,input){
   const y=round(1.0 / v0_mM, 2);
   return {raw,ideal:raw,period:1.0,x,y,valid:s_val>=0.10&&s_val<=4.00};
  }
+ if(slug==='electrochemical-cell-thermodynamics-nernst'){
+  const t=Number(input);
+  const T=t + 273.15;
+  const table_raw={15.0:1101.13, 20.0:1100.58, 25.0:1100.02, 30.0:1099.46, 35.0:1098.91, 40.0:1098.35};
+  const table_y={15.0:1101.13, 20.0:1100.58, 25.0:1100.02, 30.0:1099.46, 35.0:1098.91, 40.0:1098.35};
+  const key=round(t, 1);
+  const raw_val=table_raw.hasOwnProperty(key)?table_raw[key]:round(1133.19 - 0.11126 * T, 2);
+  const x=T;
+  const y=table_y.hasOwnProperty(key)?table_y[key]:raw_val;
+  return {raw:raw_val,ideal:raw_val,period:1.0,x,y,valid:t>=10.0&&t<=50.0};
+ }
  if(slug==='transference-numbers-hittorf-moving-boundary'){
   const t_time=Number(input);
   const table_raw={3.00:77.05, 6.00:154.10, 9.00:231.14, 12.00:308.19, 15.00:385.24, 18.00:462.29};
@@ -447,6 +458,13 @@ function predict(slug,input){
 
 function reading(slug,input,raw){
  let x=Number(input),y=Number(raw);
+ if(slug==='electrochemical-cell-thermodynamics-nernst'){
+  const t=Number(input);
+  const raw_val=Number(raw);
+  const T=t + 273.15;
+  x=T;
+  y=raw_val;
+ }
  if(slug==='density-mass-volume-precision'){
   x=Number(input);
   y=Number(raw);
@@ -711,6 +729,16 @@ function fit(rows){
 }
 
 function estimate(slug,f){
+ if(slug==='electrochemical-cell-thermodynamics-nernst'){
+  const m=f.m;
+  const b=f.b;
+  const F=96485.3;
+  const n=2;
+  const E298=m * 298.15 + b;
+  const dG298= -n * F * (E298 * 0.001) * 0.001;
+  const se=Math.abs(f.slopeSE || 0.0005) * 298.15 * n * F * 1e-6;
+  return {value:dG298,se:se,reference:-212.27};
+ }
  if(slug==='density-mass-volume-precision'){
   return {value:f.m,se:f.slopeSE,reference:0.9982};
  }
