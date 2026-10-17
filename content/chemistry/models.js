@@ -120,6 +120,16 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:1.0,x,y,valid:m>=0.600&&m<=1.600};
  }
+ if(slug==='heat-solution-crystallization-calorimetry'){
+  const m=Number(input);
+  const M_KNO3=101.103;
+  const C_eff=0.44590;
+  const dH=34.890;
+  const raw=round((dH * m) / (M_KNO3 * C_eff), 3);
+  const x=m;
+  const y=raw;
+  return {raw,ideal:raw,period:1.0,x,y,valid:m>=2.000&&m<=7.000};
+ }
  throw Error('Unknown Chemistry experiment predict: '+slug);
 }
 
@@ -176,6 +186,10 @@ function reading(slug,input,raw){
   y=Number(raw);
  }
  if(slug==='combustion-bomb-calorimetry-benzoic'){
+  x=Number(input);
+  y=Number(raw);
+ }
+ if(slug==='heat-solution-crystallization-calorimetry'){
   x=Number(input);
   y=Number(raw);
  }
@@ -282,6 +296,13 @@ function estimate(slug,f){
   const dU_est= -f.m * M_benzoic * C_cal;
   const se= f.slopeSE * M_benzoic * C_cal;
   return {value:dU_est,se:se,reference:-3227.0};
+ }
+ if(slug==='heat-solution-crystallization-calorimetry'){
+  const M_KNO3=101.103;
+  const C_eff=0.44590;
+  const dH_est= f.m * M_KNO3 * C_eff;
+  const se= f.slopeSE * M_KNO3 * C_eff;
+  return {value:dH_est,se:se,reference:34.89};
  }
  throw Error('Unknown Chemistry experiment estimate: '+slug);
 }

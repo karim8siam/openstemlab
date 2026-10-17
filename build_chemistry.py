@@ -112,6 +112,15 @@ def observation(c,value):
   x=m
   y=raw
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='heat-solution-crystallization-calorimetry':
+  m=float(value)
+  M_KNO3=101.103
+  C_eff=0.44590
+  dH=34.890
+  raw=rnd((dH * m) / (M_KNO3 * C_eff), 3)
+  x=m
+  y=raw
+  return {'input':value,'raw':raw,'x':x,'y':y}
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fit(rows):
@@ -192,6 +201,12 @@ def estimate(c,f):
   dU_est= -f['m'] * M_benzoic * C_cal
   se=f['slopeSE'] * M_benzoic * C_cal
   return dU_est, se, -3227.0
+ elif slug=='heat-solution-crystallization-calorimetry':
+  M_KNO3=101.103
+  C_eff=0.44590
+  dH_est= f['m'] * M_KNO3 * C_eff
+  se=f['slopeSE'] * M_KNO3 * C_eff
+  return dH_est, se, 34.89
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fmt(v,n=5):
@@ -239,6 +254,9 @@ def formula(c,f):
   conv= -f['m'] * 122.12 * 10.500
   dH_comb= conv + (-0.5 * 8.3145 * 298.15 * 0.001)
   return f"ΔU_comb = −m_slope · M_benzoic · C_cal = −{fmt(f['m'],4)} × 1282.26 = {fmt(conv,1)} kJ/mol; ΔH_comb° = ΔU + Δn_g·R·T = {fmt(dH_comb,1)} kJ/mol; Intercept ΔT₀ = {fmt(f['b'],4)} °C"
+ elif slug=='heat-solution-crystallization-calorimetry':
+  conv= f['m'] * 101.103 * 0.44590
+  return f"ΔH_soln = m_slope · M_KNO3 · C_eff = {fmt(f['m'],4)} × 45.082 = {fmt(conv,2)} kJ/mol; Intercept ΔT₀ = {fmt(f['b'],4)} °C"
  return ""
 
 def worked(c,row):
@@ -505,6 +523,26 @@ def worked(c,row):
    f"linear regression extracts the thermometric slope m_slope = 2.5169 °C/g, inverting via ΔU_comb = −m_slope · M · C_cal to isolate "
    f"the standard internal energy of combustion ΔU_comb° = −3227.3 kJ/mol with R² = 1.00000, confirming NIST SRM 39j primary standard."
   )
+ elif slug=='heat-solution-crystallization-calorimetry':
+  m=row['input']
+  dt_drop=row['raw']
+  M_KNO3=101.103
+  C_eff=0.44590
+  n_mol=m / M_KNO3
+  q_soln=C_eff * dt_drop
+  dH_single=q_soln / n_mol
+  return (
+   f"Calorimeter Total Heat Capacity: C_eff = m_water·c_p + C_cal = 100.00 g × 4.184 J/(g·K) + 27.50 J/K = 445.90 J/K = 0.44590 kJ/K.\n"
+   f"Potassium Nitrate Solute Mass: m_KNO3 = {m:.4f} g (M_KNO3 = 101.103 g/mol).\n"
+   f"Dissolution Stoichiometric Moles: n = m / M = {m:.4f} g / 101.103 g/mol = {n_mol:.6f} mol KNO₃.\n"
+   f"Corrected Adiabatic Temperature Depression: ΔT_drop = T_initial − T_min = {dt_drop:.3f} °C (Regnault-Pfaundler extrapolated).\n"
+   f"Thermal Energy Absorbed from Solution: q_soln = C_eff · ΔT_drop = 0.44590 kJ/K × {dt_drop:.3f} K = {q_soln:.4f} kJ = {q_soln*1000.0:.1f} J.\n"
+   f"Single-Trial Integral Enthalpy of Solution: ΔH_soln = q_soln / n = {q_soln:.4f} kJ / {n_mol:.6f} mol = +{dH_single:.2f} kJ/mol.\n"
+   f"Lattice & Hydration Energy Partitioning: ΔH_soln = ΔH_lattice + ΔH_hyd = +687.0 kJ/mol + (−652.1 kJ/mol) = +34.9 kJ/mol.\n"
+   f"Verification: Across the full six-point series from 2.000 to 7.000 g of KNO₃ crystals, ordinary least-squares "
+   f"linear regression extracts the thermometric slope m_slope = 0.7739 °C/g, scaling via ΔH_soln = m_slope · M · C_eff to isolate "
+   f"the standard molar enthalpy of solution ΔH_soln° = +34.89 kJ/mol with R² = 1.00000, confirming the accepted literature thermodynamic value."
+  )
  return ""
 
 def uncertainty_text(c):
@@ -748,6 +786,27 @@ def uncertainty_text(c):
    "Ordinary least-squares linear regression across six independent pellet masses (0.600 to 1.600 g) extracts the empirical slope "
    "m_slope = 2.5169 °C/g with an ideal coefficient of determination R² = 1.00000, isolating the standard molar internal energy of combustion "
    "ΔU_comb° = −3227.3 kJ/mol and molar enthalpy of combustion ΔH_comb° = −3228.5 kJ/mol within 0.008% of NIST SRM 39j primary standard."
+  )
+ elif slug=='heat-solution-crystallization-calorimetry':
+  return (
+   "In solution calorimetry of endothermic dissolution governed by the first-law relation "
+   "ΔH_soln = [ (M_KNO3 · C_eff) / m ] · ΔT_drop + ΔH₀, "
+   "experimental measurement uncertainty is evaluated across thermodynamic, thermal, gravimetric, chemical, and ambient heat leakage contributions: "
+   "(1) High-Precision Thermistor Resolution: The digital thermistor probe samples the stirred solution at 2 Hz with an instrument resolution "
+   "of ±0.001 °C and a calibrated absolute accuracy of ±0.005 °C. For adiabatic temperature depressions spanning 1.548 °C to 5.417 °C, "
+   "the relative thermometric uncertainty is δ(ΔT_drop) / ΔT_drop ≈ 0.002 / 3.48 ≈ 5.7 × 10⁻⁴ (0.057%), demonstrating outstanding thermometric fidelity. "
+   "(2) Regnault-Pfaundler Inward Heat-Leak Extrapolation: Because endothermic dissolution cools the solution below room temperature (T < T_room), "
+   "ambient heat leaks inward through the lid and walls (Newton warming rate constant k ≈ 0.0008 s⁻¹). Extrapolating the post-period linear warming tail "
+   "backward to the 63.2% dissolution midpoint restores 0.04 to 0.12 °C of unmeasured temperature drop, reducing non-adiabatic environmental bias to under ±0.004 °C (<0.10%). "
+   "(3) Solvent Dispensing Gravimetry: Pure deionized water (100.00 ± 0.05 mL, m_water = 100.00 g) was dispensed using a Class-A volumetric pipette (δV/V = 0.05%), "
+   "ensuring strict repeatability of the solvent heat capacity contribution (418.4 J/K). "
+   "(4) Solute Purity and Moisture Exclusion: Analytical-grade KNO₃ was dried at 110 °C and stored in a desiccator, ensuring absence of hygroscopic water contamination. "
+   "Crystal masses (2.0000 to 7.0000 g) were weighed to ±0.0001 g on an analytical balance (δm/m = 0.0014% to 0.0050%). "
+   "(5) Calorimeter Heat Capacity Calibration: Total effective heat capacity (C_eff = 445.90 ± 0.8 J/K) was established via electrical Joule heating and water mixing calorimetry, "
+   "contributing a systematic uncertainty of δC_eff / C_eff ≈ 0.18%. "
+   "Ordinary least-squares linear regression across six independent crystal masses (2.000 to 7.000 g) extracts the empirical slope "
+   "m_slope = 0.7739 °C/g with an ideal coefficient of determination R² = 1.00000, isolating the standard integral molar enthalpy of solution "
+   "ΔH_soln° = +34.89 kJ/mol within 0.009% of the accepted literature thermodynamic benchmark."
   )
  return ""
 
@@ -1339,6 +1398,52 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"confirming the accepted NIST literature standard (−3227.0 kJ/mol) with a percentage difference of {percent:.4f}%. "
    "The investigation verified the First Law principle that constant-volume heat equals internal energy change (q_v = ΔU), demonstrated the Legendre conversion to enthalpy (ΔH = ΔU + Δn_g·R·T), "
    "and proved that multi-point bomb calorimetric regression delivers supreme thermochemical accuracy free from ignition wire and thermometer calibration biases."
+  )
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='heat-solution-crystallization-calorimetry':
+  abstract=(
+   f"Six precision constant-pressure solution calorimetry trials were conducted in an insulated vacuum Dewar reaction cell "
+   f"(calorimeter body heat capacity C_cal = 27.5 J/K, total system effective heat capacity C_eff = 0.44590 kJ/K) across recrystallized potassium nitrate "
+   f"(KNO₃, M = 101.103 g/mol) crystal charges from m = {rows[0]['input']:.3f} g to {rows[-1]['input']:.3f} g dissolving into 100.00 mL of deionized water at 25.0 °C. "
+   f"Under motorized paddle stirring at 200 rpm, rapid endothermic dissolution produced corrected adiabatic temperature depressions ranging from "
+   f"ΔT_drop = {rows[0]['raw']:.3f} °C to {rows[-1]['raw']:.3f} °C, determined via Regnault-Pfaundler ambient warming extrapolation. "
+   f"Ordinary least-squares linear regression of temperature depression ΔT_drop against potassium nitrate mass m yielded an empirical thermometric slope of "
+   f"{fmt(f['m'],4)} °C/g, isolating an experimental standard integral molar enthalpy of solution of ΔH_soln° = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} "
+   f"with a fit standard error of {fmt(se*c['resultScale'])} {c['resultUnit']} and an ideal coefficient of determination R² = 1.00000, "
+   f"confirming the accepted literature thermodynamic benchmark (reference ΔH_soln° = +34.89 kJ/mol) with a percentage difference of {percent:.4f}%."
+  )
+  graph_choice=(
+   f"The mathematical regression models the endothermic solution calorimetric relation ΔT_drop = [ ΔH_soln / (M_KNO3 · C_eff) ] · m + ΔT₀, "
+   f"where m represents the weighed mass of pure potassium nitrate in g, ΔT_drop represents the corrected adiabatic temperature depression in °C, "
+   f"M_KNO3 = 101.103 g/mol is the formula weight of potassium nitrate, C_eff = 0.44590 kJ/K is the total effective system heat capacity, and ΔT₀ represents the baseline drift intercept in °C. "
+   f"Multiplying the regression slope m_slope by (M_KNO3 · C_eff) directly isolates the integral molar enthalpy of solution in {c['resultUnit']}, "
+   f"while constant mechanical stirring friction and crystal immersion heats are absorbed harmlessly into the baseline intercept ΔT₀."
+  )
+  discussion=(
+   "The experimental observations provide rigorous quantitative verification of Electrolyte Solution Thermodynamics, Born-Haber Solvation Cycles, and Enthalpy-Entropy Balance. "
+   "When an ionic solid dissolves in a polar solvent at constant pressure, the net enthalpy change ΔH_soln represents the algebraic sum of the endothermic crystal lattice energy "
+   "and the exothermic ion hydration enthalpies: ΔH_soln = ΔH_lattice + ΔH_hyd. "
+   "For crystalline potassium nitrate, breaking the ordered 3D ionic lattice into separated gas ions requires ΔH_lattice = +687.0 kJ/mol, while solvating the gaseous K⁺ and NO₃⁻ ions "
+   "into aqueous hydration shells releases ΔH_hyd = −652.1 kJ/mol. Because lattice breakdown consumes more energy than hydration releases, the net process is strongly endothermic "
+   "(ΔH_soln° = +34.89 kJ/mol), causing the solution to extract thermal energy from the solvent and drop significantly in temperature. "
+   "Despite absorbing heat, KNO₃ dissolves spontaneously at 25 °C because the breakdown of the rigid lattice produces a large positive entropy of solution (ΔS_soln ≈ +115 J/(mol·K)), "
+   "rendering the Gibbs free energy of dissolution negative: ΔG_soln = ΔH_soln − T ΔS_soln < 0. "
+   "Across all six crystal loadings from 2.000 g to 7.000 g, the adiabatic temperature depression exhibited impeccable linear proportionality to solute mass. "
+   "The ordinary least-squares regression line ΔT_drop = 0.7739 · m + 0.0005 °C produced an ideal coefficient of determination R² = 1.00000. "
+   "Inverting this empirical slope isolated an experimental molar enthalpy of solution of ΔH_soln° = +34.89 kJ/mol, matching the accepted thermodynamic literature benchmark "
+   "to within 0.0089%. "
+   "Thermal loss analysis demonstrated that inward Newton heat leakage from the warmer laboratory environment into the chilled solution was completely eliminated "
+   "by Regnault-Pfaundler midpoint extrapolation, which recovered up to 0.12 °C of unmeasured temperature drop. "
+   "Furthermore, multi-point linear regression absorbed constant paddle stirring heat (~0.02 W) into the intercept ΔT₀, guaranteeing an unbiased thermometric slope."
+  )
+  conclusion=(
+   "This laboratory investigation successfully determined the standard integral molar enthalpy of solution of crystalline potassium nitrate using constant-pressure solution calorimetry. "
+   f"Through systematic thermometric depression measurements across crystal loadings from {rows[0]['input']:.3f} g to {rows[-1]['input']:.3f} g in a calibrated vacuum Dewar calorimeter, we extracted an "
+   f"experimental molar enthalpy of solution of ΔH_soln° = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with a fit standard error of "
+   f"{fmt(se*c['resultScale'])} {c['resultUnit']} and an ideal coefficient of determination R² = 1.00000. "
+   f"The observed thermodynamic value confirms the accepted literature standard (+34.89 kJ/mol) with a percentage difference of {percent:.4f}%. "
+   "The investigation verified the Born-Haber lattice-hydration enthalpy partitioning model, explained the entropic driving force behind endothermic spontaneous dissolution, "
+   "and proved that multi-point calorimetric regression with Regnault-Pfaundler cooling extrapolation provides high-precision thermochemical results free from ambient heat-leak biases."
   )
   return abstract, graph_choice, discussion, conclusion
  return "","","",""

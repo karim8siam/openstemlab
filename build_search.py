@@ -83,7 +83,8 @@ def experiment_index(experiments):
     'colligative-freezing-point-depression':'colligative properties freezing point depression cryoscopy beckmann differential thermometer cyclohexane biphenyl raoult law chemical potential plastic crystal supercooling latent heat fusion ebulliometry osmometry',
     'solution-calorimetry-neutralization':'solution calorimetry enthalpy of neutralization acid base dewar dewar flask thermistor thermochemistry hess law heat of reaction hydronium hydroxide strong acid strong base adiabatic temperature rise cooling curve heat capacity',
     'hess-law-magnesium-calorimetry':'hess law thermochemistry magnesium oxide enthalpy of formation calorimetry dewar state function thermochemical cycle regnault pfaundler adiabatic extrapolation heat of reaction enthalpy change standard enthalpy',
-    'combustion-bomb-calorimetry-benzoic':'bomb calorimetry oxygen bomb benzoic acid heat of combustion internal energy enthalpy of combustion thermochemistry parr calorimeter fuse wire water equivalent nist standard constant volume'}
+    'combustion-bomb-calorimetry-benzoic':'bomb calorimetry oxygen bomb benzoic acid heat of combustion internal energy enthalpy of combustion thermochemistry parr calorimeter fuse wire water equivalent nist standard constant volume',
+    'heat-solution-crystallization-calorimetry':'heat of solution integral heat differential heat potassium nitrate kno3 endothermic dissolution solution calorimetry dewar lattice energy hydration enthalpy van t hoff solubility refrigeration'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):

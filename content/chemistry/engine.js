@@ -50,6 +50,9 @@ function update(){
  }else if(cfg.slug==='combustion-bomb-calorimetry-benzoic'){
   $('liveState').textContent='Ready to combust '+p.input.toFixed(3)+' g benzoic acid pellet under 30 atm O2.';
   message('Set pellet mass m, verify 10 cm fuse wire contact, pressurize bomb to 30 atm O2 & fire.');
+ }else if(cfg.slug==='heat-solution-crystallization-calorimetry'){
+  $('liveState').textContent='Ready to dissolve '+p.input.toFixed(3)+' g KNO3 crystals in 100 mL H2O.';
+  message('Set solute mass m_KNO3, transfer crystals via powder funnel into Dewar & log temperature drop.');
  }else{
   $('liveState').textContent='Ready to dispense '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+' of liquid.';
   message('Adjust '+cfg.shortInput+' V, then weigh the dispensed aliquot.');
@@ -82,6 +85,7 @@ $('measure').onclick=async()=>{
  if(cfg.slug==='solution-calorimetry-neutralization') msgStart='Dispensing base into Dewar, sealing lid, stirring at 200 rpm, logging exothermic adiabatic curve…';
  if(cfg.slug==='hess-law-magnesium-calorimetry') msgStart='Dropping polished Mg ribbon into 1.0 M HCl, sealing lid, vigorous H2 evolution & logging ΔT₁…';
  if(cfg.slug==='combustion-bomb-calorimetry-benzoic') msgStart='Discharging 23 V through ignition fuse wire, deflagration in 30 atm O2, logging temperature rise ΔT…';
+ if(cfg.slug==='heat-solution-crystallization-calorimetry') msgStart='Pouring KNO3 crystals into Dewar, motorized stirring at 200 rpm, endothermic cooling plunge & logging ΔT_drop…';
  message(msgStart);
  await new Promise(resolve=>setTimeout(resolve,400));
  const raw=prediction.raw;
@@ -131,6 +135,12 @@ $('measure').onclick=async()=>{
   const dU = -q_cal / n_mol;
   $('liveState').textContent='Combustion complete: ΔT = '+raw.toFixed(3)+' °C for '+p.input.toFixed(3)+' g pellet.';
   message('Bomb calorimetric combustion complete: ΔT = '+raw.toFixed(3)+' °C (ΔU_comb = '+dU.toFixed(1)+' kJ/mol, ΔH_comb = '+(dU - 1.24).toFixed(1)+' kJ/mol). Record in notebook.');
+ }else if(cfg.slug==='heat-solution-crystallization-calorimetry'){
+  const q_soln = 0.44590 * raw;
+  const n_mol = p.input / 101.103;
+  const dH = q_soln / n_mol;
+  $('liveState').textContent='Dissolution complete: ΔT_drop = '+raw.toFixed(3)+' °C for '+p.input.toFixed(3)+' g KNO3.';
+  message('Endothermic dissolution complete: ΔT_drop = '+raw.toFixed(3)+' °C (T_min = '+(25.000-raw).toFixed(3)+' °C, ΔH_soln = +'+dH.toFixed(2)+' kJ/mol). Record in notebook.');
  }else{
   $('liveState').textContent='Analytical balance stabilized: '+raw.toFixed(cfg.rawDecimals)+' g net mass.';
   message('Gravimetric measurement complete: '+raw.toFixed(cfg.rawDecimals)+' '+cfg.rawUnit+' for '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+'. Record in notebook.');
@@ -384,6 +394,18 @@ function draw(t){
    return;
   }
   $('apparatusDiagram').innerHTML=drawBombBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='heat-solution-crystallization-calorimetry'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawSolnCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawSolnSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawSolnBenchView(p,rawVal);
   return;
  }
  if(currentSimMode==='compare'){
@@ -3791,5 +3813,279 @@ function drawBombSandboxView(p, rawVal){
  });
 
  svg += text(360, 305, 'Thermodynamic Invariant: Multi-point regression purges fuse wire and nitric acid biases.', '#789c80', 8.5);
+ return svg;
+}
+
+
+// --- LAB 14: HEAT OF SOLUTION VIA SOLUTION CALORIMETRY ---
+
+function drawSolnBenchView(p, rawVal){
+ const m = (p && p.input) ? p.input : 4.000;
+ const M_KNO3 = 101.103;
+ const C_eff = 0.44590;
+ const dt_drop = rawVal !== null ? rawVal : (34.890 * m / (M_KNO3 * C_eff));
+ const T_init = 25.000;
+ const T_min = T_init - dt_drop;
+ const n_mol = m / M_KNO3;
+ const q_soln = C_eff * dt_drop;
+ const dH = q_soln / n_mol;
+
+ let svg = '';
+ svg += '<rect x="0" y="0" width="720" height="320" fill="#051009"/>';
+ svg += text(360, 24, 'ENDOTHERMIC SOLUTION CALORIMETER (DEWAR FLASK CELL)', '#4ade80', 13);
+ svg += text(360, 39, 'KNO3(s) + aq -> K+(aq) + NO3-(aq) | Endothermic Lattice-Hydration Enthalpy ΔH_soln° = +34.89 kJ/mol', '#94a3b8', 9);
+
+ // --- LEFT PANEL: VACUUM DEWAR VESSEL WITH DISSOLVING CRYSTALS ---
+ const dX = 140, dY = 70;
+ // Outer protective jacket
+ svg += '<rect x="'+(dX-65)+'" y="'+(dY+20)+'" width="130" height="180" rx="8" fill="#1e293b" stroke="#334155" stroke-width="2"/>';
+ svg += '<text x="'+dX+'" y="'+(dY+190)+'" text-anchor="middle" fill="#64748b" font-size="7.5">Vacuum-Insulated Dewar Vessel</text>';
+
+ // Silvered vacuum jacket
+ svg += '<path d="M '+(dX-52)+' '+(dY+30)+' L '+(dX-52)+' '+(dY+165)+' Q '+(dX-52)+' '+(dY+175)+' '+(dX-42)+' '+(dY+175)+' L '+(dX+42)+' '+(dY+175)+' Q '+(dX+52)+' '+(dY+175)+' '+(dX+52)+' '+(dY+30)+'" fill="none" stroke="#94a3b8" stroke-width="5" stroke-opacity="0.4"/>';
+ svg += '<path d="M '+(dX-46)+' '+(dY+30)+' L '+(dX-46)+' '+(dY+160)+' Q '+(dX-46)+' '+(dY+168)+' '+(dX-38)+' '+(dY+168)+' L '+(dX+38)+' '+(dY+168)+' Q '+(dX+46)+' '+(dY+168)+' '+(dX+46)+' '+(dY+30)+'" fill="#0b1712" stroke="#38bdf8" stroke-width="1.5"/>';
+
+ // Liquid fill (100.0 mL H2O, chilled blue shade)
+ const liqTop = dY + 90;
+ svg += '<path d="M '+(dX-44)+' '+liqTop+' L '+(dX-44)+' '+(dY+158)+' Q '+(dX-44)+' '+(dY+166)+' '+(dX-36)+' '+(dY+166)+' L '+(dX+36)+' '+(dY+166)+' Q '+(dX+44)+' '+(dY+166)+' '+(dX+44)+' '+liqTop+' Z" fill="#0284c7" fill-opacity="0.4"/>';
+ svg += '<ellipse cx="'+dX+'" cy="'+liqTop+'" rx="44" ry="4" fill="#38bdf8" fill-opacity="0.5"/>';
+ svg += '<text x="'+dX+'" y="'+(liqTop+24)+'" text-anchor="middle" fill="#bae6fd" font-size="7.5" font-weight="bold">100.0 mL Aqueous Solution</text>';
+
+ // Dissolving crystalline particles swirling in solvent
+ const crystals = [
+  {cx: dX - 18, cy: liqTop + 50, s: 3.5},
+  {cx: dX - 5,  cy: liqTop + 62, s: 2.8},
+  {cx: dX + 16, cy: liqTop + 45, s: 3.2},
+  {cx: dX - 25, cy: liqTop + 35, s: 2.5},
+  {cx: dX + 8,  cy: liqTop + 32, s: 3.0},
+  {cx: dX + 22, cy: liqTop + 58, s: 2.4}
+ ];
+ crystals.forEach(c=>{
+  svg += '<rect x="'+(c.cx-c.s/2)+'" y="'+(c.cy-c.s/2)+'" width="'+c.s+'" height="'+c.s+'" rx="0.5" fill="#f8fafc" stroke="#38bdf8" stroke-width="0.7"/>';
+ });
+ svg += '<text x="'+(dX-10)+'" y="'+(liqTop+44)+'" fill="#e0f2fe" font-size="6.5">KNO₃ Dissolving</text>';
+
+ // Powder funnel in addition port
+ svg += '<polygon points="'+(dX+32)+','+(dY-12)+' '+(dX+48)+','+(dY-12)+' '+(dX+42)+','+(dY+14)+' '+(dX+38)+','+(dY+14)+'" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1"/>';
+ svg += '<text x="'+(dX+50)+'" y="'+(dY-8)+'" fill="#38bdf8" font-size="6.5">Powder Funnel</text>';
+
+ // Insulated PTFE lid
+ svg += '<rect x="'+(dX-60)+'" y="'+(dY+15)+'" width="120" height="18" rx="3" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1.5"/>';
+ svg += '<text x="'+(dX-40)+'" y="'+(dY+27)+'" fill="#1e293b" font-size="7" font-weight="bold">PTFE LID</text>';
+
+ // Motorized Paddle Stirrer
+ svg += '<rect x="'+(dX-6)+'" y="'+(dY-12)+'" width="4" height="145" fill="#94a3b8"/>';
+ svg += '<rect x="'+(dX-14)+'" y="'+(dY+130)+'" width="20" height="7" rx="2" fill="#64748b"/>';
+ // Motor head
+ svg += '<rect x="'+(dX-15)+'" y="'+(dY-24)+'" width="22" height="14" rx="2" fill="#475569" stroke="#334155"/>';
+ svg += '<text x="'+(dX-4)+'" y="'+(dY-14)+'" text-anchor="middle" fill="#f8fafc" font-size="6">200rpm</text>';
+
+ // Digital Thermistor probe
+ svg += '<rect x="'+(dX+16)+'" y="'+(dY+5)+'" width="3" height="130" rx="1" fill="#f59e0b"/>';
+ svg += '<circle cx="'+(dX+17)+'" cy="'+(dY+135)+'" r="2.8" fill="#ef4444"/>';
+ svg += '<path d="M '+(dX+17)+' '+(dY+5)+' Q '+(dX+28)+' '+(dY-18)+' '+(dX+75)+' '+(dY-20)+'" fill="none" stroke="#f59e0b" stroke-width="1.5"/>';
+
+
+ // --- RIGHT PANEL: DIGITAL DISPLAY & ENDOTHERMIC AUDIT ---
+ const rX = 260, rY = 55, rW = 435, rH = 240;
+ svg += '<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+
+ // Thermistor Display Readout (chilled reading)
+ svg += '<rect x="'+(rX+15)+'" y="'+(rY+12)+'" width="200" height="72" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1.2"/>';
+ svg += '<text x="'+(rX+25)+'" y="'+(rY+26)+'" fill="#86efac" font-size="8" font-weight="bold">DIGITAL THERMISTOR (ENDOTHERMIC)</text>';
+ svg += '<text x="'+(rX+25)+'" y="'+(rY+56)+'" fill="#38bdf8" font-size="22" font-family="monospace" font-weight="bold">'+T_min.toFixed(3)+' °C</text>';
+ svg += '<text x="'+(rX+140)+'" y="'+(rY+44)+'" fill="#94a3b8" font-size="7.5">T_init = '+T_init.toFixed(3)+' °C</text>';
+ svg += '<text x="'+(rX+140)+'" y="'+(rY+56)+'" fill="#38bdf8" font-size="7.5" font-weight="bold">ΔT = −'+dt_drop.toFixed(3)+' °C</text>';
+ svg += '<text x="'+(rX+140)+'" y="'+(rY+68)+'" fill="#86efac" font-size="7">±0.001 °C Res.</text>';
+
+ // Mini Reaction Thermogram Profile (cooling curve)
+ const cX = rX + 225, cY = rY + 12, cW = 195, cH = 72;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1.2"/>';
+ svg += '<text x="'+(cX+8)+'" y="'+(cY+12)+'" fill="#94a3b8" font-size="7">Thermogram (Pre / Endothermic Drop / Re-warm)</text>';
+ // baseline
+ svg += '<line x1="'+(cX+12)+'" y1="'+(cY+28)+'" x2="'+(cX+45)+'" y2="'+(cY+28)+'" stroke="#38bdf8" stroke-width="1.5"/>';
+ // steep endothermic drop
+ const bottomY = cY + 28 + Math.min(36, dt_drop * 6.5);
+ svg += '<path d="M '+(cX+45)+' '+(cY+28)+' Q '+(cX+52)+' '+(cY+28)+' '+(cX+68)+' '+bottomY+'" fill="none" stroke="#38bdf8" stroke-width="2"/>';
+ // slow ambient re-warming tail upwards
+ svg += '<path d="M '+(cX+68)+' '+bottomY+' L '+(cX+185)+' '+(bottomY-6)+'" fill="none" stroke="#f59e0b" stroke-width="1.5"/>';
+ svg += '<text x="'+(cX+185)+'" y="'+(bottomY+8)+'" text-anchor="end" fill="#facc15" font-size="6.8" font-weight="bold">Extrapolated ΔT_drop = '+dt_drop.toFixed(3)+' °C</text>';
+
+ // Thermochemical State Matrix Grid
+ const gY = rY + 92;
+ const metrics = [
+  {label: 'Potassium Nitrate Mass m', val: m.toFixed(4) + ' g (' + (n_mol*1000).toFixed(2) + ' mmol)', col: '#86efac', sub: 'n = m / 101.103 g/mol'},
+  {label: 'Calorimeter Heat Capacity C_eff', val: '0.44590 kJ/K (445.9 J/K)', col: '#38bdf8', sub: '100 g H2O (418.4) + Dewar body (27.5)'},
+  {label: 'Thermal Energy Absorbed q_soln', val: q_soln.toFixed(4) + ' kJ (' + (q_soln*1000).toFixed(1) + ' J)', col: '#38bdf8', sub: 'q_soln = C_eff · ΔT_drop'},
+  {label: 'Integral Enthalpy ΔH_soln°', val: '+' + dH.toFixed(2) + ' kJ/mol', col: '#facc15', sub: 'ΔH = q_soln / n (Target: +34.89 kJ/mol)'}
+ ];
+
+ metrics.forEach((mi, idx)=>{
+  const mx = rX + 15 + (idx % 2) * 205;
+  const my = gY + Math.floor(idx / 2) * 52;
+  svg += '<rect x="'+mx+'" y="'+my+'" width="195" height="46" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1"/>';
+  svg += '<text x="'+(mx+10)+'" y="'+(my+13)+'" fill="#94a3b8" font-size="7">'+mi.label+'</text>';
+  svg += '<text x="'+(mx+10)+'" y="'+(my+28)+'" fill="'+mi.col+'" font-size="9" font-weight="bold">'+mi.val+'</text>';
+  svg += '<text x="'+(mx+10)+'" y="'+(my+39)+'" fill="#64748b" font-size="6.5">'+mi.sub+'</text>';
+ });
+
+ // Bottom Verification Banner
+ svg += '<rect x="'+(rX+15)+'" y="'+(rY+200)+'" width="405" height="30" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1"/>';
+ svg += '<text x="'+(rX+217)+'" y="'+(rY+218)+'" text-anchor="middle" fill="#4ade80" font-size="8.2" font-family="monospace" font-weight="bold">Linear Regression Invariant: ΔT_drop = 0.7739 · m => ΔH_soln° = +34.89 kJ/mol (R² = 1.000)</text>';
+
+ svg += text(360, 310, 'Endothermic dissolution absorbs thermal energy from the solvent, lowering temperature in proportion to solute mass.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawSolnCompareView(p, rawVal){
+ let svg = '';
+ svg += '<rect x="0" y="0" width="720" height="320" fill="#051009"/>';
+ svg += text(360, 24, 'ELECTROLYTE DISSOLUTION THERMODYNAMICS & SOLVATION CYCLES', '#4ade80', 13);
+ svg += text(360, 39, 'Integral vs Differential Heat of Solution vs Born-Haber Solvation Partitioning', '#94a3b8', 9);
+
+ const cards = [
+  {
+   title: '1. Integral Heat of Solution',
+   sub: 'ΔH_int = q_p / n_solute',
+   color: '#4ade80',
+   border: '#166534',
+   items: [
+    'Definition: Total heat evolved/absorbed dissolving 1 mol in finite solvent',
+    'Concentration: Dependent on final molality m (kJ per mol solute)',
+    'Infinite Dilution: Approaches standard limiting value ΔH_soln° as m -> 0',
+    'Calorimetric Signal: Directly measured from observed ΔT_drop',
+    'Potassium Nitrate: ΔH_soln° = +34.89 kJ/mol (endothermic cooling)',
+    'Linearity: Ideal Henry-Debye behavior across 0.2 to 0.7 mol/kg'
+   ]
+  },
+  {
+   title: '2. Differential Heat of Solution',
+   sub: 'ΔH_diff = (∂H / ∂n₂)_P,T,n₁',
+   color: '#38bdf8',
+   border: '#0369a1',
+   items: [
+    'Definition: Incremental enthalpy change adding 1 mol to infinite solution',
+    'Partial Molar Quantity: Equal to H̄₂ − H₂* (solute partial molar enthalpy)',
+    'Concentration Derivative: ΔH_diff = ΔH_int + n₂ · (dΔH_int / dn₂)',
+    'Infinite Dilution Limit: Identical to integral heat at m = 0',
+    'Physical Meaning: Energetics of inserting solute into pre-formed solution',
+    'Applications: Industrial crystallizers, evaporators, phase equilibria'
+   ]
+  },
+  {
+   title: '3. Born Solvation Energetics',
+   sub: 'ΔH_soln = ΔH_lattice + ΔH_hyd',
+   color: '#facc15',
+   border: '#854d0e',
+   items: [
+    'Crystal Lattice Energy: KNO3(s) -> K+(g) + NO3-(g) (ΔH_L = +687.0 kJ/mol)',
+    'Ion Hydration Enthalpy: K+(g) + NO3-(g) -> aq (ΔH_hyd = −652.1 kJ/mol)',
+    'Enthalpic Deficit: Lattice cost exceeds hydration by +34.89 kJ/mol',
+    'Entropic Driving Force: Crystal breakdown yields ΔS_soln ≈ +115 J/(mol·K)',
+    'Gibbs Free Energy: ΔG = ΔH − TΔS = +34.9 − (298 × 0.115) = −0.6 kJ/mol < 0',
+    'Exothermic Contrast: CaCl2 dissolves exothermically (ΔH = −82.8 kJ/mol)'
+   ]
+  }
+ ];
+
+ cards.forEach((c, idx)=>{
+  const x = 20 + idx * 230, y = 50, w = 220, h = 240;
+  svg += '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="6" fill="#0d1f14" stroke="'+c.border+'" stroke-width="1.5"/>';
+  svg += '<rect x="'+(x+8)+'" y="'+(y+8)+'" width="'+(w-16)+'" height="34" rx="4" fill="#051009"/>';
+  svg += '<text x="'+(x+w/2)+'" y="'+(y+22)+'" text-anchor="middle" fill="'+c.color+'" font-size="9" font-weight="bold">'+c.title+'</text>';
+  svg += '<text x="'+(x+w/2)+'" y="'+(y+35)+'" text-anchor="middle" fill="#94a3b8" font-size="7">'+c.sub+'</text>';
+
+  c.items.forEach((item, ii)=>{
+   const iy = y + 54 + ii * 29;
+   svg += '<circle cx="'+(x+14)+'" cy="'+(iy-3)+'" r="2" fill="'+c.color+'"/>';
+   svg += '<foreignObject x="'+(x+22)+'" y="'+(iy-10)+'" width="'+(w-28)+'" height="29"><p xmlns="http://www.w3.org/1999/xhtml" style="font-size:7.2px;color:#cbd5e1;line-height:1.2;margin:0">'+item+'</p></foreignObject>';
+  });
+ });
+
+ svg += text(360, 305, 'Thermodynamic Invariant: Endothermic dissolution (ΔH > 0) is driven spontaneously by large positive entropy (ΔS > 0).', '#789c80', 8.5);
+ return svg;
+}
+
+function drawSolnSandboxView(p, rawVal){
+ const m = (p && p.input) ? p.input : 4.000;
+ const M_KNO3 = 101.103;
+ const C_eff = 0.44590;
+ const dt_drop = rawVal !== null ? rawVal : (34.890 * m / (M_KNO3 * C_eff));
+ const n_mol = m / M_KNO3;
+ const q_soln = C_eff * dt_drop;
+ const dH = q_soln / n_mol;
+
+ let svg = '';
+ svg += '<rect x="0" y="0" width="720" height="320" fill="#051009"/>';
+ svg += text(360, 24, 'VAN 'T HOFF SOLUBILITY DEPENDENCE & HEAT-LEAK EXTRAPOLATION', '#4ade80', 13);
+ svg += text(360, 39, 'd(ln K_sp)/dT = ΔH_soln° / (R T²) and Newton Inward Heat Leak Correction', '#94a3b8', 9);
+
+ // --- LEFT PANEL: TEMPERATURE-DEPENDENT SOLUBILITY CURVE ---
+ const lX = 25, lY = 50, lW = 390, lH = 240;
+ svg += '<rect x="'+lX+'" y="'+lY+'" width="'+lW+'" height="'+lH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+18)+'" text-anchor="middle" fill="#86efac" font-size="9.5" font-weight="bold">VAN 'T HOFF SOLUBILITY PROFILE (g KNO₃ / 100 g H₂O)</text>';
+
+ const gX = lX + 45, gY = lY + 35, gW = 325, gH = 155;
+ svg += '<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#051009" stroke="#162e1e" stroke-width="1"/>';
+
+ // Grid lines
+ for(let gy = gY + 30; gy < gY + gH; gy += 30){
+  svg += '<line x1="'+gX+'" y1="'+gy+'" x2="'+(gX+gW)+'" y2="'+gy+'" stroke="#162e1e" stroke-width="0.8" stroke-dasharray="2,2"/>';
+ }
+ for(let gx = gX + 65; gx < gX + gW; gx += 65){
+  svg += '<line x1="'+gx+'" y1="'+gY+'" x2="'+gx+'" y2="'+(gY+gH)+'" stroke="#162e1e" stroke-width="0.8" stroke-dasharray="2,2"/>';
+ }
+
+ // Axes labels
+ svg += '<text x="'+(gX+gW/2)+'" y="'+(gY+gH+14)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5">Solution Temperature T (°C)</text>';
+ svg += '<text x="'+(gX-8)+'" y="'+(gY+gH/2)+'" text-anchor="middle" transform="rotate(-90 '+(gX-8)+' '+(gY+gH/2)+')" fill="#94a3b8" font-size="7.5">Solubility S (g/100g H₂O)</text>';
+
+ // Ticks
+ svg += '<text x="'+gX+'" y="'+(gY+gH+10)+'" text-anchor="middle" fill="#64748b" font-size="6.5">0 °C</text>';
+ svg += '<text x="'+(gX+65)+'" y="'+(gY+gH+10)+'" text-anchor="middle" fill="#64748b" font-size="6.5">25 °C</text>';
+ svg += '<text x="'+(gX+130)+'" y="'+(gY+gH+10)+'" text-anchor="middle" fill="#64748b" font-size="6.5">50 °C</text>';
+ svg += '<text x="'+(gX+195)+'" y="'+(gY+gH+10)+'" text-anchor="middle" fill="#64748b" font-size="6.5">75 °C</text>';
+ svg += '<text x="'+(gX+gW)+'" y="'+(gY+gH+10)+'" text-anchor="middle" fill="#64748b" font-size="6.5">100 °C</text>';
+
+ // Exponential steep solubility curve for KNO3: 0C->13.3g, 25C->38g, 50C->85g, 75C->155g, 100C->246g
+ const p0 = {x: gX, y: gY + gH - 10};
+ const p25 = {x: gX + 65, y: gY + gH - 26};
+ const p50 = {x: gX + 130, y: gY + gH - 55};
+ const p75 = {x: gX + 195, y: gY + gH - 98};
+ const p100 = {x: gX + gW, y: gY + 12};
+
+ svg += '<path d="M '+p0.x+' '+p0.y+' Q '+(p25.x-10)+' '+p25.y+' '+p25.x+' '+p25.y+' T '+p50.x+' '+p50.y+' T '+p75.x+' '+p75.y+' T '+p100.x+' '+p100.y+'" fill="none" stroke="#facc15" stroke-width="2.5"/>';
+ svg += '<circle cx="'+p25.x+'" cy="'+p25.y+'" r="3" fill="#4ade80"/>';
+ svg += '<text x="'+(p25.x+8)+'" y="'+(p25.y-4)+'" fill="#4ade80" font-size="7" font-weight="bold">25 °C: 38 g/100g (ΔH° = +34.9 kJ)</text>';
+ svg += '<circle cx="'+p100.x+'" cy="'+p100.y+'" r="3" fill="#ef4444"/>';
+ svg += '<text x="'+(p100.x-8)+'" y="'+(p100.y+12)+'" text-anchor="end" fill="#f87171" font-size="7">100 °C: 246 g/100g</text>';
+
+ // Bottom delta T badge
+ svg += '<rect x="'+(lX+15)+'" y="'+(lY+198)+'" width="'+(lW-30)+'" height="32" rx="3" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+218)+'" text-anchor="middle" fill="#86efac" font-size="8" font-family="monospace" font-weight="bold">Van 't Hoff Relation: d(ln K_sp)/dT > 0 due to positive endothermic ΔH_soln°</text>';
+
+
+ // --- RIGHT PANEL: SOURCES OF BIAS & SYSTEM AUDIT ---
+ const rX = 425, rY = 50, rW = 275, rH = 240;
+ svg += '<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<text x="'+(rX+rW/2)+'" y="'+(rY+18)+'" text-anchor="middle" fill="#86efac" font-size="9.5" font-weight="bold">SOURCES OF BIAS & SYSTEM AUDIT</text>';
+
+ const lossItems = [
+  {label: 'Inward Newton Heat Leak', desc: 'Room air warms cold solution; extrapolated to 63.2% t_mid', val: '+0.09 °C Restored', col: '#4ade80'},
+  {label: 'Crystal Moisture Absence', desc: 'Dried at 110 °C and stored in desiccator prevents hydrate bias', val: 'Pure anhydrous salt', col: '#38bdf8'},
+  {label: 'Stirrer Dissipation Heat', desc: 'Constant 200 rpm paddle imparts ~0.02 W mechanical heat', val: 'Absorbed in intercept', col: '#86efac'},
+  {label: 'Solvent Volumetric Delivery', desc: 'Class-A 100.00 mL pipette delivers exactly 100.0 g H2O', val: 'δV/V = 0.05%', col: '#facc15'},
+  {label: 'Multi-Point OLS Regression', desc: 'Slope eliminates zero-datum and crystal entry offsets', val: 'R² = 1.00000 Unbiased', col: '#4ade80'}
+ ];
+
+ lossItems.forEach((li, idx)=>{
+  const ly = rY + 30 + idx * 40;
+  svg += '<rect x="'+(rX+8)+'" y="'+ly+'" width="'+(rW-16)+'" height="34" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg += '<text x="'+(rX+14)+'" y="'+(ly+12)+'" fill="'+li.col+'" font-size="7.5" font-weight="bold">'+li.label+'</text>';
+  svg += '<text x="'+(rX+14)+'" y="'+(ly+25)+'" fill="#94a3b8" font-size="6.8">'+li.desc+'</text>';
+  svg += '<text x="'+(rX+rW-14)+'" y="'+(ly+12)+'" text-anchor="end" fill="'+li.col+'" font-size="7.5" font-family="monospace">'+li.val+'</text>';
+ });
+
+ svg += text(360, 305, 'Thermodynamic Invariant: Regnault-Pfaundler extrapolation restores true adiabatic temperature depression.', '#789c80', 8.5);
  return svg;
 }
