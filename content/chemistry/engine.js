@@ -59,10 +59,58 @@ function update(){
  }else if(cfg.slug==='gibbs-free-energy-solubility-van-t-hoff'){
   $('liveState').textContent='Ready to equilibrate saturated borax slurry at '+p.input.toFixed(1)+' °C.';
   message('Equilibrate borax flask, pre-warm filter pipette, draw 5.00 mL aliquot & titrate with 0.50 M HCl.');
- }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
+  message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  const C_aq = p.input;
+  const V_titr = raw;
+  const C_org = V_titr / 20.0;
+  const D = C_org / C_aq;
+  const K_D = 0.100;
+  const C_dim = (C_org - K_D * C_aq) / 2.0;
+  $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
+  message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawTernarySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawTernaryBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
   $('liveState').textContent='Ready to reflux Othmer still with x_liquid = '+p.input.toFixed(2)+' ethanol.';
   message('Energize heating mantle, establish Cottrell thermo-lift pumping, reflux 30 min & sample condensate.');
- }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
+  message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  const C_aq = p.input;
+  const V_titr = raw;
+  const C_org = V_titr / 20.0;
+  const D = C_org / C_aq;
+  const K_D = 0.100;
+  const C_dim = (C_org - K_D * C_aq) / 2.0;
+  $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
+  message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawTernarySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawTernaryBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
   const x1 = p.input;
   const x2 = 1.0 - x1;
   const raw_val = raw;
@@ -81,7 +129,31 @@ function update(){
   const nD = 1.3330 + 0.0284 * raw_val;
   $('liveState').textContent='VLE equilibrium reached: T_b = '+Tb.toFixed(2)+' °C, y_vapor = '+raw_val.toFixed(4)+'.';
   message('Distillation equilibrium established: T_b = '+Tb.toFixed(2)+' °C, n_D²⁰ = '+nD.toFixed(4)+' (y₁ = '+raw_val.toFixed(4)+', γ₁ = '+gamma1.toFixed(3)+'). Record in notebook.');
- }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
+  message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  const C_aq = p.input;
+  const V_titr = raw;
+  const C_org = V_titr / 20.0;
+  const D = C_org / C_aq;
+  const K_D = 0.100;
+  const C_dim = (C_org - K_D * C_aq) / 2.0;
+  $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
+  message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawTernarySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawTernaryBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawVleCompareView(p,rawVal);
    return;
@@ -96,10 +168,58 @@ function update(){
  if(cfg.slug==='partial-molar-volume-binary-mixtures'){
   $('liveState').textContent='Ready to equilibrate pycnometer with m = '+p.input.toFixed(2)+' mol/kg ethanol.';
   message('Fill 25 mL pycnometer, seat capillary stopper, equilibrate in 25.00 °C bath & weigh on balance.');
- }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
+  message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  const C_aq = p.input;
+  const V_titr = raw;
+  const C_org = V_titr / 20.0;
+  const D = C_org / C_aq;
+  const K_D = 0.100;
+  const C_dim = (C_org - K_D * C_aq) / 2.0;
+  $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
+  message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawTernarySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawTernaryBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
   $('liveState').textContent='Ready to reflux Othmer still with x_liquid = '+p.input.toFixed(2)+' ethanol.';
   message('Energize heating mantle, establish Cottrell thermo-lift pumping, reflux 30 min & sample condensate.');
- }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
+  message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  const C_aq = p.input;
+  const V_titr = raw;
+  const C_org = V_titr / 20.0;
+  const D = C_org / C_aq;
+  const K_D = 0.100;
+  const C_dim = (C_org - K_D * C_aq) / 2.0;
+  $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
+  message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawTernarySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawTernaryBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
   const x1 = p.input;
   const x2 = 1.0 - x1;
   const raw_val = raw;
@@ -118,7 +238,31 @@ function update(){
   const nD = 1.3330 + 0.0284 * raw_val;
   $('liveState').textContent='VLE equilibrium reached: T_b = '+Tb.toFixed(2)+' °C, y_vapor = '+raw_val.toFixed(4)+'.';
   message('Distillation equilibrium established: T_b = '+Tb.toFixed(2)+' °C, n_D²⁰ = '+nD.toFixed(4)+' (y₁ = '+raw_val.toFixed(4)+', γ₁ = '+gamma1.toFixed(3)+'). Record in notebook.');
- }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
+  message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  const C_aq = p.input;
+  const V_titr = raw;
+  const C_org = V_titr / 20.0;
+  const D = C_org / C_aq;
+  const K_D = 0.100;
+  const C_dim = (C_org - K_D * C_aq) / 2.0;
+  $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
+  message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawTernarySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawTernaryBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawVleCompareView(p,rawVal);
    return;
@@ -137,10 +281,58 @@ function update(){
   const phi = ((1000.0 + m * 46.069) / rho - 1000.0 / 0.997047) / m;
   $('liveState').textContent='Pycnometer weighed: m_filled = '+raw.toFixed(4)+' g (ρ = '+rho.toFixed(5)+' g/cm³).';
   message('Pycnometric weighing complete: m_filled = '+raw.toFixed(4)+' g (ρ = '+rho.toFixed(5)+' g/cm³, φ_V = '+phi.toFixed(3)+' cm³/mol). Record in notebook.');
- }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
+  message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  const C_aq = p.input;
+  const V_titr = raw;
+  const C_org = V_titr / 20.0;
+  const D = C_org / C_aq;
+  const K_D = 0.100;
+  const C_dim = (C_org - K_D * C_aq) / 2.0;
+  $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
+  message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawTernarySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawTernaryBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
   $('liveState').textContent='Ready to reflux Othmer still with x_liquid = '+p.input.toFixed(2)+' ethanol.';
   message('Energize heating mantle, establish Cottrell thermo-lift pumping, reflux 30 min & sample condensate.');
- }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
+  message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  const C_aq = p.input;
+  const V_titr = raw;
+  const C_org = V_titr / 20.0;
+  const D = C_org / C_aq;
+  const K_D = 0.100;
+  const C_dim = (C_org - K_D * C_aq) / 2.0;
+  $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
+  message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawTernarySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawTernaryBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
   const x1 = p.input;
   const x2 = 1.0 - x1;
   const raw_val = raw;
@@ -159,7 +351,31 @@ function update(){
   const nD = 1.3330 + 0.0284 * raw_val;
   $('liveState').textContent='VLE equilibrium reached: T_b = '+Tb.toFixed(2)+' °C, y_vapor = '+raw_val.toFixed(4)+'.';
   message('Distillation equilibrium established: T_b = '+Tb.toFixed(2)+' °C, n_D²⁰ = '+nD.toFixed(4)+' (y₁ = '+raw_val.toFixed(4)+', γ₁ = '+gamma1.toFixed(3)+'). Record in notebook.');
- }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
+  message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  const C_aq = p.input;
+  const V_titr = raw;
+  const C_org = V_titr / 20.0;
+  const D = C_org / C_aq;
+  const K_D = 0.100;
+  const C_dim = (C_org - K_D * C_aq) / 2.0;
+  $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
+  message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawTernarySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawTernaryBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawVleCompareView(p,rawVal);
    return;
@@ -221,6 +437,7 @@ $('measure').onclick=async()=>{
  if(cfg.slug==='heat-solution-crystallization-calorimetry') msgStart='Pouring KNO3 crystals into Dewar, motorized stirring at 200 rpm, endothermic cooling plunge & logging ΔT_drop…';
  if(cfg.slug==='vapor-pressure-liquid-clausius-clapeyron') msgStart='Regulating water bath, throttling air-bleed needle valve, nulling U-tube menisci & reading transducer…';
  if(cfg.slug==='gibbs-free-energy-solubility-van-t-hoff') msgStart='Filtering 5.00 mL saturated borax aliquot, adding bromocresol green, titrating dropwise to yellow endpoint…';
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase') msgStart='Equilibrating in separatory funnel (25.00 °C), draining lower chloroform phase, titrating 5.00 mL with 0.250 M NaOH…';
  if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope') msgStart='Boiling in Othmer still, Cottrell pump washing PT100 sensor, sampling condensate onto Abbe refractometer…';
  if(cfg.slug==='partial-molar-volume-binary-mixtures') msgStart='Immersing pycnometer in 25.00 °C bath (20 min), blotting capillary rim, weighing on analytical balance…';
  if(cfg.slug==='heat-capacity-ratio-gases-clement-desormes') msgStart='Triggering quick-release valve, rapid adiabatic expansion (0.80 s), isochoric thermal re-warming…';
@@ -291,10 +508,58 @@ $('measure').onclick=async()=>{
   const ln_Ksp = Math.log(Ksp);
   $('liveState').textContent='Titration endpoint reached: V_HCl = '+raw.toFixed(2)+' mL at '+p.input.toFixed(1)+' °C.';
   message('Titration complete: V_HCl = '+raw.toFixed(2)+' mL (s = '+s.toFixed(4)+' M, K_sp = '+Ksp.toExponential(3)+', ln K_sp = '+ln_Ksp.toFixed(3)+'). Record in notebook.');
- }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
+  message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  const C_aq = p.input;
+  const V_titr = raw;
+  const C_org = V_titr / 20.0;
+  const D = C_org / C_aq;
+  const K_D = 0.100;
+  const C_dim = (C_org - K_D * C_aq) / 2.0;
+  $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
+  message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawTernarySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawTernaryBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
   $('liveState').textContent='Ready to reflux Othmer still with x_liquid = '+p.input.toFixed(2)+' ethanol.';
   message('Energize heating mantle, establish Cottrell thermo-lift pumping, reflux 30 min & sample condensate.');
- }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
+  message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  const C_aq = p.input;
+  const V_titr = raw;
+  const C_org = V_titr / 20.0;
+  const D = C_org / C_aq;
+  const K_D = 0.100;
+  const C_dim = (C_org - K_D * C_aq) / 2.0;
+  $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
+  message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawTernarySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawTernaryBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
   const x1 = p.input;
   const x2 = 1.0 - x1;
   const raw_val = raw;
@@ -313,7 +578,31 @@ $('measure').onclick=async()=>{
   const nD = 1.3330 + 0.0284 * raw_val;
   $('liveState').textContent='VLE equilibrium reached: T_b = '+Tb.toFixed(2)+' °C, y_vapor = '+raw_val.toFixed(4)+'.';
   message('Distillation equilibrium established: T_b = '+Tb.toFixed(2)+' °C, n_D²⁰ = '+nD.toFixed(4)+' (y₁ = '+raw_val.toFixed(4)+', γ₁ = '+gamma1.toFixed(3)+'). Record in notebook.');
- }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
+  message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  const C_aq = p.input;
+  const V_titr = raw;
+  const C_org = V_titr / 20.0;
+  const D = C_org / C_aq;
+  const K_D = 0.100;
+  const C_dim = (C_org - K_D * C_aq) / 2.0;
+  $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
+  message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawTernarySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawTernaryBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawVleCompareView(p,rawVal);
    return;
@@ -328,10 +617,58 @@ $('measure').onclick=async()=>{
  if(cfg.slug==='partial-molar-volume-binary-mixtures'){
   $('liveState').textContent='Ready to equilibrate pycnometer with m = '+p.input.toFixed(2)+' mol/kg ethanol.';
   message('Fill 25 mL pycnometer, seat capillary stopper, equilibrate in 25.00 °C bath & weigh on balance.');
- }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
+  message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  const C_aq = p.input;
+  const V_titr = raw;
+  const C_org = V_titr / 20.0;
+  const D = C_org / C_aq;
+  const K_D = 0.100;
+  const C_dim = (C_org - K_D * C_aq) / 2.0;
+  $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
+  message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawTernarySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawTernaryBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
   $('liveState').textContent='Ready to reflux Othmer still with x_liquid = '+p.input.toFixed(2)+' ethanol.';
   message('Energize heating mantle, establish Cottrell thermo-lift pumping, reflux 30 min & sample condensate.');
- }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
+  message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  const C_aq = p.input;
+  const V_titr = raw;
+  const C_org = V_titr / 20.0;
+  const D = C_org / C_aq;
+  const K_D = 0.100;
+  const C_dim = (C_org - K_D * C_aq) / 2.0;
+  $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
+  message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawTernarySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawTernaryBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
   const x1 = p.input;
   const x2 = 1.0 - x1;
   const raw_val = raw;
@@ -350,7 +687,31 @@ $('measure').onclick=async()=>{
   const nD = 1.3330 + 0.0284 * raw_val;
   $('liveState').textContent='VLE equilibrium reached: T_b = '+Tb.toFixed(2)+' °C, y_vapor = '+raw_val.toFixed(4)+'.';
   message('Distillation equilibrium established: T_b = '+Tb.toFixed(2)+' °C, n_D²⁰ = '+nD.toFixed(4)+' (y₁ = '+raw_val.toFixed(4)+', γ₁ = '+gamma1.toFixed(3)+'). Record in notebook.');
- }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
+  message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  const C_aq = p.input;
+  const V_titr = raw;
+  const C_org = V_titr / 20.0;
+  const D = C_org / C_aq;
+  const K_D = 0.100;
+  const C_dim = (C_org - K_D * C_aq) / 2.0;
+  $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
+  message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawTernarySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawTernaryBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawVleCompareView(p,rawVal);
    return;
@@ -369,10 +730,58 @@ $('measure').onclick=async()=>{
   const phi = ((1000.0 + m * 46.069) / rho - 1000.0 / 0.997047) / m;
   $('liveState').textContent='Pycnometer weighed: m_filled = '+raw.toFixed(4)+' g (ρ = '+rho.toFixed(5)+' g/cm³).';
   message('Pycnometric weighing complete: m_filled = '+raw.toFixed(4)+' g (ρ = '+rho.toFixed(5)+' g/cm³, φ_V = '+phi.toFixed(3)+' cm³/mol). Record in notebook.');
- }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
+  message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  const C_aq = p.input;
+  const V_titr = raw;
+  const C_org = V_titr / 20.0;
+  const D = C_org / C_aq;
+  const K_D = 0.100;
+  const C_dim = (C_org - K_D * C_aq) / 2.0;
+  $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
+  message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawTernarySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawTernaryBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
   $('liveState').textContent='Ready to reflux Othmer still with x_liquid = '+p.input.toFixed(2)+' ethanol.';
   message('Energize heating mantle, establish Cottrell thermo-lift pumping, reflux 30 min & sample condensate.');
- }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
+  message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  const C_aq = p.input;
+  const V_titr = raw;
+  const C_org = V_titr / 20.0;
+  const D = C_org / C_aq;
+  const K_D = 0.100;
+  const C_dim = (C_org - K_D * C_aq) / 2.0;
+  $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
+  message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawTernarySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawTernaryBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
   const x1 = p.input;
   const x2 = 1.0 - x1;
   const raw_val = raw;
@@ -391,7 +800,31 @@ $('measure').onclick=async()=>{
   const nD = 1.3330 + 0.0284 * raw_val;
   $('liveState').textContent='VLE equilibrium reached: T_b = '+Tb.toFixed(2)+' °C, y_vapor = '+raw_val.toFixed(4)+'.';
   message('Distillation equilibrium established: T_b = '+Tb.toFixed(2)+' °C, n_D²⁰ = '+nD.toFixed(4)+' (y₁ = '+raw_val.toFixed(4)+', γ₁ = '+gamma1.toFixed(3)+'). Record in notebook.');
- }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
+  message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  const C_aq = p.input;
+  const V_titr = raw;
+  const C_org = V_titr / 20.0;
+  const D = C_org / C_aq;
+  const K_D = 0.100;
+  const C_dim = (C_org - K_D * C_aq) / 2.0;
+  $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
+  message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
+ }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawTernarySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawTernaryBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawVleCompareView(p,rawVal);
    return;
@@ -708,6 +1141,18 @@ function draw(t){
    return;
   }
   $('apparatusDiagram').innerHTML=drawHoffBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawTernarySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawTernaryBenchView(p,rawVal);
   return;
  }
  if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
@@ -5857,5 +6302,309 @@ function drawVleSandboxView(p, rawVal){
  });
 
  svg += text(360, 312, 'Phase Invariant: Activity coefficient ln(γ₁) = 1.400·(1−x₁)² isolates A = 1.400 with R² = 1.00000.', '#789c80', 8.5);
+ return svg;
+}
+
+
+// ======================================================================
+// LAB 20: THREE-COMPONENT LIQUID-LIQUID PHASE EQUILIBRIUM & EXTRACTION
+// ======================================================================
+
+function drawTernaryBenchView(p, rawVal){
+ const C_aq = p.input;
+ const K_D = 0.100;
+ const K_dim = 100.0;
+ const m_slope = 2.0 * K_dim * (K_D * K_D); // 2.000 L/mol
+ const C_org = K_D * C_aq + m_slope * (C_aq * C_aq);
+ const V_titr = rawVal || (20.0 * C_org);
+ const C_org_calc = V_titr / 20.0;
+ const D = C_org_calc / C_aq;
+ const C_mon = K_D * C_aq;
+ const C_dim = (C_org_calc - C_mon) / 2.0;
+ const pct_dim = (2.0 * C_dim / C_org_calc) * 100.0;
+
+ let svg = header('Separatory Funnel LLE Extraction & Micro-Burette Titration');
+
+ // Background Lab Bench
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // --- LEFT: SEPARATORY FUNNEL & PHASE SEPARATION (x: 35, y: 60, w: 240, h: 225) ---
+ const fX = 35, fY = 60, fW = 240, fH = 225;
+ svg += '<rect x="'+fX+'" y="'+fY+'" width="'+fW+'" height="'+fH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(fX+8)+'" y="'+(fY+8)+'" width="'+(fW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(fX+fW/2)+'" y="'+(fY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">SEPARATORY FUNNEL (25.00 °C)</text>';
+
+ // Retort Stand & Ring Clamp
+ const stX = fX + 35, stY = fY + 35;
+ svg += '<rect x="'+(stX-4)+'" y="'+stY+'" width="8" height="180" fill="#64748b"/>';
+ svg += '<circle cx="'+(stX+75)+'" cy="'+(stY+45)+'" r="32" fill="none" stroke="#94a3b8" stroke-width="2"/>';
+
+ // Separatory Funnel Pear Shape
+ const sfX = stX + 75, sfY = stY + 30;
+ // Funnel body
+ svg += '<path d="M '+(sfX-26)+' '+(sfY+20)+' C '+(sfX-32)+' '+(sfY+50)+', '+(sfX-10)+' '+(sfY+95)+', '+(sfX-4)+' '+(sfY+120)+' L '+(sfX+4)+' '+(sfY+120)+' C '+(sfX+10)+' '+(sfY+95)+', '+(sfX+32)+' '+(sfY+50)+', '+(sfX+26)+' '+(sfY+20)+' Z" fill="#03150d" stroke="#38bdf8" stroke-width="1.5"/>';
+
+ // Upper Aqueous Phase (Water-rich, lower density ρ ≈ 1.01 g/cm³)
+ svg += '<path d="M '+(sfX-25)+' '+(sfY+22)+' C '+(sfX-28)+' '+(sfY+42)+', '+(sfX-22)+' '+(sfY+60)+', '+(sfX-18)+' '+(sfY+65)+' L '+(sfX+18)+' '+(sfY+65)+' C '+(sfX+22)+' '+(sfY+60)+', '+(sfX+28)+' '+(sfY+42)+', '+(sfX+25)+' '+(sfY+22)+' Z" fill="#0284c7" fill-opacity="0.35"/>';
+ svg += '<text x="'+sfX+'" y="'+(sfY+45)+'" text-anchor="middle" fill="#e0f2fe" font-size="7" font-weight="bold">Aqueous Layer (C_aq = '+C_aq.toFixed(2)+' M)</text>';
+
+ // Meniscus boundary between phases
+ svg += '<line x1="'+(sfX-18)+'" y1="'+(sfY+65)+'" x2="'+(sfX+18)+'" y2="'+(sfY+65)+'" stroke="#38bdf8" stroke-width="1.5"/>';
+
+ // Lower Organic Phase (Chloroform-rich, high density ρ ≈ 1.48 g/cm³)
+ svg += '<path d="M '+(sfX-18)+' '+(sfY+66)+' C '+(sfX-14)+' '+(sfY+85)+', '+(sfX-8)+' '+(sfY+105)+', '+(sfX-3)+' '+(sfY+119)+' L '+(sfX+3)+' '+(sfY+119)+' C '+(sfX+8)+' '+(sfY+105)+', '+(sfX+14)+' '+(sfY+85)+', '+(sfX+18)+' '+(sfY+66)+' Z" fill="#22c55e" fill-opacity="0.45"/>';
+ svg += '<text x="'+sfX+'" y="'+(sfY+92)+'" text-anchor="middle" fill="#a7f3d0" font-size="7" font-weight="bold">CHCl₃ Organic Layer</text>';
+ svg += '<text x="'+sfX+'" y="'+(sfY+102)+'" text-anchor="middle" fill="#4ade80" font-size="6.5">ρ = 1.48 g/cm³</text>';
+
+ // PTFE Stopcock & delivery stem
+ svg += '<rect x="'+(sfX-3)+'" y="'+(sfY+120)+'" width="6" height="25" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>';
+ svg += '<circle cx="'+sfX+'" cy="'+(sfY+132)+'" r="4" fill="#ffffff" stroke="#64748b"/>';
+ svg += '<rect x="'+(sfX-8)+'" y="'+(sfY+130)+'" width="16" height="4" rx="2" fill="#3b82f6"/>';
+ // Drop emerging from stem
+ svg += '<circle cx="'+sfX+'" cy="'+(sfY+150)+'" r="2" fill="#22c55e"/>';
+
+ // Receiving Erlenmeyer Flask below
+ const efX = sfX, efY = sfY + 155;
+ svg += '<path d="M '+(efX-6)+' '+efY+' L '+(efX-18)+' '+(efY+28)+' L '+(efX+18)+' '+(efY+28)+' L '+(efX+6)+' '+efY+' Z" fill="#041208" stroke="#38bdf8" stroke-width="1"/>';
+ svg += '<path d="M '+(efX-16)+' '+(efY+27)+' L '+(efX-12)+' '+(efY+18)+' L '+(efX+12)+' '+(efY+18)+' L '+(efX+16)+' '+(efY+27)+' Z" fill="#22c55e" fill-opacity="0.5"/>';
+ svg += '<text x="'+efX+'" y="'+(efY+24)+'" text-anchor="middle" fill="#a7f3d0" font-size="6">5.00 mL Aliquot</text>';
+
+
+ // --- CENTER: MICRO-BURETTE TITRATION SETUP (x: 285, y: 60, w: 230, h: 225) ---
+ const bX = 285, bY = 60, bW = 230, bH = 225;
+ svg += '<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="8" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(bX+8)+'" y="'+(bY+8)+'" width="'+(bW-16)+'" height="20" rx="3" fill="#132e1f" stroke="#1e4d31"/>';
+ svg += '<text x="'+(bX+bW/2)+'" y="'+(bY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">MICRO-BURETTE TITRATION (0.250 M NaOH)</text>';
+
+ // Burette Tube (Vertical glass tube with Schellbach stripe)
+ const buX = bX + 50, buY = bY + 35, buW = 10, buH = 120;
+ svg += '<rect x="'+buX+'" y="'+buY+'" width="'+buW+'" height="'+buH+'" rx="2" fill="#04120a" stroke="#cbd5e1" stroke-width="1"/>';
+ svg += '<line x1="'+(buX+buW/2)+'" y1="'+buY+'" x2="'+(buX+buW/2)+'" y2="'+(buY+buH)+'" stroke="#38bdf8" stroke-width="1.2"/>';
+ // Graduations
+ for(let g=0; g<10; g++){
+  const gy = buY + 10 + g * 10;
+  svg += '<line x1="'+buX+'" y1="'+gy+'" x2="'+(buX+4)+'" y2="'+gy+'" stroke="#94a3b8" stroke-width="0.8"/>';
+ }
+ // Liquid inside burette
+ const liqTop = buY + Math.min(buH-15, 10 + (V_titr / 60.0) * (buH - 25));
+ svg += '<rect x="'+(buX+1)+'" y="'+liqTop+'" width="'+(buW-2)+'" height="'+(buH - (liqTop - buY))+'" fill="#38bdf8" fill-opacity="0.4"/>';
+
+ // Titration stopcock
+ svg += '<rect x="'+(buX+buW/2-2)+'" y="'+(buY+buH)+'" width="4" height="15" fill="#cbd5e1"/>';
+ svg += '<circle cx="'+(buX+buW/2)+'" cy="'+(buY+buH+7)+'" r="3.5" fill="#3b82f6"/>';
+
+ // Titration Conical Flask on Stirrer
+ const tfX = buX + buW/2, tfY = buY + buH + 20;
+ svg += '<rect x="'+(tfX-30)+'" y="'+(tfY+28)+'" width="60" height="8" rx="2" fill="#1e293b" stroke="#64748b"/>';
+ svg += '<text x="'+tfX+'" y="'+(tfY+34)+'" text-anchor="middle" fill="#94a3b8" font-size="5.5">Magnetic Stirrer Plate</text>';
+ // Conical Flask Body
+ svg += '<path d="M '+(tfX-8)+' '+tfY+' L '+(tfX-24)+' '+(tfY+26)+' L '+(tfX+24)+' '+(tfY+26)+' L '+(tfX+8)+' '+tfY+' Z" fill="#041208" stroke="#38bdf8" stroke-width="1.2"/>';
+ // Pink Endpoint Liquid
+ svg += '<path d="M '+(tfX-22)+' '+(tfY+25)+' L '+(tfX-16)+' '+(tfY+12)+' L '+(tfX+16)+' '+(tfY+12)+' L '+(tfX+22)+' '+(tfY+25)+' Z" fill="#ec4899" fill-opacity="0.45"/>';
+ svg += '<text x="'+tfX+'" y="'+(tfY+21)+'" text-anchor="middle" fill="#fbcfe8" font-size="6" font-weight="bold">Pink Endpoint</text>';
+
+ // Digital Readout Display Card
+ const dCardX = bX + 115, dCardY = bY + 45;
+ svg += '<rect x="'+dCardX+'" y="'+dCardY+'" width="100" height="75" rx="4" fill="#020804" stroke="#163824"/>';
+ svg += '<text x="'+(dCardX+50)+'" y="'+(dCardY+15)+'" text-anchor="middle" fill="#94a3b8" font-size="7">Titrant Volume V_NaOH</text>';
+ svg += '<text x="'+(dCardX+50)+'" y="'+(dCardY+38)+'" text-anchor="middle" fill="#4ade80" font-size="16" font-family="monospace" font-weight="bold">'+V_titr.toFixed(2)+' mL</text>';
+ svg += '<text x="'+(dCardX+50)+'" y="'+(dCardY+54)+'" text-anchor="middle" fill="#38bdf8" font-size="7">0.2500 M NaOH Standard</text>';
+ svg += '<text x="'+(dCardX+50)+'" y="'+(dCardY+67)+'" text-anchor="middle" fill="#facc15" font-size="6.8">C_org = '+C_org_calc.toFixed(4)+' M</text>';
+
+
+ // --- RIGHT: THERMODYNAMIC DIMERIZATION & PARTITION DATA (x: 525, y: 60, w: 165, h: 225) ---
+ const cX = 525, cY = 60, cW = 165, cH = 225;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="8" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(cX+8)+'" y="'+(cY+8)+'" width="'+(cW-16)+'" height="20" rx="3" fill="#132e1f" stroke="#1e4d31"/>';
+ svg += '<text x="'+(cX+cW/2)+'" y="'+(cY+22)+'" text-anchor="middle" fill="#86efac" font-size="8" font-weight="bold">PARTITION EQUILIBRIA</text>';
+
+ const statItems = [
+  {label: 'Aqueous Acid C_aq', val: C_aq.toFixed(2)+' M', col: '#a7f3d0'},
+  {label: 'Organic Total C_org', val: C_org_calc.toFixed(4)+' M', col: '#facc15'},
+  {label: 'Distribution Ratio D', val: D.toFixed(3), col: '#4ade80'},
+  {label: 'Monomer [HAc]_mon', val: C_mon.toFixed(4)+' M', col: '#38bdf8'},
+  {label: 'Dimer [(HAc)₂]', val: C_dim.toFixed(4)+' M', col: '#4ade80'},
+  {label: '% Acid Dimerized', val: pct_dim.toFixed(1)+'%', col: '#facc15'},
+  {label: 'Partition Coeff K_D', val: '0.1000', col: '#38bdf8'},
+  {label: 'Dimerization K_dim', val: '100.0 L/mol', col: '#4ade80'}
+ ];
+
+ statItems.forEach((it, idx)=>{
+  const sy = cY + 34 + idx * 21;
+  svg += '<rect x="'+(cX+6)+'" y="'+sy+'" width="'+(cW-12)+'" height="18" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg += '<text x="'+(cX+10)+'" y="'+(sy+12)+'" fill="#94a3b8" font-size="6.5">'+it.label+'</text>';
+  svg += '<text x="'+(cX+cW-10)+'" y="'+(sy+12)+'" text-anchor="end" fill="'+it.col+'" font-size="7" font-family="monospace" font-weight="bold">'+it.val+'</text>';
+ });
+
+ svg += '<rect x="'+(cX+6)+'" y="'+(cY+203)+'" width="'+(cW-12)+'" height="15" rx="2" fill="#022c22"/>';
+ svg += '<text x="'+(cX+cW/2)+'" y="'+(cY+213)+'" text-anchor="middle" fill="#86efac" font-size="6.5" font-weight="bold">Nernst Law: D = 0.100 + 2.000·C_aq</text>';
+
+ svg += text(360, 312, 'Ternary LLE at 25.00 °C: Water + Acetic Acid + Chloroform. NaOH titration isolates K_dim = 100.0 L/mol.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawTernaryCompareView(p, rawVal){
+ const curCaq = p.input;
+
+ let svg = header('Equilateral Triangular Gibbs Phase Diagram & Tie Lines (25.00 °C)');
+
+ // Background
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // --- LEFT: EQUILATERAL TRIANGLE GIBBS DIAGRAM (x: 40, y: 55, w: 380, h: 235) ---
+ const tX = 40, tY = 55, tW = 380, tH = 235;
+ svg += '<rect x="'+tX+'" y="'+tY+'" width="'+tW+'" height="'+tH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<text x="'+(tX+tW/2)+'" y="'+(tY+18)+'" text-anchor="middle" fill="#86efac" font-size="9" font-weight="bold">GIBBS TERNARY DIAGRAM (Viviani Coordinates)</text>';
+
+ // Equilateral Triangle Vertices:
+ // Top Vertex: Acetic Acid (100%)
+ const vTop = {x: tX + tW/2, y: tY + 35};
+ // Bottom Left: Water (100%)
+ const vLeft = {x: tX + 45, y: tY + tH - 35};
+ // Bottom Right: Chloroform (100%)
+ const vRight = {x: tX + tW - 45, y: tY + tH - 35};
+
+ // Draw Main Triangle Edges
+ svg += '<polygon points="'+vTop.x+','+vTop.y+' '+vLeft.x+','+vLeft.y+' '+vRight.x+','+vRight.y+'" fill="#041208" stroke="#64748b" stroke-width="1.8"/>';
+
+ // Labels at Vertices
+ svg += '<circle cx="'+vTop.x+'" cy="'+vTop.y+'" r="3.5" fill="#facc15"/>';
+ svg += '<text x="'+vTop.x+'" y="'+(vTop.y-6)+'" text-anchor="middle" fill="#facc15" font-size="8" font-weight="bold">100% Acetic Acid</text>';
+
+ svg += '<circle cx="'+vLeft.x+'" cy="'+vLeft.y+'" r="3.5" fill="#38bdf8"/>';
+ svg += '<text x="'+(vLeft.x-10)+'" y="'+(vLeft.y+15)+'" text-anchor="middle" fill="#38bdf8" font-size="7.5" font-weight="bold">100% Water</text>';
+
+ svg += '<circle cx="'+vRight.x+'" cy="'+vRight.y+'" r="3.5" fill="#4ade80"/>';
+ svg += '<text x="'+(vRight.x+10)+'" y="'+(vRight.y+15)+'" text-anchor="middle" fill="#4ade80" font-size="7.5" font-weight="bold">100% Chloroform</text>';
+
+ // Binodal Curve (Dome-shaped boundary between 1-phase and 2-phase)
+ // Starts near bottom left (w_CHCl3 ~ 1%), arches up toward plait point (w_HAc ~ 40%), ends near bottom right (w_water ~ 0.8%)
+ const bCurve = 'M '+(vLeft.x+8)+' '+(vLeft.y-2)+' Q '+(tX+tW*0.42)+' '+(vTop.y+55)+' '+(vRight.x-8)+' '+(vRight.y-2);
+ svg += '<path d="'+bCurve+'" fill="#022c22" fill-opacity="0.5" stroke="#ef4444" stroke-width="2"/>';
+ svg += '<text x="'+(tX+tW/2)+'" y="'+(vTop.y+45)+'" text-anchor="middle" fill="#4ade80" font-size="7">Single-Phase Homogeneous Solution</text>';
+ svg += '<text x="'+(tX+tW/2)+'" y="'+(vLeft.y-15)+'" text-anchor="middle" fill="#ef4444" font-size="7" font-weight="bold">Two-Phase Miscibility Gap (Heterogeneous)</text>';
+
+ // Tie Lines inside the Binodal Dome
+ const tieLines = [
+  {y1: 0.10, y2: 0.08, lx: vLeft.x + 22, ly: vLeft.y - 12, rx: vRight.x - 30, ry: vRight.y - 10},
+  {y1: 0.20, y2: 0.16, lx: vLeft.x + 45, ly: vLeft.y - 28, rx: vRight.x - 55, ry: vRight.y - 24},
+  {y1: 0.30, y2: 0.26, lx: vLeft.x + 75, ly: vLeft.y - 48, rx: vRight.x - 85, ry: vRight.y - 42},
+  {y1: 0.40, y2: 0.35, lx: vLeft.x + 110, ly: vLeft.y - 70, rx: vRight.x - 120, ry: vRight.y - 65}
+ ];
+
+ tieLines.forEach((tl, idx)=>{
+  svg += '<line x1="'+tl.lx+'" y1="'+tl.ly+'" x2="'+tl.rx+'" y2="'+tl.ry+'" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="2,2"/>';
+  svg += '<circle cx="'+tl.lx+'" cy="'+tl.ly+'" r="2.5" fill="#38bdf8"/>';
+  svg += '<circle cx="'+tl.rx+'" cy="'+tl.ry+'" r="2.5" fill="#4ade80"/>';
+ });
+
+ // Plait Point (Critical Solution Point where tie line length = 0)
+ const plaitX = tX + tW * 0.43, plaitY = vTop.y + 60;
+ svg += '<circle cx="'+plaitX+'" cy="'+plaitY+'" r="5" fill="#facc15" stroke="#ffffff" stroke-width="1.2"/>';
+ svg += '<text x="'+(plaitX-8)+'" y="'+(plaitY-6)+'" text-anchor="end" fill="#facc15" font-size="7" font-weight="bold">Plait Point (w_HAc ≈ 40%)</text>';
+
+
+ // --- RIGHT: TIE LINE PRINCIPLES & LEVER RULE (x: 435, y: 55, w: 265, h: 235) ---
+ const rX = 435, rY = 55, rW = 265, rH = 235;
+ svg += '<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="8" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(rX+8)+'" y="'+(rY+8)+'" width="'+(rW-16)+'" height="20" rx="3" fill="#132e1f" stroke="#1e4d31"/>';
+ svg += '<text x="'+(rX+rW/2)+'" y="'+(rY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">TIE LINE LEVER RULE & PRINCIPLES</text>';
+
+ const guideItems = [
+  {title: '1. Univariant Equilibrium (F = 1)', desc: 'At 25 °C and 1 atm, fixing C_aq fixes all conjugate phase compositions', val: 'F_T,P = 1', col: '#4ade80'},
+  {title: '2. Gibbs Lever Rule', desc: 'Relative mass of phases is inversely proportional to segment lengths', val: 'm_aq / m_org = L₂ / L₁', col: '#38bdf8'},
+  {title: '3. Plait Point Displaced', desc: 'Due to asymmetric solubility, plait point shifts toward water apex', val: 'Tie length -> 0', col: '#facc15'},
+  {title: '4. Hydrotropic Blending', desc: 'Acetic acid acts as mutual consolute solvent closing miscibility gap', val: 'Single Phase at Top', col: '#86efac'},
+  {title: '5. Hand Correlation Line', desc: 'ln(w₂_aq/w₁_aq) = k + n·ln(w₂_org/w₃_org) linearizes all tie lines', val: 'R² = 1.00000', col: '#4ade80'}
+ ];
+
+ guideItems.forEach((g, idx)=>{
+  const gy = rY + 32 + idx * 39;
+  svg += '<rect x="'+(rX+8)+'" y="'+gy+'" width="'+(rW-16)+'" height="33" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg += '<text x="'+(rX+12)+'" y="'+(gy+11)+'" fill="'+g.col+'" font-size="7.2" font-weight="bold">'+g.title+'</text>';
+  svg += '<text x="'+(rX+12)+'" y="'+(gy+23)+'" fill="#94a3b8" font-size="6.5">'+g.desc+'</text>';
+  svg += '<text x="'+(rX+rW-12)+'" y="'+(gy+11)+'" text-anchor="end" fill="'+g.col+'" font-size="7" font-family="monospace">'+g.val+'</text>';
+ });
+
+ svg += text(360, 312, 'Gibbs Phase Invariant: F = 3 - 2 = 1. Each tie line uniquely fixes coexisting aqueous and organic layers.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawTernarySandboxView(p, rawVal){
+ let svg = header('Nernst-Christian Dimerization Model & Industrial Extraction');
+
+ // Background
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // --- LEFT: NERNST-CHRISTIAN DISTRIBUTION PLOT (x: 35, y: 55, w: 370, h: 235) ---
+ const lX = 35, lY = 55, lW = 370, lH = 235;
+ svg += '<rect x="'+lX+'" y="'+lY+'" width="'+lW+'" height="'+lH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+18)+'" text-anchor="middle" fill="#86efac" font-size="9" font-weight="bold">DISTRIBUTION RATIO D = C_org / C_aq vs C_aq</text>';
+
+ const gX = lX + 45, gY = lY + 35, gW = lW - 65, gH = lH - 80;
+ svg += '<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#051009" stroke="#162e1e"/>';
+
+ // Grid
+ for(let i=1; i<5; i++){
+  const gy = gY + (gH * i / 5);
+  svg += '<line x1="'+gX+'" y1="'+gy+'" x2="'+(gX+gW)+'" y2="'+gy+'" stroke="#162e1e" stroke-width="0.8" stroke-dasharray="2,2"/>';
+  const gx = gX + (gW * i / 5);
+  svg += '<line x1="'+gx+'" y1="'+gY+'" x2="'+gx+'" y2="'+(gY+gH)+'" stroke="#162e1e" stroke-width="0.8" stroke-dasharray="2,2"/>';
+ }
+
+ svg += '<text x="'+(gX+gW/2)+'" y="'+(gY+gH+14)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5">Aqueous Acid Concentration C_aq (mol/L)</text>';
+ svg += '<text x="'+(gX-8)+'" y="'+(gY+gH/2)+'" text-anchor="middle" transform="rotate(-90 '+(gX-8)+' '+(gY+gH/2)+')" fill="#94a3b8" font-size="7.5">Distribution Ratio D</text>';
+
+ // Linear Fit Line: D = 0.100 + 2.000 * C_aq
+ // C_aq: 0 to 1.4 M -> D: 0.100 to 2.900
+ function fitY(Dval){
+  return (gY + gH) - (Dval / 3.0) * gH;
+ }
+ function fitX(cVal){
+  return gX + (cVal / 1.4) * gW;
+ }
+
+ const lineY0 = fitY(0.100);
+ const lineY1 = fitY(0.100 + 2.000 * 1.3);
+ svg += '<line x1="'+fitX(0)+'" y1="'+lineY0+'" x2="'+fitX(1.3)+'" y2="'+lineY1+'" stroke="#4ade80" stroke-width="2.5"/>';
+
+ // Points
+ const samplePts = [0.20, 0.40, 0.60, 0.80, 1.00, 1.20];
+ samplePts.forEach(c=>{
+  const dVal = 0.100 + 2.000 * c;
+  svg += '<circle cx="'+fitX(c)+'" cy="'+fitY(dVal)+'" r="3.5" fill="#38bdf8" stroke="#ffffff" stroke-width="1"/>';
+ });
+
+ // Labels on Plot
+ svg += '<text x="'+(fitX(0)+8)+'" y="'+(lineY0-6)+'" fill="#38bdf8" font-size="7.5" font-weight="bold">Intercept b = K_D = 0.100</text>';
+ svg += '<text x="'+fitX(0.7)+'" y="'+(fitY(0.100+2.000*0.7)-10)+'" fill="#4ade80" font-size="7.5" font-weight="bold">Slope m = 2·K_dim·K_D² = 2.000 L/mol</text>';
+
+ // Invariant badge at bottom
+ svg += '<rect x="'+(lX+15)+'" y="'+(lY+195)+'" width="'+(lW-30)+'" height="32" rx="3" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+215)+'" text-anchor="middle" fill="#86efac" font-size="7.8" font-family="monospace" font-weight="bold">Thermodynamic Invariant: K_dim = m / (2·K_D²) = 100.0 L/mol (R² = 1.00000)</text>';
+
+
+ // --- RIGHT: SOURCES OF BIAS & EXTRACTION AUDIT ---
+ const rX = 420, rY = 55, rW = 280, rH = 235;
+ svg += '<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<text x="'+(rX+rW/2)+'" y="'+(rY+18)+'" text-anchor="middle" fill="#86efac" font-size="9" font-weight="bold">LLE METROLOGY & SYSTEM AUDIT</text>';
+
+ const auditItems = [
+  {label: 'Reciprocating Bath (25.00 ± 0.05 °C)', desc: 'Stabilizes mutual solubility; eliminates binodal drift', val: 'δT = ±0.05 °C', col: '#4ade80'},
+  {label: '30-Minute Quiescent Settling', desc: 'Complete gravitational coalescence prevents micro-emulsions', val: 'Clear Meniscus', col: '#38bdf8'},
+  {label: 'Stopcock Bore Pre-Flushing', desc: 'Discards 0.5 mL dense chloroform to clear aqueous drag-in', val: 'Zero Bore Bias', col: '#86efac'},
+  {label: 'Covered Water-Quenched Titration', desc: 'Suppresses volatile chloroform loss (P_vap ≈ 26 kPa)', val: 'δC < 0.0008 M', col: '#facc15'},
+  {label: 'Christian Linear Least-Squares', desc: 'D = K_D + 2·K_dim·K_D²·C_aq isolates monomer K_D and dimer K_dim', val: 'R² = 1.00000', col: '#4ade80'}
+ ];
+
+ auditItems.forEach((it, idx)=>{
+  const ay = rY + 30 + idx * 39;
+  svg += '<rect x="'+(rX+8)+'" y="'+ay+'" width="'+(rW-16)+'" height="33" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg += '<text x="'+(rX+14)+'" y="'+(ay+12)+'" fill="'+it.col+'" font-size="7.5" font-weight="bold">'+it.label+'</text>';
+  svg += '<text x="'+(rX+14)+'" y="'+(ay+24)+'" fill="#94a3b8" font-size="6.8">'+it.desc+'</text>';
+  svg += '<text x="'+(rX+rW-14)+'" y="'+(ay+12)+'" text-anchor="end" fill="'+it.col+'" font-size="7.2" font-family="monospace">'+it.val+'</text>';
+ });
+
+ svg += text(360, 312, 'Extraction Invariant: Nernst distribution D = 0.100 + 2.000·C_aq isolates K_dim = 100.0 L/mol with R² = 1.00000.', '#789c80', 8.5);
  return svg;
 }

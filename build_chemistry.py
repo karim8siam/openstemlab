@@ -149,6 +149,18 @@ def observation(c,value):
   ksp_calc=4.0 * (s_calc**3)
   y=rnd(math.log(ksp_calc), 4)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='three-component-liquid-liquid-ternary-phase':
+  C_aq=float(value)
+  K_D=0.100
+  K_dim=100.0
+  m_slope=2.0 * K_dim * (K_D * K_D)
+  C_org=K_D * C_aq + m_slope * (C_aq * C_aq)
+  raw=rnd(20.0 * C_org, 2)
+  C_org_calc=raw / 20.0
+  D_calc=C_org_calc / C_aq
+  x=C_aq
+  y=rnd(D_calc, 4)
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='liquid-vapor-phase-equilibrium-azeotrope':
   x1=float(value)
   x2=1.0 - x1
@@ -287,6 +299,12 @@ def estimate(c,f):
   dH_est= -f['m'] * 8.31446
   se=f['slopeSE'] * 8.31446
   return dH_est, se, 110.0
+ elif slug=='three-component-liquid-liquid-ternary-phase':
+  K_D_est= f['b']
+  m_slope= f['m']
+  K_dim_est= m_slope / (2.0 * (K_D_est**2))
+  se= f['slopeSE'] / (2.0 * (K_D_est**2))
+  return K_dim_est, se, 100.0
  elif slug=='liquid-vapor-phase-equilibrium-azeotrope':
   A_est= f['m']
   se= f['slopeSE']
@@ -359,6 +377,11 @@ def formula(c,f):
   conv_S= f['b'] * 8.31446
   dG_298= conv_H - (298.15 * conv_S * 0.001)
   return f"ΔH° = −m_slope · (1000·R) = −({fmt(f['m'],4)}) × 8.3145 = {fmt(conv_H,1)} kJ/mol; ΔS° = b · R = {fmt(conv_S,1)} J/(mol·K); ΔG°(298K) = {fmt(dG_298,1)} kJ/mol; Intercept b = {fmt(f['b'],4)}"
+ elif slug=='three-component-liquid-liquid-ternary-phase':
+  K_D_val= f['b']
+  m_slope= f['m']
+  K_dim_val= m_slope / (2.0 * (K_D_val**2))
+  return f"K_D = Intercept b = {fmt(K_D_val,4)}; Slope m = {fmt(m_slope,4)} L/mol; K_dim = m / (2·K_D²) = {fmt(K_dim_val,1)} L/mol; D(C_aq) = {fmt(K_D_val,4)} + {fmt(m_slope,4)}·C_aq"
  elif slug=='liquid-vapor-phase-equilibrium-azeotrope':
   A_val= f['m']
   b_val= f['b']
@@ -694,6 +717,33 @@ def worked(c,row):
    f"ordinary least-squares linear regression of ln(K_sp) against 1000/T extracts the van 't Hoff slope m_slope = −13.241 K "
    f"and intercept b = 39.723, isolating ΔH° = +110.1 kJ/mol and ΔS° = +330.3 J/(mol·K) with R² = 1.00000, "
    f"confirming the accepted literature thermodynamic parameters for borax dissolution."
+  )
+ elif slug=='three-component-liquid-liquid-ternary-phase':
+  C_aq=row['input']
+  V_titr=row['raw']
+  # organic aliquot: 5.00 mL titrated with 0.2500 M NaOH
+  C_org=V_titr / 20.0
+  D_val=C_org / C_aq
+  K_D=0.100
+  C_mon=K_D * C_aq
+  C_dim=(C_org - C_mon) / 2.0
+  pct_dim=(2.0 * C_dim / C_org) * 100.0
+  return (
+   f"Ternary Liquid-Liquid Equilibrium at 25.00 °C (Water [1] + Acetic Acid [2] + Chloroform [3]):\n"
+   f"1. Conjugate Aqueous Phase Acid Concentration: C_aq = {C_aq:.2f} mol/L (M).\n"
+   f"2. Coexisting Organic Phase Titration:\n"
+   f"   Aliquot volume V_aliquot = 5.00 mL titrated with standardized 0.2500 M NaOH.\n"
+   f"   Burette titrant volume: V_NaOH = {V_titr:.2f} mL to permanent phenolphthalein pink endpoint.\n"
+   f"   Organic phase acid concentration: C_org = (V_NaOH × M_NaOH) / V_aliquot = ({V_titr:.2f} × 0.2500) / 5.00 = {C_org:.4f} mol/L.\n"
+   f"3. Apparent Distribution Ratio:\n"
+   f"   D = C_org / C_aq = {C_org:.4f} / {C_aq:.2f} = {D_val:.4f} (dimensionless).\n"
+   f"4. Monomer-Dimer Equilibrium Breakdown in Chloroform Layer:\n"
+   f"   True monomer concentration: [HAc]_mon,org = K_D × C_aq = 0.100 × {C_aq:.2f} = {C_mon:.4f} mol/L.\n"
+   f"   Cyclic dimer concentration: [(HAc)₂]_org = (C_org − [HAc]_mon) / 2 = ({C_org:.4f} − {C_mon:.4f}) / 2 = {C_dim:.4f} mol/L.\n"
+   f"   Fraction of organic acetic acid dimerized: {pct_dim:.1f}%.\n"
+   f"5. Linear Regression Extrapolation across six equilibrium tie lines (C_aq = 0.20 M to 1.20 M) yields:\n"
+   f"   y-intercept b = K_D = 0.1000 (true monomer partition coefficient) and slope m = 2.0000 L/mol with R² = 1.00000.\n"
+   f"   Dimerization constant: K_dim = m / (2 · K_D²) = 2.0000 / (2 × 0.0100) = 100.0 L/mol, confirming cyclic dimerization in chloroform."
   )
  elif slug=='liquid-vapor-phase-equilibrium-azeotrope':
   x1=row['input']
@@ -1082,6 +1132,29 @@ def uncertainty_text(c):
    "Ordinary least-squares linear regression across six independent temperatures extracts the van 't Hoff slope "
    "m_slope = −13.241 K with an ideal coefficient of determination R² = 1.00000, isolating the standard enthalpy of dissolution "
    "ΔH° = +110.1 kJ/mol and standard entropy of dissolution ΔS° = +330.3 J/(mol·K) within 0.09% of accepted thermodynamic literature."
+  )
+ elif slug=='three-component-liquid-liquid-ternary-phase':
+  return (
+   "In the titrimetric determination of ternary liquid-liquid equilibrium tie lines and acetic acid dimerization governed by "
+   "D = K_D + 2·K_dim·K_D²·C_aq, "
+   "experimental measurement uncertainty is evaluated across thermal, gravimetric, volumetric, phase separation, and chemical components: "
+   "(1) Thermostatic Shaking Bath Regulation: Phase distribution and mutual solubility are highly sensitive to temperature. "
+   "Separatory funnels are agitated in a reciprocating thermostatic bath controlled to 25.00 ± 0.05 °C. "
+   "For the water-acetic acid-chloroform system, the temperature coefficient of mutual solubility is approximately 0.25% per degree Celsius. "
+   "Maintaining ±0.05 °C stability restricts solubility drift to < 0.013%, ensuring an invariant binodal boundary. "
+   "(2) Gravitational Coalescence and Phase Clarity: Micro-emulsions and suspended droplets of the opposite phase produce severe titration errors. "
+   "Funnels are allowed to settle undisturbed for at least 30 minutes until both layers achieve optical clarity. "
+   "Flushing and discarding the first 0.5 mL of the dense chloroform phase clears the stopcock bore, preventing aqueous droplet drag-in. "
+   "(3) Volumetric Class A Pipetting and Titration Precision: Organic aliquots are drawn using Class A 5.00 mL volumetric pipettes (δV = ±0.01 mL). "
+   "Titration with standardized 0.2500 M NaOH is executed using a 50.00 mL Class A Schellbach micro-burette with 0.05 mL graduations, "
+   "yielding a reading uncertainty of δV_titr = ±0.02 mL. For an aliquot requiring 15.60 mL of titrant, volumetric uncertainty is 0.13%. "
+   "(4) Suppression of Volatile Solvent Evaporation: Chloroform has an ambient vapor pressure of ~26 kPa at 25 °C. "
+   "Pipetting into pre-filled covered flasks containing neutral deionized water instantly suppresses volatile loss, "
+   "limiting evaporation-induced concentration bias to < 0.0008 mol/L. "
+   "(5) Uncertainty Propagation into Dimerization Constant: From K_dim = m / (2·b²), logarithmic error propagation yields "
+   "δK_dim / K_dim ≈ [ (δm / m)² + 4·(δb / b)² ]^{1/2}. Ordinary least-squares regression across six independent tie lines "
+   "produces an intercept standard error of SE(b) = ±0.0005 and slope standard error SE(m) = ±0.0008 L/mol, "
+   "achieving an ideal coefficient of determination R² = 1.00000 and constraining uncertainty in K_dim to ±0.8 L/mol (0.8%)."
   )
  elif slug=='liquid-vapor-phase-equilibrium-azeotrope':
   return (
@@ -1887,6 +1960,76 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    "The investigation verified that endothermic dissolution is driven spontaneously by massive entropy generation from crystal lattice and hydrate water release, "
    "demonstrated the power of the van 't Hoff equation to extract thermal quantities without calorimetry, "
    "and proved that pre-warmed filter-plugged pipetting eliminates crystallization and suspended particle errors."
+  )
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='three-component-liquid-liquid-ternary-phase':
+  abstract=(
+   f"Ternary liquid-liquid phase equilibrium (LLE) for the three-component system water (1) + acetic acid (2) + chloroform (3) was investigated "
+   f"at 25.00 ± 0.05 °C. "
+   f"The binodal solubility curve was established via turbidimetric cloud-point titrations, delineating the extensive two-phase miscibility gap. "
+   f"Inside the heterogeneous dome, six independent liquid-liquid extraction equilibria were synthesized across aqueous acid concentrations "
+   f"from C_aq = {rows[0]['input']:.2f} M to {rows[-1]['input']:.2f} M. "
+   f"Following 30 minutes of quiescent phase separation, 5.00 mL aliquots of the lower organic phase were titrated with standardized 0.2500 M NaOH, "
+   f"yielding titrant volumes from {rows[0]['raw']:.2f} mL to {rows[-1]['raw']:.2f} mL and organic acid concentrations from 0.1000 M to 3.0000 M. "
+   f"The apparent distribution ratio D = C_org / C_aq exhibited a pronounced linear increase from {rows[0]['y']:.4f} to {rows[-1]['y']:.4f}, "
+   f"confirming extensive carboxylic acid self-association in the organic layer. "
+   f"Ordinary least-squares linear regression based on the Nernst-Christian formulation isolated a true monomer partition coefficient of "
+   f"K_D = {f['b']:.4f} ± {f['interceptSE']:.4f} and a slope of m = {f['m']:.4f} ± {f['slopeSE']:.4f} L/mol with R² = {f['r2']:.5f}. "
+   f"The dimerization constant of acetic acid in chloroform was evaluated as K_dim = {f['m']/(2.0*(f['b']**2)):.1f} ± 0.8 L/mol, "
+   f"reproducing the accepted physical chemistry literature reference (100.0 L/mol) with 0.0000% error. "
+   f"Tie lines were mapped onto an equilateral triangular Gibbs phase diagram, demonstrating the converging path toward the plait point and "
+   f"providing a complete thermodynamic foundation for industrial solvent extraction."
+  )
+  graph_choice=(
+   "Graph Choice: The apparent distribution ratio D = C_org / C_aq (dimensionless) was chosen as the ordinate (y-axis) and the equilibrium "
+   "aqueous acid concentration C_aq (mol/L) as the abscissa (x-axis). In solution thermodynamics, when a solute exists as a monomer in the aqueous "
+   "phase and self-associates into cyclic dimers in the organic phase, mass action equilibria dictate that total organic concentration follows "
+   "C_org = K_D·C_aq + 2·K_dim·K_D²·C_aq². Dividing by C_aq linearizes this quadratic relation into D = K_D + (2·K_dim·K_D²)·C_aq. "
+   "This coordinate system directly separates the monomeric partition behavior (isolated as the y-intercept b = K_D) from the dimerization "
+   "phenomenon (captured by the slope m = 2·K_dim·K_D²). Alternative plots such as ln(C_org) vs ln(C_aq) display slight non-linear curvature "
+   "in the low concentration regime where monomers are not negligible, whereas plotting D vs C_aq provides an exact, unwarped linear representation "
+   "with optimal statistical weighting."
+  )
+  discussion=(
+   "Thermodynamic Analysis & Phase Equilibrium Foundations:\n"
+   "1. Molecular Thermodynamics of Phase Partitioning & Dimerization:\n"
+   "The experimental observation that the distribution ratio D = C_org / C_aq increases monotonically with concentration (from 0.5000 at C_aq = 0.20 M "
+   "to 2.5000 at C_aq = 1.20 M) provides decisive physical evidence of solute self-association in the organic phase. If acetic acid existed solely as "
+   "unassociated monomers in both phases, the classical Nernst distribution law would require D to remain strictly constant across all concentrations. "
+   "The dramatic five-fold increase in D demonstrates that the organic phase possesses an expanding capacity to absorb acetic acid as concentration rises.\n\n"
+   "2. Energetics of Cyclic Hydrogen Bonding in Non-Polar Media:\n"
+   "This expanding capacity originates from the profound dielectric disparity between the two solvents. In the aqueous phase (dielectric constant ε ≈ 78.5), "
+   "strong electrostatic screening and competitive hydrogen bonding with water dipoles stabilize individual acetic acid molecules as solvated monomers. "
+   "In chloroform, however, the dielectric constant is very low (ε ≈ 4.8), and the solvent cannot form hydrogen bonds. Acetic acid molecules minimize their "
+   "chemical potential by pairing up into planar eight-membered cyclic dimers held together by two strong, cooperative O−H···O=C hydrogen bonds (bond energy "
+   "~30 kJ/mol per dimer). The extracted dimerization constant K_dim = 100.0 L/mol corresponds to a standard Gibbs free energy of dimerization of "
+   "ΔG°_dim = −RT ln(K_dim) = −(8.314 × 298.15) ln(100.0) = −11.41 kJ/mol. At C_aq = 1.20 M, where C_org reaches 3.000 M, 96.0% of all acetic acid "
+   "molecules in the chloroform phase exist in the dimerized state [(HAc)₂], leaving only 4.0% as unassociated monomers.\n\n"
+   "3. Ternary Phase Geometry and Gibbs Phase Rule Univariance:\n"
+   "Mapping the conjugate phase compositions onto the equilateral triangular Gibbs coordinate diagram illustrates the univariant nature of three-component "
+   "two-phase equilibrium. Under isothermal (25.0 °C) and isobaric (1.0 atm) constraints, the Gibbs phase rule dictates F = 3 − 2 = 1. "
+   "The coexisting aqueous layer (rich in water, containing dissolved acid and trace chloroform) and organic layer (rich in chloroform, containing dissolved acid "
+   "and trace water) define the endpoints of an equilibrium tie line. As total acetic acid is added to the system, the tie lines slope upward toward the "
+   "water-acetic acid binary axis because acetic acid distributes preferentially into the aqueous phase at low concentrations (K_D = 0.100), but shifts toward "
+   "the organic phase at higher concentrations as dimerization takes over. The tie lines progressively shorten and converge toward the plait point at "
+   "approximately 40 wt% acetic acid, where the distinction between aqueous and organic layers vanishes.\n\n"
+   "4. Industrial Extraction Implications:\n"
+   "In chemical process engineering, extracting acetic acid from aqueous streams using organic solvents (such as ethyl acetate or chlorinated hydrocarbons) "
+   "relies directly on this dimerization-enhanced distribution. Because the apparent distribution ratio D increases at higher acid concentrations, "
+   "extraction columns operate with exceptional efficiency in the concentrated feed section, requiring fewer theoretical equilibrium stages than would be "
+   "predicted from dilute monomer partition coefficients alone."
+  )
+  conclusion=(
+   f"The three-component liquid-liquid phase equilibrium and partition thermodynamics of the water-acetic acid-chloroform system was successfully "
+   f"established at 25.00 °C. "
+   f"The binodal solubility curve and equilibrium tie lines were mapped onto an equilateral triangular Gibbs phase diagram, demonstrating the single "
+   f"degree of freedom governing two-phase ternary coexistence. "
+   f"Through micro-burette acid-base titration of coexisting organic aliquots across six tie lines (C_aq = 0.20 M to 1.20 M), the Nernst-Christian "
+   f"distribution model was validated with an ideal coefficient of determination R² = {f['r2']:.5f}. "
+   f"Linear regression isolated the monomer partition coefficient as K_D = {f['b']:.4f} ± {f['interceptSE']:.4f} and the dimerization constant as "
+   f"K_dim = {f['m']/(2.0*(f['b']**2)):.1f} L/mol, matching the accepted thermodynamic benchmark (100.0 L/mol) with 0.0000% error. "
+   f"The investigation quantitatively verified the formation of cyclic hydrogen-bonded dimers in low-dielectric organic media, elucidated the "
+   f"mechanisms of hydrotropic phase blending, and provided an authoritative experimental foundation for industrial liquid-liquid extraction column design."
   )
   return abstract, graph_choice, discussion, conclusion
  elif slug=='liquid-vapor-phase-equilibrium-azeotrope':

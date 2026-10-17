@@ -160,6 +160,22 @@ function predict(slug,input){
   const y=round(Math.log(ksp_calc), 4);
   return {raw,ideal:raw,period:1.0,x,y,valid:t>=30.0&&t<=55.0};
  }
+ if(slug==='three-component-liquid-liquid-ternary-phase'){
+  const C_aq=Number(input);
+  const K_D=0.100;
+  const K_dim=100.0;
+  const m_slope=2.0 * K_dim * (K_D * K_D); // 2.000 L/mol
+  const C_org=K_D * C_aq + m_slope * (C_aq * C_aq);
+  // Titrating 5.00 mL aliquot with 0.250 M NaOH:
+  // V_NaOH = C_org * 5.00 / 0.250 = 20.0 * C_org (mL)
+  const raw=round(20.0 * C_org, 2);
+  const C_org_calc=raw / 20.0;
+  const D_calc=C_org_calc / C_aq;
+  const x=C_aq;
+  const y=round(D_calc, 4);
+  return {raw,ideal:raw,period:1.0,x,y,valid:C_aq>=0.20&&C_aq<=1.20};
+ }
+
  if(slug==='liquid-vapor-phase-equilibrium-azeotrope'){
   const x1=Number(input);
   const x2=1.0 - x1;
@@ -287,6 +303,14 @@ function reading(slug,input,raw){
   const s_calc=V / 20.0;
   const ksp_calc=4.0 * Math.pow(s_calc, 3);
   y=round(Math.log(ksp_calc), 4);
+ }
+ if(slug==='three-component-liquid-liquid-ternary-phase'){
+  const C_aq=Number(input);
+  const raw_val=Number(raw);
+  const C_org_calc=raw_val / 20.0;
+  const D_calc=C_org_calc / C_aq;
+  x=C_aq;
+  y=round(D_calc, 4);
  }
  if(slug==='liquid-vapor-phase-equilibrium-azeotrope'){
   const x1=Number(input);
@@ -443,6 +467,13 @@ function estimate(slug,f){
   const dH_est= -f.m * 8.31446;
   const se= f.slopeSE * 8.31446;
   return {value:dH_est,se:se,reference:110.0};
+ }
+ if(slug==='three-component-liquid-liquid-ternary-phase'){
+  const K_D_est= f.b;
+  const m_slope= f.m;
+  const K_dim_est= m_slope / (2.0 * K_D_est * K_D_est);
+  const se= (f.slopeSE / (2.0 * K_D_est * K_D_est));
+  return {value:K_dim_est,se:se,reference:100.0};
  }
  if(slug==='liquid-vapor-phase-equilibrium-azeotrope'){
   const A_est= f.m;
