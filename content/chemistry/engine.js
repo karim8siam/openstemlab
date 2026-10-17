@@ -87,6 +87,18 @@ function update(){
   $('apparatusDiagram').innerHTML=drawEnzymeKineticsBenchView(p,rawVal);
   return;
  }
+ if(cfg.slug==='dipole-moment-dielectric-constant-debye'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawDipoleCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawDipoleSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawDipoleBenchView(p,rawVal);
+  return;
+ }
  if(cfg.slug==='magnetic-susceptibility-gouy-balance-complexes'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawGouyCompareView(p,rawVal);
@@ -360,7 +372,23 @@ function update(){
   const dA_dt = v0_uM * 0.0185;
   $('liveState').textContent='Photometric trace recorded: v₀ = '+v0_uM.toFixed(2)+' μM/min (dA/dt = '+(dA_dt/1000).toFixed(4)+' AU/min).';
   message('Assay complete: v₀ = '+v0_uM.toFixed(2)+' μM/min (1/v₀ = '+inv_v0.toFixed(2)+' min/mM, 1/[S] = '+inv_s.toFixed(2)+' mM⁻¹). Record in notebook.');
- }else if(cfg.slug==='magnetic-susceptibility-gouy-balance-complexes'){
+ }else if(cfg.slug==='dipole-moment-dielectric-constant-debye'){
+  const x2 = p.input;
+  const p12 = raw.toFixed(3);
+  const eps = (2.015 + 2.25 * x2).toFixed(4);
+  $('liveState').textContent='Heterodyne beat null: x₂ = '+x2.toFixed(3)+' (Chlorobenzene), ε₁₂ = '+eps+', P₁₂ = '+p12+' cm³/mol.';
+  message('Resonance beat frequency tuned to zero null. Dielectric permittivity recorded. Record P₁₂ in notebook.');
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawDipoleCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawDipoleSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawDipoleBenchView(p,rawVal);
+  return;
+}else if(cfg.slug==='magnetic-susceptibility-gouy-balance-complexes'){
   const b2 = p.input;
   const b_T = Math.sqrt(b2).toFixed(2);
   const dm_mg = raw.toFixed(3);
@@ -15968,6 +15996,301 @@ function drawGouySandboxView(p, rawVal) {
  // Bottom Insight text
  svg += rect(380, 285, 310, 22, '#090d16', '#334155', 1, 3);
  svg += text(535, 299, 'Integral of dF/dz over 0 to h yields exactly F_z = (A χ_v / 2μ₀) B²', '#38bdf8', 6.5, 'middle');
+
+ return svg;
+}
+
+// ======================================================================
+// LAB 47: DIPOLE MOMENT & DEBYE POLARIZATION OF CHLOROBENZENE
+// ======================================================================
+
+function drawDipoleBenchView(p, rawVal) {
+ var x2 = Number(p.input) || 0.050;
+ var p12 = (rawVal !== null && rawVal !== undefined) ? rawVal : (27.490 + 57.524 * x2);
+ var eps12 = (2.015 + 2.250 * x2).toFixed(4);
+ var n12 = (1.4235 + 0.108 * x2).toFixed(4);
+ var rho12 = (0.7739 + 0.325 * x2).toFixed(4);
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a0f1d');
+
+ // Title header
+ svg += text(360, 18, 'HETERODYNE BEAT DIELECTRIC DIPOLEMETER & ABBE REFRACTOMETER', '#38bdf8', 11, 'middle', 'bold');
+ svg += text(360, 32, 'Chlorobenzene in Cyclohexane (25.00 °C) | Solute Mole Fraction x₂ = ' + x2.toFixed(3) + ' | Permittivity ε₁₂ = ' + eps12, '#94a3b8', 8.5, 'middle');
+
+ // LEFT: Heterodyne Dipolemeter & Liquid Cell (x: 15 to 345)
+ svg += rect(15, 42, 330, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(180, 58, '2.0 MHz HETERODYNE BEAT DIPOLEMETER', '#38bdf8', 9.5, 'middle', 'bold');
+
+ // Console chassis
+ svg += rect(30, 70, 300, 105, '#020617', '#334155', 1, 5);
+
+ // Frequency counter display
+ svg += rect(42, 80, 130, 32, '#090d16', '#1e293b', 1, 3);
+ svg += text(107, 93, 'CRYSTAL OSCILLATOR', '#94a3b8', 6, 'middle');
+ svg += text(107, 106, '2,000,000 Hz', '#4ade80', 8.5, 'middle', 'bold');
+
+ // Beat frequency / null detector
+ svg += rect(185, 80, 130, 32, '#090d16', '#1e293b', 1, 3);
+ svg += text(250, 93, 'BEAT FREQUENCY NULL', '#94a3b8', 6, 'middle');
+ svg += text(250, 106, 'Δf = 0.0 Hz (NULL)', '#facc15', 8.5, 'middle', 'bold');
+
+ // Coaxial liquid capacitance cell
+ svg += rect(42, 120, 100, 45, '#1e293b', '#64748b', 1, 3);
+ svg += text(92, 134, 'COAXIAL CELL', '#38bdf8', 6.5, 'middle', 'bold');
+ svg += text(92, 146, 'C = 42.185 pF', '#f8fafc', 7, 'middle');
+ svg += text(92, 158, 'ε₁₂ = ' + eps12, '#4ade80', 7, 'middle', 'bold');
+
+ // Precision Micrometer Tuning Dial
+ svg += circle(210, 142, 18, '#334155', '#94a3b8', 1.5);
+ svg += line(210, 142, 222, 132, '#f43f5e', 2);
+ svg += text(250, 140, 'Tuning Dial', '#94a3b8', 6.5, 'start');
+ svg += text(250, 151, '±0.001 pF', '#f8fafc', 6.5, 'start', 'bold');
+
+ // Chemical molecular dipole representation at bottom of left panel
+ svg += rect(30, 185, 300, 120, '#090d16', '#1e293b', 1, 4);
+ svg += text(180, 200, 'CHLOROBENZENE MOLECULAR DIPOLE VECTOR (C_2v)', '#cbd5e1', 7.5, 'middle', 'bold');
+
+ // Benzene ring skeleton
+ var rx = 100, ry = 250;
+ svg += polygon((rx) + ',' + (ry-20) + ' ' + (rx+17) + ',' + (ry-10) + ' ' + (rx+17) + ',' + (ry+10) + ' ' + (rx) + ',' + (ry+20) + ' ' + (rx-17) + ',' + (ry+10) + ' ' + (rx-17) + ',' + (ry-10), 'none', '#38bdf8', 1.8);
+ svg += circle(rx, ry, 11, 'none', '#38bdf8', 1);
+
+ // Chlorine atom & bond
+ svg += line(rx, ry-20, rx, ry-38, '#4ade80', 2.5);
+ svg += circle(rx, ry-38, 7, '#4ade80', '#fff', 1);
+ svg += text(rx, ry-35, 'Cl', '#065f46', 7, 'middle', 'bold');
+ svg += text(rx, ry+32, 'H', '#94a3b8', 6.5, 'middle');
+
+ // Dipole vector arrow (from + to - towards Cl)
+ svg += line(rx+35, ry+15, rx+35, ry-30, '#f43f5e', 2.5);
+ svg += polygon((rx+31) + ',' + (ry-28) + ' ' + (rx+35) + ',' + (ry-36) + ' ' + (rx+39) + ',' + (ry-28), '#f43f5e');
+ svg += line(rx+30, ry+15, rx+40, ry+15, '#f43f5e', 2); // crossed plus end
+ svg += text(rx+45, ry-8, 'μ = 1.60 D', '#f43f5e', 7.5, 'start', 'bold');
+
+ // Telemetry column
+ svg += text(185, 222, 'Refractive Index (n_D): ' + n12, '#38bdf8', 7, 'start');
+ svg += text(185, 237, 'Solution Density: ' + rho12 + ' g/cm³', '#cbd5e1', 7, 'start');
+ svg += text(185, 252, 'Molar Refraction R₂: 31.14 cm³/mol', '#facc15', 7, 'start');
+ svg += text(185, 267, 'Distortion Polariz. P_D: 32.70 cm³/mol', '#94a3b8', 7, 'start');
+ svg += text(185, 282, 'Orientation Polariz. P_or: 52.31 cm³/mol', '#4ade80', 7, 'start', 'bold');
+
+ // RIGHT PANEL: Total Molar Polarization Linear Regression P12 vs x2 (x: 360 to 705)
+ svg += rect(360, 42, 345, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(532, 58, 'DEBYE MOLAR POLARIZATION REGRESSION', '#38bdf8', 9.5, 'middle', 'bold');
+
+ // Plot axes (x: 400 to 680, y: 80 to 225)
+ var plot_x0 = 400, plot_x1 = 680, plot_y0 = 225, plot_y1 = 80;
+ svg += line(plot_x0, plot_y0, plot_x1, plot_y0, '#64748b', 1.5);
+ svg += line(plot_x0, plot_y0, plot_x0, plot_y1, '#64748b', 1.5);
+
+ // X-axis ticks (x2: 0 to 0.10)
+ for (var cur_x = 0; cur_x <= 0.10; cur_x += 0.02) {
+  var px = plot_x0 + (cur_x / 0.10) * (plot_x1 - plot_x0);
+  svg += line(px, plot_y0, px, plot_y0 + 4, '#64748b', 1);
+  svg += text(px, plot_y0 + 13, cur_x.toFixed(2), '#94a3b8', 6.5, 'middle');
+ }
+ svg += text((plot_x0 + plot_x1) / 2, plot_y0 + 26, 'Chlorobenzene Mole Fraction x₂', '#cbd5e1', 7.5, 'middle', 'bold');
+
+ // Y-axis ticks (P12: 27 to 34 cm^3/mol)
+ for (var cur_p = 27; cur_p <= 33; cur_p += 2) {
+  var py = plot_y0 - ((cur_p - 27) / 7.0) * (plot_y0 - plot_y1);
+  svg += line(plot_x0 - 4, py, plot_x0, py, '#64748b', 1);
+  svg += text(plot_x0 - 7, py + 3, '' + cur_p, '#94a3b8', 6.5, 'end');
+ }
+ svg += text(plot_x0 - 18, (plot_y0 + plot_y1) / 2, 'P₁₂ (cm³/mol)', '#cbd5e1', 7.5, 'middle', 'normal', 'rotate(-90 ' + (plot_x0 - 18) + ' ' + ((plot_y0 + plot_y1) / 2) + ')');
+
+ // Regression line: P12 = 27.49 + 57.52 * x2
+ var r_y0 = plot_y0 - ((27.490 - 27) / 7.0) * (plot_y0 - plot_y1);
+ var r_y1 = plot_y0 - (((27.490 + 57.52 * 0.10) - 27) / 7.0) * (plot_y0 - plot_y1);
+ svg += line(plot_x0, r_y0, plot_x1, r_y1, '#38bdf8', 2);
+
+ // Standard sample points
+ var samples_data = [
+  {x: 0.010, y: 28.065}, {x: 0.020, y: 28.640}, {x: 0.035, y: 29.503},
+  {x: 0.050, y: 30.366}, {x: 0.070, y: 31.516}, {x: 0.090, y: 32.667}
+ ];
+ for (var i = 0; i < samples_data.length; i++) {
+  var sx = plot_x0 + (samples_data[i].x / 0.10) * (plot_x1 - plot_x0);
+  var sy = plot_y0 - ((samples_data[i].y - 27) / 7.0) * (plot_y0 - plot_y1);
+  svg += circle(sx, sy, 3, '#4ade80', '#ffffff', 1);
+ }
+
+ // Active point
+ var cur_px = plot_x0 + (x2 / 0.10) * (plot_x1 - plot_x0);
+ var cur_py = plot_y0 - ((p12 - 27) / 7.0) * (plot_y0 - plot_y1);
+ if (cur_px >= plot_x0 && cur_px <= plot_x1 && cur_py <= plot_y0 && cur_py >= plot_y1) {
+  svg += circle(cur_px, cur_py, 5, '#f43f5e', '#ffffff', 1.5);
+ }
+
+ // Bottom Regression Box
+ svg += rect(375, 255, 315, 52, '#090d16', '#1e293b', 1, 4);
+ svg += text(385, 269, 'DEBYE REGRESSION EXTRACTED PARAMETERS', '#38bdf8', 7.5, 'start', 'bold');
+ svg += text(385, 283, 'Slope S = 57.52 cm³/mol  |  Intercept P₁ = 27.49 cm³/mol', '#f8fafc', 7, 'start');
+ svg += text(385, 297, 'Solute P₂,∞ = 85.01 cm³/mol  =>  μ = 1.60 D (Benchmark 1.60 D)', '#4ade80', 7.5, 'start', 'bold');
+
+ return svg;
+}
+
+function drawDipoleCompareView(p, rawVal) {
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a0f1d');
+
+ svg += text(360, 18, 'AROMATIC DIPOLE MOMENT SERIES: SYMMETRY & VECTOR ADDITION', '#38bdf8', 11, 'middle', 'bold');
+ svg += text(360, 32, 'Point Group Symmetry, Bond Vector Cancellation, and Inductive/Mesomeric Polarization', '#94a3b8', 8.5, 'middle');
+
+ var compounds = [
+  { name: "Benzene", formula: "C₆H₆", sym: "D_6h", mu: 0.00, col: "#94a3b8" },
+  { name: "Toluene", formula: "C₆H₅CH₃", sym: "C_s", mu: 0.36, col: "#38bdf8" },
+  { name: "Chlorobenzene", formula: "C₆H₅Cl", sym: "C_2v", mu: 1.60, col: "#4ade80" },
+  { name: "Bromobenzene", formula: "C₆H₅Br", sym: "C_2v", mu: 1.55, col: "#10b981" },
+  { name: "o-Dichlorobenzene", formula: "1,2-C₆H₄Cl₂", sym: "C_2v", mu: 2.50, col: "#f59e0b" },
+  { name: "p-Dichlorobenzene", formula: "1,4-C₆H₄Cl₂", sym: "D_2h", mu: 0.00, col: "#64748b" },
+  { name: "Nitrobenzene", formula: "C₆H₅NO₂", sym: "C_2v", mu: 4.22, col: "#f43f5e" }
+ ];
+
+ // Bar Chart Area (x: 25 to 450)
+ svg += rect(25, 42, 435, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(242, 58, 'EXPERIMENTAL DIPOLE MOMENTS μ (DEBYE)', '#38bdf8', 9.5, 'middle', 'bold');
+
+ var c_x0 = 55, c_x1 = 440, c_y0 = 265, c_y1 = 80;
+ svg += line(c_x0, c_y0, c_x1, c_y0, '#64748b', 1.5);
+ svg += line(c_x0, c_y0, c_x0, c_y1, '#64748b', 1.5);
+
+ // Y-axis ticks (0 to 5 Debye)
+ for (var u = 0; u <= 5; u += 1) {
+  var uy = c_y0 - (u / 5.0) * (c_y0 - c_y1);
+  svg += line(c_x0 - 4, uy, c_x0, uy, '#64748b', 1);
+  svg += text(c_x0 - 7, uy + 3, '' + u, '#94a3b8', 6.5, 'end');
+ }
+ svg += text(c_x0 - 18, (c_y0 + c_y1) / 2, 'Dipole Moment μ (Debye)', '#cbd5e1', 7.5, 'middle', 'normal', 'rotate(-90 ' + (c_x0 - 18) + ' ' + ((c_y0 + c_y1) / 2) + ')');
+
+ // Draw bars
+ var grp_w = (c_x1 - c_x0) / compounds.length;
+ for (var i = 0; i < compounds.length; i++) {
+  var gx = c_x0 + i * grp_w + 10;
+  var bar_h = (compounds[i].mu / 5.0) * (c_y0 - c_y1);
+
+  svg += rect(gx, c_y0 - bar_h, 32, bar_h, compounds[i].col, 'none', 0, 2);
+  if (compounds[i].mu > 0) {
+   svg += text(gx + 16, c_y0 - bar_h - 4, compounds[i].mu.toFixed(2), compounds[i].col, 6.5, 'middle', 'bold');
+  }
+
+  // Label
+  svg += text(gx + 16, c_y0 + 13, compounds[i].name.split('-')[0], '#f8fafc', 6, 'middle', 'bold');
+  svg += text(gx + 16, c_y0 + 24, compounds[i].sym, '#94a3b8', 6, 'middle');
+ }
+
+ // RIGHT PANEL: Theoretical Insights & Symmetry Cancellation (x: 470 to 705)
+ svg += rect(470, 42, 235, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(587, 58, 'DIPOLE VECTOR ADDITION LAWS', '#38bdf8', 9.5, 'middle', 'bold');
+
+ var rules = [
+  { t: "Centrosymmetric Cancellation", d: "Molecules with inversion center (i) such as Benzene (D_6h) and p-Dichlorobenzene (D_2h) have μ = 0 D identically." },
+  { t: "ortho-Dichlorobenzene Vector Sum", d: "Two C-Cl dipoles at 60° angle: μ = 2 · μ₀ · cos(30°) = √3 · (1.60 D) ≈ 2.50 D." },
+  { t: "Resonance Mesomeric Effect", d: "Nitro group (-NO₂) has powerful -M and -I effects, yielding an extraordinarily large dipole moment of 4.22 D." },
+  { t: "Debye Formulation Validity", d: "Dilution in non-polar cyclohexane eliminates dipole-dipole self-clustering, isolating single-molecule dipole vectors." }
+ ];
+
+ for (var r = 0; r < rules.length; r++) {
+  var ry = 75 + r * 58;
+  svg += rect(480, ry, 215, 52, '#090d16', '#1e293b', 1, 3);
+  svg += text(488, ry + 14, rules[r].t, '#facc15', 7, 'start', 'bold');
+  // Description wrapped
+  var words = rules[r].d.split(' ');
+  var line1 = words.slice(0, 6).join(' ');
+  var line2 = words.slice(6).join(' ');
+  svg += text(488, ry + 28, line1, '#cbd5e1', 6.5, 'start');
+  svg += text(488, ry + 40, line2, '#94a3b8', 6.5, 'start');
+ }
+
+ return svg;
+}
+
+function drawDipoleSandboxView(p, rawVal) {
+ var x2 = Number(p.input) || 0.050;
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a0f1d');
+
+ svg += text(360, 18, 'DEBYE POLARIZATION DECOMPOSITION & THERMAL ORIENTATION', '#38bdf8', 11, 'middle', 'bold');
+ svg += text(360, 32, 'Total Molar Polarization P_m = P_e (Electronic) + P_a (Atomic) + P_or (Orientation)', '#94a3b8', 8.5, 'middle');
+
+ // LEFT: Additive Components of Polarization Bar Breakdown (x: 15 to 350)
+ svg += rect(15, 42, 335, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(182, 58, 'MOLAR POLARIZATION COMPONENTS (cm³/mol)', '#38bdf8', 9.5, 'middle', 'bold');
+
+ // Stacked bar for Chlorobenzene P2,inf = 85.01 cm^3/mol
+ // Pe = 31.14 cm^3/mol (36.6%)
+ // Pa = 1.56 cm^3/mol (1.8%)
+ // Por = 52.31 cm^3/mol (61.5%)
+ var bar_x = 70, bar_w = 65, base_y = 265, full_h = 175;
+
+ var pe_h = (31.14 / 85.01) * full_h;
+ var pa_h = (1.56 / 85.01) * full_h;
+ var por_h = (52.31 / 85.01) * full_h;
+
+ // Electronic
+ svg += rect(bar_x, base_y - pe_h, bar_w, pe_h, '#38bdf8', 'none', 0, 2);
+ // Atomic
+ svg += rect(bar_x, base_y - pe_h - pa_h, bar_w, pa_h, '#facc15', 'none', 0, 1);
+ // Orientation
+ svg += rect(bar_x, base_y - full_h, bar_w, por_h, '#4ade80', 'none', 0, 2);
+
+ svg += text(bar_x + bar_w / 2, base_y - pe_h / 2, 'P_e: 31.14', '#0284c7', 7, 'middle', 'bold');
+ svg += text(bar_x + bar_w / 2, base_y - full_h + por_h / 2, 'P_or: 52.31', '#065f46', 7.5, 'middle', 'bold');
+
+ // Labels and details to the right of bar
+ var leg_x = 155;
+ svg += rect(leg_x, 95, 12, 12, '#4ade80');
+ svg += text(leg_x + 18, 104, 'Orientation Polarization P_or (61.5%)', '#4ade80', 7, 'start', 'bold');
+ svg += text(leg_x + 18, 115, 'P_or = (4π N_A μ²) / (9 k_B T)  [∝ 1/T]', '#cbd5e1', 6.5, 'start');
+
+ svg += rect(leg_x, 140, 12, 12, '#facc15');
+ svg += text(leg_x + 18, 149, 'Atomic Polarization P_a (1.8%)', '#facc15', 7, 'start', 'bold');
+ svg += text(leg_x + 18, 160, 'Nuclear vibrational bond stretch', '#cbd5e1', 6.5, 'start');
+
+ svg += rect(leg_x, 180, 12, 12, '#38bdf8');
+ svg += text(leg_x + 18, 189, 'Electronic Polarization P_e (36.6%)', '#38bdf8', 7, 'start', 'bold');
+ svg += text(leg_x + 18, 200, 'P_e = R₂ = [(n²−1)/(n²+2)]·(M/ρ)', '#cbd5e1', 6.5, 'start');
+
+ svg += rect(40, 280, 285, 25, '#090d16', '#334155', 1, 3);
+ svg += text(182, 296, 'Total P₂,∞ = P_D + P_or = 32.70 + 52.31 = 85.01 cm³/mol', '#f8fafc', 7, 'middle', 'bold');
+
+ // RIGHT: Thermal Randomization vs Electric Field Alignment (x: 365 to 705)
+ svg += rect(365, 42, 340, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(535, 58, 'DIPOLE ALIGNMENT IN STATIC ELECTRIC FIELD', '#38bdf8', 9.5, 'middle', 'bold');
+
+ // Capacitor plates
+ svg += rect(385, 75, 15, 165, '#f43f5e', '#fff', 1, 3); // Positive plate (+)
+ svg += text(392, 160, '+', '#fff', 12, 'middle', 'bold');
+ svg += rect(670, 75, 15, 165, '#38bdf8', '#fff', 1, 3); // Negative plate (-)
+ svg += text(677, 160, '−', '#fff', 12, 'middle', 'bold');
+
+ // Field lines
+ for (var ly = 95; ly <= 225; ly += 25) {
+  svg += line(400, ly, 670, ly, '#334155', 1, 'stroke-dasharray="3,3"');
+ }
+ svg += text(535, 87, 'Electric Field E →', '#cbd5e1', 7.5, 'middle');
+
+ // Polar dipoles partially aligned along field
+ var dipoles = [
+  {x: 450, y: 120, a: 15}, {x: 520, y: 110, a: -20}, {x: 600, y: 125, a: 10},
+  {x: 470, y: 165, a: 25}, {x: 550, y: 160, a: -10}, {x: 620, y: 175, a: 30},
+  {x: 440, y: 210, a: -15}, {x: 510, y: 215, a: 5}, {x: 590, y: 210, a: -25}
+ ];
+ for (var d = 0; d < dipoles.length; d++) {
+  var dx = dipoles[d].x, dy = dipoles[d].y, ang = dipoles[d].a * Math.PI / 180;
+  var lx = 14 * Math.cos(ang), ly = 14 * Math.sin(ang);
+  svg += line(dx - lx, dy - ly, dx + lx, dy + ly, '#4ade80', 2);
+  svg += circle(dx - lx, dy - ly, 3, '#f43f5e'); // + end
+  svg += circle(dx + lx, dy + ly, 3, '#38bdf8'); // - end
+ }
+
+ svg += rect(385, 255, 300, 50, '#090d16', '#1e293b', 1, 4);
+ svg += text(535, 270, 'Langevin-Debye Classical Alignment Function:', '#38bdf8', 7, 'middle');
+ svg += text(535, 284, '<cos θ> = L(x) ≈ (μ E) / (3 k_B T)', '#facc15', 7.5, 'middle', 'bold');
+ svg += text(535, 297, 'Thermal energy k_B T opposes dipole field alignment', '#94a3b8', 6.5, 'middle');
 
  return svg;
 }

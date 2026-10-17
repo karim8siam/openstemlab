@@ -159,6 +159,14 @@ def observation(c,value):
   v0_mM=raw / 1000.0
   y=rnd(1.0 / v0_mM, 2)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='dipole-moment-dielectric-constant-debye':
+  x2=float(value)
+  table_raw={0.010:28.065, 0.020:28.640, 0.035:29.503, 0.050:30.366, 0.070:31.516, 0.090:32.667}
+  key=round(x2, 3)
+  raw=table_raw.get(key, rnd(27.490 + 57.524 * x2, 3))
+  x=x2
+  y=raw
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='magnetic-susceptibility-gouy-balance-complexes':
   b2=float(value)
   table_raw={0.16:102.312, 0.36:230.203, 0.64:409.249, 1.00:639.452, 1.44:920.811, 1.96:1253.326}
@@ -647,6 +655,16 @@ def estimate(c,f):
   D_scaled=D_est * 1e6
   se=abs(f.get('slopeSE', 0.05)) / prefactor * 2.0 * math.sqrt(D_est) * 1e6
   return D_scaled, se, 7.60
+ elif slug=='dipole-moment-dielectric-constant-debye':
+  slope=f['m']
+  P1=27.490
+  PD=32.700
+  T=298.15
+  P2_inf=P1 + slope
+  Por=P2_inf - PD
+  mu_eff=0.012812 * math.sqrt(Por * T)
+  se=(0.5 * mu_eff * f.get('slopeSE', 0.05) / Por) if 'slopeSE' in f else 0.001
+  return mu_eff, se, 1.60
  elif slug=='magnetic-susceptibility-gouy-balance-complexes':
   slope=f['m']
   slope_kg=slope * 1e-6
@@ -891,6 +909,16 @@ def formula(c,f):
   D_est=((m * 1e-6) / prefactor)**2
   D_scaled=D_est * 1e6
   return f"Randles-Ševčík Fit: i_pc = {fmt(m,2)}·ν¹/² + {fmt(b,3)} μA; Diffusion Coefficient D = {fmt(D_scaled,2)} × 10⁻⁶ cm²·s⁻¹; Peak Separation ΔE_p = 59.2 mV"
+ elif slug=='dipole-moment-dielectric-constant-debye':
+  m=f['m']
+  b=f['b']
+  P1=b
+  PD=32.700
+  T=298.15
+  P2_inf=P1 + m
+  Por=P2_inf - PD
+  mu_eff=0.012812 * math.sqrt(Por * T)
+  return f"Debye Regression Fit: P₁₂ = {fmt(m,2)}·x₂ + {fmt(b,3)} cm³/mol; P₂,∞ = {fmt(P2_inf,2)} cm³/mol; P_or = {fmt(Por,2)} cm³/mol; μ = {fmt(mu_eff,2)} D"
  elif slug=='magnetic-susceptibility-gouy-balance-complexes':
   m=f['m']
   b=f['b']
@@ -1495,6 +1523,55 @@ def worked(c,row):
    f"   Scaled diffusion coefficient: D = {fmt(D_scaled, 2)} × 10⁻⁶ cm²·s⁻¹.\n"
    f"   Literature reference benchmark at 25.00 °C: D = 7.60 × 10⁻⁶ cm²·s⁻¹ (percentage difference = {fmt(abs(D_scaled - 7.60)/7.60*100.0, 4)}%).\n"
    f"   Transient Nernst diffusion layer thickness at ν = {fmt(v_val,1)} mV/s: δ ≈ √(π·D·t) = {fmt(math.sqrt(math.pi * D_est * (0.70/(v_val*1e-3)))*1e4, 1)} μm."
+  )
+ elif slug=='dipole-moment-dielectric-constant-debye':
+  x2_val=row['input']
+  raw=row['raw']
+  x_val=row['x']
+  y_val=row['y']
+  M1=84.16
+  M2=112.56
+  rho1=0.7739
+  eps1=2.015
+  m_slope=57.5241
+  b_int=27.4896
+  P1=27.490
+  PD=32.700
+  T=298.15
+  P2_inf=P1 + m_slope
+  Por=P2_inf - PD
+  mu_eff=0.012812 * math.sqrt(Por * T)
+  eps12=eps1 + 2.250 * x2_val
+  n12=1.4235 + 0.108 * x2_val
+  rho12=rho1 + 0.325 * x2_val
+  M12=(1.0 - x2_val) * M1 + x2_val * M2
+  pred_P12=m_slope * x2_val + b_int
+  diff_P12=raw - pred_P12
+  return (
+   f"Representative Observation — Debye Polarization of Chlorobenzene in Cyclohexane at x₂ = {fmt(x2_val, 3)}:\n"
+   f"1. Binary Solution Formulation & Measured Observables (25.00 °C):\n"
+   f"   Chlorobenzene solute mole fraction: x₂ = {fmt(x2_val, 3)} (solvent mole fraction x₁ = {fmt(1.0 - x2_val, 3)}).\n"
+   f"   Mean molecular weight of solution: M₁₂ = x₁·M₁ + x₂·M₂ = {fmt(M12, 3)} g/mol.\n"
+   f"   Pycnometric solution density: ρ₁₂ = {fmt(rho12, 4)} g/cm³.\n"
+   f"   Heterodyne beat measured dielectric constant: ε₁₂ = {fmt(eps12, 4)}.\n"
+   f"   Abbe sodium D-line refractive index: n₁₂ = {fmt(n12, 4)}.\n"
+   f"2. Total Molar Polarization Evaluation via Clausius-Mossotti Relation:\n"
+   f"   Dielectric function factor: (ε₁₂ − 1) / (ε₁₂ + 2) = ({fmt(eps12, 4)} − 1) / ({fmt(eps12, 4)} + 2) = {fmt((eps12 - 1.0)/(eps12 + 2.0), 5)}.\n"
+   f"   Molar volume of solution: V_m = M₁₂ / ρ₁₂ = {fmt(M12 / rho12, 3)} cm³/mol.\n"
+   f"   Total solution molar polarization: y = P₁₂ = [ (ε₁₂ − 1)/(ε₁₂ + 2) ] · [ M₁₂ / ρ₁₂ ] = {fmt(raw, 3)} cm³/mol.\n"
+   f"3. Multi-Point Debye Linear Regression Across Dilute Concentration Regime:\n"
+   f"   Linearized polarization equation: P₁₂ = P₁ + (P₂,∞ − P₁) · x₂ = S · x₂ + b.\n"
+   f"   Regression slope: S = P₂,∞ − P₁ = {fmt(m_slope, 4)} cm³/mol.\n"
+   f"   Regression Y-intercept (pure cyclohexane): b = P₁ = {fmt(b_int, 4)} cm³/mol.\n"
+   f"   Predicted molar polarization: P₁₂,pred = S · x₂ + b = {fmt(pred_P12, 3)} cm³/mol.\n"
+   f"   Residual polarization deviation: ΔP₁₂ = P₁₂,obs − P₁₂,pred = {fmt(diff_P12, 4)} cm³/mol.\n"
+   f"4. Solute Infinite Dilution Polarization & Dipole Moment Extraction:\n"
+   f"   Total solute polarization at infinite dilution: P₂,∞ = P₁ + S = {fmt(P1, 3)} + {fmt(m_slope, 3)} = {fmt(P2_inf, 3)} cm³/mol.\n"
+   f"   Chlorobenzene molar refraction: R₂ = [ (n₂² − 1)/(n₂² + 2) ] · (M₂ / ρ₂) = 31.14 cm³/mol.\n"
+   f"   Induced distortion polarization: P_D = P_e + P_a = 1.05 · R₂ = 32.70 cm³/mol.\n"
+   f"   Orientation polarization: P_or = P₂,∞ − P_D = {fmt(P2_inf, 3)} − 32.70 = {fmt(Por, 3)} cm³/mol.\n"
+   f"   Debye dipole moment formula: μ = 0.012812 · √(P_or · T) = 0.012812 · √[({fmt(Por, 3)})·(298.15)] = {fmt(mu_eff, 2)} D.\n"
+   f"   Literature benchmark: μ_lit = 1.60 D (percentage deviation = {fmt(abs(mu_eff - 1.60)/1.60*100.0, 4)}%)."
   )
  elif slug=='magnetic-susceptibility-gouy-balance-complexes':
   b2_val=row['input']
@@ -2675,6 +2752,37 @@ def uncertainty_text(c):
    "propagate as u_r(D) = √[ 4(u(m)/m)² + 4(u(A)/A)² + 4(u(c)/c)² + (u(T)/T)² ] = √[ 4(0.0001)² + 4(0.0033)² + 4(0.0012)² + (0.00007)² ] = 0.70%. "
    "For an empirical diffusion coefficient D = 7.60 × 10⁻⁶ cm²·s⁻¹, the expanded uncertainty at the 95% confidence level (coverage factor k = 2) "
    "is U(D) = ±0.11 × 10⁻⁶ cm²·s⁻¹ (1.4%), confirming exceptional concordance with the authoritative literature benchmark (7.60 ± 0.05 × 10⁻⁶ cm²·s⁻¹)."
+  )
+ elif slug=='dipole-moment-dielectric-constant-debye':
+  return (
+   "In the high-precision determination of permanent molecular electric dipole moments via the Debye-Clausius-Mossotti equation, "
+   "experimental uncertainties and systematic physical perturbations are rigorously quantified across dielectric, optical, gravimetric, "
+   "barometric, and thermodynamic domains: "
+   "(1) Heterodyne Beat Capacitance Measurement, Resonance Stability, and Audio Null Precision: Dielectric constants are determined using "
+   "a 2.000000 MHz quartz crystal reference oscillator paired with a variable LC tank oscillator incorporating a gold-plated coaxial capacitance cell. "
+   "The audio heterodyne zero-beat frequency is identified with an audio frequency analyzer to within ±1.0 Hz, corresponding to a capacitance "
+   "reproducibility of u(C) = ±0.002 pF on a 42.0 pF cell (relative dielectric uncertainty u(ε)/ε ≤ 0.005%). Cell temperature is actively stabilized "
+   "to 25.00 ± 0.02 °C by circulating water through a double-walled jacket, suppressing thermal permittivity drift (dε/dT ≈ −0.002 K⁻¹). "
+   "(2) Evaporative Solution Fractionation, Gravimetric Formulation, and Mole Fraction Uncertainty: Binary solutions of chlorobenzene in "
+   "cyclohexane are prepared by mass using an analytical microbalance (±0.0001 g) in airtight ground-glass flasks sealed with PTFE sleeves. "
+   "Because cyclohexane possesses a vapor pressure of 97.6 Torr at 25 °C (bp = 80.7 °C), headspace vapor losses are minimized by preparing large "
+   "batches (50.0 mL) with syringe-dispensed transfers, limiting evaporative composition drift to u(x₂)/x₂ ≤ 0.08%. "
+   "(3) Thermostatic Bath Regulation, Thermal Expansion Coefficients, and Pycnometric Density Calibration: Binary liquid densities ρ₁₂ are "
+   "determined using a 25.000 mL Gay-Lussac capillary pycnometer calibrated with degassed deionized water at 25.00 °C. The volume calibration "
+   "uncertainty is u(V) = ±0.002 mL, and mass readings are reproducible to ±0.1 mg, yielding a combined density uncertainty of u(ρ) = ±0.0001 g/cm³ "
+   "(u(ρ)/ρ ≤ 0.013%). Thermal expansion coefficients (α_V ≈ 0.0012 K⁻¹) are strictly controlled by thermostatic immersion. "
+   "(4) Optical Refractometry, Sodium D-Line Dispersion, and Atomic Polarization Approximation: Refractive indices n₁₂ are measured with an "
+   "Abbe refractometer illuminated by a spectral sodium lamp (λ = 589.3 nm) with optical reading uncertainty u(n) = ±0.0001. In accordance with "
+   "standard physical chemistry practice, atomic polarization is approximated as P_a ≈ 0.05 R₂, yielding total distortion polarization P_D = 1.05 R₂. "
+   "Comparison with far-infrared dielectric loss dispersion measurements confirms that residual atomic polarization uncertainty contributes "
+   "u(P_D) ≤ 0.35 cm³/mol, propagating into an uncertainty of less than 0.01 D in the final extracted dipole moment. "
+   "(5) Uncertainty Propagation through the Debye Equation: According to the ISO/IEC Guide 98-3 (GUM), the permanent dipole moment is given by "
+   "μ = 0.012812 · √[ (P₁ + S − P_D) · T ]. Differentiating with respect to the empirical slope S and orientation polarization P_or yields the relative "
+   "sensitivity coefficient: u_r(μ) = (1/2) · [ u(S) / P_or ]. From ordinary least-squares regression across the six concentration points, the standard "
+   "error of the slope is s_S = 0.018 cm³/mol, corresponding to u(S) / P_or = 0.018 / 52.31 = 0.034%. Combining with temperature uncertainty "
+   "(0.05 K / 298.15 K = 0.017%) and refractometric distortion uncertainty (0.35 / 52.31 = 0.67%) yields a combined relative standard uncertainty "
+   "in dipole moment of u_c(μ) = 0.35%. For an empirical dipole moment μ = 1.60 D, the expanded uncertainty at the 95% confidence level (coverage "
+   "factor k = 2) is U(μ) = ±0.01 D (0.70%), confirming exceptional concordance with the accepted gas-phase and solution literature benchmark (1.60 ± 0.02 D)."
   )
  elif slug=='magnetic-susceptibility-gouy-balance-complexes':
   return (
@@ -4330,6 +4438,100 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"invariant peak potential separation ΔE_p = 59.2 mV and current ratio |i_pa / i_pc| = 1.000 confirming ideal Nernstian reversibility. The extracted "
    f"diffusion coefficient agrees with authoritative electrochemistry literature benchmarks within {fmt(abs(D_val - 7.60)/7.60*100.0, 4)}% relative deviation, "
    f"demonstrating the high metrological precision of the Randles-Ševčík formulation for diagnostic electrochemistry."
+  )
+  
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='dipole-moment-dielectric-constant-debye':
+  m_val=f['m']
+  b_val=f['b']
+  mu_val=value
+  r2_val=f['r2']
+  P1_val=b_val
+  P2_inf_val=P1_val + m_val
+  Por_val=P2_inf_val - 32.700
+  
+  abstract=(
+   f"The permanent electric dipole moment, total molar polarization, and electronic and atomic distortion polarizations of chlorobenzene "
+   f"(C₆H₅Cl, M₂ = 112.56 g/mol) were determined in dilute binary solutions of non-polar cyclohexane (C₆H₁₂) at 25.00 °C (298.15 K) using a "
+   f"2.000 MHz heterodyne beat dielectric dipolemeter, a thermostatted precision Abbe refractometer (sodium D-line λ = 589.3 nm), and a calibrated "
+   f"Gay-Lussac capillary pycnometer. Six independent binary solutions spanning solute mole fractions from x₂ = 0.010 to 0.090 were formulated "
+   f"gravimetrically. The dielectric constants exhibited an exceptionally clean linear increase from ε₁₂ = 2.0375 (x₂ = 0.010) to ε₁₂ = 2.2175 "
+   f"(x₂ = 0.090), while refractive indices advanced from n₁₂ = 1.4246 to 1.4332 and densities from ρ₁₂ = 0.7772 to 0.8032 g/cm³. Total solution "
+   f"molar polarizations P₁₂ were computed via the Clausius-Mossotti equation, increasing linearly from 28.065 to 32.667 cm³/mol across the series. "
+   f"Ordinary least-squares regression of P₁₂ against x₂ yielded an empirical slope S = P₂,∞ − P₁ = {fmt(m_val, 4)} cm³/mol and Y-intercept "
+   f"b = P₁ = {fmt(b_val, 4)} cm³/mol with a Pearson correlation coefficient R² = {fmt(r2_val, 8)}. Extrapolating to infinite dilution yielded "
+   f"the solute limiting total molar polarization P₂,∞ = {fmt(P2_inf_val, 3)} cm³/mol. Subtracting the total distortion polarization "
+   f"(P_D = 1.05·R₂ = 32.700 cm³/mol, where molar refraction R₂ = 31.143 cm³/mol) isolated the orientation polarization P_or = {fmt(Por_val, 3)} cm³/mol. "
+   f"Applying the Debye-Langevin formulation μ = 0.012812·√(P_or·T) extracted a permanent electric dipole moment μ = {fmt(mu_val, 2)} D, "
+   f"demonstrating near-perfect agreement within {fmt(abs(mu_val - 1.60)/1.60*100.0, 4)}% relative deviation from the authoritative 1.60 D "
+   f"literature benchmark, definitively confirming the polar C-Cl bond vector moment and non-centrosymmetric C_2v molecular point group symmetry."
+  )
+  
+  graph_choice=(
+   f"To rigorously evaluate Debye's theory of dielectric polarization and isolate the solute limiting polarization free from intermolecular "
+   f"dipole coupling, the primary analytical graph plots the experimental total solution molar polarization P₁₂ (in cm³/mol) on the dependent "
+   f"Y-axis against the chlorobenzene solute mole fraction x₂ on the independent X-axis across the dilute concentration coordinates "
+   f"(x₂ = 0.010, 0.020, 0.035, 0.050, 0.070, 0.090). In the Debye-Clausius-Mossotti formulation, the molar polarization of a binary mixture "
+   f"is governed by the linear mixing rule: P₁₂ = x₁·P₁ + x₂·P₂ = (1 − x₂)·P₁ + x₂·P₂ = P₁ + (P₂ − P₁)·x₂. In the limit of infinite dilution "
+   f"(x₂ → 0), where polar solute molecules are completely surrounded by an inert, non-polar solvent cage of cyclohexane molecules, solute-solute "
+   f"dipole interactions vanish and P₂ approaches its limiting constant value P₂,∞. Consequently, the relationship between P₁₂ and x₂ is strictly "
+   f"linear: P₁₂ = P₁ + (P₂,∞ − P₁)·x₂ = S·x₂ + b. Plotting P₁₂ against x₂ linearizes the experimental dataset with outstanding precision "
+   f"(R² = {fmt(r2_val, 8)}). The Y-intercept b directly confirms the molar polarization of pure non-polar cyclohexane (P₁ ≈ 27.49 cm³/mol), "
+   f"while the slope S = P₂,∞ − P₁ directly enables calculation of P₂,∞ = b + S without requiring empirical curvature fitting, isolating the "
+   f"orientation polarization P_or with sub-picocoulomb accuracy."
+  )
+  
+  discussion=(
+   f"The experimental determination of the permanent electric dipole moment of chlorobenzene provides a profound, illuminating demonstration "
+   f"of how macroscopic electrical capacitance and optical refractive measurements resolve sub-angstrom intramolecular electronic charge "
+   f"distributions. A permanent electric dipole moment represents an intrinsic vector property of an asymmetric molecular charge cloud. "
+   f"In chlorobenzene (C₆H₅Cl), the chlorine substituent is substantially more electronegative (Pauling electronegativity χ_Cl = 3.16) than "
+   f"the sp²-hybridized carbon atom of the benzene ring (χ_C = 2.75). This electronegativity gradient withdraws electron density through "
+   f"the σ-bonding framework (inductive −I effect), creating an asymmetric charge separation with negative partial charge accumulating on the "
+   f"chlorine atom and positive charge distributed across the aromatic ring. Although partial π-backdonation from chlorine lone pairs into "
+   f"the aromatic ring (resonance +M effect) opposes the inductive withdrawal, the inductive effect dominates, producing a net dipole moment "
+   f"oriented along the C-Cl axis directed toward the halogen atom. Because chlorobenzene possesses C_2v point group symmetry with no inversion "
+   f"center, this vector cannot cancel, resulting in a substantial permanent dipole moment (μ ≈ 1.60 D). "
+   f"In Debye's dielectric formulation, an applied electric field polarizes matter through three distinct physical mechanisms operating on vastly "
+   f"different timescales. Electronic polarization (P_e) involves the ultrafast deformation of electron clouds relative to the nuclei (t ≈ 10⁻¹⁶ s). "
+   f"Atomic polarization (P_a) involves the slight displacement of bonded atomic nuclei along vibrational normal coordinates (t ≈ 10⁻¹³ s). "
+   f"Because these distortion polarizations involve mechanical displacement of bound charges against elastic bond springs, they are strictly "
+   f"temperature-independent: P_D = P_e + P_a = (4π/3)·N_A·α_D. In contrast, orientation polarization (P_or) arises from the physical rotation "
+   f"of whole polar molecules in response to the torque τ = μ × E exerted by the applied field. Because thermal kinetic energy (k_B T) continuously "
+   f"randomizes molecular orientations via rotational Brownian motion, the average alignment is governed by the classical Langevin function: "
+   f"<cos θ> = L(x) ≈ (μ·E) / (3·k_B·T). Consequently, orientation polarization is inversely proportional to absolute temperature: "
+   f"P_or = (4π·N_A·μ²) / (9·k_B·T) ∝ 1/T. "
+   f"To deconvolute P_or from the total molar polarization, Maxwell's electromagnetic relation was exploited. At visible optical frequencies "
+   f"(the sodium D-line, λ = 589.3 nm, f ≈ 5.09 × 10¹⁴ Hz), the electric field alternates too rapidly for molecular rotations or atomic vibrations "
+   f"to follow; only the lightweight electrons can oscillate in phase with the light wave. Thus, the optical dielectric constant equals the square "
+   f"of the refractive index: ε_∞ = n². The Lorentz-Lorenz equation directly yields the electronic molar refraction of chlorobenzene: "
+   f"R₂ = [ (n₂² − 1)/(n₂² + 2) ] · (M₂ / ρ₂) = 31.14 cm³/mol = P_e. Including the standard 5% atomic polarization correction (P_a ≈ 0.05 R₂) "
+   f"established the total distortion polarization: P_D = 1.05·R₂ = 32.70 cm³/mol. "
+   f"Crucially, measurements were executed in dilute solutions of non-polar cyclohexane. In pure chlorobenzene, intense dipole-dipole interactions "
+   f"and antiparallel molecular pairing cause dielectric saturation and local field shielding, causing the simple Clausius-Mossotti cavity field "
+   f"to fail. Dissolving chlorobenzene in inert, spherical, non-polar cyclohexane (μ₁ = 0 D, ε₁ = 2.015) isolates individual polar solute molecules "
+   f"within non-polar solvent cavities, fully restoring the validity of Debye's ideal internal field model. Linear regression of solution molar "
+   f"polarization P₁₂ against solute mole fraction x₂ yielded an empirical slope S = {fmt(m_val, 4)} cm³/mol and intercept b = {fmt(b_val, 4)} cm³/mol "
+   f"with Pearson correlation coefficient R² = {fmt(r2_val, 8)}. Extrapolating to x₂ → 0 yielded the solute infinite-dilution molar polarization "
+   f"P₂,∞ = b + S = {fmt(P2_inf_val, 3)} cm³/mol. "
+   f"Subtracting distortion polarization gave orientation polarization P_or = P₂,∞ − P_D = {fmt(P2_inf_val, 3)} − 32.70 = {fmt(Por_val, 3)} cm³/mol. "
+   f"Applying Debye's relation μ = 0.012812 · √(P_or · T) at T = 298.15 K extracted an empirical permanent dipole moment of μ = {fmt(mu_val, 2)} D. "
+   f"This result exhibits extraordinary agreement within {fmt(abs(mu_val - 1.60)/1.60*100.0, 4)}% relative deviation from the accepted 1.60 D "
+   f"literature standard. This agreement confirms that 61.5% of chlorobenzene's total polarization stems from permanent dipole orientation, "
+   f"providing elegant experimental verification of Debye's molecular dielectric theory and chemical bond polarity."
+  )
+  
+  conclusion=(
+   f"The dielectric constants, refractive indices, and liquid densities of dilute binary solutions of chlorobenzene in non-polar cyclohexane "
+   f"(x₂ = 0.010 to 0.090) were measured at 25.00 °C (298.15 K) using a 2.0 MHz heterodyne beat dipolemeter and Abbe refractometer. "
+   f"The total solution molar polarization P₁₂ demonstrated exceptional linearity against solute mole fraction x₂ (R² = {fmt(r2_val, 8)}), "
+   f"yielding an empirical slope S = {fmt(m_val, 4)} cm³/mol and intercept P₁ = {fmt(b_val, 4)} cm³/mol, corresponding to a solute limiting "
+   f"molar polarization P₂,∞ = {fmt(P2_inf_val, 3)} cm³/mol at infinite dilution. Subtracting the electronic and atomic distortion polarization "
+   f"(P_D = 1.05·R₂ = 32.700 cm³/mol) isolated the orientation polarization P_or = {fmt(Por_val, 3)} cm³/mol. Applying the Debye equation "
+   f"extracted a permanent electric dipole moment of μ = {fmt(mu_val, 2)} D, in near-perfect agreement within {fmt(abs(mu_val - 1.60)/1.60*100.0, 4)}% "
+   f"relative deviation from the 1.60 D literature benchmark. Expanded uncertainty analysis (U(μ) = ±0.01 D at 95% confidence) definitively "
+   f"establishes the metrological precision of the heterodyne dilution method, providing rigorous experimental verification of molecular "
+   f"charge separation, orientation polarization, and C_2v symmetry in polar aromatic systems."
   )
   
   return abstract, graph_choice, discussion, conclusion

@@ -9909,5 +9909,226 @@
     ],
     "intro": "The magnetic properties of chemical compounds provide profound, indispensable insight into electronic structure, chemical bonding, oxidation state, and coordination geometry. When placed in a magnetic field, all substances respond through either diamagnetism (repulsion from the field caused by induced orbital currents in closed shells) or paramagnetism (attraction into the field caused by permanent electronic magnetic dipole moments of unpaired electron spins). In transition metal chemistry, the magnitude of the paramagnetic susceptibility directly reveals the number of unpaired d-electrons and discriminates between high-spin and low-spin crystal field ground states. The classic Gouy balance method provides a robust, highly accurate magnetostatic approach for quantifying magnetic susceptibility. A long cylindrical sample of the complex is suspended such that its lower boundary rests in the intense uniform magnetic field B between the flat pole pieces of an electromagnet, while its upper boundary resides in the near-zero fringe field B_0. The resulting vertical magnetic field gradient exerts a downward translational force F_z proportional to the square of the magnetic flux density B\u00b2. In this investigation, high-spin hexaaquairon(II) ammonium sulfate (Mohr's salt, [Fe(H2O)6](NH4)2(SO4)2\u00b76H2O) is investigated across fields from 0.40 to 1.40 T (B\u00b2 = 0.16 to 1.96 T\u00b2) at 25.0 \u00b0C. Linear regression of apparent mass gain \u0394m against B\u00b2 extracts the mass and molar magnetic susceptibility, evaluates Pascal's diamagnetic corrections, and determines the effective magnetic moment \u03bc_eff = 4.90 \u03bc_B, confirming the presence of four unpaired d-electrons (S = 2) in accordance with crystal field theory.",
     "modelExtra": "The physical chemistry simulation model evaluates analytically pure Mohr's salt, [Fe(H2O)6](NH4)2(SO4)2\u00b76H2O (M = 392.14 g/mol), at 25.0 \u00b0C (298.15 K). Experimental parameters: sample mass m_s = 2.500 g (0.00250 kg), tube inner diameter d = 4.00 mm, powder packing height h = 50.00 mm (0.0500 m), gravitational acceleration g = 9.80665 m/s\u00b2, magnetic permeability \u03bc_0 = 4\u03c0 \u00d7 10\u207b\u2077 N/A\u00b2. Across the six magnetic flux density settings B = [0.40, 0.60, 0.80, 1.00, 1.20, 1.40] T (B\u00b2 = [0.16, 0.36, 0.64, 1.00, 1.44, 1.96] T\u00b2), the measured apparent mass gains are \u0394m = [102.312, 230.203, 409.249, 639.452, 920.811, 1253.326] mg. Ordinary least-squares regression yields an empirical slope S = 639.4521 mg/T\u00b2 (6.39452 \u00d7 10\u207b\u2074 kg/T\u00b2) and intercept b = \u22120.0001 mg with Pearson correlation coefficient R\u00b2 = 0.9999999999998. Applying the Gouy force relation extracts a gram magnetic susceptibility \u03c7_g(SI) = 3.15209 \u00d7 10\u207b\u2077 m\u00b3/kg (\u03c7_g(cgs) = 2.50834 \u00d7 10\u207b\u2075 emu/g). Multiplying by molar mass gives raw molar susceptibility \u03c7_M = 0.009836 emu/mol. Applying Pascal's diamagnetic correction for [Fe(H2O)6](NH4)2(SO4)2 (|\u03c7_dia| = 230 \u00d7 10\u207b\u2076 emu/mol) yields the corrected paramagnetic molar susceptibility \u03c7_M,corr = 0.010066 emu/mol. Applying the Curie relation \u03bc_eff = \u221a[8 \u00b7 T \u00b7 \u03c7_M,corr] extracts an effective magnetic moment \u03bc_eff = 4.90 \u03bc_B (difference = 0.00007% from the 4.90 \u03bc_B theoretical spin-only benchmark for high-spin d\u2076 Fe\u00b2\u207a), rigorously confirming four unpaired d-electrons."
+  },
+  {
+    "id": 47,
+    "number": 47,
+    "slug": "dipole-moment-dielectric-constant-debye",
+    "title": "Electric Dipole Moment of Polar Molecules from Dielectric Constant and Refractive Index via the Debye Equation",
+    "shortTitle": "Dipole Moment & Debye Polarization",
+    "category": "Spectroscopy, Quantum & Surface Chemistry",
+    "department": "chemistry",
+    "subject_id": 3,
+    "subject": "chemistry",
+    "published": true,
+    "page_path": "/chemistry/dipole-moment-dielectric-constant-debye/",
+    "aim": "Determine the total molar polarization, orientation polarization, and permanent electric dipole moment \u03bc of chlorobenzene in cyclohexane from precision dielectric constant and Abbe refractometry measurements using the Debye equation.",
+    "difficulty": "Advanced",
+    "time": "3 Hours",
+    "gradientUnit": "cm\u00b3/mol",
+    "interceptUnit": "cm\u00b3/mol",
+    "target": "1.60",
+    "targetName": "Electric Dipole Moment \u03bc",
+    "resultUnit": "D",
+    "resultScale": 1.0,
+    "resultDecimals": 2,
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 3,
+    "yDecimals": 3,
+    "initial": 0.05,
+    "samples": [
+      0.01,
+      0.02,
+      0.035,
+      0.05,
+      0.07,
+      0.09
+    ],
+    "emptyX": 0.01,
+    "emptyY": 28.065,
+    "measureLabel": "Molar Polarization P\u2081\u2082",
+    "fitEquation": "P_{12} = P_1 + (P_{2,\\infty} - P_1) x_2 \\implies P_{\\text{or}} = P_{2,\\infty} - 1.05 R_2 \\implies \\mu = 0.012812 \\sqrt{P_{\\text{or}} T} = 1.60\\text{ D}",
+    "min": 0.005,
+    "max": 0.12,
+    "step": 0.005,
+    "inputLabel": "Chlorobenzene Solute Mole Fraction x\u2082",
+    "shortInput": "x\u2082",
+    "inputUnit": "",
+    "inputDecimals": 3,
+    "rawLabel": "Solution Total Molar Polarization P\u2081\u2082",
+    "rawUnit": "cm\u00b3/mol",
+    "rawDecimals": 3,
+    "angle": false,
+    "timed": false,
+    "observationLabel": "Heterodyne beat dielectric and refractometric measurement",
+    "xAxis": "Chlorobenzene Mole Fraction x\u2082",
+    "yAxis": "Solution Total Molar Polarization P\u2081\u2082 (cm\u00b3/mol)",
+    "settings": [
+      "Binary System: Chlorobenzene (C6H5Cl) in Cyclohexane (C6H12)",
+      "Dipolemeter Resonance Frequency: 2.000 MHz (Heterodyne beat zero-null)",
+      "Thermostatted Cell Temperature: 25.00 \u00b1 0.05 \u00b0C",
+      "Optical Refractometer: Abbe Sodium D-line (\u03bb = 589.3 nm)"
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "\u26a1",
+        "label": "Dielectric Dipolemeter"
+      },
+      {
+        "id": "compare",
+        "icon": "\ud83d\udcca",
+        "label": "Polar Solute Series"
+      },
+      {
+        "id": "sandbox",
+        "icon": "\ud83e\udded",
+        "label": "Debye Polarization Sandbox"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Heterodyne Beat Dielectric Dipolemeter (2.0 MHz)",
+        "purpose": "Dual-oscillator resonance dipolemeter with a gold-plated coaxial cylindrical capacitance cell (15.0 mL liquid capacity) and quartz crystal reference oscillator detecting dielectric permittivity variations via audio zero-beat null."
+      },
+      {
+        "name": "Thermostatted Precision Abbe Refractometer",
+        "purpose": "High-accuracy Abbe refractometer (precision \u00b10.0001, sodium D-line \u03bb = 589.3 nm) with integral water-jacketed circulation to measure solution refractive indices n12 for electronic molar refraction deconvolution."
+      },
+      {
+        "name": "Gay-Lussac Precision Capillary Pycnometer (25.000 mL)",
+        "purpose": "Class-A calibrated glass capillary pycnometer with ground-glass thermometer stopper to measure binary solution densities \u03c112 at 25.00 \u00b0C to within \u00b10.0001 g/cm\u00b3."
+      },
+      {
+        "name": "Spectroscopic Grade Chlorobenzene Solute",
+        "purpose": "Anhydrous, analytical grade chlorobenzene (C6H5Cl, purity \u2265 99.8%, M2 = 112.56 g/mol, bp = 131.7 \u00b0C), fractional-distilled and stored over activated 4\u00c5 molecular sieves."
+      },
+      {
+        "name": "Spectroscopic Grade Non-Polar Cyclohexane Solvent",
+        "purpose": "High-purity non-polar cyclohexane (C6H12, purity \u2265 99.9%, M1 = 84.16 g/mol, dielectric constant \u03b51 = 2.015, n1 = 1.4235), dried over sodium wire to provide an inert, dipole-free dielectric matrix."
+      },
+      {
+        "name": "Hermetic Mixing Glassware & Digital Micropipettes",
+        "purpose": "Set of 50.00 mL ground-glass volumetric flasks with PTFE-lined caps and calibrated gas-tight Hamilton micro-syringes for gravimetric formulation of dilute binary solutions without evaporative composition drift."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Gravimetric Preparation of Binary Chlorobenzene Solutions",
+        "text": "Prepare six binary solutions of chlorobenzene in cyclohexane across the dilute regime: x2 = 0.010, 0.020, 0.035, 0.050, 0.070, and 0.090 mole fraction. Accurately weigh solute and solvent on an analytical microbalance (\u00b10.0001 g) into 50.00 mL volumetric flasks, seal immediately with PTFE stoppers, and mix thoroughly by gentle inversion."
+      },
+      {
+        "title": "Thermostatic Equilibration and Pycnometric Density Measurement",
+        "text": "Immerse all solution flasks and pure cyclohexane in a circulating water bath thermostatted at 25.00 \u00b1 0.05 \u00b0C for 30 minutes. Determine the exact solution densities \u03c112 using the calibrated 25.000 mL Gay-Lussac pycnometer, weighing to 0.1 mg and confirming reproducibility to within \u00b10.0001 g/cm\u00b3."
+      },
+      {
+        "title": "Dipolemeter Warm-up and Pure Solvent Baseline Calibration",
+        "text": "Power on the heterodyne beat dipolemeter and allow the crystal and variable LC oscillators to thermally stabilize for 45 minutes. Fill the gold-plated coaxial capacitance cell with pure dry cyclohexane (\u03b51 = 2.015). Adjust the precision micrometer capacitor until the heterodyne audio beat note drops to zero frequency (zero-beat null), recording the baseline capacitance reading C1."
+      },
+      {
+        "title": "Measurement of Solution Capacitances and Dielectric Constants",
+        "text": "Thoroughly rinse and fill the capacitance cell with each chlorobenzene solution in ascending order of concentration (x2 = 0.010 to 0.090). Adjust the micrometer capacitor to re-establish the zero-beat null, recording the solution capacitance C12. Calculate the relative permittivity \u03b512 = 1 + (C12 \u2212 C_air) / (C_cell \u2212 C_air)."
+      },
+      {
+        "title": "High-Precision Refractometric Dispersion Measurement",
+        "text": "Clean the prisms of the thermostatted Abbe refractometer with absolute ethanol and lens tissue. Introduce two drops of each solution onto the lower prism, clamp securely, adjust the Amici chromatic compensator to obtain a sharp light-dark boundary, and record the sodium D-line refractive index n12 to within \u00b10.0001."
+      },
+      {
+        "title": "Debye Polarization Regression and Dipole Moment Extraction",
+        "text": "Compute total molar polarization P12 = [(\u03b512 \u2212 1) / (\u03b512 + 2)] \u00b7 [(x1 M1 + x2 M2) / \u03c112] for each solution. Plot P12 against x2 and perform ordinary least-squares regression to extract intercept P1 and slope S = P2,\u221e \u2212 P1. Compute solute limiting polarization P2,\u221e, subtract distortion polarization (P_D = 1.05 R2 = 32.70 cm\u00b3/mol), and calculate the permanent dipole moment \u03bc = 0.012812 \u221a(P_or \u00b7 T) in Debye, evaluating the percentage deviation from the 1.60 D benchmark."
+      }
+    ],
+    "topics": [
+      {
+        "question": "What distinct physical mechanisms contribute to the total molar polarization of a polar molecule in an electric field?",
+        "answer": "The total molar polarization P_m is composed of three additive quantum and classical contributions: P_m = P_e + P_a + P_or. Electronic polarization (P_e) arises from the displacement of the electron cloud relative to the positively charged nuclei (femto-second response). Atomic polarization (P_a) arises from the small relative displacement of bonded nuclei (vibrational response, pico-second timescale). Together, P_e + P_a constitute the induced distortion polarization P_D, which is strictly temperature-independent. Orientation polarization (P_or) arises from the partial alignment of permanent electric dipole moments against thermal rotational randomization, which is inversely proportional to absolute temperature (Curie-Debye relation: P_or \u221d 1/T)."
+      },
+      {
+        "question": "Why is the electronic polarization P_e accurately approximated by the molar refraction R at optical frequencies?",
+        "answer": "According to Maxwell's electromagnetic relation, the dielectric constant at optical frequencies equals the square of the refractive index: \u03b5_\u221e = n\u00b2. At optical frequencies (~5 \u00d7 10\u00b9\u2074 Hz for visible light), molecular rotations (GHz regime) and atomic nuclear vibrations (IR regime, ~10\u00b9\u00b3 Hz) are far too sluggish to follow the rapidly oscillating electric field vector; only the lightweight electrons can respond. Consequently, the Clausius-Mossotti equation simplifies to the Lorentz-Lorenz equation for molar refraction: R = [(n\u00b2 \u2212 1) / (n\u00b2 + 2)] \u00b7 (M / \u03c1) = (4\u03c0/3) N_A \u03b1_e = P_e. In practice, adding a 5% correction for atomic vibrational polarization yields the total distortion polarization: P_D = P_e + P_a \u2248 1.05 R."
+      },
+      {
+        "question": "Why must the dipole moment of a polar solute be measured in dilute solutions of a non-polar solvent rather than in the pure polar liquid?",
+        "answer": "In pure polar liquids (such as pure chlorobenzene or water), strong dipole-dipole interactions, local electric field polarization, and dipole clustering (head-to-tail pairing or antiparallel dimerization) severely perturb the local field experienced by each molecule. The simple Clausius-Mossotti internal field approximation (E_local = E + P / 3\u03b5_0) fails completely, leading to dielectric saturation and anomalous dipole values. By dissolving the polar solute in an inert, non-polar solvent (such as cyclohexane) and extrapolating measurements to infinite dilution (x2 -> 0), solute polar molecules are isolated by non-polar solvent cages, eliminating solute-solute dipole coupling and satisfying Debye's ideal gas-like dielectric theory."
+      },
+      {
+        "question": "How does molecular point group symmetry determine whether a polyatomic molecule has a permanent electric dipole moment?",
+        "answer": "A molecule can possess a permanent electric dipole moment if and only if its equilibrium geometry belongs to one of the non-centrosymmetric point groups: C_1, C_s, C_n, or C_nv. If a molecule possesses a center of inversion (i), such as in trans-1,2-dichloroethene or benzene (D_6h), or perpendicular rotation axes / improper rotation axes (such as in CCl4 (T_d) or SF6 (O_h)), the vector sum of bond dipole moments cancels to identically zero (\u03bc = 0 D). In chlorobenzene (point group C_2v), the C-Cl bond dipole and aromatic ring vectors lie along the twofold symmetry axis without cancellation, producing a robust permanent dipole moment of \u03bc = 1.60 D directed along the C2 axis."
+      },
+      {
+        "question": "How does the heterodyne beat method achieve parts-per-million sensitivity in detecting minute dielectric capacitance variations?",
+        "answer": "The heterodyne beat apparatus uses two high-frequency RF oscillators: a fixed quartz crystal oscillator operating at a precisely known frequency (e.g. 2.000000 MHz) and a variable LC oscillator incorporating the liquid dielectric capacitance cell. When the two signals are combined in a non-linear mixer, they produce a beat frequency equal to their difference: f_beat = |f_crystal \u2212 f_variable|. By adjusting a calibrated micrometer capacitor in parallel with the cell, the operator tunes the beat frequency down to zero (zero-beat null, detected by an oscilloscope or audio speaker). A tiny capacitance shift of \u0394C = 0.001 pF produces a noticeable audio pitch change, allowing capacitance and dielectric constant determination to 6 significant figures."
+      },
+      {
+        "question": "What is the physical significance of the Debye unit (D) and its conversion to SI units?",
+        "answer": "The Debye unit (symbol D) was established by Peter Debye in honour of his pioneering work on molecular polarity. One Debye is defined as 10\u207b\u00b9\u2078 esu\u00b7cm in Gaussian CGS units. This magnitude corresponds roughly to an electron charge (e = 4.803 \u00d7 10\u207b\u00b9\u2070 esu) separated from a proton by a typical chemical bond distance of ~0.21 \u00c5. In SI units, 1 D = 3.33564 \u00d7 10\u207b\u00b3\u2070 C\u00b7m. A dipole moment of 1.60 D for chlorobenzene corresponds to \u03bc = 5.34 \u00d7 10\u207b\u00b3\u2070 C\u00b7m, representing a partial charge separation of ~0.24 e across the 1.74 \u00c5 C-Cl bond."
+      },
+      {
+        "question": "Why is cyclohexane chosen as the preferred non-polar solvent over benzene in modern physical chemistry laboratories?",
+        "answer": "Cyclohexane (C6H12) is an ideal non-polar aliphatic solvent because its saturated chair conformation possesses zero permanent dipole moment (\u03bc = 0 D), low dielectric constant (\u03b5 = 2.015), and no aromatic \u03c0-electron clouds. While benzene was historically used, benzene possesses an anisotropic quadrupole moment that can engage in \u03c0-stacking or weak quadrupole-dipole interactions with halobenzenes. Furthermore, cyclohexane is substantially less toxic and non-carcinogenic compared to benzene, making it the preferred green chemistry standard."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "According to the Debye equation, which component of the total molar polarization is inversely proportional to absolute temperature T?",
+        "options": [
+          "Orientation polarization (P_or), because thermal rotational agitation opposes dipole alignment in the electric field",
+          "Electronic polarization (P_e), because electron orbital radii expand thermally",
+          "Atomic polarization (P_a), because bond lengths increase at higher temperatures",
+          "Distortion polarization (P_D), because solvent density decreases"
+        ],
+        "correct": 0,
+        "explanation": "Debye showed that P_or = (4\u03c0 N_A \u03bc\u00b2) / (9 k_B T). Thermal kinetic energy randomizes dipole orientations, causing orientation polarization to diminish as 1/T."
+      },
+      {
+        "question": "What is the relation between optical dielectric constant \u03b5_\u221e and the sodium D-line refractive index n in Maxwell's electromagnetic theory?",
+        "options": [
+          "\u03b5_\u221e = n\u00b2",
+          "\u03b5_\u221e = 2n",
+          "\u03b5_\u221e = 1 / n\u00b2",
+          "\u03b5_\u221e = \u221a(n)"
+        ],
+        "correct": 0,
+        "explanation": "At optical frequencies where only electrons can polarize, Maxwell's relation dictates \u03b5_\u221e = n\u00b2, enabling evaluation of electronic molar refraction via R = [(n\u00b2 \u2212 1)/(n\u00b2 + 2)] \u00b7 (M/\u03c1)."
+      },
+      {
+        "question": "For a polar solute with orientation polarization P_or = 52.31 cm\u00b3/mol at T = 298.15 K, what is the calculated permanent electric dipole moment \u03bc in Debye?",
+        "options": [
+          "1.60 D",
+          "3.20 D",
+          "0.80 D",
+          "4.80 D"
+        ],
+        "correct": 0,
+        "explanation": "Using Debye's formula: \u03bc = 0.012812 \u00b7 \u221a(P_or \u00b7 T) = 0.012812 \u00b7 \u221a[(52.31)(298.15)] = 0.012812 \u00b7 \u221a(15596.2) = 0.012812 \u00d7 124.88 = 1.60 D."
+      },
+      {
+        "question": "In the linear regression of solution molar polarization P\u2081\u2082 vs solute mole fraction x\u2082, what does the Y-intercept directly represent?",
+        "options": [
+          "The molar polarization of the pure non-polar solvent P\u2081",
+          "The permanent dipole moment of the solute \u03bc\u2082",
+          "The orientation polarization of the solute P_or",
+          "The molecular mass of the solution M\u2081\u2082"
+        ],
+        "correct": 0,
+        "explanation": "When x\u2082 = 0 (pure solvent), P\u2081\u2082 = P\u2081. Thus, the Y-intercept directly yields the molar polarization of pure cyclohexane (P\u2081 \u2248 27.49 cm\u00b3/mol)."
+      }
+    ],
+    "precautions": [
+      "Chlorobenzene and cyclohexane are volatile, flammable organic liquids; prepare all binary solutions and clean cells inside an approved chemical fume hood away from heat and open flames.",
+      "Seal all solution flasks tightly with ground-glass stoppers and PTFE sleeves immediately after preparation to prevent preferential evaporation of volatile cyclohexane, which alters solute mole fractions.",
+      "Inspect the gold-plated coaxial capacitance cell to ensure it is completely dry and free from dust or solvent residue before adding sample; trace water (\u03b5 = 78.4) causes massive dielectric errors.",
+      "Allow the heterodyne beat dipolemeter electronics to warm up for at least 45 minutes to eliminate thermal oscillator frequency drift and ensure stable zero-beat null detection.",
+      "Clean the Abbe refractometer prisms with pure ethanol and optical lens paper; never use abrasive paper or touch optical glass faces with metal spatulas to prevent scratching.",
+      "Ensure the circulating water bath actively maintains 25.00 \u00b1 0.05 \u00b0C across both the dielectric cell and the refractometer prisms; dielectric constants and densities have high temperature coefficients (d\u03b5/dT \u2248 \u22120.002 K\u207b\u00b9)."
+    ],
+    "limitations": [
+      "The Debye formulation assumes an idealized spherical cavity in a continuous dielectric; minor solvent electrostriction and anisotropic polarizability in cyclohexane introduce small second-order perturbations.",
+      "The atomic vibrational polarization P_a is approximated as 5% of electronic refraction (P_D = 1.05 R2), which introduces a minor systematic uncertainty of ~0.02 D compared to far-infrared measurements.",
+      "The method relies on linear extrapolation to infinite dilution (x2 -> 0); at solute mole fractions exceeding x2 > 0.15, dipole-dipole self-association causes non-linear curvature in P12 vs x2."
+    ],
+    "intro": "The permanent electric dipole moment of a molecule is one of the most fundamental physical constants governing intermolecular forces, dielectric response, chemical reactivity, and structural symmetry. A permanent dipole moment arises when the spatial centroid of positive nuclear charges does not coincide with the centroid of negative electronic charge density, creating an intrinsic vector quantity \u03bc = q \u00b7 d. The classic Debye theory of dielectric polarization provides an elegant, rigorous experimental methodology for isolating molecular dipole moments by examining the dielectric constant (relative permittivity \u03b5) and refractive index n of dilute solutions of a polar solute in a non-polar solvent. In an applied electric field, matter responds through three distinct polarization mechanisms: electronic distortion (P_e), atomic vibrational distortion (P_a), and permanent dipole orientation (P_or). Because only orientation polarization is opposed by thermal rotational agitation, the Debye-Clausius-Mossotti equation establishes that P_or is inversely proportional to absolute temperature T. In this laboratory investigation, the dielectric permittivity and sodium D-line refractive index of dilute binary solutions of chlorobenzene in cyclohexane (x2 = 0.010 to 0.090) are measured at 25.00 \u00b0C using a 2.0 MHz heterodyne beat dipolemeter and an Abbe precision refractometer. Linear regression of solution total molar polarization P12 against solute mole fraction x2 isolates the solute limiting polarization P2,\u221e = 85.01 cm\u00b3/mol. Subtracting the distortion polarization (P_D = 1.05 R2 = 32.70 cm\u00b3/mol) extracts the orientation polarization P_or = 52.31 cm\u00b3/mol and determines the permanent electric dipole moment \u03bc = 1.60 D with sub-percent accuracy.",
+    "modelExtra": "The physical chemistry simulation model evaluates dilute binary solutions of chlorobenzene (C6H5Cl, M2 = 112.56 g/mol) in non-polar cyclohexane (C6H12, M1 = 84.16 g/mol, \u03c11 = 0.7739 g/cm\u00b3, \u03b51 = 2.015, n1 = 1.4235) at 25.00 \u00b0C (298.15 K). Solvent molar polarization P1 = [(\u03b51 \u2212 1)/(\u03b51 + 2)] \u00b7 (M1 / \u03c11) = 27.490 cm\u00b3/mol. Solute molar refraction R2 = [(n2\u00b2 \u2212 1)/(n2\u00b2 + 2)] \u00b7 (M2 / \u03c12) = 31.143 cm\u00b3/mol; distortion polarization P_D = 1.05 \u00b7 R2 = 32.700 cm\u00b3/mol. Across the six solute mole fraction coordinates x2 = [0.010, 0.020, 0.035, 0.050, 0.070, 0.090], the measured total solution molar polarizations are P12 = [28.065, 28.640, 29.503, 30.366, 31.516, 32.667] cm\u00b3/mol. Ordinary least-squares regression yields an empirical slope S = P2,\u221e \u2212 P1 = 57.5241 cm\u00b3/mol and intercept b = P1 = 27.4896 cm\u00b3/mol with Pearson correlation coefficient R\u00b2 = 0.999999987. Adding the slope to the intercept yields the solute total molar polarization at infinite dilution P2,\u221e = P1 + S = 85.014 cm\u00b3/mol. Subtracting distortion polarization gives orientation polarization P_or = P2,\u221e \u2212 P_D = 85.014 \u2212 32.700 = 52.314 cm\u00b3/mol. Applying Debye's relation \u03bc = 0.012812 \u00b7 \u221a[P_or \u00b7 T] extracts a permanent electric dipole moment \u03bc = 1.600 D (relative difference = 0.005% from the authoritative 1.60 D literature benchmark), confirming quantum electronic charge separation and molecular symmetry."
   }
 ]

@@ -3,6 +3,13 @@
 const round=(v,n)=>Math.round((v+Number.EPSILON)*10**n)/10**n;
 
 function predict(slug,input){
+  if(slug==='dipole-moment-dielectric-constant-debye'){
+   const x2=Number(input);
+   const table_raw={0.010:28.065, 0.020:28.640, 0.035:29.503, 0.050:30.366, 0.070:31.516, 0.090:32.667};
+   const key=round(x2, 3);
+   const raw_val=table_raw.hasOwnProperty(key)?table_raw[key]:round(27.490 + 57.524 * x2, 3);
+   return {raw:raw_val,ideal:raw_val,period:1.0,x:x2,y:raw_val,valid:x2>=0.005&&x2<=0.150};
+  }
   if(slug==='magnetic-susceptibility-gouy-balance-complexes'){
    const b2=Number(input);
    const table_raw={0.16:102.312, 0.36:230.203, 0.64:409.249, 1.00:639.452, 1.44:920.811, 1.96:1253.326};
@@ -577,6 +584,10 @@ function predict(slug,input){
 
 function reading(slug,input,raw){
  let x=Number(input),y=Number(raw);
+  if(slug==='dipole-moment-dielectric-constant-debye'){
+   x=Number(input);
+   y=Number(raw);
+  }
   if(slug==='magnetic-susceptibility-gouy-balance-complexes'){
    x=Number(input);
    y=Number(raw);
@@ -925,6 +936,17 @@ function fit(rows){
 }
 
 function estimate(slug,f){
+  if(slug==='dipole-moment-dielectric-constant-debye'){
+   const slope=f.m;
+   const P1=27.490;
+   const PD=32.700;
+   const T=298.15;
+   const P2_inf=P1 + slope;
+   const Por=P2_inf - PD;
+   const mu_eff=0.012812 * Math.sqrt(Por * T);
+   const se=(f.slopeSE ? (0.5 * mu_eff * f.slopeSE / Por) : 0.001);
+   return {value:mu_eff,se:se,reference:1.60};
+  }
   if(slug==='magnetic-susceptibility-gouy-balance-complexes'){
    const slope=f.m; // in mg / T^2
    const slope_kg=slope * 1e-6;
