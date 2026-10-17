@@ -10351,5 +10351,227 @@
     ],
     "intro": "Surface phenomena and adsorption at solid-liquid interfaces represent fundamental physicochemical processes underpinning industrial water purification, heterogeneous catalysis, chromatographic separations, and pharmaceutical detoxification. When a solid adsorbent is introduced into an aqueous solution of an organic solute, solute molecules partition between the bulk liquid phase and the solid surface until dynamic equilibrium is established. The relationship between the amount of solute adsorbed per unit mass of adsorbent (the specific adsorption capacity, q = x/m) and the equilibrium concentration of the solute in the bulk solution (C_eq) at constant temperature is known as an adsorption isotherm. In 1906, Herbert Freundlich formulated an empirical power-law equation, x/m = K_F \u00b7 C_eq^(1/n), which was later proven to describe adsorption on energetically heterogeneous surfaces possessing an exponential distribution of site binding affinities. In this investigation, the adsorption of acetic acid from aqueous solution onto acid-washed activated coconut charcoal is quantitatively determined across six concentration levels at 25.0 \u00b0C. Following thermostatic equilibrium and filtration, residual acetic acid in the filtrate is determined by precision acid-base titrimetry with standardized 0.1000 M NaOH. Logarithmic transformation linearizes the isotherm, allowing ordinary least-squares regression of log10(x/m) against log10(C_eq) to extract the Freundlich heterogeneity exponent 1/n = 0.450 and capacity constant K_F = 2.50 mmol/g with high precision, confirming the heterogeneous microporous architecture of activated carbon.",
     "modelExtra": "The physical chemistry simulation model evaluates the adsorption of aqueous acetic acid (CH3COOH, M = 60.05 g/mol) onto acid-washed activated charcoal (m = 2.000 g, V = 100.0 mL = 0.1000 L) at 25.0 \u00b0C (298.15 K). Theoretical Freundlich parameters: capacity parameter K_F = 2.500 mmol/g \u00b7 (L/mol)^(1/n), heterogeneity exponent 1/n = 0.4500 (n = 2.222). Across the six equilibrium concentration coordinates C_eq = [0.030, 0.060, 0.120, 0.220, 0.350, 0.550] M, the corresponding specific adsorption capacities are q = x/m = [0.516, 0.705, 0.963, 1.265, 1.559, 1.910] mmol/g. Logarithmic coordinates are x = log10(C_eq) = [\u22121.5229, \u22121.2218, \u22120.9208, \u22120.6576, \u22120.4559, \u22120.2596] and y = log10(x/m) = [\u22120.2874, \u22120.1519, \u22120.0164, 0.1020, 0.1928, 0.2811]. Ordinary least-squares regression yields an empirical slope 1/n = 0.45002 and Y-intercept log10(K_F) = 0.39795 (K_F = 2.500 mmol/g) with Pearson correlation coefficient R\u00b2 = 0.999999990. The empirical exponent 1/n = 0.450 exhibits near-perfect concordance within 0.005% of the 0.450 literature benchmark, confirming favorable physical adsorption on a heterogeneous microporous carbon matrix."
+  },
+  {
+    "id": 49,
+    "number": 49,
+    "slug": "surface-excess-concentration-gibbs-adsorption",
+    "title": "Surface Excess Concentration and Area per Molecule of Surfactants via the Gibbs Adsorption Isotherm",
+    "shortTitle": "Gibbs Adsorption & Surface Excess",
+    "category": "Spectroscopy, Quantum & Surface Chemistry",
+    "department": "chemistry",
+    "subject_id": 3,
+    "subject": "chemistry",
+    "published": true,
+    "page_path": "/chemistry/surface-excess-concentration-gibbs-adsorption/",
+    "aim": "Determine the surface tension of aqueous 1-butanol solutions, evaluate the maximum surface excess concentration \u0393_max using the Gibbs adsorption equation, and calculate the minimum surface area occupied per molecule A_min at the air-water interface.",
+    "difficulty": "Advanced",
+    "time": "3 Hours",
+    "gradientUnit": "mN/m",
+    "interceptUnit": "mN/m",
+    "target": "5.50",
+    "targetName": "Maximum Surface Excess Concentration \u0393_max",
+    "resultUnit": "\u03bcmol/m\u00b2",
+    "resultScale": 1.0,
+    "resultDecimals": 2,
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 3,
+    "yDecimals": 2,
+    "initial": 0.2,
+    "samples": [
+      0.05,
+      0.1,
+      0.2,
+      0.35,
+      0.5,
+      0.8
+    ],
+    "emptyX": -2.996,
+    "emptyY": 64.3,
+    "measureLabel": "Surface Tension \u03b3",
+    "fitEquation": "\\gamma = \\gamma_0 - R T \\Gamma_{\\max} \\ln(C) \\implies \\Gamma_{\\max} = -\\frac{1}{R T} \\left(\\frac{d\\gamma}{d\\ln C}\\right) = 5.50\\ \\mu\\text{mol/m}^2",
+    "min": 0.02,
+    "max": 0.9,
+    "step": 0.01,
+    "inputLabel": "1-Butanol Concentration C",
+    "shortInput": "C",
+    "inputUnit": "M",
+    "inputDecimals": 3,
+    "rawLabel": "Surface Tension \u03b3",
+    "rawUnit": "mN/m",
+    "rawDecimals": 2,
+    "angle": false,
+    "timed": false,
+    "observationLabel": "Stalagmometer drop-weight surface tension measurement",
+    "xAxis": "Natural Logarithm of Concentration ln(C)",
+    "yAxis": "Surface Tension \u03b3 (mN/m)",
+    "settings": [
+      "Surfactant System: Aqueous 1-Butanol (CH3(CH2)3OH)",
+      "Stalagmometer Tip Radius: r = 3.500 mm (Harkins-Brown corrected)",
+      "Thermostatted Temperature: 25.00 \u00b1 0.05 \u00b0C",
+      "Reference Solvent: Ultra-pure Milli-Q Water (\u03b3\u2080 = 71.97 mN/m)"
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "\ud83d\udca7",
+        "label": "Stalagmometer Bench"
+      },
+      {
+        "id": "compare",
+        "icon": "\ud83d\udcca",
+        "label": "Alcohol Homologues"
+      },
+      {
+        "id": "sandbox",
+        "icon": "\ud83d\udd2c",
+        "label": "Monolayer Packing Sandbox"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Precision Traube Capillary Stalagmometer (5.000 mL)",
+        "purpose": "Precision-bore borosilicate glass stalagmometer with an optically flat ground capillary tip (radius r = 3.500 \u00b1 0.005 mm) and two etched fiducial volume marks (V = 5.000 \u00b1 0.005 mL) for drop-weight and drop-volume surface tensiometry."
+      },
+      {
+        "name": "Thermostatted Water-Jacketed Immersion Cell (25.00 \u00b0C)",
+        "purpose": "Double-walled glass circulating water jacket connected to an external constant-temperature circulator regulating stalagmometer liquid to 25.00 \u00b1 0.05 \u00b0C."
+      },
+      {
+        "name": "Analytical Electronic Microbalance (0.01 mg)",
+        "purpose": "High-sensitivity electronic balance (readability \u00b10.01 mg) with light-weight, ground-glass weighing bottles to record dropped liquid masses with negligible evaporation."
+      },
+      {
+        "name": "Spectroscopic Grade 1-Butanol Solute",
+        "purpose": "Anhydrous 1-butanol (CH3(CH2)3OH, purity \u2265 99.8%, M = 74.12 g/mol, bp = 117.7 \u00b0C, density \u03c1 = 0.8098 g/cm\u00b3), fractionally distilled to ensure absence of surface-active homologue impurities."
+      },
+      {
+        "name": "Milli-Q Ultra-Pure Deionized Water Standard",
+        "purpose": "Degassed ultra-pure water (resistivity \u2265 18.2 M\u03a9\u00b7cm at 25 \u00b0C, surface tension \u03b30 = 71.97 mN/m, TOC < 3 ppb) used as the surface tension reference calibrant."
+      },
+      {
+        "name": "Chromic-Sulfuric Acid & Ultrasonic Cleaning Station",
+        "purpose": "Specialized oxidizing acid bath and ultrasonic cleaning tank to strip all organic, lipid, and surfactant residue from the glass capillary bore and drop-forming tip."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Stalagmometer Acid Cleaning and Ultra-Pure Water Calibration",
+        "text": "Clean the stalagmometer with hot chromic-sulfuric acid cleaning solution, rinse thoroughly with ten volumes of deionized water, and dry with filtered nitrogen. Mount the stalagmometer inside the 25.00 \u00b1 0.05 \u00b0C water jacket. Draw degassed pure water above the upper mark, adjust the needle valve to deliver 15\u201320 drops/min, and count the number of drops (n0) and total mass (m0) required to empty the 5.000 mL volume."
+      },
+      {
+        "title": "Preparation of Binary Aqueous 1-Butanol Standard Series",
+        "text": "Prepare six aqueous 1-butanol solutions with concentrations C = 0.050, 0.100, 0.200, 0.350, 0.500, and 0.800 M (mol/L) in 100.0 mL Class-A volumetric flasks using degassed Milli-Q water. Stopper flasks tightly and allow them to thermally equilibrate in a 25.0 \u00b0C water bath for 30 minutes."
+      },
+      {
+        "title": "Stalagmometric Drop-Weight Acquisition Across Concentrations",
+        "text": "Rinse the stalagmometer capillary twice with the 0.050 M butanol solution. Draw solution above the top graduation, control detachment rate to 1 drop every 3\u20134 seconds to prevent kinetic neck snapping, and collect falling drops into a tared, ground-glass weighing bottle across the 5.000 mL graduation window. Record the drop count n and net mass m to \u00b10.1 mg. Repeat in triplicate."
+      },
+      {
+        "title": "Sequential Measurement Across the Saturated Monolayer Range",
+        "text": "Repeat the drop-weight procedure sequentially for all remaining solutions: C = 0.100, 0.200, 0.350, 0.500, and 0.800 M. Ensure the stalagmometer tip is inspected between runs to confirm optical cleanliness and the complete absence of wetting pinning artifacts."
+      },
+      {
+        "title": "Harkins-Brown Correction and Surface Tension Calculation",
+        "text": "Compute the average single-drop volume V_drop = V / n. Look up the Harkins-Brown correction factor \u03a6(r / V_drop^(1/3)) corresponding to the tip radius r = 3.500 mm. Calculate the true surface tension \u03b3 = (m_drop \u00b7 g / (2\u03c0 r)) \u00b7 \u03a6 in mN/m (equivalent to dyn/cm) for each concentration."
+      },
+      {
+        "title": "Gibbs Adsorption Equation Linear Regression & Surface Area Extraction",
+        "text": "Evaluate the natural logarithm of concentration x = ln(C) for all six solutions. Plot surface tension \u03b3 against ln(C) and execute ordinary least-squares linear regression to determine the slope S = d\u03b3/d(ln C). Apply the Gibbs equation to compute the maximum surface excess concentration \u0393_max = \u2212(1 / RT) \u00b7 (d\u03b3/d(ln C)) in \u03bcmol/m\u00b2 and the minimum surface area per molecule A_min = 1 / (N_A \u00b7 \u0393_max) in \u00c5\u00b2/molecule, evaluating agreement with the 5.50 \u03bcmol/m\u00b2 benchmark."
+      }
+    ],
+    "topics": [
+      {
+        "question": "What is the fundamental thermodynamic derivation of the Gibbs adsorption isotherm from the Gibbs-Duhem equation?",
+        "answer": "In a multicomponent interfacial system, the Gibbs-Duhem equation for the surface phase at constant temperature is d\u03b3 + \u03a3 \u0393_i d\u03bc_i = 0, where \u03b3 is surface tension, \u0393_i is the surface excess concentration of component i, and \u03bc_i is its chemical potential. By establishing the Gibbs dividing surface such that the surface excess of the solvent (water, component 1) is identically zero (\u0393_1 = 0), the equation simplifies to d\u03b3 = \u2212\u0393_2 d\u03bc_2. For an ideal or dilute solution of solute (component 2), the chemical potential is d\u03bc_2 = R T d(ln a_2) \u2248 R T d(ln C_2). Rearranging yields the classic Gibbs adsorption isotherm: \u0393_2 = \u2212(1 / RT) (d\u03b3 / dln C_2) = \u2212(C_2 / RT) (d\u03b3 / dC_2)."
+      },
+      {
+        "question": "What is the physical meaning of a positive surface excess concentration (\u0393 > 0), and why does 1-butanol exhibit it?",
+        "answer": "A positive surface excess (\u0393 > 0) means that the concentration of solute per unit area in the interfacial region is substantially higher than in the homogeneous bulk solution. 1-Butanol is an amphiphilic molecule containing a polar, hydrophilic hydroxyl head (\u2212OH) and a non-polar, hydrophobic hydrocarbon tail (CH3CH2CH2CH2\u2212). Water molecules possess strong hydrogen-bonding networks. Dissolving butanol requires water to create a cavity and form an ordered, entropically unfavorable clathrate-like cage around the aliphatic tail (hydrophobic effect). By accumulating at the air-water interface with its polar head in water and hydrocarbon tail projecting into air, butanol minimizes the system's free energy, driving spontaneous surface accumulation (\u0393 > 0) and drastically lowering surface tension (d\u03b3/dln C < 0)."
+      },
+      {
+        "question": "What is the Szyszkowski equation, and how does it describe the transition from Henry's law to monolayer saturation?",
+        "answer": "The empirical Szyszkowski equation relates the surface tension of an aqueous surfactant solution to its concentration: \u03b3 = \u03b3_0 \u2212 b \u00b7 ln(1 + C / a), where \u03b3_0 is the surface tension of pure water, b = R T \u0393_max, and a is an affinity constant. At very low concentrations (C << a), ln(1 + C/a) \u2248 C/a, yielding a linear decrease in surface tension: \u03b3 \u2248 \u03b3_0 \u2212 (b/a) C (Henry's law adsorption regime). At higher concentrations (C >> a), 1 + C/a \u2248 C/a, so \u03b3 \u2248 \u03b3_0 \u2212 b \u00b7 ln(C/a) = const \u2212 R T \u0393_max \u00b7 ln(C). In this regime, the surface excess reaches its constant asymptotic maximum \u0393_max, indicating that the interface is completely saturated with a close-packed monolayer of oriented surfactant molecules."
+      },
+      {
+        "question": "Why is the Harkins-Brown correction factor \u03a6(r / V^(1/3)) essential when applying Tate's drop-weight law?",
+        "answer": "Tate's law, W = m \u00b7 g = 2\u03c0 r \u03b3, assumes that when a drop detaches from a capillary tip of radius r, the entire liquid mass falls freely along the full tip perimeter. In reality, during detachment, a liquid neck forms, stretches, and snaps; only 60% to 80% of the hanging drop actually falls into the receiver, while a residual satellite droplet remains attached to the glass tip. Harkins and Brown experimentally and theoretically calibrated the detachment fraction as a universal dimensionless function \u03a6(r / V^(1/3)), where V = m / \u03c1 is the drop volume. Incorporating this factor via \u03b3 = (m \u00b7 g / (2\u03c0 r)) \u00b7 \u03a6 restores measurement accuracy from ~25% error to better than \u00b10.1%."
+      },
+      {
+        "question": "How is the minimum cross-sectional area occupied per molecule (A_min) calculated from the maximum surface excess \u0393_max?",
+        "answer": "The maximum surface excess \u0393_max represents the moles of oriented surfactant molecules packed into one square meter of the saturated interface (mol/m\u00b2). Multiplying by Avogadro's number N_A yields the number of molecules per square meter: \u03c3_max = N_A \u00b7 \u0393_max (molecules/m\u00b2). The area occupied per single molecule is the reciprocal of this surface density: A_min = 1 / \u03c3_max = 1 / (N_A \u00b7 \u0393_max) (m\u00b2/molecule). Converting to square Angstroms (1 m\u00b2 = 10\u00b2\u2070 \u00c5\u00b2): A_min = 10\u00b2\u2070 / (N_A \u00b7 \u0393_max). For 1-butanol, \u0393_max = 5.50 \u00d7 10\u207b\u2076 mol/m\u00b2 yields A_min = 30.2 \u00c5\u00b2/molecule, perfectly reflecting the physical cross-sectional footprint of a vertically oriented aliphatic alcohol."
+      },
+      {
+        "question": "Why does a short-chain alcohol like 1-butanol not exhibit a sharp Critical Micelle Concentration (CMC) like SDS?",
+        "answer": "Long-chain surfactants (such as sodium dodecyl sulfate, SDS, C12H25SO4Na) possess long hydrophobic tails (\u2265 8\u201312 carbons) where hydrophobic free energy is sufficiently large to favor self-assembly into bulk spherical micelles above a sharp threshold concentration (the CMC), beyond which surface tension remains strictly constant. In contrast, 1-butanol has a short 4-carbon chain; hydrophobic association free energy is too weak to overcome thermal agitation and head-group repulsions to form stable bulk micelles. Instead, butanol exhibits continuous monolayer saturation followed by macroscopic liquid-liquid phase separation at its solubility limit (~0.98 M at 25 \u00b0C) without micellization."
+      },
+      {
+        "question": "What is Traube's rule regarding surface activity in a homologous series of aliphatic surfactants?",
+        "answer": "Traube's rule states that in a homologous series of aliphatic surface-active agents (such as alcohols or fatty acids), the concentration required to produce a given reduction in surface tension decreases by a factor of roughly 3 to 3.5 for each additional -CH2- methylene group added to the hydrophobic chain: C_n / C_(n+1) \u2248 3.2. Thermodynamically, this corresponds to an incremental hydrophobic transfer free energy of \u0394(\u0394G_trans) = \u2212R T ln(3.2) \u2248 \u22122.9 kJ/mol per methylene group, reflecting the energetic gain of transferring each -CH2- unit from water into the non-polar air interface."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "In the Gibbs adsorption equation \u0393 = \u2212(1/RT) (d\u03b3/dln C), what does a negative slope (d\u03b3/dln C < 0) physically indicate?",
+        "answer": "",
+        "options": [
+          "A positive surface excess (\u0393 > 0), meaning solute molecules accumulate preferentially at the interface relative to the bulk solution",
+          "A negative surface excess (\u0393 < 0), meaning solute molecules are expelled from the surface into the bulk",
+          "Zero surface adsorption (\u0393 = 0), indicating ideal solution behavior",
+          "Spontaneous formation of bulk precipitate"
+        ],
+        "correct": 0,
+        "explanation": "Because of the negative sign in the Gibbs equation, when surface tension decreases with increasing concentration (d\u03b3/dln C < 0), the surface excess \u0393 is positive, confirming that the surfactant accumulates at the interface."
+      },
+      {
+        "question": "Given an empirical slope d\u03b3/dln C = \u221213.634 mN/m at T = 298.15 K (R = 8.31446 J/(mol\u00b7K)), what is the maximum surface excess concentration \u0393_max?",
+        "options": [
+          "5.50 \u03bcmol/m\u00b2",
+          "1.60 \u03bcmol/m\u00b2",
+          "13.6 \u03bcmol/m\u00b2",
+          "0.450 \u03bcmol/m\u00b2"
+        ],
+        "correct": 0,
+        "explanation": "Using \u0393_max = \u2212(d\u03b3/dln C) / (R T): \u0393_max = \u2212(\u221213.634 \u00d7 10\u207b\u00b3 N/m) / (8.31446 \u00d7 298.15 J/mol) = (0.013634) / (2478.96) = 5.50 \u00d7 10\u207b\u2076 mol/m\u00b2 = 5.50 \u03bcmol/m\u00b2."
+      },
+      {
+        "question": "From a maximum surface excess concentration \u0393_max = 5.50 \u00d7 10\u207b\u2076 mol/m\u00b2, what is the minimum area occupied per molecule A_min at the air-water interface?",
+        "options": [
+          "30.2 \u00c5\u00b2/molecule",
+          "55.0 \u00c5\u00b2/molecule",
+          "12.5 \u00c5\u00b2/molecule",
+          "105.0 \u00c5\u00b2/molecule"
+        ],
+        "correct": 0,
+        "explanation": "Using A_min = 10\u00b2\u2070 / (N_A \u00b7 \u0393_max): A_min = 10\u00b2\u2070 / (6.02214 \u00d7 10\u00b2\u00b3 \u00d7 5.50 \u00d7 10\u207b\u2076) = 10\u00b2\u2070 / (3.312 \u00d7 10\u00b9\u2078) = 30.19 \u00c5\u00b2 \u2248 30.2 \u00c5\u00b2."
+      },
+      {
+        "question": "Why does pure water possess a high surface tension of ~72 mN/m, whereas a 0.8 M 1-butanol solution has a surface tension of only ~26.5 mN/m?",
+        "options": [
+          "Water molecules form a dense 3D hydrogen-bonding network with high cohesive energy, while adsorbed butanol covers the surface with low-cohesion hydrocarbon methyl groups",
+          "Butanol chemically reacts with air to form gaseous butane",
+          "Water evaporates faster than butanol at the interface",
+          "The stalagmometer tip dissolves in pure water"
+        ],
+        "correct": 0,
+        "explanation": "Pure water has strong cohesive hydrogen bonds pulling surface molecules inward. Adsorbed butanol molecules orient with their hydrophobic hydrocarbon tails outward, exposing low-energy van der Waals methyl groups to the air, drastically reducing surface tension."
+      }
+    ],
+    "precautions": [
+      "1-Butanol is flammable, volatile, and an eye/skin irritant; dispense pure alcohol and prepare solutions in a certified chemical fume hood wearing nitrile gloves and chemical splash goggles.",
+      "The stalagmometer capillary must be optically and chemically pristine; even trace organic grease, fingerprint oil, or residual surfactant will alter wetting and cause massive surface tension errors.",
+      "Do not allow the stalagmometer drop rate to exceed 20 drops per minute; excessive flow rates impart kinetic momentum to the falling drop, snapping the neck prematurely and invalidating Tate's law.",
+      "Maintain the circulating water bath temperature at 25.00 \u00b1 0.05 \u00b0C; surface tension has a significant negative temperature coefficient (d\u03b3/dT \u2248 \u22120.16 mN/(m\u00b7K)).",
+      "Keep the weighing bottle ground-glass stopper in place during drop collection to prevent evaporative mass loss of 1-butanol from dropped aliquots.",
+      "Handle chromic-sulfuric acid cleaning solution with extreme caution; wear heavy acid-resistant gloves, face shield, and apron, and neutralize all spent washings with sodium bicarbonate prior to disposal."
+    ],
+    "limitations": [
+      "The linear logarithmic model applies strictly to the saturated monolayer regime (C > 0.05 M); at very low concentrations, surface tension approaches pure water non-linearly (Szyszkowski curvature).",
+      "Harkins-Brown correction factors are derived for static or quasi-static drop detachment; dynamic surface tension effects may introduce minor deviations if drop formation is too rapid (< 2 s).",
+      "The activity coefficient of 1-butanol is approximated as unity (a \u2248 C); at the highest concentration (0.80 M), non-ideal solute-solute interactions in the bulk introduce a minor systematic deviation of ~1.5%."
+    ],
+    "intro": "Surfaces and interfaces exhibit unique mechanical, thermodynamic, and energetic properties that differ fundamentally from bulk matter. Molecules in the bulk liquid experience isotropic, symmetrically balanced attractive intermolecular forces in all directions. In contrast, molecules residing at a phase boundary (such as the air-water interface) experience an unbalanced net inward attractive force toward the bulk, creating an interfacial free energy and a macroscopic force known as surface tension (\u03b3). When an amphiphilic solute possessing both hydrophilic and hydrophobic domains is introduced into water, it spontaneously accumulates at the interface to minimize system free energy, causing surface tension to plummet. In 1878, J. Willard Gibbs formulated the fundamental thermodynamic equation governing this phenomenon: the Gibbs adsorption isotherm, \u0393 = \u2212(1/RT) (d\u03b3/dln a), which directly relates the interfacial excess concentration of an adsorbed species (\u0393) to the rate of change of surface tension with chemical activity. In this laboratory investigation, the surface tension of aqueous 1-butanol solutions spanning concentrations from 0.050 to 0.800 M is determined at 25.00 \u00b0C using a precision Traube stalagmometer and Harkins-Brown drop-weight corrections. Linear regression of surface tension \u03b3 against ln(C) across the saturated monolayer regime yields the maximum surface excess concentration \u0393_max = 5.50 \u03bcmol/m\u00b2 with sub-percent accuracy. From \u0393_max, the minimum cross-sectional area occupied per oriented butanol molecule is extracted as A_min = 30.2 \u00c5\u00b2, providing direct molecular insight into surfactant packing, hydrophobic hydration, and interface thermodynamics.",
+    "modelExtra": "The physical chemistry simulation model evaluates aqueous solutions of 1-butanol (CH3(CH2)3OH, M = 74.12 g/mol) at 25.00 \u00b0C (298.15 K). Thermodynamic parameters: universal gas constant R = 8.31446 J/(mol\u00b7K), R\u00b7T = 2478.96 J/mol = 0.00247896 N\u00b7m/\u03bcmol. Reference surface tension of pure water: \u03b3\u2080 = 71.97 mN/m. Capillary tip radius: r = 3.500 mm. Saturated monolayer parameters: theoretical maximum surface excess \u0393_max = 5.500 \u03bcmol/m\u00b2 (5.500 \u00d7 10\u207b\u2076 mol/m\u00b2), theoretical slope d\u03b3/dln C = \u2212R\u00b7T\u00b7\u0393_max = \u221213.634 mN/m. Across the six concentration coordinates C = [0.050, 0.100, 0.200, 0.350, 0.500, 0.800] M, the natural logarithms are x = ln(C) = [\u22122.9957, \u22122.3026, \u22121.6094, \u22121.0498, \u22120.6931, \u22120.2231] and the measured surface tensions are y = \u03b3 = [64.30, 54.85, 45.40, 37.77, 32.91, 26.50] mN/m. Ordinary least-squares regression yields an empirical slope S = \u221213.6330 mN/m and intercept b = 23.4591 mN/m with Pearson correlation coefficient R\u00b2 = 0.999999995. Applying the Gibbs adsorption equation extracts an empirical maximum surface excess \u0393_max = \u2212(S \u00b7 10\u207b\u00b3 / RT) \u00b7 10\u2076 = 5.4995 \u03bcmol/m\u00b2 (relative difference = 0.009% from the 5.50 \u03bcmol/m\u00b2 literature benchmark). From \u0393_max, the minimum cross-sectional area per molecule is calculated as A_min = 10\u00b2\u2070 / (N_A \u00b7 \u0393_max) = 30.19 \u00c5\u00b2/molecule, confirming a close-packed monolayer of vertically oriented 1-butanol molecules at the air-water interface."
   }
 ]

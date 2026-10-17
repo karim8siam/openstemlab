@@ -159,6 +159,15 @@ def observation(c,value):
   v0_mM=raw / 1000.0
   y=rnd(1.0 / v0_mM, 2)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='surface-excess-concentration-gibbs-adsorption':
+  c=float(value)
+  table_raw={0.050:64.30, 0.100:54.85, 0.200:45.40, 0.350:37.77, 0.500:32.91, 0.800:26.50}
+  table_x={0.050:-2.9957, 0.100:-2.3026, 0.200:-1.6094, 0.350:-1.0498, 0.500:-0.6931, 0.800:-0.2231}
+  key=round(c, 3)
+  x=table_x.get(key, rnd(math.log(c), 4))
+  raw=table_raw.get(key, rnd(23.459 - 13.633 * x, 2))
+  y=raw
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='adsorption-isotherm-activated-charcoal-freundlich':
   ceq=float(value)
   table_raw={0.030:0.516, 0.060:0.705, 0.120:0.963, 0.220:1.265, 0.350:1.559, 0.550:1.910}
@@ -665,6 +674,14 @@ def estimate(c,f):
   D_scaled=D_est * 1e6
   se=abs(f.get('slopeSE', 0.05)) / prefactor * 2.0 * math.sqrt(D_est) * 1e6
   return D_scaled, se, 7.60
+ elif slug=='surface-excess-concentration-gibbs-adsorption':
+  slope=f['m']
+  R=8.31446
+  T=298.15
+  RT=R * T
+  Gamma_calc=(-slope * 1e-3 / RT) * 1e6
+  se=(f.get('slopeSE', 0.05) * 1e-3 / RT) * 1e6
+  return Gamma_calc, se, 5.50
  elif slug=='adsorption-isotherm-activated-charcoal-freundlich':
   inv_n=f['m']
   se=f.get('slopeSE', 0.001)
@@ -923,6 +940,16 @@ def formula(c,f):
   D_est=((m * 1e-6) / prefactor)**2
   D_scaled=D_est * 1e6
   return f"Randles-Ševčík Fit: i_pc = {fmt(m,2)}·ν¹/² + {fmt(b,3)} μA; Diffusion Coefficient D = {fmt(D_scaled,2)} × 10⁻⁶ cm²·s⁻¹; Peak Separation ΔE_p = 59.2 mV"
+ elif slug=='surface-excess-concentration-gibbs-adsorption':
+  m=f['m']
+  b=f['b']
+  R=8.31446
+  T=298.15
+  RT=R * T
+  Gamma_calc=(-m * 1e-3 / RT) * 1e6
+  NA=6.02214076e23
+  Amin=(1e20) / (NA * (Gamma_calc * 1e-6))
+  return f"Gibbs Isotherm Fit: γ = {fmt(m,3)}·ln(C) + {fmt(b,2)} mN/m; Γ_max = {fmt(Gamma_calc,2)} μmol/m²; Area A_min = {fmt(Amin,1)} Å²; R² = {fmt(f['r2'],6)}"
  elif slug=='adsorption-isotherm-activated-charcoal-freundlich':
   m=f['m']
   b=f['b']
@@ -1543,6 +1570,44 @@ def worked(c,row):
    f"   Scaled diffusion coefficient: D = {fmt(D_scaled, 2)} × 10⁻⁶ cm²·s⁻¹.\n"
    f"   Literature reference benchmark at 25.00 °C: D = 7.60 × 10⁻⁶ cm²·s⁻¹ (percentage difference = {fmt(abs(D_scaled - 7.60)/7.60*100.0, 4)}%).\n"
    f"   Transient Nernst diffusion layer thickness at ν = {fmt(v_val,1)} mV/s: δ ≈ √(π·D·t) = {fmt(math.sqrt(math.pi * D_est * (0.70/(v_val*1e-3)))*1e4, 1)} μm."
+  )
+ elif slug=='surface-excess-concentration-gibbs-adsorption':
+  c_val=row['input']
+  raw=row['raw']
+  x_val=row['x']
+  y_val=row['y']
+  R=8.31446
+  T=298.15
+  RT=R * T
+  m_slope=-13.6330
+  b_int=23.4591
+  Gamma_calc=(-m_slope * 1e-3 / RT) * 1e6
+  NA=6.02214076e23
+  Amin=(1e20) / (NA * (Gamma_calc * 1e-6))
+  gamma_0=71.97
+  pi_surf=gamma_0 - raw
+  pred_gamma=m_slope * x_val + b_int
+  diff_gamma=raw - pred_gamma
+  return (
+   f"Representative Observation — Surface Tension of 1-Butanol Solution at C = {fmt(c_val, 3)} M:\n"
+   f"1. Experimental Stalagmometer Observables (25.00 °C):\n"
+   f"   Aqueous 1-butanol concentration: C = {fmt(c_val, 3)} M (mol/L).\n"
+   f"   Natural logarithm of concentration: x = ln(C) = ln({fmt(c_val, 3)}) = {fmt(x_val, 4)}.\n"
+   f"   Measured liquid surface tension: y = γ = {fmt(raw, 2)} mN/m (mJ/m² = dyn/cm).\n"
+   f"   Surface pressure reduction: Π = γ₀ − γ = {fmt(gamma_0, 2)} − {fmt(raw, 2)} = {fmt(pi_surf, 2)} mN/m.\n"
+   f"2. Multi-Point Gibbs Adsorption Linear Regression (Monolayer Saturated Regime):\n"
+   f"   Linearized Gibbs relation: γ(C) = γ₀ − R·T·Γ_max · ln(C) = S · ln(C) + b.\n"
+   f"   Regression slope: S = dγ/d(ln C) = {fmt(m_slope, 4)} mN/m = {fmt(m_slope*1e-3, 6)} N/m.\n"
+   f"   Regression Y-intercept: b = {fmt(b_int, 2)} mN/m.\n"
+   f"   Predicted surface tension: γ_pred = S · ln(C) + b = {fmt(pred_gamma, 2)} mN/m.\n"
+   f"   Residual tension deviation: Δγ = γ_obs − γ_pred = {fmt(diff_gamma, 3)} mN/m.\n"
+   f"3. Maximum Surface Excess Concentration & Surfactant Area Extraction:\n"
+   f"   Thermal energy product: R·T = ({fmt(R, 5)} J/(mol·K)) × ({fmt(T, 2)} K) = {fmt(RT, 2)} J/mol.\n"
+   f"   Maximum surface excess concentration: Γ_max = −(S · 10⁻³) / (R·T) = −({fmt(m_slope*1e-3, 6)}) / ({fmt(RT, 2)}) = {fmt(Gamma_calc*1e-6, 8)} mol/m².\n"
+   f"   Scaled surface excess: Γ_max = {fmt(Gamma_calc, 2)} μmol/m².\n"
+   f"   Literature reference benchmark: Γ_max = 5.50 μmol/m² (difference = {fmt(abs(Gamma_calc - 5.50)/5.50*100.0, 4)}%).\n"
+   f"   Avogadro surface density: σ_max = N_A · Γ_max = ({fmt(NA, 4)}) × ({fmt(Gamma_calc*1e-6, 8)}) = {fmt(NA * Gamma_calc * 1e-6, 4)} molecules/m².\n"
+   f"   Minimum cross-sectional area per molecule: A_min = 10²⁰ / σ_max = {fmt(Amin, 2)} Å²/molecule."
   )
  elif slug=='adsorption-isotherm-activated-charcoal-freundlich':
   ceq_val=row['input']
@@ -2812,6 +2877,36 @@ def uncertainty_text(c):
    "propagate as u_r(D) = √[ 4(u(m)/m)² + 4(u(A)/A)² + 4(u(c)/c)² + (u(T)/T)² ] = √[ 4(0.0001)² + 4(0.0033)² + 4(0.0012)² + (0.00007)² ] = 0.70%. "
    "For an empirical diffusion coefficient D = 7.60 × 10⁻⁶ cm²·s⁻¹, the expanded uncertainty at the 95% confidence level (coverage factor k = 2) "
    "is U(D) = ±0.11 × 10⁻⁶ cm²·s⁻¹ (1.4%), confirming exceptional concordance with the authoritative literature benchmark (7.60 ± 0.05 × 10⁻⁶ cm²·s⁻¹)."
+  )
+ elif slug=='surface-excess-concentration-gibbs-adsorption':
+  return (
+   "In the high-precision determination of interfacial surface excess concentrations, surface pressures, and molecular cross-sectional "
+   "areas via the Gibbs adsorption isotherm and stalagmometric drop tensiometry, experimental uncertainties and systematic physical "
+   "perturbations are rigorously evaluated across capillary, hydrodynamical, barometric, thermal, and interfacial thermodynamic domains: "
+   "(1) Stalagmometer Capillary Tip Metrology and Harkins-Brown Detachment Mechanics: The Traube stalagmometer features an optically flat "
+   "ground capillary tip with external radius r = 3.500 ± 0.005 mm (u(r)/r = 0.14%). Liquid drop detachment is governed by Tate's law modified "
+   "by Harkins-Brown empirical correction factors: γ = (m_drop · g / (2π r)) · Φ(r / V_drop^(1/3)). The correction factor Φ ranges from 0.605 to 0.625 "
+   "across the drop volume spectrum (V_drop = 0.035 to 0.085 mL), with residual calibration uncertainty u(Φ) ≤ 0.001 (0.16%). "
+   "(2) Evaporation Control, Drop Counting Rate, and Quasi-Static Detachment Kinetics: Drop formation rate is strictly maintained at 15 to 20 "
+   "drops per minute using an upstream micro-metering needle valve. At this quasi-static detachment rate, kinetic inertial neck snapping is suppressed, "
+   "and dynamic surface tension relaxation of the small 1-butanol molecule (adsorption timescale t_ads < 10 ms) is complete before drop separation. "
+   "Dropped liquid is collected inside a ground-glass stoppered weighing bottle enclosed within a saturated vapor draft shield, limiting evaporative "
+   "losses during the 3-minute run to < 0.2 mg (relative mass uncertainty u(m)/m ≤ 0.015%). "
+   "(3) Thermostatic Bath Regulation and Negative Temperature Coefficient of Surface Tension: The double-walled water jacket is maintained "
+   "at 25.00 ± 0.02 °C. Because surface tension has a significant negative temperature coefficient (dγ/dT ≈ −0.16 mN/(m·K) for water and −0.12 mN/(m·K) "
+   "for aqueous butanol), temperature fluctuations of ±0.05 °C correspond to an uncertainty of u(γ)_temp ≤ 0.008 mN/m. "
+   "(4) Solution Activity Coefficient and Bulk Solute-Solute Non-Ideality: The Gibbs adsorption equation strictly relates to thermodynamic activity: "
+   "Γ = −(1/RT) (dγ/dln a). For aqueous 1-butanol below 0.80 M, activity coefficients (γ_act ≈ 1.05 to 0.98) deviate by less than 2% from unity. "
+   "In the semi-log linear regime where the monolayer is saturated (C = 0.05 to 0.80 M), dln a / dln C ≈ 1.00 ± 0.015, introducing less than "
+   "0.08 μmol/m² systematic error in the extracted limiting surface excess. "
+   "(5) Uncertainty Propagation through the Gibbs Adsorption Equation: According to the ISO/IEC Guide 98-3 (GUM), the maximum surface excess "
+   "concentration is related to the empirical regression slope S = dγ/d(ln C) (mN/m) via Γ_max = −(S · 10⁻³) / (R · T). Differentiating with "
+   "respect to slope S and temperature T yields the relative standard uncertainty: u_r(Γ_max) = √[ (u(S)/S)² + (u(T)/T)² ]. From ordinary least-squares "
+   "regression across six concentrations, the standard error of the slope is s_S = 0.012 mN/m, corresponding to a relative slope uncertainty "
+   "of u_r(S) = 0.012 / 13.633 = 0.088%. Combining with temperature uncertainty (0.05 K / 298.15 K = 0.017%) and capillary calibration uncertainty (0.16%) "
+   "yields a combined relative standard uncertainty of u_c(Γ_max) = 0.18%. For an empirical surface excess Γ_max = 5.50 μmol/m², the expanded "
+   "uncertainty at the 95% confidence level (coverage factor k = 2) is U(Γ_max) = ±0.02 μmol/m² (0.36%). Propagating into molecular area yields "
+   "A_min = 30.2 ± 0.2 Å²/molecule, confirming extraordinary agreement with crystallographic close-packed surfactant benchmarks."
   )
  elif slug=='adsorption-isotherm-activated-charcoal-freundlich':
   return (
@@ -4528,6 +4623,103 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"invariant peak potential separation ΔE_p = 59.2 mV and current ratio |i_pa / i_pc| = 1.000 confirming ideal Nernstian reversibility. The extracted "
    f"diffusion coefficient agrees with authoritative electrochemistry literature benchmarks within {fmt(abs(D_val - 7.60)/7.60*100.0, 4)}% relative deviation, "
    f"demonstrating the high metrological precision of the Randles-Ševčík formulation for diagnostic electrochemistry."
+  )
+  
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='surface-excess-concentration-gibbs-adsorption':
+  m_val=f['m']
+  b_val=f['b']
+  Gamma_val=value
+  r2_val=f['r2']
+  R=8.31446
+  T=298.15
+  RT=R * T
+  NA=6.02214076e23
+  Amin_val=(1e20) / (NA * (Gamma_val * 1e-6))
+  
+  abstract=(
+   f"The surface tension, surface excess concentration, and molecular cross-sectional packing area of aqueous solutions of 1-butanol "
+   f"(CH₃(CH₂)₃OH, M = 74.12 g/mol) were investigated at 25.00 °C (298.15 K) across six concentration coordinates spanning C = 0.050 to "
+   f"0.800 M (mol/L) using a calibrated Traube precision capillary stalagmometer (flat tip radius r = 3.500 mm, fiducial volume V = 5.000 mL) "
+   f"enclosed within a thermostatted water jacket (25.00 ± 0.05 °C). Droplet masses were determined by precision gravimetry with Harkins-Brown "
+   f"detachment correction factors. With increasing 1-butanol concentration, the surface tension dropped sharply and monotonically from "
+   f"γ = 64.30 mN/m at 0.050 M down to γ = 26.50 mN/m at 0.800 M (compared to pure water γ₀ = 71.97 mN/m), generating a maximum surface pressure "
+   f"of Π = γ₀ − γ = 45.47 mN/m. In the concentration range C = 0.050 to 0.800 M, corresponding to the formation of a saturated interfacial "
+   f"surfactant monolayer, surface tension decreased with rigorous linearity against the natural logarithm of concentration ln(C). "
+   f"Ordinary least-squares regression of γ against ln(C) yielded an empirical slope S = dγ/d(ln C) = {fmt(m_val, 4)} mN/m and Y-intercept "
+   f"b = {fmt(b_val, 2)} mN/m with an ideal Pearson correlation coefficient R² = {fmt(r2_val, 8)}. Applying the Gibbs adsorption isotherm "
+   f"equation Γ_max = −(1/RT)·(dγ/dln C) extracted an empirical maximum surface excess concentration of Γ_max = {fmt(Gamma_val, 2)} μmol/m² "
+   f"({fmt(Gamma_val*1e-6, 8)} mol/m²), demonstrating near-perfect agreement within {fmt(abs(Gamma_val - 5.50)/5.50*100.0, 4)}% relative "
+   f"deviation from the authoritative 5.50 μmol/m² literature benchmark. From Γ_max, the minimum cross-sectional area per molecule was evaluated "
+   f"as A_min = 1/(N_A·Γ_max) = {fmt(Amin_val, 1)} Å²/molecule, providing direct physical verification of a close-packed monolayer of oriented "
+   f"amphiphilic alcohol molecules with polar hydroxyl heads submerged in water and hydrophobic hydrocarbon tails projecting into the vapor phase."
+  )
+  
+  graph_choice=(
+   f"To rigorously evaluate the Gibbs adsorption isotherm and isolate the maximum surface excess concentration under saturated monolayer "
+   f"conditions, the primary analytical graph plots the experimental surface tension γ (in mN/m or dyn/cm) on the dependent Y-axis against the "
+   f"natural logarithm of solute concentration ln(C) on the independent X-axis across the six measurement coordinates (ln C = −2.996, −2.303, "
+   f"−1.609, −1.050, −0.693, −0.223). In classical interfacial thermodynamics, the fundamental Gibbs adsorption equation for a binary dilute "
+   f"solution at constant temperature is formulated as dγ = −Γ₂·dμ₂ = −Γ₂·R·T·d(ln C). When the liquid-gas interface approaches close-packed "
+   f"monolayer saturation, the surface excess concentration reaches a constant limiting plateau value: Γ₂ → Γ_max = constant. Integrating the "
+   f"differential relation between an arbitrary concentration and a reference state yields the linear expression: "
+   f"γ(C) = γ_ref − R·T·Γ_max · [ ln(C) − ln(C_ref) ] = −(R·T·Γ_max) · ln(C) + b = S · ln(C) + b. Plotting γ vs ln(C) linearizes the entire "
+   f"saturated monolayer regime with outstanding precision (R² = {fmt(r2_val, 8)}). The empirical slope S = dγ/d(ln C) directly yields the "
+   f"maximum surface excess concentration through the relation Γ_max = −S / (R·T) without requiring empirical curve-fitting or graphical "
+   f"tangent construction, isolating the interfacial molecular density with sub-angstrom spatial fidelity."
+  )
+  
+  discussion=(
+   f"The quantitative investigation of aqueous 1-butanol solutions using the Traube stalagmometer provides an exceptionally clear, elegant "
+   f"experimental demonstration of the fundamental thermodynamic laws governing surface activity, interfacial adsorption, and hydrophobic "
+   f"hydration. Pure liquid water possesses an extraordinarily high surface tension (γ₀ = 71.97 mN/m at 25.0 °C) due to its three-dimensional "
+   f"tetrahedral network of intermolecular hydrogen bonds. Inside the bulk aqueous phase, every water molecule participates in an average of "
+   f"four hydrogen bonds, symmetrically coordinated by neighbors. At the air-water boundary, however, surface water molecules experience no "
+   f"attractive hydrogen bonding from the overlying vapor phase, resulting in a strong net inward cohesive force and a substantial positive "
+   f"interfacial excess free energy. "
+   f"When an amphiphilic solute such as 1-butanol (CH₃CH₂CH₂CH₂OH) is dissolved in water, it encounters a profound thermodynamic driving "
+   f"force known as the hydrophobic effect. The polar hydroxyl group (−OH) can participate in hydrogen bonding with solvent water molecules, "
+   f"making the molecule moderately soluble in water (solubility limit ≈ 0.98 M at 25 °C). However, the non-polar, hydrophobic 4-carbon aliphatic "
+   f"tail (−C₄H₉) cannot form hydrogen bonds; to accommodate this alkyl chain, surrounding water molecules must reorient into highly ordered, "
+   f"rigid clathrate-like hydration cages. This structural ordering imposes a severe entropic penalty (ΔS_hydration < 0). "
+   f"To minimize this unfavorable free energy, 1-butanol molecules spontaneously migrate from the bulk solution to the air-water interface. "
+   f"At the interface, the molecules orient themselves with high directional anisotropy: the hydrophilic hydroxyl head remains immersed in the "
+   f"aqueous phase, satisfying its hydrogen-bonding requirement, while the hydrophobic hydrocarbon tail is expelled into the gas phase. "
+   f"This spontaneous surface accumulation replaces high-energy water-air contacts with low-energy hydrocarbon-air contacts (dominated by weak "
+   f"van der Waals dispersion forces), causing the macroscopic surface tension to drop dramatically from 71.97 mN/m down to 26.50 mN/m. "
+   f"According to the Gibbs adsorption isotherm, the surface excess concentration is defined as Γ = −(1/RT)·(dγ/dln C). Across the concentration "
+   f"range C = 0.050 to 0.800 M, linear regression of γ against ln(C) yielded an empirical slope of S = {fmt(m_val, 4)} mN/m with a linear "
+   f"correlation coefficient of R² = {fmt(r2_val, 8)}. Applying the Gibbs relation with R = 8.31446 J/(mol·K) and T = 298.15 K (RT = 2478.96 J/mol) "
+   f"extracted an empirical maximum surface excess concentration of Γ_max = −(S · 10⁻³) / (2478.96) = {fmt(Gamma_val, 2)} μmol/m² "
+   f"({fmt(Gamma_val*1e-6, 8)} mol/m²). This experimental result displays breathtaking concordance with the accepted 5.50 μmol/m² literature "
+   f"benchmark for 1-butanol, with a relative percentage deviation of only {fmt(abs(Gamma_val - 5.50)/5.50*100.0, 4)}%. "
+   f"The physical significance of Γ_max is revealed by evaluating the average area occupied per single surfactant molecule at the saturated interface: "
+   f"A_min = 1 / (N_A · Γ_max). Substituting Avogadro's number (N_A = 6.02214 × 10²³ molecules/mol) into the expression yields "
+   f"A_min = 10²⁰ / [ (6.02214 × 10²³) × ({fmt(Gamma_val*1e-6, 8)}) ] = {fmt(Amin_val, 1)} Å²/molecule. In structural surface chemistry, "
+   f"the cross-sectional footprint of a vertically oriented aliphatic alcohol molecule packed in a close-packed Langmuir monolayer is established "
+   f"by the steric radius of the hydrated hydroxyl head group and the van der Waals envelope of the aliphatic chain, which typically spans "
+   f"28 to 32 Å². The experimentally determined value of A_min = {fmt(Amin_val, 1)} Å² matches this theoretical structural footprint with "
+   f"exquisite fidelity, proving that at concentrations exceeding C ≈ 0.1 M, the air-water interface is completely covered by a dense, oriented "
+   f"monomolecular film of 1-butanol molecules. "
+   f"Comparative analysis with the homologous series (ethanol through hexanol) further validates Traube's rule. For each additional −CH₂− methylene "
+   f"unit added to the hydrocarbon tail, the concentration required to produce an identical surface pressure reduction (Π = 20 mN/m) decreases "
+   f"by a factor of ~3.2, corresponding to a hydrophobic transfer free energy of Δ(ΔG_trans) = −R T ln(3.2) ≈ −2.9 kJ/mol per methylene group. "
+   f"However, despite this ~30-fold increase in surface activity from ethanol to hexanol, the limiting molecular cross-sectional area A_min remains "
+   f"virtually constant at ~30 Å² across all aliphatic alcohol homologues, because the packing footprint is governed by the invariant hydroxyl "
+   f"head-group cross-section. This profound invariance underscores the fundamental validity of Gibbs interfacial thermodynamics."
+  )
+  
+  conclusion=(
+   f"The surface tension of aqueous 1-butanol solutions spanning C = 0.050 to 0.800 M was systematically measured at 25.00 °C (298.15 K) "
+   f"using a calibrated Traube precision stalagmometer and Harkins-Brown drop-weight corrections. Surface tension decreased monotonically "
+   f"from 64.30 to 26.50 mN/m across the series, reflecting powerful surface activity driven by the hydrophobic effect. In the saturated "
+   f"monolayer regime, surface tension displayed exceptional linearity against ln(C) (R² = {fmt(r2_val, 8)}), yielding an empirical slope "
+   f"S = dγ/d(ln C) = {fmt(m_val, 4)} mN/m. Applying the Gibbs adsorption isotherm extracted a maximum surface excess concentration of "
+   f"Γ_max = {fmt(Gamma_val, 2)} μmol/m², demonstrating near-perfect agreement within {fmt(abs(Gamma_val - 5.50)/5.50*100.0, 4)}% relative deviation "
+   f"from the 5.50 μmol/m² literature benchmark. From Γ_max, the minimum molecular area at the interface was evaluated as A_min = {fmt(Amin_val, 1)} Å²/molecule, "
+   f"in exact concordance with the steric cross-section of an oriented aliphatic alcohol. Expanded uncertainty analysis (U(Γ_max) = ±0.02 μmol/m² "
+   f"at 95% confidence) establishes the metrological precision of the stalagmometric method, confirming fundamental Gibbs adsorption thermodynamics, "
+   f"surface pressure relations, and amphiphilic self-assembly at aqueous interfaces."
   )
   
   return abstract, graph_choice, discussion, conclusion

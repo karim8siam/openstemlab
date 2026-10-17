@@ -87,6 +87,18 @@ function update(){
   $('apparatusDiagram').innerHTML=drawEnzymeKineticsBenchView(p,rawVal);
   return;
  }
+ if(cfg.slug==='surface-excess-concentration-gibbs-adsorption'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawGibbsCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawGibbsSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawGibbsBenchView(p,rawVal);
+  return;
+ }
  if(cfg.slug==='adsorption-isotherm-activated-charcoal-freundlich'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawCharcoalCompareView(p,rawVal);
@@ -384,7 +396,24 @@ function update(){
   const dA_dt = v0_uM * 0.0185;
   $('liveState').textContent='Photometric trace recorded: v₀ = '+v0_uM.toFixed(2)+' μM/min (dA/dt = '+(dA_dt/1000).toFixed(4)+' AU/min).';
   message('Assay complete: v₀ = '+v0_uM.toFixed(2)+' μM/min (1/v₀ = '+inv_v0.toFixed(2)+' min/mM, 1/[S] = '+inv_s.toFixed(2)+' mM⁻¹). Record in notebook.');
- }else if(cfg.slug==='adsorption-isotherm-activated-charcoal-freundlich'){
+ }else if(cfg.slug==='surface-excess-concentration-gibbs-adsorption'){
+  const c_conc = p.input;
+  const gam = raw.toFixed(2);
+  const ln_c = Math.log(c_conc).toFixed(3);
+  const pi_surf = (71.97 - raw).toFixed(2);
+  $('liveState').textContent='Stalagmometer drop detached: C = '+c_conc.toFixed(3)+' M (ln C = '+ln_c+'), Surface tension γ = '+gam+' mN/m (Π = '+pi_surf+' mN/m).';
+  message('Quasi-static drop detachment recorded with Harkins-Brown correction. Record γ in notebook.');
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawGibbsCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawGibbsSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawGibbsBenchView(p,rawVal);
+  return;
+}else if(cfg.slug==='adsorption-isotherm-activated-charcoal-freundlich'){
   const ceq = p.input;
   const q_val = raw.toFixed(3);
   const log_c = Math.log10(ceq).toFixed(3);
@@ -16571,6 +16600,266 @@ function drawCharcoalSandboxView(p, rawVal) {
 
  svg += rect(390, 275, 290, 30, '#090d16', '#1e293b', 1, 3);
  svg += text(535, 293, 'High surface area: BET Area > 950 m²/g | q_max ≈ 2.5 mmol/g', '#4ade80', 7, 'middle', 'bold');
+
+ return svg;
+}
+
+// ======================================================================
+// LAB 49: GIBBS ADSORPTION ISOTHERM & SURFACE EXCESS OF 1-BUTANOL
+// ======================================================================
+
+function drawGibbsBenchView(p, rawVal) {
+ var c_conc = Number(p.input) || 0.200;
+ var gam = (rawVal !== null && rawVal !== undefined) ? rawVal : (23.459 - 13.633 * Math.log(c_conc));
+ var ln_c = Math.log(c_conc);
+ var pi_surf = (71.97 - gam).toFixed(2);
+ var drop_mg = (gam * (2 * Math.PI * 0.00350 / 9.80665) / 0.615 * 1e3).toFixed(1);
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a0f1d');
+
+ // Title header
+ svg += text(360, 18, 'GIBBS ADSORPTION TENSIOMETRY: TRAUBE STALAGMOMETER BENCH', '#38bdf8', 11, 'middle', 'bold');
+ svg += text(360, 32, 'Aqueous 1-Butanol (25.00 °C) | Concentration C = ' + c_conc.toFixed(3) + ' M (ln C = ' + ln_c.toFixed(3) + ') | γ = ' + gam.toFixed(2) + ' mN/m', '#94a3b8', 8.5, 'middle');
+
+ // LEFT PANEL: Stalagmometer Capillary & Drop Formation (x: 15 to 345)
+ svg += rect(15, 42, 330, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(180, 58, 'TRAUBE STALAGMOMETER & DROP DETACHMENT', '#38bdf8', 9.5, 'middle', 'bold');
+
+ // Water-jacket outer cylinder
+ svg += rect(125, 70, 110, 145, 'rgba(56, 189, 248, 0.05)', '#38bdf8', 1, 6);
+ svg += text(180, 83, 'WATER JACKET (25.0 °C)', '#38bdf8', 6.5, 'middle', 'bold');
+
+ // Stalagmometer upper bulb & fiducial lines
+ svg += rect(172, 88, 16, 25, '#1e293b', '#94a3b8', 1); // upper tube
+ svg += line(165, 96, 195, 96, '#f43f5e', 1.5); // upper mark
+ svg += text(205, 98, 'Mark A (5.0 mL)', '#f43f5e', 6, 'start');
+
+ svg += ellipse(180, 125, 20, 15, '#1e293b', '#64748b', 1); // central bulb
+ svg += ellipse(180, 125, 18, 13, '#38bdf8', 'none', 0); // liquid in bulb
+
+ svg += rect(172, 140, 16, 25, '#1e293b', '#94a3b8', 1); // lower tube
+ svg += line(165, 150, 195, 150, '#f43f5e', 1.5); // lower mark
+ svg += text(205, 152, 'Mark B', '#f43f5e', 6, 'start');
+
+ // Capillary tube and flat ground tip (r = 3.50 mm)
+ svg += rect(176, 165, 8, 30, '#1e293b', '#94a3b8', 1);
+ svg += rect(172, 195, 16, 4, '#475569', '#cbd5e1', 1); // flat tip disk
+ svg += text(150, 198, 'Tip r = 3.5 mm', '#94a3b8', 6, 'end');
+
+ // Hanging drop necking / detaching
+ svg += path('M 174,199 C 174,212 170,218 172,225 C 174,233 186,233 188,225 C 190,218 186,212 186,199 Z', '#38bdf8', '#0284c7', 1);
+ svg += text(205, 218, 'Harkins-Brown Φ', '#facc15', 6.5, 'start');
+
+ // Tared weighing bottle
+ svg += rect(155, 238, 50, 32, '#020617', '#64748b', 1, 3);
+ svg += rect(157, 252, 46, 16, '#38bdf8', 'none', 0); // collected liquid
+ svg += text(180, 264, 'Collected Drops', '#0284c7', 6, 'middle', 'bold');
+
+ // Bottom telemetry card in left panel
+ svg += rect(30, 275, 300, 35, '#090d16', '#1e293b', 1, 4);
+ svg += text(40, 288, 'Surface Tension: γ = ' + gam.toFixed(2) + ' mN/m (dyn/cm)', '#4ade80', 7.5, 'start', 'bold');
+ svg += text(40, 301, 'Surface Pressure: Π = γ₀ − γ = ' + pi_surf + ' mN/m | Drop Mass: ' + drop_mg + ' mg', '#cbd5e1', 6.5, 'start');
+
+ // RIGHT PANEL: Gibbs Isotherm Plot γ vs ln(C) (x: 360 to 705)
+ svg += rect(360, 42, 345, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(532, 58, 'GIBBS ISOTHERM REGRESSION: γ vs ln(C)', '#38bdf8', 9.5, 'middle', 'bold');
+
+ // Plot axes (x: 405 to 680, y: 80 to 225)
+ var plot_x0 = 405, plot_x1 = 680, plot_y0 = 225, plot_y1 = 80;
+ svg += line(plot_x0, plot_y0, plot_x1, plot_y0, '#64748b', 1.5);
+ svg += line(plot_x0, plot_y0, plot_x0, plot_y1, '#64748b', 1.5);
+
+ // X-axis ticks (ln C: -3.5 to 0.0)
+ for (var cur_ln = -3.0; cur_ln <= 0.0; cur_ln += 1.0) {
+  var px = plot_x0 + ((cur_ln - (-3.5)) / 3.5) * (plot_x1 - plot_x0);
+  svg += line(px, plot_y0, px, plot_y0 + 4, '#64748b', 1);
+  svg += text(px, plot_y0 + 13, cur_ln.toFixed(1), '#94a3b8', 6.5, 'middle');
+ }
+ svg += text((plot_x0 + plot_x1) / 2, plot_y0 + 26, 'Natural Logarithm of Concentration ln(C)', '#cbd5e1', 7.5, 'middle', 'bold');
+
+ // Y-axis ticks (gamma: 20 to 70 mN/m)
+ for (var cur_g = 20; cur_g <= 70; cur_g += 10) {
+  var py = plot_y0 - ((cur_g - 20) / 55.0) * (plot_y0 - plot_y1);
+  svg += line(plot_x0 - 4, py, plot_x0, py, '#64748b', 1);
+  svg += text(plot_x0 - 7, py + 3, '' + cur_g, '#94a3b8', 6.5, 'end');
+ }
+ svg += text(plot_x0 - 18, (plot_y0 + plot_y1) / 2, 'γ (mN/m)', '#cbd5e1', 7.5, 'middle', 'normal', 'rotate(-90 ' + (plot_x0 - 18) + ' ' + ((plot_y0 + plot_y1) / 2) + ')');
+
+ // Regression line: gamma = 23.46 - 13.633 * ln(C)
+ var r_y0 = plot_y0 - (((23.459 - 13.633 * (-3.5)) - 20) / 55.0) * (plot_y0 - plot_y1);
+ var r_y1 = plot_y0 - (((23.459 - 13.633 * 0.0) - 20) / 55.0) * (plot_y0 - plot_y1);
+ svg += line(plot_x0, r_y0, plot_x1, r_y1, '#38bdf8', 2);
+
+ // Standard sample points
+ var samples_data = [
+  {c: 0.050, g: 64.30}, {c: 0.100, g: 54.85}, {c: 0.200, g: 45.40},
+  {c: 0.350, g: 37.77}, {c: 0.500, g: 32.91}, {c: 0.800, g: 26.50}
+ ];
+ for (var i = 0; i < samples_data.length; i++) {
+  var l_c = Math.log(samples_data[i].c);
+  var sx = plot_x0 + ((l_c - (-3.5)) / 3.5) * (plot_x1 - plot_x0);
+  var sy = plot_y0 - ((samples_data[i].g - 20) / 55.0) * (plot_y0 - plot_y1);
+  svg += circle(sx, sy, 3, '#4ade80', '#ffffff', 1);
+ }
+
+ // Active point
+ var cur_px = plot_x0 + ((ln_c - (-3.5)) / 3.5) * (plot_x1 - plot_x0);
+ var cur_py = plot_y0 - ((gam - 20) / 55.0) * (plot_y0 - plot_y1);
+ if (cur_px >= plot_x0 && cur_px <= plot_x1 && cur_py <= plot_y0 && cur_py >= plot_y1) {
+  svg += circle(cur_px, cur_py, 5, '#f43f5e', '#ffffff', 1.5);
+ }
+
+ // Bottom Regression Box
+ svg += rect(375, 255, 315, 52, '#090d16', '#1e293b', 1, 4);
+ svg += text(385, 269, 'GIBBS ISOTHERM EXTRACTED PARAMETERS', '#38bdf8', 7.5, 'start', 'bold');
+ svg += text(385, 283, 'Slope: dγ/d(ln C) = −13.633 mN/m  (R² = 1.000)', '#f8fafc', 7, 'start');
+ svg += text(385, 297, 'Γ_max = 5.50 μmol/m²  |  Area per Molecule A_min = 30.2 Å²', '#4ade80', 7.5, 'start', 'bold');
+
+ return svg;
+}
+
+function drawGibbsCompareView(p, rawVal) {
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a0f1d');
+
+ svg += text(360, 18, 'HOMOLOGOUS ALIPHATIC ALCOHOLS: TRAUBE\'S SURFACE ACTIVITY RULE', '#38bdf8', 11, 'middle', 'bold');
+ svg += text(360, 32, 'Surface Activity Increases ~3.2× per −CH₂− Unit | Uniform Monolayer Area A_min ≈ 30 Å²', '#94a3b8', 8.5, 'middle');
+
+ var alcohols = [
+  { name: "Ethanol (C₂)", formula: "C₂H₅OH", c_half: 2.50, gamma_lim: 30.5, col: "#94a3b8" },
+  { name: "1-Propanol (C₃)", formula: "C₃H₇OH", c_half: 0.78, gamma_lim: 28.0, col: "#38bdf8" },
+  { name: "1-Butanol (C₄)", formula: "C₄H₉OH", c_half: 0.24, gamma_lim: 26.5, col: "#4ade80" },
+  { name: "1-Pentanol (C₅)", formula: "C₅H₁₁OH", c_half: 0.075, gamma_lim: 25.5, col: "#facc15" },
+  { name: "1-Hexanol (C₆)", formula: "C₆H₁₃OH", c_half: 0.024, gamma_lim: 25.0, col: "#f43f5e" }
+ ];
+
+ // LEFT: Traube Concentration Comparison Bar Chart (x: 20 to 355)
+ svg += rect(20, 42, 335, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(187, 58, 'TRAUBE\'S RULE: CONC. TO REACH γ = 50 mN/m', '#38bdf8', 9.5, 'middle', 'bold');
+
+ var t_x0 = 50, t_x1 = 330, t_y0 = 265, t_y1 = 80;
+ svg += line(t_x0, t_y0, t_x1, t_y0, '#64748b', 1.5);
+ svg += line(t_x0, t_y0, t_x0, t_y1, '#64748b', 1.5);
+
+ // Y-axis (log C scale: 0.01 to 3.0 M)
+ for (var c_val of [0.01, 0.1, 1.0]) {
+  var log_c = Math.log10(c_val);
+  var py = t_y0 - ((log_c - (-2.0)) / 2.5) * (t_y0 - t_y1);
+  svg += line(t_x0 - 4, py, t_x0, py, '#64748b', 1);
+  svg += text(t_x0 - 7, py + 3, c_val.toFixed(2) + ' M', '#94a3b8', 6, 'end');
+ }
+
+ var bar_w = (t_x1 - t_x0) / alcohols.length;
+ for (var i = 0; i < alcohols.length; i++) {
+  var bx = t_x0 + i * bar_w + 8;
+  var log_ch = Math.log10(alcohols[i].c_half);
+  var bar_h = ((log_ch - (-2.0)) / 2.5) * (t_y0 - t_y1);
+
+  svg += rect(bx, t_y0 - bar_h, 38, bar_h, alcohols[i].col, 'none', 0, 2);
+  svg += text(bx + 19, t_y0 - bar_h - 4, alcohols[i].c_half.toFixed(3) + 'M', alcohols[i].col, 6, 'middle', 'bold');
+  svg += text(bx + 19, t_y0 + 13, alcohols[i].name.split(' ')[0], '#f8fafc', 6, 'middle', 'bold');
+  svg += text(bx + 19, t_y0 + 24, alcohols[i].name.split(' ')[1], '#94a3b8', 5.5, 'middle');
+ }
+
+ // RIGHT: Thermodynamic Table & Invariant Area per Molecule (x: 365 to 705)
+ svg += rect(365, 42, 340, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(535, 58, 'SATURATED MONOLAYER PACKING FOOTPRINT', '#38bdf8', 9.5, 'middle', 'bold');
+
+ var info = [
+  { item: "Hydrophobic Transfer Energy", val: "Δ(ΔG_trans) ≈ −2.9 kJ/mol per −CH₂−" },
+  { item: "Traube Surface Factor", val: "C_n / C_(n+1) ≈ 3.2× reduction" },
+  { item: "1-Butanol Γ_max", val: "5.50 μmol/m² (Saturated monolayer)" },
+  { item: "Minimum Area per Molecule", val: "A_min = 30.2 Å² / molecule" },
+  { item: "Hydroxyl Head-Group Footprint", val: "A_head ≈ 28–32 Å² (Cross-section)" },
+  { item: "Aliphatic Tail Orientation", val: "Vertical projection into vapor phase" }
+ ];
+
+ for (var r = 0; r < info.length; r++) {
+  var ry = 78 + r * 35;
+  svg += rect(375, ry, 320, 28, (r % 2 === 0) ? '#090d16' : '#1e293b', 'none', 0, 3);
+  svg += text(385, ry + 12, info[r].item, '#facc15', 6.5, 'start', 'bold');
+  svg += text(385, ry + 23, info[r].val, '#cbd5e1', 6.5, 'start');
+ }
+
+ svg += rect(375, 288, 320, 22, '#020617', '#334155', 1, 3);
+ svg += text(535, 302, 'Universal packing density: A_min invariant across alcohol series', '#4ade80', 6.5, 'middle', 'bold');
+
+ return svg;
+}
+
+function drawGibbsSandboxView(p, rawVal) {
+ var c_conc = Number(p.input) || 0.200;
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a0f1d');
+
+ svg += text(360, 18, 'MOLECULAR INTERFACE SANDBOX: GIBBS DIVIDING SURFACE & PACKING', '#38bdf8', 11, 'middle', 'bold');
+ svg += text(360, 32, 'Hydrophobic Effect Drives 1-Butanol to the Air-Water Boundary (Γ > 0, dγ/dln C < 0)', '#94a3b8', 8.5, 'middle');
+
+ // LEFT: Molecular Scale Air-Water Boundary (x: 15 to 440)
+ svg += rect(15, 42, 425, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(227, 58, 'ATOMIC-SCALE AIR-WATER INTERFACE', '#38bdf8', 9.5, 'middle', 'bold');
+
+ // Air phase above (dark blue-gray)
+ svg += rect(30, 72, 395, 80, '#020617', 'none', 0);
+ svg += text(50, 88, 'AIR PHASE (VAPOR)', '#94a3b8', 7, 'start', 'bold');
+
+ // Water phase below (blue)
+ svg += rect(30, 152, 395, 155, '#0c4a6e', 'none', 0);
+ svg += text(50, 295, 'AQUEOUS BULK PHASE (H₂O Hydrogen-Bond Network)', '#38bdf8', 7, 'start', 'bold');
+
+ // Gibbs Dividing Surface line
+ svg += line(30, 152, 425, 152, '#facc15', 2, 'stroke-dasharray="4,3"');
+ svg += text(350, 148, 'Gibbs Dividing Surface (Γ_H2O = 0)', '#facc15', 6, 'end');
+
+ // Adsorbed 1-butanol molecules packed at the interface
+ // Polar head (OH) in water (circle), hydrocarbon tail (CH3-CH2-CH2-CH2-) in air
+ var num_mols = 11;
+ for (var i = 0; i < num_mols; i++) {
+  var mx = 55 + i * 34;
+  // Polar head in water
+  svg += circle(mx, 158, 6, '#f43f5e', '#fff', 1); // OH head
+  svg += text(mx, 161, 'OH', '#fff', 5, 'middle', 'bold');
+  // Hydrophobic hydrocarbon tail projecting into air
+  svg += path('M ' + mx + ',152 L ' + (mx-4) + ',140 L ' + (mx+4) + ',128 L ' + mx + ',114 L ' + (mx-3) + ',102', 'none', '#4ade80', 2.5);
+  svg += circle(mx - 3, 102, 3, '#22c55e'); // terminal methyl CH3
+ }
+
+ svg += text(227, 88, 'Aliphatic Tails (CH₃CH₂CH₂CH₂−)', '#4ade80', 7, 'middle', 'bold');
+ svg += text(227, 175, 'Polar Hydrophilic Heads (−OH)', '#f43f5e', 7, 'middle', 'bold');
+
+ // Water molecules in bulk (H-O-H clusters)
+ var waters = [
+  {x: 80, y: 210}, {x: 140, y: 225}, {x: 210, y: 215}, {x: 280, y: 230}, {x: 350, y: 215},
+  {x: 110, y: 260}, {x: 180, y: 270}, {x: 250, y: 255}, {x: 320, y: 275}, {x: 380, y: 250}
+ ];
+ for (var w = 0; w < waters.length; w++) {
+  var wx = waters[w].x, wy = waters[w].y;
+  svg += circle(wx, wy, 5, '#0284c7');
+  svg += circle(wx - 4, wy - 3, 3, '#94a3b8');
+  svg += circle(wx + 4, wy - 3, 3, '#94a3b8');
+ }
+
+ // RIGHT PANEL: Theoretical Quantities (x: 450 to 705)
+ svg += rect(450, 42, 255, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(577, 58, 'INTERFACE THERMODYNAMICS', '#38bdf8', 9.5, 'middle', 'bold');
+
+ var thermo = [
+  { k: "Gibbs Dividing Surface", v: "Positioned where Γ_water = 0" },
+  { k: "Maximum Surface Excess", v: "Γ_max = 5.50 μmol/m²" },
+  { k: "Surface Density σ_max", v: "3.31 × 10¹⁸ molecules/m²" },
+  { k: "Area per Molecule A_min", v: "30.2 Å² / molecule" },
+  { k: "Langmuir Footprint", v: "Close-packed parallel chains" },
+  { k: "Surface Pressure Π", v: "Π = γ₀ − γ = 45.47 mN/m" }
+ ];
+
+ for (var t = 0; t < thermo.length; t++) {
+  var ty = 78 + t * 38;
+  svg += rect(460, ty, 235, 30, (t % 2 === 0) ? '#090d16' : '#1e293b', 'none', 0, 3);
+  svg += text(470, ty + 12, thermo[t].k, '#facc15', 6.5, 'start', 'bold');
+  svg += text(470, ty + 24, thermo[t].v, '#cbd5e1', 6.5, 'start');
+ }
 
  return svg;
 }

@@ -3,6 +3,15 @@
 const round=(v,n)=>Math.round((v+Number.EPSILON)*10**n)/10**n;
 
 function predict(slug,input){
+  if(slug==='surface-excess-concentration-gibbs-adsorption'){
+   const c=Number(input);
+   const table_raw={0.050:64.30, 0.100:54.85, 0.200:45.40, 0.350:37.77, 0.500:32.91, 0.800:26.50};
+   const table_x={0.050:-2.9957, 0.100:-2.3026, 0.200:-1.6094, 0.350:-1.0498, 0.500:-0.6931, 0.800:-0.2231};
+   const key=round(c, 3);
+   const x_val=table_x.hasOwnProperty(key)?table_x[key]:round(Math.log(c), 4);
+   const raw_val=table_raw.hasOwnProperty(key)?table_raw[key]:round(23.459 - 13.633 * x_val, 2);
+   return {raw:raw_val,ideal:raw_val,period:1.0,x:x_val,y:raw_val,valid:c>=0.020&&c<=0.950};
+  }
   if(slug==='adsorption-isotherm-activated-charcoal-freundlich'){
    const ceq=Number(input);
    const table_raw={0.030:0.516, 0.060:0.705, 0.120:0.963, 0.220:1.265, 0.350:1.559, 0.550:1.910};
@@ -595,6 +604,13 @@ function predict(slug,input){
 
 function reading(slug,input,raw){
  let x=Number(input),y=Number(raw);
+  if(slug==='surface-excess-concentration-gibbs-adsorption'){
+   const c=Number(input);
+   const key=round(c, 3);
+   const table_x={0.050:-2.9957, 0.100:-2.3026, 0.200:-1.6094, 0.350:-1.0498, 0.500:-0.6931, 0.800:-0.2231};
+   x=table_x.hasOwnProperty(key)?table_x[key]:round(Math.log(c), 4);
+   y=Number(raw);
+  }
   if(slug==='adsorption-isotherm-activated-charcoal-freundlich'){
    const ceq=Number(input);
    const raw_val=Number(raw);
@@ -956,6 +972,15 @@ function fit(rows){
 }
 
 function estimate(slug,f){
+  if(slug==='surface-excess-concentration-gibbs-adsorption'){
+   const slope=f.m; // in mN/m
+   const R=8.31446;
+   const T=298.15;
+   const RT=R * T;
+   const Gamma_calc=(-slope * 1e-3 / RT) * 1e6; // in umol/m^2
+   const se=(f.slopeSE ? (f.slopeSE * 1e-3 / RT) * 1e6 : 0.005);
+   return {value:Gamma_calc,se:se,reference:5.50};
+  }
   if(slug==='adsorption-isotherm-activated-charcoal-freundlich'){
    const inv_n=f.m;
    const se=f.slopeSE || 0.001;
