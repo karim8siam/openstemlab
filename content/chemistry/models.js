@@ -3,6 +3,30 @@
 const round=(v,n)=>Math.round((v+Number.EPSILON)*10**n)/10**n;
 
 function predict(slug,input){
+  if(slug==='dissociation-constant-weak-acid-spectrophotometry'){
+   const ph=Number(input);
+   const pKa=7.100;
+   const Aa=0.040;
+   const Ab=0.960;
+   const table_raw={6.20:0.143, 6.50:0.225, 6.80:0.347, 7.10:0.500, 7.40:0.653, 7.70:0.775};
+   const table_x={6.20:-0.899, 6.50:-0.599, 6.80:-0.300, 7.10:0.000, 7.40:0.300, 7.70:0.599};
+   const key=round(ph, 2);
+   let raw_val, x_val;
+   if(table_raw.hasOwnProperty(key)){
+    raw_val=table_raw[key];
+    x_val=table_x[key];
+   }else{
+    const ratio=Math.pow(10, ph - pKa);
+    const alpha=ratio / (1.0 + ratio);
+    raw_val=round(Aa + (Ab - Aa) * alpha, 3);
+    const num=raw_val - Aa;
+    const den=Ab - raw_val;
+    x_val=(num > 0 && den > 0) ? round(Math.log10(num / den), 3) : 0.000;
+   }
+   const x=x_val;
+   const y=ph;
+   return {raw:raw_val,ideal:raw_val,period:1.0,x,y,valid:ph>=5.50&&ph<=8.50};
+  }
  if(slug==='polarography-dropping-mercury-ilkovic'){
   const c_mM=Number(input);
   const table_raw={0.200:1.27, 0.500:3.19, 1.000:6.37, 1.500:9.56, 2.000:12.74, 2.500:15.93};
@@ -479,6 +503,18 @@ function predict(slug,input){
 
 function reading(slug,input,raw){
  let x=Number(input),y=Number(raw);
+  if(slug==='dissociation-constant-weak-acid-spectrophotometry'){
+   const ph=Number(input);
+   const raw_val=Number(raw);
+   const table_x={6.20:-0.899, 6.50:-0.599, 6.80:-0.300, 7.10:0.000, 7.40:0.300, 7.70:0.599};
+   const key=round(ph, 2);
+   const Aa=0.040;
+   const Ab=0.960;
+   const num=raw_val - Aa;
+   const den=Ab - raw_val;
+   x=table_x.hasOwnProperty(key)?table_x[key]:((num > 0 && den > 0)?round(Math.log10(num / den), 3):0.000);
+   y=ph;
+  }
  if(slug==='polarography-dropping-mercury-ilkovic'){
   const c_mM=Number(input);
   const raw_val=Number(raw);
@@ -765,6 +801,11 @@ function fit(rows){
 }
 
 function estimate(slug,f){
+  if(slug==='dissociation-constant-weak-acid-spectrophotometry'){
+   const pKa_est=f.b;
+   const se=f.interceptSE || f.slopeSE || 0.005;
+   return {value:pKa_est,se:se,reference:7.100};
+  }
  if(slug==='polarography-dropping-mercury-ilkovic'){
   const m=f.m;
   const n=2;

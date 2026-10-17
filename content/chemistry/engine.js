@@ -87,7 +87,19 @@ function update(){
   $('apparatusDiagram').innerHTML=drawEnzymeKineticsBenchView(p,rawVal);
   return;
  }
- if(cfg.slug==='polarography-dropping-mercury-ilkovic'){
+ if(cfg.slug==='dissociation-constant-weak-acid-spectrophotometry'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawPkaCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawPkaSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawPkaBenchView(p,rawVal);
+  return;
+ }
+  if(cfg.slug==='polarography-dropping-mercury-ilkovic'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawPolarographyCompareView(p,rawVal);
    return;
@@ -264,6 +276,19 @@ function update(){
   const dA_dt = v0_uM * 0.0185;
   $('liveState').textContent='Photometric trace recorded: v₀ = '+v0_uM.toFixed(2)+' μM/min (dA/dt = '+(dA_dt/1000).toFixed(4)+' AU/min).';
   message('Assay complete: v₀ = '+v0_uM.toFixed(2)+' μM/min (1/v₀ = '+inv_v0.toFixed(2)+' min/mM, 1/[S] = '+inv_s.toFixed(2)+' mM⁻¹). Record in notebook.');
+ }else if(cfg.slug==='dissociation-constant-weak-acid-spectrophotometry'){
+  $('liveState').textContent='Ready to record absorbance at buffer pH = '+p.input.toFixed(2)+'.';
+  message('Adjust buffer pH, insert matched quartz cuvette, zero reference blank & record A_616.');
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawPkaCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawPkaSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawPkaBenchView(p,rawVal);
+  return;
  }else if(cfg.slug==='polarography-dropping-mercury-ilkovic'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawPolarographyCompareView(p,rawVal);
@@ -12979,6 +13004,393 @@ function drawPolarographySandboxView(p, rawVal) {
  svg += '<text x="'+(cpX - 22)+'" y="'+(cpY + cpH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7" transform="rotate(-90 '+(cpX-22)+' '+(cpY+cpH/2)+')">Diffusion Current i_d (μA)</text>';
 
  svg += text(360, 314, 'Capillary Constancy: m²/³ t¹/⁶ = 1.956 mg²/³·s⁻¹/² remains invariant at constant 50.0 cm mercury column height.', '#789c80', 8, 'middle');
+
+ return svg;
+}
+
+// ======================================================================
+// Lab 39: Spectrophotometric pKa Determination of Bromothymol Blue
+// ======================================================================
+
+function drawPkaBenchView(p, rawVal) {
+ var ph = p.input || 7.10;
+ var rawA = (rawVal !== null && rawVal !== undefined) ? rawVal : 0.500;
+ var pKa = 7.100;
+ var ratio = Math.pow(10, ph - pKa);
+ var alpha = ratio / (1.0 + ratio);
+ var pctIn = alpha * 100.0;
+ var pctHIn = (1.0 - alpha) * 100.0;
+ var logRatio = Math.log10(ratio);
+ var T_pct = Math.pow(10, -rawA) * 100.0;
+
+ // Color interpolation: yellow (234, 179, 8) -> green (16, 185, 129) -> blue (37, 99, 235)
+ var r_col, g_col, b_col;
+ if (alpha < 0.5) {
+  var t_sub = alpha / 0.5;
+  r_col = Math.round(234 + (16 - 234) * t_sub);
+  g_col = Math.round(179 + (185 - 179) * t_sub);
+  b_col = Math.round(8 + (129 - 8) * t_sub);
+ } else {
+  var t_sub = (alpha - 0.5) / 0.5;
+  r_col = Math.round(16 + (37 - 16) * t_sub);
+  g_col = Math.round(185 + (99 - 185) * t_sub);
+  b_col = Math.round(129 + (235 - 129) * t_sub);
+ }
+ var solColor = 'rgb(' + r_col + ',' + g_col + ',' + b_col + ')';
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a111a');
+ svg += '<defs>';
+ svg += '<linearGradient id="pkaSolGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + solColor + '" stop-opacity="0.85"/><stop offset="100%" stop-color="' + solColor + '" stop-opacity="0.95"/></linearGradient>';
+ svg += '<linearGradient id="pkaBlankGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#38bdf8" stop-opacity="0.08"/><stop offset="100%" stop-color="#38bdf8" stop-opacity="0.18"/></linearGradient>';
+ svg += '<linearGradient id="quartzGlass" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#94a3b8" stop-opacity="0.4"/><stop offset="50%" stop-color="#f8fafc" stop-opacity="0.1"/><stop offset="100%" stop-color="#94a3b8" stop-opacity="0.4"/></linearGradient>';
+ svg += '<filter id="beamGlow"><feGaussianBlur stdDeviation="1.5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+ svg += '</defs>';
+
+ // Header
+ svg += text(20, 24, 'LABORATORY BENCH: DUAL-BEAM SPECTROPHOTOMETER (pKa AT 616.0 nm)', '#f8fafc', 12, 'bold');
+ svg += text(20, 40, 'Bromothymol Blue Indicator (4.00 × 10⁻⁵ M) · 10.00 mm Matched Quartz Cuvettes · 0.100 M Phosphate Buffers (25.0 °C)', '#38bdf8', 9);
+
+ // --- LEFT OPTICAL BENCH (x: 20 to 360, y: 55 to 305) ---
+ svg += rect(20, 55, 345, 250, '#0f172a', '#1e293b', 1.5, 6);
+ svg += text(30, 74, 'Optical Monochromator & Dual-Beam Cell Chamber', '#94a3b8', 7, 'start', 'bold');
+
+ // Tungsten Lamp Housing
+ svg += rect(30, 140, 36, 46, '#1e293b', '#eab308', 1.2, 4);
+ svg += circle(48, 163, 10, '#fef08a', '#eab308', 1.5);
+ svg += text(48, 166, 'W', '#854d0e', 7, 'middle', 'bold');
+ svg += text(48, 198, 'Lamp', '#94a3b8', 6, 'middle');
+
+ // White entrance beam
+ svg += '<line x1="66" y1="163" x2="95" y2="163" stroke="#fef08a" stroke-width="3" filter="url(#beamGlow)"/>';
+
+ // Monochromator Grating Box
+ svg += rect(95, 135, 42, 56, '#1e293b', '#38bdf8', 1, 4);
+ svg += '<line x1="116" y1="140" x2="116" y2="186" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="2,2"/>';
+ svg += text(116, 155, 'Grating', '#94a3b8', 6, 'middle');
+ svg += text(116, 172, '616 nm', '#f97316', 7, 'middle', 'bold');
+
+ // Monochromatic 616 nm orange/amber probe beam
+ svg += '<line x1="137" y1="163" x2="165" y2="163" stroke="#f97316" stroke-width="2.5" filter="url(#beamGlow)"/>';
+
+ // Rotating Chopper / Beam Splitter
+ svg += circle(172, 163, 12, '#334155', '#94a3b8', 1);
+ svg += '<line x1="172" y1="151" x2="172" y2="175" stroke="#f8fafc" stroke-width="1.5"/>';
+ svg += text(172, 185, 'Chopper', '#94a3b8', 5.5, 'middle');
+
+ // Split Beams: Reference beam (top) and Sample beam (bottom)
+ svg += '<path d="M 172 151 L 172 105 L 205 105" fill="none" stroke="#f97316" stroke-width="2" stroke-dasharray="3,2"/>';
+ svg += '<line x1="184" y1="163" x2="205" y2="215" stroke="#f97316" stroke-width="2"/>';
+
+ // Reference Cuvette (top: y: 80 to 130)
+ svg += rect(205, 80, 48, 50, 'url(#quartzGlass)', '#64748b', 1.2, 2);
+ svg += rect(208, 86, 42, 42, 'url(#pkaBlankGrad)', 'none');
+ svg += text(229, 74, 'Reference Cuvette (Blank)', '#38bdf8', 6, 'middle', 'bold');
+ svg += text(229, 110, '0.1 M Buffer', '#94a3b8', 6, 'middle');
+ svg += text(229, 120, 'A = 0.000', '#f8fafc', 6.5, 'middle', 'bold');
+
+ // Sample Cuvette (bottom: y: 190 to 240)
+ svg += rect(205, 190, 48, 50, 'url(#quartzGlass)', '#38bdf8', 1.5, 2);
+ svg += rect(208, 196, 42, 42, 'url(#pkaSolGrad)', 'none');
+ svg += text(229, 184, 'Sample Cuvette (BTB)', '#facc15', 6, 'middle', 'bold');
+ svg += text(229, 215, 'pH = ' + ph.toFixed(2), '#ffffff', 7, 'middle', 'bold');
+ svg += text(229, 227, solColor, '#e2e8f0', 5.5, 'middle');
+
+ // Transmitted beams to detectors
+ svg += '<line x1="253" y1="105" x2="285" y2="105" stroke="#f97316" stroke-width="2" filter="url(#beamGlow)"/>';
+ var transWidth = Math.max(0.5, 2.5 * Math.pow(10, -rawA));
+ svg += '<line x1="253" y1="215" x2="285" y2="215" stroke="#f97316" stroke-width="' + transWidth + '" filter="url(#beamGlow)"/>';
+
+ // Reference Photodiode Detector (top)
+ svg += rect(285, 93, 24, 24, '#1e293b', '#38bdf8', 1, 2);
+ svg += text(297, 107, 'D_ref', '#38bdf8', 6, 'middle', 'bold');
+ svg += text(297, 126, 'I₀ = 100%', '#94a3b8', 5.5, 'middle');
+
+ // Sample Photodiode Detector (bottom)
+ svg += rect(285, 203, 24, 24, '#1e293b', '#22c55e', 1, 2);
+ svg += text(297, 217, 'D_smp', '#22c55e', 6, 'middle', 'bold');
+ svg += text(297, 236, 'I = ' + T_pct.toFixed(1) + '%', '#cbd5e1', 5.5, 'middle');
+
+ // Logarithmic Amplifier Module
+ svg += rect(322, 140, 32, 42, '#1e293b', '#facc15', 1, 3);
+ svg += text(338, 157, 'Log', '#facc15', 6.5, 'middle', 'bold');
+ svg += text(338, 169, 'Amp', '#facc15', 6, 'middle');
+ svg += '<path d="M 309 105 L 338 105 L 338 140" fill="none" stroke="#64748b" stroke-width="1"/>';
+ svg += '<path d="M 309 215 L 338 215 L 338 182" fill="none" stroke="#64748b" stroke-width="1"/>';
+
+ // Optical path length indicator
+ svg += '<line x1="205" y1="247" x2="253" y2="247" stroke="#94a3b8" stroke-width="1"/>';
+ svg += text(229, 257, 'b = 10.00 mm', '#94a3b8', 6, 'middle');
+
+ // Peltier Thermostat Tag
+ svg += rect(205, 265, 48, 16, '#0284c7', 'none', 0, 2);
+ svg += text(229, 276, '25.00 °C', '#ffffff', 6, 'middle', 'bold');
+
+ // --- RIGHT DIGITAL CONSOLE (x: 380 to 700, y: 55 to 305) ---
+ svg += rect(380, 55, 320, 250, '#0f172a', '#334155', 1.5, 6);
+ svg += text(395, 76, 'PRECISION DIGITAL SPECTROPHOTOMETRIC TELEMETRY', '#f8fafc', 8, 'start', 'bold');
+
+ // Primary Readout Displays (Dual Big Cards)
+ // Absorbance Card
+ svg += rect(395, 88, 140, 56, '#020617', '#38bdf8', 1.2, 4);
+ svg += text(405, 102, 'ABSORBANCE (616 nm)', '#38bdf8', 6.5, 'start', 'bold');
+ svg += text(465, 132, rawA.toFixed(3) + ' AU', '#38bdf8', 16, 'middle', 'bold');
+
+ // Transmittance Card
+ svg += rect(545, 88, 140, 56, '#020617', '#22c55e', 1.2, 4);
+ svg += text(555, 102, 'TRANSMITTANCE (%T)', '#22c55e', 6.5, 'start', 'bold');
+ svg += text(615, 132, T_pct.toFixed(2) + ' %', '#22c55e', 16, 'middle', 'bold');
+
+ // Telemetry Data Grid
+ var rowsGrid = [
+  ['Analytical Wavelength', 'λ = 616.0 nm (Bandwidth: 1.0 nm)'],
+  ['Buffer Solution pH', 'pH = ' + ph.toFixed(2) + ' (±0.01 IUPAC)'],
+  ['Pure Acid Absorbance', 'A_acid = 0.040 AU (0.10 M HCl)'],
+  ['Pure Base Absorbance', 'A_base = 0.960 AU (0.10 M NaOH)'],
+  ['Fractional Speciation', '[In⁻] = ' + pctIn.toFixed(1) + '% · [HIn] = ' + pctHIn.toFixed(1) + '%'],
+  ['Log Ionization Ratio', 'log([In⁻]/[HIn]) = ' + (logRatio >= 0 ? '+' : '') + logRatio.toFixed(3)],
+  ['Extracted Indicator pKa', 'pKa = ' + (ph - logRatio).toFixed(3) + ' (Theory: 7.100)']
+ ];
+ for (var i = 0; i < rowsGrid.length; i++) {
+  var ry = 160 + i * 16;
+  svg += rect(395, ry, 290, 14, i % 2 === 0 ? '#1e293b' : '#0f172a', 'none', 0, 2);
+  svg += text(402, ry + 10, rowsGrid[i][0], '#94a3b8', 6, 'start');
+  svg += text(680, ry + 10, rowsGrid[i][1], i === 6 ? '#facc15' : '#f8fafc', 6, 'end', i === 6 ? 'bold' : 'normal');
+ }
+
+ // Status Badges at Bottom
+ svg += rect(395, 280, 88, 18, '#164e63', '#06b6d4', 1, 3);
+ svg += text(439, 292, 'DUAL-BEAM LOCKED', '#22d3ee', 5.5, 'middle', 'bold');
+
+ svg += rect(495, 280, 95, 18, '#14532d', '#22c55e', 1, 3);
+ svg += text(542, 292, 'PELTIER: 25.00 ± 0.02 °C', '#4ade80', 5.5, 'middle', 'bold');
+
+ svg += rect(602, 280, 83, 18, '#312e81', '#6366f1', 1, 3);
+ svg += text(643, 292, 'I = 0.100 M BUFFER', '#a5b4fc', 5.5, 'middle', 'bold');
+
+ return svg;
+}
+
+function drawPkaCompareView(p, rawVal) {
+ var ph = p.input || 7.10;
+ var rawA = (rawVal !== null && rawVal !== undefined) ? rawVal : 0.500;
+ var pKa = 7.100;
+ var ratio = Math.pow(10, ph - pKa);
+ var alpha = ratio / (1.0 + ratio);
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a111a');
+
+ // Header
+ svg += text(20, 24, 'UV-VIS ABSORPTION SPECTRA & ISOBESTIC POINT CONVERGENCE (350–700 nm)', '#f8fafc', 12, 'bold');
+ svg += text(20, 40, 'Yellow Acid HIn (λ_max = 430 nm) ⇌ Blue Conjugate Base In⁻ (λ_max = 616 nm) · Isosbestic Point at 498 nm', '#38bdf8', 9);
+
+ // --- LEFT SPECTRUM PLOT (x: 45 to 475, y: 60 to 275) ---
+ var gx = 45, gy = 60, gw = 430, gh = 215;
+ svg += rect(gx, gy, gw, gh, '#0f172a', '#334155', 1, 4);
+
+ // Grid lines and labels
+ for (var a_val = 0.0; a_val <= 1.0; a_val += 0.2) {
+  var py = gy + gh - (a_val / 1.0) * gh;
+  svg += '<line x1="' + gx + '" y1="' + py + '" x2="' + (gx + gw) + '" y2="' + py + '" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(gx - 8, py + 3, a_val.toFixed(1), '#64748b', 6, 'end');
+ }
+ svg += text(gx - 26, gy + gh/2, 'Absorbance A (AU)', '#94a3b8', 7, 'middle', 'bold');
+
+ for (var w_val = 350; w_val <= 700; w_val += 50) {
+  var px = gx + ((w_val - 350) / 350.0) * gw;
+  svg += '<line x1="' + px + '" y1="' + gy + '" x2="' + px + '" y2="' + (gy + gh) + '" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(px, gy + gh + 12, w_val.toString(), '#64748b', 6, 'middle');
+ }
+ svg += text(gx + gw/2, gy + gh + 24, 'Wavelength λ (nm)', '#94a3b8', 7, 'middle', 'bold');
+
+ // Spectral Curves Generation
+ function getAbsHIn(wl) {
+  var g1 = 0.85 * Math.exp(-Math.pow((wl - 430)/42.0, 2));
+  var tail = 0.04 * Math.exp(-Math.pow((wl - 600)/70.0, 2));
+  return Math.max(0.01, g1 + tail);
+ }
+ function getAbsIn(wl) {
+  var g1 = 0.96 * Math.exp(-Math.pow((wl - 616)/50.0, 2));
+  var tail = 0.05 * Math.exp(-Math.pow((wl - 400)/60.0, 2));
+  return Math.max(0.01, g1 + tail);
+ }
+
+ var ptsAcid = '', ptsBase = '', ptsCur = '';
+ for (var wl = 350; wl <= 700; wl += 5) {
+  var px = gx + ((wl - 350) / 350.0) * gw;
+  var aHIn = getAbsHIn(wl);
+  var aIn = getAbsIn(wl);
+  if (Math.abs(wl - 498) <= 5) {
+   aHIn = 0.320;
+   aIn = 0.320;
+  }
+  var aCur = (1.0 - alpha) * aHIn + alpha * aIn;
+
+  var pyAcid = gy + gh - (aHIn / 1.0) * gh;
+  var pyBase = gy + gh - (aIn / 1.0) * gh;
+  var pyCur = gy + gh - (aCur / 1.0) * gh;
+
+  ptsAcid += (wl === 350 ? 'M ' : 'L ') + px.toFixed(1) + ' ' + pyAcid.toFixed(1) + ' ';
+  ptsBase += (wl === 350 ? 'M ' : 'L ') + px.toFixed(1) + ' ' + pyBase.toFixed(1) + ' ';
+  ptsCur += (wl === 350 ? 'M ' : 'L ') + px.toFixed(1) + ' ' + pyCur.toFixed(1) + ' ';
+ }
+
+ // Render Acid trace (Yellow dashed)
+ svg += '<path d="' + ptsAcid + '" fill="none" stroke="#eab308" stroke-width="1.5" stroke-dasharray="4,3"/>';
+
+ // Render Base trace (Blue dashed)
+ svg += '<path d="' + ptsBase + '" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="4,3"/>';
+
+ // Render Current buffer trace (Vibrant green/cyan solid)
+ svg += '<path d="' + ptsCur + '" fill="none" stroke="#10b981" stroke-width="2.5"/>';
+
+ // Isosbestic Point marker at 498 nm
+ var pxIso = gx + ((498 - 350) / 350.0) * gw;
+ var pyIso = gy + gh - (0.320 / 1.0) * gh;
+ svg += '<line x1="' + pxIso + '" y1="' + gy + '" x2="' + pxIso + '" y2="' + (gy + gh) + '" stroke="#a855f7" stroke-width="1.2" stroke-dasharray="2,2"/>';
+ svg += circle(pxIso, pyIso, 4.5, '#a855f7', '#ffffff', 1.5);
+ svg += text(pxIso, gy + 15, 'Isosbestic Point: 498 nm', '#c084fc', 6.5, 'middle', 'bold');
+
+ // Analytical Wavelength marker at 616 nm
+ var px616 = gx + ((616 - 350) / 350.0) * gw;
+ var py616 = gy + gh - (rawA / 1.0) * gh;
+ svg += '<line x1="' + px616 + '" y1="' + gy + '" x2="' + px616 + '" y2="' + (gy + gh) + '" stroke="#f97316" stroke-width="1.2" stroke-dasharray="2,2"/>';
+ svg += circle(px616, py616, 5, '#f97316', '#ffffff', 1.5);
+ svg += text(px616, gy + gh - 8, 'λ = 616 nm', '#f97316', 6, 'middle', 'bold');
+
+ // --- RIGHT CARD: SPECTRAL INTERPRETATION (x: 490 to 705) ---
+ svg += rect(490, 55, 215, 250, '#0f172a', '#334155', 1.5, 6);
+ svg += text(500, 75, 'SPECTRAL INTERPRETATION', '#f8fafc', 8, 'start', 'bold');
+
+ // Legend Items
+ svg += '<line x1="502" y1="95" x2="526" y2="95" stroke="#eab308" stroke-width="2" stroke-dasharray="4,2"/>';
+ svg += text(532, 98, 'Acid HIn (pH 1.0, λ_max = 430 nm)', '#eab308', 6, 'start', 'bold');
+
+ svg += '<line x1="502" y1="115" x2="526" y2="115" stroke="#3b82f6" stroke-width="2" stroke-dasharray="4,2"/>';
+ svg += text(532, 118, 'Base In⁻ (pH 12.0, λ_max = 616 nm)', '#3b82f6', 6, 'start', 'bold');
+
+ svg += '<line x1="502" y1="135" x2="526" y2="135" stroke="#10b981" stroke-width="2.5"/>';
+ svg += text(532, 138, 'Buffer pH ' + ph.toFixed(2) + ' (A₆₁₆ = ' + rawA.toFixed(3) + ')', '#10b981', 6, 'start', 'bold');
+
+ // Explanatory Text Box
+ var infoLines = [
+  '• Clean Isosbestic Intersection (498 nm):',
+  '  Invariant absorbance A = 0.320 AU across all',
+  '  pH values proves that only two absorbing species',
+  '  exist in reversible 1:1 chemical equilibrium.',
+  '• Absorbance Span at 616 nm:',
+  '  ΔA = A_base − A_acid = 0.960 − 0.040 = 0.920 AU.',
+  '  High analytical sensitivity: ε_base ≈ 24,000.',
+  '• Henderson-Hasselbalch Speciation:',
+  '  Fractional In⁻: α = ' + (alpha * 100.0).toFixed(1) + ' %',
+  '  Fractional HIn: 1−α = ' + ((1.0 - alpha) * 100.0).toFixed(1) + ' %'
+ ];
+ for (var j = 0; j < infoLines.length; j++) {
+  svg += text(500, 160 + j * 12.5, infoLines[j], j % 4 === 0 ? '#38bdf8' : '#cbd5e1', 5.5, 'start', j % 4 === 0 ? 'bold' : 'normal');
+ }
+
+ return svg;
+}
+
+function drawPkaSandboxView(p, rawVal) {
+ var ph = p.input || 7.10;
+ var rawA = (rawVal !== null && rawVal !== undefined) ? rawVal : 0.500;
+ var pKa = 7.100;
+ var ratio = Math.pow(10, ph - pKa);
+ var alpha = ratio / (1.0 + ratio);
+ var pctIn = alpha * 100.0;
+ var pctHIn = (1.0 - alpha) * 100.0;
+ var logRatio = Math.log10(ratio);
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a111a');
+
+ // Header
+ svg += text(20, 24, 'HENDERSON-HASSELBALCH SPECIATION & CHEMICAL EQUILIBRIUM SANDBOX', '#f8fafc', 12, 'bold');
+ svg += text(20, 40, 'Equilibrium: HIn (Yellow, Acid) ⇌ H⁺ + In⁻ (Blue, Base) · Exact 50% Inflection at pKa = 7.100', '#38bdf8', 9);
+
+ // --- LEFT SPECIATION CURVES (x: 45 to 445, y: 60 to 275) ---
+ var gx = 45, gy = 60, gw = 400, gh = 215;
+ svg += rect(gx, gy, gw, gh, '#0f172a', '#334155', 1, 4);
+
+ // Grid lines and labels (0 to 100%)
+ for (var pct = 0; pct <= 100; pct += 20) {
+  var py = gy + gh - (pct / 100.0) * gh;
+  svg += '<line x1="' + gx + '" y1="' + py + '" x2="' + (gx + gw) + '" y2="' + py + '" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(gx - 8, py + 3, pct + '%', '#64748b', 6, 'end');
+ }
+ svg += text(gx - 26, gy + gh/2, 'Species Percentage (%)', '#94a3b8', 7, 'middle', 'bold');
+
+ for (var p_grid = 5.5; p_grid <= 8.5; p_grid += 0.5) {
+  var px = gx + ((p_grid - 5.5) / 3.0) * gw;
+  svg += '<line x1="' + px + '" y1="' + gy + '" x2="' + px + '" y2="' + (gy + gh) + '" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(px, gy + gh + 12, p_grid.toFixed(1), '#64748b', 6, 'middle');
+ }
+ svg += text(gx + gw/2, gy + gh + 24, 'Solution pH', '#94a3b8', 7, 'middle', 'bold');
+
+ // Plot Sigmoidal Curves
+ var ptsHIn = '', ptsIn = '';
+ for (var p_step = 5.5; p_step <= 8.5; p_step += 0.05) {
+  var px = gx + ((p_step - 5.5) / 3.0) * gw;
+  var r_sub = Math.pow(10, p_step - pKa);
+  var a_sub = r_sub / (1.0 + r_sub);
+  var pct_base = a_sub * 100.0;
+  var pct_acid = (1.0 - a_sub) * 100.0;
+
+  var pyBase = gy + gh - (pct_base / 100.0) * gh;
+  var pyAcid = gy + gh - (pct_acid / 100.0) * gh;
+
+  ptsIn += (p_step === 5.5 ? 'M ' : 'L ') + px.toFixed(1) + ' ' + pyBase.toFixed(1) + ' ';
+  ptsHIn += (p_step === 5.5 ? 'M ' : 'L ') + px.toFixed(1) + ' ' + pyAcid.toFixed(1) + ' ';
+ }
+
+ // Render Acid speciation curve (Yellow)
+ svg += '<path d="' + ptsHIn + '" fill="none" stroke="#eab308" stroke-width="2.5"/>';
+
+ // Render Base speciation curve (Blue)
+ svg += '<path d="' + ptsIn + '" fill="none" stroke="#3b82f6" stroke-width="2.5"/>';
+
+ // Equivalence Point Line at pKa = 7.10
+ var pxPka = gx + ((7.10 - 5.5) / 3.0) * gw;
+ var pyHalf = gy + gh - 0.5 * gh;
+ svg += '<line x1="' + pxPka + '" y1="' + gy + '" x2="' + pxPka + '" y2="' + (gy + gh) + '" stroke="#a855f7" stroke-width="1.2" stroke-dasharray="3,2"/>';
+ svg += circle(pxPka, pyHalf, 5, '#a855f7', '#ffffff', 1.5);
+ svg += text(pxPka, gy + 15, 'pKa = 7.100 (50% / 50%)', '#c084fc', 6.5, 'middle', 'bold');
+
+ // Current Experimental pH Line & Markers
+ var pxCur = gx + ((ph - 5.5) / 3.0) * gw;
+ var pyCurIn = gy + gh - (pctIn / 100.0) * gh;
+ var pyCurHIn = gy + gh - (pctHIn / 100.0) * gh;
+ svg += '<line x1="' + pxCur + '" y1="' + gy + '" x2="' + pxCur + '" y2="' + (gy + gh) + '" stroke="#10b981" stroke-width="1.5"/>';
+ svg += circle(pxCur, pyCurIn, 4.5, '#3b82f6', '#ffffff', 1.5);
+ svg += circle(pxCur, pyCurHIn, 4.5, '#eab308', '#ffffff', 1.5);
+
+ // --- RIGHT INTERACTION PANEL (x: 460 to 705) ---
+ svg += rect(460, 55, 245, 250, '#0f172a', '#334155', 1.5, 6);
+ svg += text(470, 75, 'EQUILIBRIUM THERMODYNAMICS', '#f8fafc', 8, 'start', 'bold');
+
+ // Current State Display Card
+ svg += rect(470, 88, 225, 60, '#020617', '#10b981', 1, 4);
+ svg += text(480, 103, 'BUFFER COORDINATE: pH = ' + ph.toFixed(2), '#10b981', 7, 'start', 'bold');
+ svg += text(480, 122, '[In⁻] Base = ' + pctIn.toFixed(1) + '% (Blue Form)', '#38bdf8', 6.5, 'start', 'bold');
+ svg += text(480, 137, '[HIn] Acid = ' + pctHIn.toFixed(1) + '% (Yellow Form)', '#facc15', 6.5, 'start', 'bold');
+
+ // Thermodynamic Summary
+ var thermoLines = [
+  '• Equilibrium Ratio [In⁻]/[HIn] = ' + ratio.toFixed(3),
+  '• Logarithmic Ratio log₁₀(Ratio) = ' + (logRatio >= 0 ? '+' : '') + logRatio.toFixed(3),
+  '• Henderson-Hasselbalch Equation:',
+  '  pH = pKa + log₁₀([In⁻]/[HIn])',
+  '  ' + ph.toFixed(2) + ' = 7.100 + (' + (logRatio >= 0 ? '+' : '') + logRatio.toFixed(3) + ')',
+  '• Standard Dissociation Gibbs Free Energy:',
+  '  ΔG° = 2.303 · R · T · pKa = +40.53 kJ/mol',
+  '• Thermodynamic Ka = 7.94 × 10⁻⁸ mol/L',
+  '• Color Perception: ' + (ph < 6.8 ? 'Yellow' : (ph > 7.4 ? 'Blue' : 'Emerald Green'))
+ ];
+ for (var k = 0; k < thermoLines.length; k++) {
+  svg += text(472, 163 + k * 13, thermoLines[k], k === 2 || k === 5 ? '#38bdf8' : '#cbd5e1', 5.5, 'start', k === 2 || k === 5 ? 'bold' : 'normal');
+ }
 
  return svg;
 }

@@ -159,6 +159,25 @@ def observation(c,value):
   v0_mM=raw / 1000.0
   y=rnd(1.0 / v0_mM, 2)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='dissociation-constant-weak-acid-spectrophotometry':
+  ph=float(value)
+  Aa=0.040
+  Ab=0.960
+  table_raw={6.20:0.143, 6.50:0.225, 6.80:0.347, 7.10:0.500, 7.40:0.653, 7.70:0.775}
+  table_x={6.20:-0.899, 6.50:-0.599, 6.80:-0.300, 7.10:0.000, 7.40:0.300, 7.70:0.599}
+  key=round(ph, 2)
+  if key in table_raw:
+   raw=table_raw[key]
+   x=table_x[key]
+  else:
+   ratio=10.0**(ph - 7.100)
+   alpha=ratio / (1.0 + ratio)
+   raw=round(Aa + (Ab - Aa) * alpha, 3)
+   num=raw - Aa
+   den=Ab - raw
+   x=round(math.log10(num / den), 3) if num > 0 and den > 0 else 0.000
+  y=ph
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='polarography-dropping-mercury-ilkovic':
   c_mM=float(value)
   table_raw={0.200:1.27, 0.500:3.19, 1.000:6.37, 1.500:9.56, 2.000:12.74, 2.500:15.93}
@@ -550,6 +569,10 @@ def estimate(c,f):
   D_scaled=D_est * 1e6
   se=abs(f.get('slopeSE', 0.05)) / prefactor * 2.0 * math.sqrt(D_est) * 1e6
   return D_scaled, se, 7.60
+ elif slug=='dissociation-constant-weak-acid-spectrophotometry':
+  pKa_est=f['b']
+  se=f.get('interceptSE', f.get('slopeSE', 0.005))
+  return pKa_est, se, 7.100
  elif slug=='polarography-dropping-mercury-ilkovic':
   m=f['m']
   n=2
@@ -740,6 +763,10 @@ def formula(c,f):
   D_est=((m * 1e-6) / prefactor)**2
   D_scaled=D_est * 1e6
   return f"Randles-Ševčík Fit: i_pc = {fmt(m,2)}·ν¹/² + {fmt(b,3)} μA; Diffusion Coefficient D = {fmt(D_scaled,2)} × 10⁻⁶ cm²·s⁻¹; Peak Separation ΔE_p = 59.2 mV"
+ elif slug=='dissociation-constant-weak-acid-spectrophotometry':
+  m=f['m']
+  b=f['b']
+  return f"Henderson-Hasselbalch Fit: pH = {fmt(m,4)}·log([In⁻]/[HIn]) + {fmt(b,3)}; Acid Dissociation Exponent pKa = {fmt(b,3)}; Ka = 7.94 × 10⁻⁸ M"
  elif slug=='polarography-dropping-mercury-ilkovic':
   m=f['m']
   b=f['b']
@@ -1286,6 +1313,47 @@ def worked(c,row):
    f"   Scaled diffusion coefficient: D = {fmt(D_scaled, 2)} × 10⁻⁶ cm²·s⁻¹.\n"
    f"   Literature reference benchmark at 25.00 °C: D = 7.60 × 10⁻⁶ cm²·s⁻¹ (percentage difference = {fmt(abs(D_scaled - 7.60)/7.60*100.0, 4)}%).\n"
    f"   Transient Nernst diffusion layer thickness at ν = {fmt(v_val,1)} mV/s: δ ≈ √(π·D·t) = {fmt(math.sqrt(math.pi * D_est * (0.70/(v_val*1e-3)))*1e4, 1)} μm."
+  )
+ elif slug=='dissociation-constant-weak-acid-spectrophotometry':
+  ph_val=row['input']
+  raw=row['raw']
+  x_val=row['x']
+  y_val=row['y']
+  Aa=0.040
+  Ab=0.960
+  num=raw - Aa
+  den=Ab - raw
+  ratio=num / den if den > 0 else 1.0
+  log_rat=math.log10(ratio) if ratio > 0 else 0.0
+  alpha=num / (Ab - Aa)
+  pKa_calc=ph_val - log_rat
+  R_gas=8.31446
+  T_kelvin=298.15
+  dG_calc=2.302585 * R_gas * T_kelvin * 7.100 * 1e-3
+  return (
+   f"1. Spectrophotometric Absorption Coordinates & Equilibrium Parameters at 25.00 °C:\n"
+   f"   Buffer solution equilibrium pH: pH = {fmt(ph_val, 2)} (measured with combined glass electrode calibrated against NIST buffers).\n"
+   f"   Analytical wavelength: λ_max = 616.0 nm (absorption band of deprotonated blue conjugate base In⁻).\n"
+   f"   Measured steady-state absorbance: A_616 = {fmt(raw, 3)} AU (in matched 10.00 mm quartz cuvette against buffer blank).\n"
+   f"   Limiting absorbance of pure acid form (pH 1.0 in 0.10 M HCl): A_acid = {fmt(Aa, 3)} AU.\n"
+   f"   Limiting absorbance of pure base form (pH 12.0 in 0.10 M NaOH): A_base = {fmt(Ab, 3)} AU.\n"
+   f"   Total absorbance span: ΔA_max = A_base − A_acid = {fmt(Ab - Aa, 3)} AU.\n"
+   f"\n"
+   f"2. Speciation Breakdown via Beer-Lambert Additivity:\n"
+   f"   Apparent fractional conversion to base: α = (A − A_acid) / (A_base − A_acid) = ({fmt(raw, 3)} − {fmt(Aa, 3)}) / {fmt(Ab - Aa, 3)} = {fmt(alpha, 4)} ({fmt(alpha*100.0, 2)}% In⁻).\n"
+   f"   Fraction remaining in acid form: 1 − α = {fmt(1.0 - alpha, 4)} ({fmt((1.0 - alpha)*100.0, 2)}% HIn).\n"
+   f"   Base-to-acid concentration ratio: [In⁻] / [HIn] = (A − A_acid) / (A_base − A) = ({fmt(raw, 3)} − {fmt(Aa, 3)}) / ({fmt(Ab, 3)} − {fmt(raw, 3)}) = {fmt(num, 3)} / {fmt(den, 3)} = {fmt(ratio, 4)}.\n"
+   f"   Logarithmic ionization coordinate (X-axis metric): x = log₁₀([In⁻] / [HIn]) = log₁₀({fmt(ratio, 4)}) = {fmt(log_rat, 3)}.\n"
+   f"\n"
+   f"3. Henderson-Hasselbalch Single-Point Estimation:\n"
+   f"   Henderson-Hasselbalch formulation: pH = pKa + log₁₀([In⁻] / [HIn])  ⇒  pKa = pH − log₁₀([In⁻] / [HIn]).\n"
+   f"   Apparent single-point pKa: pKa = {fmt(ph_val, 2)} − ({fmt(log_rat, 3)}) = {fmt(pKa_calc, 3)}.\n"
+   f"\n"
+   f"4. Multi-Point Linear Regression & Thermodynamic Free Energy:\n"
+   f"   Ordinary least-squares regression across six buffer coordinates (pH 6.20 to 7.70) yields:\n"
+   f"   Slope m = 1.00124 (verifying theoretical Nernstian unit slope within 0.12%) and Y-intercept b = pKa = 7.10002 with R² = 0.9999997.\n"
+   f"   Thermodynamic acid dissociation constant: Ka = 10^(−7.100) = 7.94 × 10⁻⁸ mol·L⁻¹.\n"
+   f"   Standard Gibbs free energy of ionization: ΔG° = 2.302585 · R · T · pKa = 2.302585 × 8.31446 × 298.15 × 7.100 = {fmt(dG_calc, 2)} kJ·mol⁻¹."
   )
  elif slug=='polarography-dropping-mercury-ilkovic':
   c_val=row['input']
@@ -2113,6 +2181,32 @@ def uncertainty_text(c):
    "propagate as u_r(D) = √[ 4(u(m)/m)² + 4(u(A)/A)² + 4(u(c)/c)² + (u(T)/T)² ] = √[ 4(0.0001)² + 4(0.0033)² + 4(0.0012)² + (0.00007)² ] = 0.70%. "
    "For an empirical diffusion coefficient D = 7.60 × 10⁻⁶ cm²·s⁻¹, the expanded uncertainty at the 95% confidence level (coverage factor k = 2) "
    "is U(D) = ±0.11 × 10⁻⁶ cm²·s⁻¹ (1.4%), confirming exceptional concordance with the authoritative literature benchmark (7.60 ± 0.05 × 10⁻⁶ cm²·s⁻¹)."
+  )
+ elif slug=='dissociation-constant-weak-acid-spectrophotometry':
+  return (
+   "In the high-precision determination of weak acid dissociation constants via dual-beam UV-Vis spectrophotometry, "
+   "metrological uncertainties and physical boundary conditions are rigorously quantified across photometric, potentiometric, "
+   "volumetric, thermal, and ionic strength domains: "
+   "(1) Photometric Accuracy & Stray Light Elimination: The double-beam spectrophotometer with blazed holographic grating "
+   "possesses a certified photometric accuracy of ±0.002 AU and stray radiant energy < 0.01% T at 616 nm. For sample absorbances "
+   "between 0.143 AU and 0.775 AU (corresponding to transmittances between 72% and 17%), optical noise falls strictly within the "
+   "optimal Twyman-Lothian precision window, minimizing photometric transmittance error dT/T to < 0.3%. "
+   "(2) Quartz Cuvette Path Length & Window Matching: Matched 1.000 cm quartz cuvettes are certified to 10.00 ± 0.01 mm internal "
+   "optical path length (relative uncertainty u(b)/b = 0.10%). Cuvette window optical transmission matching against deionized water "
+   "is verified to ±0.001 AU prior to every trial, eliminating path-length disparity and reflection artifacts. "
+   "(3) Potentiometric pH Measurement & Liquid Junction Potential: The combined glass-reference electrode is calibrated using "
+   "traceable NIST buffers (pH 4.01, 7.00, and 10.01) at 25.00 °C. The standard uncertainty of equilibrium pH readings is u(pH) = ±0.010. "
+   "Liquid junction potentials between the 3 M KCl filling solution and the 0.100 M phosphate test buffers are suppressed by using an "
+   "equi-transferent ceramic diaphragm junction. "
+   "(4) Constant Ionic Strength & Activity Coefficient Invariance: All buffer solutions are formulated with constant total ionic "
+   "strength I = 0.100 M (using NaH₂PO₄ / Na₂HPO₄ / NaCl). According to the extended Debye-Hückel limiting law, maintaining unvarying "
+   "ionic strength fixes the activity coefficient ratio (γ_H⁺ · γ_In⁻ / γ_HIn), ensuring that the apparent mixed ionization constant "
+   "remains completely stationary across the titration curve. "
+   "(5) Multi-Point Least-Squares Regression & Uncertainty Propagation: Ordinary least-squares regression of pH versus log([In⁻]/[HIn]) "
+   "across six discrete buffer coordinates yields an empirical slope m = 1.0012 ± 0.0003 (unitless) and an intercept b = 7.1000 ± 0.0001 "
+   "with an ideal coefficient of determination R² = 0.9999997. Propagating the combined uncertainties u(pH), u(A), u(A_acid), and u(A_base) "
+   "yields an expanded uncertainty for the acid dissociation constant of U(pKa) = ±0.010 at the 95% confidence level (coverage factor k = 2), "
+   "demonstrating extraordinary concordance with the authoritative literature benchmark (7.100 ± 0.010)."
   )
  elif slug=='polarography-dropping-mercury-ilkovic':
   return (
@@ -3544,6 +3638,73 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"invariant peak potential separation ΔE_p = 59.2 mV and current ratio |i_pa / i_pc| = 1.000 confirming ideal Nernstian reversibility. The extracted "
    f"diffusion coefficient agrees with authoritative electrochemistry literature benchmarks within {fmt(abs(D_val - 7.60)/7.60*100.0, 4)}% relative deviation, "
    f"demonstrating the high metrological precision of the Randles-Ševčík formulation for diagnostic electrochemistry."
+  )
+  
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='dissociation-constant-weak-acid-spectrophotometry':
+  m_val=f['m']
+  b_val=f['b']
+  pKa_val=value
+  r2_val=f['r2']
+  
+  abstract=(
+   f"The thermodynamic acid dissociation constant (pKa) and ionization energetics of Bromothymol Blue (BTB) indicator were determined "
+   f"at 25.00 ± 0.02 °C using precision dual-beam UV-Vis spectrophotometry across six 0.100 M phosphate buffer solutions from pH 6.20 to 7.70. "
+   f"Limiting optical absorbances of the pure protonated yellow acid (HIn, λ_max = 430 nm) and pure deprotonated blue conjugate base (In⁻, "
+   f"λ_max = 616 nm) were established at 616.0 nm in 0.10 M HCl (A_acid = 0.040 ± 0.002 AU) and 0.10 M NaOH (A_base = 0.960 ± 0.002 AU) "
+   f"in matched 10.00 mm quartz cuvettes. Across the buffer transition series, steady-state absorbances at 616.0 nm increased systematically from "
+   f"0.143 AU at pH 6.20 to 0.775 AU at pH 7.70, reflecting the stoichiometric interconversion between conjugate acid and base forms. "
+   f"Spectral scanning from 350 to 700 nm revealed an invariant isosbestic point at λ_iso = 498.0 nm with constant absorbance A_iso = 0.320 AU, "
+   f"providing definitive spectroscopic confirmation of a clean two-state equilibrium devoid of intermediate aggregates or photochemical decomposition. "
+   f"Ordinary least-squares linear regression of solution pH against the logarithmic ionization ratio log₁₀[(A − A_acid)/(A_base − A)] yielded an "
+   f"empirical slope of m = {fmt(m_val, 4)} (matching theoretical unity within 0.12%) and a Y-intercept of b = pKa = {fmt(pKa_val, 3)} with an ideal "
+   f"coefficient of determination R² = {fmt(r2_val, 6)}. The extracted thermodynamic acid dissociation constant Ka = 7.94 × 10⁻⁸ mol·L⁻¹ "
+   f"(pKa = {fmt(pKa_val, 3)} ± 0.005) corresponds to a standard Gibbs free energy of dissociation ΔG° = +40.53 kJ·mol⁻¹, showing exact "
+   f"agreement with authoritative physical chemistry literature benchmarks (percentage difference = {percent:.4f}%)."
+  )
+  
+  graph_choice=(
+   f"The primary analytical visualization models the linearized Henderson-Hasselbalch equation: pH = m · log₁₀[(A − A_acid) / (A_base − A)] + pKa, "
+   f"where solution pH serves as the dependent variable on the ordinate (Y-axis) and the logarithmic ionization ratio log₁₀([In⁻]/[HIn]) represents "
+   f"the independent variable on the abscissa (X-axis). This coordinate representation is derived directly from the fundamental definition of the "
+   f"acid dissociation constant Ka = [H⁺][In⁻]/[HIn] combined with Beer-Lambert additivity: A = A_acid·(1 − α) + A_base·α. "
+   f"Under this linear formulation, an ideal monoprotic weak acid must produce a straight line with a theoretical slope of exactly m = 1.0000. "
+   f"Plotting pH versus log₁₀[(A − A_acid)/(A_base − A)] across six discrete buffer coordinates confirms exceptional linear adherence (R² = {fmt(r2_val, 6)}). "
+   f"The empirical Y-intercept at log₁₀([In⁻]/[HIn]) = 0 (where [In⁻] = [HIn] = 50% speciation) directly isolates the acid dissociation constant pKa = {fmt(b_val, 3)}, "
+   f"completely immune to single-point photometric noise or baseline drift."
+  )
+  
+  discussion=(
+   f"The spectrophotometric investigation provides comprehensive insight into acid-base thermodynamics, optical chromophore mechanics, "
+   f"and solution speciation equilibria. The profound spectral shift exhibited by Bromothymol Blue—transitioning from vibrant yellow at pH < 6 "
+   f"to deep cobalt blue at pH > 8—originates in the electronic reorganization of the sulfonephthalein dye framework. In strongly acidic medium, "
+   f"the indicator exists predominantly as the neutral or monoanionic sultone/phenol form (HIn), wherein the central carbon atom participates in "
+   f"a strained three-ring system with localized π-electron density, giving rise to an absorption maximum at 430 nm in the high-energy blue-violet region. "
+   f"Deprotonation of the phenolic hydroxyl group at neutral to alkaline pH induces spontaneous cleavage of the sultone ring, generating a planar, "
+   f"fully conjugated quinoid dianion (In⁻). The extensive π-electron delocalization across the entire triphenylmethane skeleton dramatically lowers "
+   f"the energy gap between highest occupied molecular orbital (HOMO) and lowest unoccupied molecular orbital (LUMO), red-shifting the absorption "
+   f"band to λ_max = 616 nm with an intense molar absorptivity ε_base ≈ 24,000 L·mol⁻¹·cm⁻¹.\n\n"
+   f"The presence of an invariant isosbestic point at λ_iso = 498.0 nm (A_iso = 0.320 AU) across all six buffer solutions provides rigorous spectroscopic "
+   f"proof that only two absorbing chemical species participate in the equilibrium. According to Beer's law for a multi-component system, an isosbestic "
+   f"point occurs if and only if the molar absorptivities of both conjugate forms are exactly identical: ε_HIn(λ_iso) = ε_In⁻(λ_iso). Any side reactions, "
+   f"such as indicator dimerization, micellar encapsulation, or photo-oxidation, would destroy the sharp intersection and cause spectral smearing.\n\n"
+   f"The multi-point linear regression verified the theoretical Henderson-Hasselbalch slope to within 0.12% (empirical slope m = {fmt(m_val, 4)} vs 1.0000). "
+   f"This near-perfect adherence proves that Bromothymol Blue behaves as an ideal monoprotic weak acid under the experimental ionic conditions (I = 0.100 M). "
+   f"At the inflection midpoint (pH = pKa = {fmt(pKa_val, 3)}), the measured absorbance A = 0.500 AU matches the exact arithmetic mean of the limiting "
+   f"absorbances: A_half = (A_acid + A_base) / 2 = (0.040 + 0.960) / 2 = 0.500 AU, confirming equal speciation [In⁻] = [HIn] = 50.0%.\n\n"
+   f"The extracted thermodynamic constant pKa = {fmt(pKa_val, 3)} ± 0.005 corresponds to an ionization equilibrium constant Ka = 7.94 × 10⁻⁸ mol·L⁻¹ "
+   f"and standard Gibbs free energy of dissociation ΔG° = +40.53 kJ·mol⁻¹. The positive sign of ΔG° reflects the non-spontaneous standard state dissociation, "
+   f"dictated by the electrostatic work required to separate the proton from the divalent quinoid core and the substantial entropic ordering of water "
+   f"dipoles (electrostriction) around the newly generated ionic charges."
+  )
+  
+  conclusion=(
+   f"The thermodynamic acid dissociation constant of Bromothymol Blue indicator in 0.100 M phosphate buffer at 25.00 °C was successfully "
+   f"determined as pKa = {fmt(pKa_val, 3)} ± 0.005 (Ka = 7.94 × 10⁻⁸ mol·L⁻¹) using dual-beam UV-Vis spectrophotometry at 616.0 nm. "
+   f"The experimental data adhered rigorously to the linearized Henderson-Hasselbalch equation (R² = {fmt(r2_val, 6)}) across the pH range 6.20 to 7.70, "
+   f"with an empirical slope m = {fmt(m_val, 4)} confirming theoretical unity. A sharp isosbestic point at 498.0 nm validated ideal two-component equilibrium. "
+   f"The extracted pKa agrees with accepted literature benchmarks within {percent:.4f}% relative deviation, establishing an authoritative laboratory "
+   f"demonstration of spectrophotometric equilibrium analysis."
   )
   
   return abstract, graph_choice, discussion, conclusion
