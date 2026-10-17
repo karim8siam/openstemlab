@@ -7,6 +7,8 @@ def experiment_index(experiments):
  configs={c['slug']:c for c in json.loads((ROOT/'content/physics/experiments.json').read_text())}
  if (ROOT/'content/cs/experiments.json').exists():
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/cs/experiments.json').read_text())})
+ if (ROOT/'content/chemistry/experiments.json').exists():
+  configs.update({c['slug']:c for c in json.loads((ROOT/'content/chemistry/experiments.json').read_text())})
  index=[]
  aliases={'simple-pendulum':'gravity g oscillation bob string time period','bifilar-suspension':'rotation inertia rod oscillation strings','young-modulus':'youngs modulus elasticity stress strain wire stretching','stokes-viscosity':'stokes law fluid liquid sphere terminal velocity','convex-lens':'optics focal length lens image uv method','photoelectric-effect':'photon light planck constant stopping potential work function','ohms-law':'ohm ohms law current voltage resistor resistance circuit ammeter voltmeter','metre-bridge':'meter metre wheatstone bridge null galvanometer unknown resistance','rc-charging':'capacitor capacitance resistor rc charge time constant exponential','glass-slab':'refraction refractive index apparent real depth glass microscope','diffraction-grating':'diffraction interference grating spectrum wavelength laser light','hookes-law':'hooke hookes law spring constant stiffness elasticity elongation extension load force','density-measurement':'density mass volume archimedes copper displacement solid balance cylinder','vernier-micrometer':'vernier caliper micrometer screw gauge least count zero error pi circumference diameter length measurement metrology','friction-laws':'friction laws amontons coulomb sliding kinetic static normal force coefficient dynamometer','principle-of-moments':'principle moments torque center gravity lever parallel forces fulcrum meter rule rotational equilibrium balance steelyard','force-table':'force table concurrent forces vector addition resultant equilibrant components pulleys ring equilibrium parallelogram law','equilibrium-forces':'parallel forces non-concurrent rigid body equilibrium beam reactions dynamometers support moments translational rotational static equilibrium',
   'free-fall':'free fall acceleration gravity g spark timer drop tower kinematics uniformly accelerated motion plummet photogate',
@@ -68,11 +70,19 @@ def experiment_index(experiments):
     'lru-cache-replacement':'lru cache page replacement least recently used second chance clock algorithm fifo first in first out belady anomaly optimal page replacement min working set denning temporal locality spatial locality doubly linked hash map cache miss hit ratio effective memory access time emat virtual memory os operating system',
     'a-star-pathfinding-heuristics':'a star a* pathfinding heuristic search admissible consistent manhattan euclidean chebyshev octile open set closed set priority queue min heap edge relaxation state space exploration dijkstra greedy best first jump point search jps ida* shortest path graph navigation',
     'fast-fourier-transform':'fast fourier transform fft cooley tukey radix-2 decimation in time dit butterfly operation twiddle factor roots of unity bit reversal permutation convolution theorem polynomial multiplication frequency domain spectral analysis discrete fourier transform dft ifft signal processing',
-    'relational-query-optimization':'relational query optimization execution relational algebra equivalence predicate pushdown projection pruning cost-based join nested loop block nested loop index nested loop sort merge join hash join grace hash join selinger dynamic programming system r left deep tree interesting order cardinality estimation selectivity histogram tipping point b+ tree index scan buffer pool'}
+    'relational-query-optimization':'relational query optimization execution relational algebra equivalence predicate pushdown projection pruning cost-based join nested loop block nested loop index nested loop sort merge join hash join grace hash join selinger dynamic programming system r left deep tree interesting order cardinality estimation selectivity histogram tipping point b+ tree index scan buffer pool',
+    'density-mass-volume-precision':'precision density determination analytical balance volumetric pycnometry burette pipette water buoyancy correction archimedes mass volume least squares regression metrology'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
-  sub='computer-science' if '/computer-science/' in exp.get('page_path','') else 'physics'
-  sub_name='Computer Science' if sub=='computer-science' else 'Physics'
+  if '/computer-science/' in exp.get('page_path',''):
+   sub='computer-science'
+   sub_name='Computer Science'
+  elif '/chemistry/' in exp.get('page_path',''):
+   sub='chemistry'
+   sub_name='Chemistry'
+  else:
+   sub='physics'
+   sub_name='Physics'
   index.append({'slug':exp['slug'],'title':c.get('title',exp['title']),'subject':sub,'subjectName':sub_name,'path':exp['page_path'],'summary':c.get('aim','Determine Planck’s constant from stopping potential and frequency.'),'keywords':' '.join([aliases.get(exp['slug'],''),*[a['name'] for a in c.get('apparatus',[])]])})
  return index
 
