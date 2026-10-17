@@ -159,6 +159,18 @@ def observation(c,value):
   v0_mM=raw / 1000.0
   y=rnd(1.0 / v0_mM, 2)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='fluorescence-quenching-stern-volmer':
+  cq=float(value)
+  table_raw={0.0020:82.64, 0.0050:65.57, 0.0100:48.78, 0.0150:38.83, 0.0200:32.26, 0.0250:27.59}
+  table_y={0.0020:1.2101, 0.0050:1.5251, 0.0100:2.0500, 0.0150:2.5753, 0.0200:3.0998, 0.0250:3.6245}
+  key=round(cq, 4)
+  if key in table_raw:
+   raw=table_raw[key]
+  else:
+   raw=round(100.00 / (1.0 + 105.0 * cq), 2)
+  x=cq
+  y=table_y.get(key, round(100.00 / raw, 4))
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='job-method-continuous-variation-complex-stoichiometry':
   vl=float(value)
   table_raw={1.00:0.573, 2.00:1.060, 3.00:1.435, 4.00:1.674, 5.00:1.756, 6.00:1.674}
@@ -605,6 +617,10 @@ def estimate(c,f):
   D_scaled=D_est * 1e6
   se=abs(f.get('slopeSE', 0.05)) / prefactor * 2.0 * math.sqrt(D_est) * 1e6
   return D_scaled, se, 7.60
+ elif slug=='fluorescence-quenching-stern-volmer':
+  k_sv_est=f['m']
+  se=f.get('slopeSE', 0.05)
+  return k_sv_est, se, 105.0
  elif slug=='job-method-continuous-variation-complex-stoichiometry':
   n_est=f['m']
   se=f.get('slopeSE', 0.005)
@@ -813,6 +829,12 @@ def formula(c,f):
   D_est=((m * 1e-6) / prefactor)**2
   D_scaled=D_est * 1e6
   return f"Randles-Ševčík Fit: i_pc = {fmt(m,2)}·ν¹/² + {fmt(b,3)} μA; Diffusion Coefficient D = {fmt(D_scaled,2)} × 10⁻⁶ cm²·s⁻¹; Peak Separation ΔE_p = 59.2 mV"
+ elif slug=='fluorescence-quenching-stern-volmer':
+  m=f['m']
+  b=f['b']
+  tau0=18.50e-9
+  kq_est=m / tau0
+  return f"Stern-Volmer Linear Fit: F₀/F = {fmt(m,2)}·[Cl⁻] + {fmt(b,4)}; Quenching Constant K_SV = {fmt(m,1)} M⁻¹; Bimolecular Rate kq = {fmt(kq_est*1e-9,2)} × 10⁹ M⁻¹·s⁻¹"
  elif slug=='job-method-continuous-variation-complex-stoichiometry':
   m=f['m']
   b=f['b']
@@ -1377,6 +1399,44 @@ def worked(c,row):
    f"   Scaled diffusion coefficient: D = {fmt(D_scaled, 2)} × 10⁻⁶ cm²·s⁻¹.\n"
    f"   Literature reference benchmark at 25.00 °C: D = 7.60 × 10⁻⁶ cm²·s⁻¹ (percentage difference = {fmt(abs(D_scaled - 7.60)/7.60*100.0, 4)}%).\n"
    f"   Transient Nernst diffusion layer thickness at ν = {fmt(v_val,1)} mV/s: δ ≈ √(π·D·t) = {fmt(math.sqrt(math.pi * D_est * (0.70/(v_val*1e-3)))*1e4, 1)} μm."
+  )
+ elif slug=='fluorescence-quenching-stern-volmer':
+  cq_val=row['input']
+  raw=row['raw']
+  x_val=row['x']
+  y_val=row['y']
+  F0_val=100.00
+  ratio=y_val
+  tau0=18.50
+  tau_calc=tau0 / ratio
+  kq_calc=(ratio - 1.0) / (cq_val * (tau0 * 1e-9)) if cq_val > 0 else 5.68e9
+  return (
+   f"1. Spectrofluorometric Acquisition Coordinates at 25.00 °C:\n"
+   f"   Fluorophore: Quinine sulfate dihydrate in 0.050 M H₂SO₄ (c = 1.00 μM, A_350 < 0.01 AU, no inner filter effect).\n"
+   f"   Excitation wavelength: λ_ex = 350.0 nm;  Emission collection wavelength: λ_em = 450.0 nm (90° orthogonal geometry).\n"
+   f"   Chloride quencher concentration: [Cl⁻] = {fmt(cq_val, 4)} M = {fmt(cq_val*1000.0, 2)} mM (standardized KCl in matrix).\n"
+   f"   Unquenched reference intensity: F₀ = {fmt(F0_val, 2)} AU;  Measured quenched intensity: F = {fmt(raw, 2)} AU.\n"
+   f"\n"
+   f"2. Stern-Volmer Quenching Ratio and Singlet Lifetime Calculations:\n"
+   f"   Stern-Volmer steady-state ratio: F₀ / F = {fmt(F0_val, 2)} / {fmt(raw, 2)} = {fmt(ratio, 4)}.\n"
+   f"   Unquenched singlet excited-state lifetime: τ₀ = 18.50 ± 0.10 ns (TCSPC reference benchmark in 0.050 M H₂SO₄).\n"
+   f"   Quenched excited-state singlet lifetime: τ = τ₀ / (F₀/F) = 18.50 / {fmt(ratio, 4)} = {fmt(tau_calc, 2)} ns.\n"
+   f"   Single-point bimolecular quenching rate constant: k_q = (F₀/F − 1) / (τ₀ · [Cl⁻]) = ({fmt(ratio - 1.0, 4)}) / ({fmt(tau0*1e-9, 10)} × {fmt(cq_val, 4)}) = {fmt(kq_calc*1e-9, 2)} × 10⁹ M⁻¹·s⁻¹.\n"
+   f"\n"
+   f"3. Collisional Linearity & Multi-Point Stern-Volmer Regression:\n"
+   f"   According to the Stern-Volmer kinetic model for dynamic collisional deactivation:\n"
+   f"   F₀ / F = 1 + K_SV · [Q] = 1 + k_q · τ₀ · [Q].\n"
+   f"   Ordinary least-squares linear regression across six quencher concentrations ([Cl⁻] = 0.0020 to 0.0250 M) yields:\n"
+   f"   Slope m = K_SV = 104.979 ± 0.045 M⁻¹ (percentage difference = 0.0199% from 105.0 M⁻¹ benchmark).\n"
+   f"   Y-intercept b = 1.00024 ± 0.00072 (verifying the theoretical unquenched unity intercept F₀/F₀ = 1.000).\n"
+   f"   Coefficient of determination: R² = 0.9999999, demonstrating flawless linear adherence to dynamic quenching kinetics.\n"
+   f"\n"
+   f"4. Diffusion Dynamics & Smoluchowski Quenching Efficiency:\n"
+   f"   Extracted bimolecular quenching rate constant: k_q = K_SV / τ₀ = 104.979 / (18.50 × 10⁻⁹ s) = 5.675 × 10⁹ M⁻¹·s⁻¹.\n"
+   f"   Theoretical Smoluchowski diffusion-controlled rate limit in aqueous medium at 298.15 K (η = 0.8904 mPa·s):\n"
+   f"   k_diff = 8 R T / (3000 η) = (8 × 8.314 × 298.15) / (3000 × 0.8904 × 10⁻³) = 7.424 × 10⁹ M⁻¹·s⁻¹.\n"
+   f"   Steric and encounter quenching efficiency: γ = k_q / k_diff = 5.675 / 7.424 = 0.764 (76.4%), confirming that\n"
+   f"   more than 3 out of every 4 diffusive collisions between photoexcited quinine and chloride induce spin-orbit intersystem crossing.\n"
   )
  elif slug=='job-method-continuous-variation-complex-stoichiometry':
   vl_val=row['input']
@@ -2368,6 +2428,31 @@ def uncertainty_text(c):
    "propagate as u_r(D) = √[ 4(u(m)/m)² + 4(u(A)/A)² + 4(u(c)/c)² + (u(T)/T)² ] = √[ 4(0.0001)² + 4(0.0033)² + 4(0.0012)² + (0.00007)² ] = 0.70%. "
    "For an empirical diffusion coefficient D = 7.60 × 10⁻⁶ cm²·s⁻¹, the expanded uncertainty at the 95% confidence level (coverage factor k = 2) "
    "is U(D) = ±0.11 × 10⁻⁶ cm²·s⁻¹ (1.4%), confirming exceptional concordance with the authoritative literature benchmark (7.60 ± 0.05 × 10⁻⁶ cm²·s⁻¹)."
+  )
+ elif slug=='fluorescence-quenching-stern-volmer':
+  return (
+   "In the high-precision determination of Stern-Volmer quenching constants and bimolecular deactivation kinetics via spectrofluorometry, "
+   "metrological uncertainties and physical boundary conditions are rigorously quantified across optical, photometric, kinetic, "
+   "thermal, and fluid-diffusion domains: "
+   "(1) Spectrofluorometric Optical Calibration & Lamp Arc Stability: A dual-monochromator research spectrofluorometer with high-intensity "
+   "150 W xenon arc lamp is stabilized for 30 minutes, achieving arc flicker noise < 0.15% RMS. Monochromator wavelength calibrations "
+   "at λ_ex = 350.0 nm and λ_em = 450.0 nm are certified to ±0.3 nm against mercury atomic emission lines. Right-angle 90° collection "
+   "geometry eliminates transmitted excitation light and forward Rayleigh scatter from entering the photomultiplier detector. "
+   "(2) Elimination of Inner Filter Artifacts: Inner filter effects arise when solution absorbance attenuates excitation light (primary effect) "
+   "or reabsorbs emitted fluorescence (secondary effect). By maintaining fluorophore concentration at 1.00 μM in 0.050 M H₂SO₄, the "
+   "absorbance across the 10.00 mm optical path length remains below A_350 < 0.01 AU and A_450 < 0.001 AU, ensuring < 0.2% intensity distortion "
+   "and preserving strict proportionality between observed photon counts and excited-state populations. "
+   "(3) Peltier Thermostatic Control & Viscosity Sensitivity: Because bimolecular diffusion rates depend directly on solvent temperature "
+   "and viscosity (k_diff ∝ T/η, with a temperature coefficient dk_q/dT ≈ +1.8% per °C), the four-sided quartz cuvette holder is maintained "
+   "at 25.00 ± 0.02 °C by a Peltier thermoelectric system, restricting thermal uncertainty contributions to u(T) < 0.04%. "
+   "(4) Quencher Gravimetry & Piston Micropipette Delivery: Primary standard potassium chloride (purity 99.99%) is weighed on a calibrated "
+   "4-decimal analytical balance (±0.0001 g) and dispensed using calibrated motor-driven micro-burettes (dispensing tolerance ±0.005 mL). "
+   "The resulting relative standard uncertainty in quencher concentration is u([Cl⁻])/[Cl⁻] = 0.20%. "
+   "(5) Multi-Point Least-Squares Regression & Uncertainty Propagation: Ordinary least-squares regression of F₀/F against [Cl⁻] yields "
+   "an empirical slope K_SV = 104.98 ± 0.05 M⁻¹ and intercept b = 1.00024 ± 0.00072 with R² = 0.9999999. Combining K_SV with the "
+   "independently determined singlet lifetime τ₀ = 18.50 ± 0.10 ns yields an expanded uncertainty for the bimolecular rate constant of "
+   "U(k_q) = ±0.06 × 10⁹ M⁻¹·s⁻¹ at the 95% confidence level (coverage factor k = 2), establishing k_q = (5.68 ± 0.06) × 10⁹ M⁻¹·s⁻¹, "
+   "in flawless concordance with the Smoluchowski diffusion limit (7.42 × 10⁹ M⁻¹·s⁻¹).\n"
   )
  elif slug=='job-method-continuous-variation-complex-stoichiometry':
   return (
@@ -3901,6 +3986,70 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"invariant peak potential separation ΔE_p = 59.2 mV and current ratio |i_pa / i_pc| = 1.000 confirming ideal Nernstian reversibility. The extracted "
    f"diffusion coefficient agrees with authoritative electrochemistry literature benchmarks within {fmt(abs(D_val - 7.60)/7.60*100.0, 4)}% relative deviation, "
    f"demonstrating the high metrological precision of the Randles-Ševčík formulation for diagnostic electrochemistry."
+  )
+  
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='fluorescence-quenching-stern-volmer':
+  m_val=f['m']
+  b_val=f['b']
+  ksv_val=value
+  r2_val=f['r2']
+  tau0=18.50e-9
+  kq_val=m_val / tau0
+  
+  abstract=(
+   f"The photophysical deactivation kinetics and collisional quenching dynamics of quinine sulfate dihydrate by chloride anions "
+   f"were investigated at 25.00 ± 0.02 °C using steady-state spectrofluorometry with orthogonal 90° collection geometry. Working solutions "
+   f"containing 1.00 μM quinine sulfate in 0.050 M H₂SO₄ were photoexcited at λ_ex = 350.0 nm into the S₁ singlet excited state, and steady-state "
+   f"fluorescence emission was collected at λ_em = 450.0 nm in four-sided matched optical quartz cuvettes. Quencher concentrations "
+   f"[Cl⁻] spanning 0.0020 M to 0.0250 M (prepared from standardized potassium chloride in the identical 0.050 M H₂SO₄ matrix) produced "
+   f"a monotonic, strictly linear attenuation of fluorescence emission from F = 82.64 AU down to 27.59 AU relative to the unquenched "
+   f"reference standard F₀ = 100.00 AU. Ordinary least-squares linear regression of the Stern-Volmer intensity ratio F₀/F against [Cl⁻] "
+   f"yielded an empirical quenching constant of K_SV = {fmt(ksv_val, 2)} ± 0.05 M⁻¹ (difference = {percent:.4f}% relative to the authoritative "
+   f"literature benchmark of 105.0 M⁻¹) and a Y-intercept of b = {fmt(b_val, 5)} ± 0.00072 (concordant with theoretical unity) with an "
+   f"exceptional coefficient of determination R² = {fmt(r2_val, 7)}. Combining K_SV with the unquenched singlet lifetime τ₀ = 18.50 ns "
+   f"extracted an empirical bimolecular quenching rate constant k_q = {fmt(kq_val*1e-9, 2)} × 10⁹ M⁻¹·s⁻¹. Comparison with the Smoluchowski "
+   f"diffusion limit (k_diff = 7.42 × 10⁹ M⁻¹·s⁻¹ in water at 25.0 °C) established a collisional quenching efficiency of γ = 76.5%, confirming "
+   f"that deactivation is predominantly diffusion-controlled and mediated by heavy-atom spin-orbit induced intersystem crossing."
+  )
+  
+  graph_choice=(
+   f"The quantitative analysis is framed around the classical linear Stern-Volmer relation: F₀ / F = K_SV · [Cl⁻] + 1.000, where the "
+   f"dimensionless fluorescence intensity ratio F₀ / F represents the dependent variable on the Y-axis and chloride quencher concentration "
+   f"[Cl⁻] (in mol·L⁻¹) serves as the independent variable on the X-axis. According to steady-state photochemical kinetic derivations, "
+   f"dynamic collisional quenching introduces a non-radiative decay channel with rate k_q [Q] that competes directly with radiative decay "
+   f"(k_f) and unimolecular non-radiative relaxation (k₀). When quenching is purely collisional and unhindered by static ground-state complexation "
+   f"or inner filter effects, the ratio F₀/F must scale strictly linearly with [Q], with an empirical slope m equal to K_SV = k_q · τ₀ and a "
+   f"Y-intercept b identically equal to 1.000 at [Q] = 0. Plotting F₀/F versus [Cl⁻] across six discrete quencher standards confirms exceptional "
+   f"linear fidelity (R² = {fmt(r2_val, 7)}), with an empirical intercept b = {fmt(b_val, 5)} confirming zero baseline offset."
+  )
+  
+  discussion=(
+   f"The experimental data demonstrate the exceptional elegance of Stern-Volmer photokinetics and provide profound mechanistic insights "
+   f"into singlet excited-state dynamics. Quinine is a dicationic cinchona alkaloid in 0.050 M H₂SO₄, with both quinuclidine and quinoline "
+   f"nitrogens protonated. Optical absorption at 350.0 nm excites the aromatic π-electron system into the lowest singlet excited state (S₁). "
+   f"Following sub-picosecond vibrational thermalization, the S₁ state radiatively relaxes to the ground state (S₀) by emitting a photon at "
+   f"450.0 nm (Stokes shift Δλ = 100 nm, fluorescence quantum yield Φ_f = 0.546, unquenched lifetime τ₀ = 18.50 ns).\n\n"
+   f"Upon introducing chloride ions, fluorescence is dynamically quenched via collisional diffusion encounters. Halide ions possess high "
+   f"atomic numbers and diffuse nuclear charge, conferring strong internal spin-orbit coupling. When a chloride anion collides with an "
+   f"excited quinine dication during its 18.5 ns lifetime, the electrostatic interaction and orbital overlap relax the Pauli spin-conservation "
+   f"selection rule, accelerating intersystem crossing from the fluorescent singlet S₁ into the non-emissive triplet manifold T₁ (k_ISC). "
+   f"The triplet state subsequently decays to the ground state via thermal dissipation. Because the process occurs exclusively during the "
+   f"excited-state lifetime, the ratio of lifetimes τ₀/τ matches the intensity ratio F₀/F across all quencher concentrations, confirming the "
+   f"complete absence of ground-state static complexation (which would alter intensity without altering lifetime).\n\n"
+   f"The extracted bimolecular rate constant k_q = {fmt(kq_val*1e-9, 2)} × 10⁹ M⁻¹·s⁻¹ approaches the theoretical Smoluchowski diffusion limit "
+   f"(k_diff = 7.42 × 10⁹ M⁻¹·s⁻¹). The calculated quenching efficiency γ = k_q / k_diff = 76.5% indicates that approximately 3 out of every "
+   f"4 encounters result in successful electronic deactivation. The slight deviation from 100% collision efficiency reflects modest steric shielding "
+   f"of the aromatic quinoline ring by the bulky aliphatic quinuclidine cage and solvent hydration shells."
+  )
+  
+  conclusion=(
+   f"The collisional quenching of quinine sulfate fluorescence by chloride ions was rigorously evaluated at 25.00 °C in 0.050 M H₂SO₄ "
+   f"at λ_ex = 350.0 nm and λ_em = 450.0 nm across quencher concentrations from 0.0020 M to 0.0250 M. Ordinary least-squares regression "
+   f"of the Stern-Volmer model F₀/F = K_SV · [Cl⁻] + 1.000 yielded an empirical quenching constant K_SV = {fmt(ksv_val, 2)} ± 0.05 M⁻¹ "
+   f"(deviation = {percent:.4f}% from the accepted reference benchmark of 105.0 M⁻¹) and an intercept b = {fmt(b_val, 5)} with R² = {fmt(r2_val, 7)}. "
+   f"Combining K_SV with the unquenched singlet lifetime τ₀ = 18.50 ns yielded a bimolecular quenching rate constant k_q = {fmt(kq_val*1e-9, 2)} × 10⁹ M⁻¹·s⁻¹, "
+   f"verifying diffusion-controlled deactivation kinetics mediated by spin-orbit intersystem crossing."
   )
   
   return abstract, graph_choice, discussion, conclusion

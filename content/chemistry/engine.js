@@ -87,6 +87,18 @@ function update(){
   $('apparatusDiagram').innerHTML=drawEnzymeKineticsBenchView(p,rawVal);
   return;
  }
+ if(cfg.slug==='fluorescence-quenching-stern-volmer'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawFluorescenceCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawFluorescenceSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawFluorescenceBenchView(p,rawVal);
+  return;
+ }
  if(cfg.slug==='job-method-continuous-variation-complex-stoichiometry'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawJobCompareView(p,rawVal);
@@ -312,6 +324,21 @@ function update(){
   const dA_dt = v0_uM * 0.0185;
   $('liveState').textContent='Photometric trace recorded: v₀ = '+v0_uM.toFixed(2)+' μM/min (dA/dt = '+(dA_dt/1000).toFixed(4)+' AU/min).';
   message('Assay complete: v₀ = '+v0_uM.toFixed(2)+' μM/min (1/v₀ = '+inv_v0.toFixed(2)+' min/mM, 1/[S] = '+inv_s.toFixed(2)+' mM⁻¹). Record in notebook.');
+ }else if(cfg.slug==='fluorescence-quenching-stern-volmer'){
+  const cq = p.input;
+  const cq_mM = cq * 1000.0;
+  $('liveState').textContent='Ready to record fluorescence emission of quinine sulfate at [Cl⁻] = '+cq.toFixed(4)+' M ('+cq_mM.toFixed(1)+' mM).';
+  message('Adjust quencher concentration [Cl⁻], insert 4-sided quartz cuvette, record emission intensity F at 450 nm.');
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawFluorescenceCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawFluorescenceSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawFluorescenceBenchView(p,rawVal);
+  return;
  }else if(cfg.slug==='job-method-continuous-variation-complex-stoichiometry'){
   const vl = p.input;
   const xl = vl / 10.00;
@@ -14514,3 +14541,360 @@ function drawJobSandboxView(p, rawVal) {
 
  return svg;
 }
+
+function drawFluorescenceBenchView(p, rawVal) {
+ var cq = p.input || 0.0100;
+ var cq_mM = cq * 1000.0;
+ var rawF = (rawVal !== null && rawVal !== undefined) ? rawVal : 48.78;
+ var F0 = 100.00;
+ var ratio = F0 / rawF;
+ var tau0 = 18.50; // ns
+ var tau_q = tau0 / ratio;
+
+ // Sky-blue fluorescence glow intensity scaled by emission intensity rawF
+ var norm = Math.min(1.0, Math.max(0.1, rawF / 100.0));
+ var glowAlpha = 0.25 + 0.65 * norm;
+ var skyBlue = 'rgba(56, 189, 248, ' + glowAlpha.toFixed(2) + ')';
+ var coreBlue = 'rgba(186, 230, 253, ' + Math.min(1.0, glowAlpha + 0.2).toFixed(2) + ')';
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a111a');
+ svg += '<defs>';
+ svg += '<radialGradient id="fluorGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="' + coreBlue + '"/><stop offset="60%" stop-color="' + skyBlue + '"/><stop offset="100%" stop-color="rgba(14,165,233,0)"/></radialGradient>';
+ svg += '<linearGradient id="uvBeamGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#818cf8" stop-opacity="0.9"/><stop offset="100%" stop-color="#a855f7" stop-opacity="0.7"/></linearGradient>';
+ svg += '<linearGradient id="emBeamGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#38bdf8" stop-opacity="' + glowAlpha.toFixed(2) + '"/><stop offset="100%" stop-color="#0284c7" stop-opacity="' + (glowAlpha * 0.5).toFixed(2) + '"/></linearGradient>';
+ svg += '<filter id="flGlowFilter"><feGaussianBlur stdDeviation="2.0" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+ svg += '</defs>';
+
+ // Header
+ svg += text(20, 24, "LABORATORY BENCH: RESEARCH SPECTROFLUOROMETER (90° ORTHOGONAL GEOMETRY)", '#f8fafc', 12, 'bold');
+ svg += text(20, 40, 'Quinine Sulfate Dihydrate in 0.050 M H₂SO₄ · Collisional Halide Quenching · Peltier 25.00 °C (λ_ex = 350 nm, λ_em = 450 nm)', '#38bdf8', 9);
+
+ // --- LEFT OPTICAL SYSTEM (x: 20 to 365, y: 55 to 305) ---
+ svg += rect(20, 55, 345, 250, '#0f172a', '#1e293b', 1.5, 6);
+ svg += text(30, 72, 'Dual Monochromator Optical Train & 90° Cuvette Cell', '#94a3b8', 7, 'start', 'bold');
+
+ // Xenon Arc Lamp (UV source)
+ svg += rect(30, 115, 36, 50, '#1e293b', '#a855f7', 1.2, 4);
+ svg += circle(48, 140, 10, '#c084fc', '#9333ea', 1.5);
+ svg += text(48, 144, 'Xe', '#581c87', 7, 'middle', 'bold');
+ svg += text(48, 178, 'Lamp', '#94a3b8', 6, 'middle');
+
+ // Excitation Monochromator (350 nm)
+ svg += rect(80, 118, 38, 44, '#1e293b', '#6366f1', 1, 3);
+ svg += '<line x1="99" y1="123" x2="99" y2="157" stroke="#818cf8" stroke-width="1.5" stroke-dasharray="2,2"/>';
+ svg += text(99, 137, 'Ex Mono', '#94a3b8', 5.5, 'middle');
+ svg += text(99, 150, '350 nm', '#818cf8', 6.5, 'middle', 'bold');
+
+ // Incident UV Excitation Beam (horizontal from left to right)
+ svg += '<line x1="66" y1="140" x2="80" y2="140" stroke="#a855f7" stroke-width="2.5"/>';
+ svg += '<line x1="118" y1="140" x2="160" y2="140" stroke="url(#uvBeamGrad)" stroke-width="3" filter="url(#flGlowFilter)"/>';
+
+ // 4-Sided Polished Quartz Fluorescence Cuvette (center at x: 160 to 216, y: 112 to 168)
+ svg += rect(160, 112, 56, 56, '#020617', '#38bdf8', 1.5, 3);
+ svg += rect(164, 116, 48, 48, 'url(#fluorGlow)', 'none');
+ svg += circle(188, 140, 16 * norm, skyBlue, 'none');
+ svg += text(188, 105, 'Quartz Cell (4-Sided)', '#38bdf8', 5.5, 'middle', 'bold');
+ svg += text(188, 137, 'Quinine-H₂²⁺', '#ffffff', 6, 'middle', 'bold');
+ svg += text(188, 148, 'F = ' + rawF.toFixed(1) + ' AU', '#fef08a', 6, 'middle', 'bold');
+
+ // Unattenuated Excitation Exit Beam to Light Trap (continues horizontally)
+ svg += '<line x1="216" y1="140" x2="245" y2="140" stroke="#a855f7" stroke-width="1.8" stroke-dasharray="3,2"/>';
+ svg += rect(245, 128, 16, 24, '#1e293b', '#475569', 1, 2);
+ svg += text(253, 144, 'Trap', '#64748b', 5, 'middle');
+
+ // Orthogonal 90° Fluorescence Emission Beam (travels downwards)
+ svg += '<line x1="188" y1="168" x2="188" y2="208" stroke="url(#emBeamGrad)" stroke-width="' + (2.0 + 2.5 * norm).toFixed(1) + '" filter="url(#flGlowFilter)"/>';
+
+ // Emission Monochromator (450 nm)
+ svg += rect(169, 208, 38, 36, '#1e293b', '#0284c7', 1, 3);
+ svg += '<line x1="174" y1="226" x2="202" y2="226" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="2,2"/>';
+ svg += text(188, 222, 'Em Mono', '#94a3b8', 5.5, 'middle');
+ svg += text(188, 235, '450 nm', '#38bdf8', 6.5, 'middle', 'bold');
+
+ // Emission to Photomultiplier Tube (PMT)
+ svg += '<line x1="188" y1="244" x2="188" y2="260" stroke="#38bdf8" stroke-width="2"/>';
+ svg += rect(172, 260, 32, 34, '#1e293b', '#22c55e', 1.2, 3);
+ svg += text(188, 274, 'PMT', '#22c55e', 7, 'middle', 'bold');
+ svg += text(188, 287, 'Detector', '#94a3b8', 5.5, 'middle');
+
+ // Cuvette Holder Tags & Dimensions
+ svg += text(188, 178, '90° Collection', '#94a3b8', 5.5, 'middle');
+ svg += rect(280, 75, 75, 52, '#1e293b', '#334155', 1, 3);
+ svg += text(288, 90, 'Quencher Added:', '#94a3b8', 5.5, 'start');
+ svg += text(288, 104, cq_mM.toFixed(1) + ' mM Cl⁻', '#facc15', 6.5, 'start', 'bold');
+ svg += text(288, 118, 'τ = ' + tau_q.toFixed(2) + ' ns', '#38bdf8', 6, 'start');
+
+ // Peltier Thermostat Tag
+ svg += rect(280, 245, 75, 45, '#1e293b', '#334155', 1, 3);
+ svg += text(288, 260, 'Peltier Stage:', '#94a3b8', 5.5, 'start');
+ svg += text(288, 273, '25.00 ± 0.02 °C', '#4ade80', 6, 'start', 'bold');
+ svg += text(288, 284, '0.050 M H₂SO₄', '#94a3b8', 5, 'start');
+
+ // --- RIGHT SECTION: DIGITAL CONSOLE (x: 375 to 705, y: 55 to 305) ---
+ svg += rect(375, 55, 330, 250, '#0f172a', '#334155', 1.5, 6);
+ svg += text(390, 74, "STERN-VOLMER PHOTOPHYSICAL METROLOGY", '#f8fafc', 8, 'start', 'bold');
+
+ // Dual Primary Digital Readouts
+ svg += rect(390, 85, 145, 54, '#020617', '#38bdf8', 1.2, 4);
+ svg += text(400, 98, 'EMISSION INTENSITY F (450 nm)', '#38bdf8', 6, 'start', 'bold');
+ svg += text(462, 126, rawF.toFixed(2) + ' AU', '#38bdf8', 15, 'middle', 'bold');
+
+ svg += rect(545, 85, 145, 54, '#020617', '#facc15', 1.2, 4);
+ svg += text(555, 98, 'QUENCHING RATIO F₀ / F', '#facc15', 6, 'start', 'bold');
+ svg += text(617, 126, ratio.toFixed(3), '#facc15', 15, 'middle', 'bold');
+
+ // Telemetry Data Grid
+ var rowsGrid = [
+  ['Excitation / Emission Wavelengths', 'λ_ex = 350.0 nm  /  λ_em = 450.0 nm'],
+  ['Chloride Quencher Concentration', '[Cl⁻] = ' + cq.toFixed(4) + ' M (' + cq_mM.toFixed(1) + ' mM)'],
+  ['Unquenched Reference Intensity', 'F₀ = 100.00 AU ([Cl⁻] = 0.000 M)'],
+  ['Excited-State Singlet Lifetime', 'τ = ' + tau_q.toFixed(2) + ' ns (τ₀ = 18.50 ns)'],
+  ['Stern-Volmer Quenching Constant', 'K_SV = 105.0 M⁻¹ (Slope OLS)'],
+  ['Bimolecular Quenching Rate Constant', 'k_q = K_SV / τ₀ = 5.68 × 10⁹ M⁻¹·s⁻¹'],
+  ['Smoluchowski Quenching Efficiency', 'γ = k_q / k_diff = 77.0% (Diffusion Limited)']
+ ];
+ for (var i = 0; i < rowsGrid.length; i++) {
+  var ry = 148 + i * 17;
+  svg += rect(390, ry, 300, 15, i % 2 === 0 ? '#1e293b' : '#0f172a', 'none', 0, 2);
+  svg += text(398, ry + 11, rowsGrid[i][0], '#94a3b8', 6, 'start');
+  svg += text(682, ry + 11, rowsGrid[i][1], i === 3 ? '#38bdf8' : (i === 5 ? '#facc15' : '#f8fafc'), 6, 'end', (i === 3 || i === 5) ? 'bold' : 'normal');
+ }
+
+ // Status Badges
+ svg += rect(390, 275, 95, 18, '#1e3a8a', '#3b82f6', 1, 3);
+ svg += text(437, 287, 'COLLISIONAL DECAY', '#60a5fa', 5.5, 'middle', 'bold');
+
+ svg += rect(492, 275, 100, 18, '#14532d', '#22c55e', 1, 3);
+ svg += text(542, 287, 'K_SV = 105.0 M⁻¹', '#4ade80', 5.5, 'middle', 'bold');
+
+ svg += rect(599, 275, 91, 18, '#701a75', '#d946ef', 1, 3);
+ svg += text(644, 287, 'SPIN-ORBIT ISC', '#f0abfc', 5.5, 'middle', 'bold');
+
+ return svg;
+}
+
+function drawFluorescenceCompareView(p, rawVal) {
+ var cq = p.input || 0.0100;
+ var rawF = (rawVal !== null && rawVal !== undefined) ? rawVal : 48.78;
+ var F0 = 100.00;
+ var curRatio = F0 / rawF;
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a111a');
+
+ // Header
+ svg += text(20, 24, "STERN-VOLMER CALIBRATION REGRESSION & COLLISIONAL LINEARITY", '#f8fafc', 12, 'bold');
+ svg += text(20, 40, 'F₀/F = 1 + K_SV·[Cl⁻] · Slope K_SV = 105.0 M⁻¹ (R² = 0.9999999) · k_q = 5.68 × 10⁹ M⁻¹·s⁻¹', '#38bdf8', 9);
+
+ // --- LEFT STERN-VOLMER PLOT (x: 45 to 465, y: 60 to 275) ---
+ var gx = 45, gy = 60, gw = 420, gh = 215;
+ svg += rect(gx, gy, gw, gh, '#0f172a', '#334155', 1, 4);
+
+ // Y-axis grid lines (F0 / F from 1.0 to 4.0)
+ for (var r_grid = 1.0; r_grid <= 4.01; r_grid += 0.5) {
+  var py = gy + gh - ((r_grid - 1.0) / 3.0) * gh;
+  svg += '<line x1="' + gx + '" y1="' + py + '" x2="' + (gx + gw) + '" y2="' + py + '" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(gx - 8, py + 3, r_grid.toFixed(1), '#64748b', 6, 'end');
+ }
+ svg += text(gx - 26, gy + gh/2, 'Fluorescence Ratio F₀ / F', '#94a3b8', 7, 'middle', 'bold');
+
+ // X-axis grid lines ([Cl-] from 0.000 to 0.030 M)
+ for (var c_grid = 0.000; c_grid <= 0.0301; c_grid += 0.005) {
+  var px = gx + (c_grid / 0.030) * gw;
+  svg += '<line x1="' + px + '" y1="' + gy + '" x2="' + px + '" y2="' + (gy + gh) + '" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(px, gy + gh + 12, (c_grid * 1000.0).toFixed(0) + ' mM', '#64748b', 6, 'middle');
+ }
+ svg += text(gx + gw/2, gy + gh + 24, 'Chloride Quencher Concentration [Cl⁻] (M)', '#94a3b8', 7, 'middle', 'bold');
+
+ // Linear Regression Line: F0/F = 1.000 + 105.0 * [Cl-]
+ var px0 = gx;
+ var py0 = gy + gh - ((1.000 - 1.0) / 3.0) * gh;
+ var pxMax = gx + (0.028 / 0.030) * gw;
+ var pyMax = gy + gh - (((1.000 + 105.0 * 0.028) - 1.0) / 3.0) * gh;
+ svg += '<line x1="' + px0 + '" y1="' + py0 + '" x2="' + pxMax + '" y2="' + pyMax + '" stroke="#38bdf8" stroke-width="2.2"/>';
+
+ // Six Experimental Calibration Standards
+ var calibData = [
+  { c: 0.0020, ratio: 1.2101 },
+  { c: 0.0050, ratio: 1.5251 },
+  { c: 0.0100, ratio: 2.0500 },
+  { c: 0.0150, ratio: 2.5753 },
+  { c: 0.0200, ratio: 3.0998 },
+  { c: 0.0250, ratio: 3.6245 }
+ ];
+ for (var k = 0; k < calibData.length; k++) {
+  var sx = gx + (calibData[k].c / 0.030) * gw;
+  var sy = gy + gh - ((calibData[k].ratio - 1.0) / 3.0) * gh;
+  svg += circle(sx, sy, 4.5, '#38bdf8', '#ffffff', 1.2);
+ }
+
+ // Active Measurement Crosshair
+ var curX = gx + (cq / 0.030) * gw;
+ var curY = gy + gh - ((curRatio - 1.0) / 3.0) * gh;
+ svg += '<line x1="' + curX + '" y1="' + gy + '" x2="' + curX + '" y2="' + (gy + gh) + '" stroke="#facc15" stroke-width="1.2" stroke-dasharray="3,2"/>';
+ svg += '<line x1="' + gx + '" y1="' + curY + '" x2="' + (gx + gw) + '" y2="' + curY + '" stroke="#facc15" stroke-width="1.2" stroke-dasharray="3,2"/>';
+ svg += circle(curX, curY, 6, '#facc15', '#ffffff', 2);
+ svg += text(curX + 8, curY - 6, (cq * 1000).toFixed(1) + ' mM (F₀/F = ' + curRatio.toFixed(3) + ')', '#facc15', 6.5, 'start', 'bold');
+
+ // Overlay Linear Formula
+ svg += rect(gx + 15, gy + 15, 215, 32, '#1e293b', '#38bdf8', 1, 3);
+ svg += text(gx + 22, gy + 27, 'Stern-Volmer: F₀/F = 104.98·[Cl⁻] + 1.000', '#f8fafc', 6.5, 'start', 'bold');
+ svg += text(gx + 22, gy + 40, 'Correlation: R² = 0.9999999 (Pure Dynamic)', '#4ade80', 6, 'start');
+
+ // --- RIGHT CARD: FIGURES OF MERIT (x: 480 to 705) ---
+ svg += rect(480, 55, 225, 250, '#0f172a', '#334155', 1.5, 6);
+ svg += text(490, 75, "KINETIC PARAMETERS & QUENCHING", '#f8fafc', 8, 'start', 'bold');
+
+ var infoLines = [
+  "• Stern-Volmer Quenching Constant:",
+  "  K_SV = 104.98 ± 0.05 M⁻¹ (Slope OLS)",
+  "  Literature Benchmark: 105.0 M⁻¹ (Diff: 0.02%)",
+  "• Unquenched Singlet Lifetime (τ₀):",
+  "  τ₀ = 18.50 ± 0.10 ns (TCSPC Ref)",
+  "• Bimolecular Quenching Rate Constant:",
+  "  k_q = K_SV / τ₀ = 5.68 × 10⁹ M⁻¹·s⁻¹",
+  "• Smoluchowski Diffusion Limit (25 °C):",
+  "  k_diff = 8RT / (3000 η) = 7.42 × 10⁹ M⁻¹·s⁻¹",
+  "• Quenching Efficiency Factor:",
+  "  γ = k_q / k_diff = 0.77 (77% Efficiency)",
+  "• Dynamic vs Static Diagnostic:",
+  "  τ₀ / τ = F₀ / F = " + curRatio.toFixed(3) + " (Strictly Dynamic)",
+  "  Zero ground-state complexation detected."
+ ];
+ for (var j = 0; j < infoLines.length; j++) {
+  var isHead = (j === 0 || j === 3 || j === 5 || j === 7 || j === 9 || j === 11);
+  svg += text(490, 95 + j * 14.5, infoLines[j], isHead ? '#38bdf8' : '#cbd5e1', 5.5, 'start', isHead ? 'bold' : 'normal');
+ }
+
+ return svg;
+}
+
+function drawFluorescenceSandboxView(p, rawVal) {
+ var cq = p.input || 0.0100;
+ var rawF = (rawVal !== null && rawVal !== undefined) ? rawVal : 48.78;
+ var F0 = 100.00;
+ var ratio = F0 / rawF;
+ var tau0 = 18.50; // ns
+ var tau_q = tau0 / ratio;
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a111a');
+
+ // Header
+ svg += text(20, 24, "JABLONSKI DIAGRAM & TIME-RESOLVED FLUORESCENCE LIFETIME DECAY", '#f8fafc', 12, 'bold');
+ svg += text(20, 40, 'I(t) = I₀·exp(−t/τ) · Collisional Deactivation Accelerates Singlet Decay (τ₀ = 18.50 ns → τ = ' + tau_q.toFixed(2) + ' ns)', '#38bdf8', 9);
+
+ // --- LEFT SECTION: JABLONSKI DIAGRAM (x: 25 to 245, y: 55 to 305) ---
+ svg += rect(25, 55, 220, 250, '#0f172a', '#334155', 1.5, 6);
+ svg += text(35, 74, 'JABLONSKI PHOTOPHYSICAL DIAGRAM', '#f8fafc', 7.5, 'start', 'bold');
+
+ // Ground Singlet State S0
+ svg += '<line x1="35" y1="260" x2="135" y2="260" stroke="#f8fafc" stroke-width="2.5"/>';
+ svg += text(40, 275, 'S₀ (Ground Singlet)', '#94a3b8', 6, 'start');
+
+ // Excited Singlet State S1 with vibrational rungs
+ svg += '<line x1="35" y1="120" x2="135" y2="120" stroke="#38bdf8" stroke-width="2.5"/>';
+ svg += '<line x1="35" y1="110" x2="135" y2="110" stroke="#38bdf8" stroke-width="1" stroke-dasharray="2,2"/>';
+ svg += '<line x1="35" y1="100" x2="135" y2="100" stroke="#38bdf8" stroke-width="1" stroke-dasharray="2,2"/>';
+ svg += text(40, 95, 'S₁ (Excited Singlet)', '#38bdf8', 6, 'start', 'bold');
+
+ // Triplet State T1
+ svg += '<line x1="160" y1="165" x2="230" y2="165" stroke="#f43f5e" stroke-width="2"/>';
+ svg += text(165, 180, 'T₁ (Triplet)', '#f43f5e', 6, 'start');
+
+ // Absorption hν_ex (350 nm upward purple arrow)
+ svg += '<line x1="50" y1="260" x2="50" y2="100" stroke="#c084fc" stroke-width="2"/>';
+ svg += '<polygon points="50,96 46,106 54,106" fill="#c084fc"/>';
+ svg += text(42, 185, 'hν_ex', '#c084fc', 6, 'end');
+
+ // Internal Conversion / Vibrational Relaxation (wavy blue downward)
+ svg += '<path d="M 50 100 Q 55 110 50 120" fill="none" stroke="#38bdf8" stroke-width="1.5"/>';
+
+ // Radiative Fluorescence Emission hν_em (450 nm downward sky-blue arrow)
+ svg += '<line x1="85" y1="120" x2="85" y2="260" stroke="#38bdf8" stroke-width="2.2"/>';
+ svg += '<polygon points="85,264 81,254 89,254" fill="#38bdf8"/>';
+ svg += text(92, 195, 'Fluorescence (k_f)', '#38bdf8', 5.5, 'start');
+ svg += text(92, 206, 'λ_em = 450 nm', '#38bdf8', 5, 'start');
+
+ // Collisional Quenching Pathway: S1 -> T1 (Intersystem Crossing induced by Cl-)
+ svg += '<path d="M 125 120 C 145 120 145 165 160 165" fill="none" stroke="#facc15" stroke-width="2" stroke-dasharray="3,2"/>';
+ svg += '<polygon points="160,165 152,160 154,169" fill="#facc15"/>';
+ svg += text(140, 140, 'k_q[Cl⁻]', '#facc15', 6, 'middle', 'bold');
+ svg += text(140, 152, 'Spin-Orbit ISC', '#cbd5e1', 5, 'middle');
+
+ // Non-radiative Triplet Decay T1 -> S0
+ svg += '<path d="M 195 165 C 195 210 120 235 110 260" fill="none" stroke="#64748b" stroke-width="1.2" stroke-dasharray="2,2"/>';
+ svg += text(175, 230, 'Heat', '#64748b', 5, 'middle');
+
+ // --- MIDDLE SECTION: TIME-RESOLVED DECAY (x: 255 to 485, y: 55 to 305) ---
+ svg += rect(255, 55, 230, 250, '#0f172a', '#334155', 1.5, 6);
+ svg += text(265, 74, 'TIME-RESOLVED DECAY PROFILE I(t)', '#f8fafc', 7.5, 'start', 'bold');
+
+ var pxD = 270, pyD = 95, pwD = 200, phD = 180;
+ svg += rect(pxD, pyD, pwD, phD, '#020617', '#1e293b', 1, 3);
+
+ // Grid lines for time (0 to 60 ns)
+ for (var t_ns = 0; t_ns <= 60; t_ns += 15) {
+  var tx = pxD + (t_ns / 60.0) * pwD;
+  svg += '<line x1="' + tx + '" y1="' + pyD + '" x2="' + tx + '" y2="' + (pyD + phD) + '" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(tx, pyD + phD + 12, t_ns + ' ns', '#64748b', 5.5, 'middle');
+ }
+
+ // Unquenched Lifetime Curve: tau0 = 18.50 ns (gray dashed)
+ var ptsUnq = '';
+ for (var ti = 0; ti <= 60; ti += 2) {
+  var intUnq = Math.exp(-ti / 18.50);
+  var xPos = pxD + (ti / 60.0) * pwD;
+  var yPos = pyD + phD - intUnq * phD;
+  ptsUnq += (ti === 0 ? 'M ' : 'L ') + xPos.toFixed(1) + ' ' + yPos.toFixed(1) + ' ';
+ }
+ svg += '<path d="' + ptsUnq + '" fill="none" stroke="#64748b" stroke-width="1.5" stroke-dasharray="3,2"/>';
+ svg += text(pxD + pwD - 8, pyD + 35, 'Unquenched (τ₀ = 18.5 ns)', '#94a3b8', 5.5, 'end');
+
+ // Quenched Lifetime Curve: tau_q (bright cyan solid)
+ var ptsQ = '';
+ for (var tj = 0; tj <= 60; tj += 1.5) {
+  var intQ = Math.exp(-tj / tau_q);
+  var xPosQ = pxD + (tj / 60.0) * pwD;
+  var yPosQ = pyD + phD - intQ * phD;
+  ptsQ += (tj === 0 ? 'M ' : 'L ') + xPosQ.toFixed(1) + ' ' + yPosQ.toFixed(1) + ' ';
+ }
+ svg += '<path d="' + ptsQ + '" fill="none" stroke="#38bdf8" stroke-width="2.2"/>';
+ svg += text(pxD + pwD - 8, pyD + 60, 'Quenched (τ = ' + tau_q.toFixed(2) + ' ns)', '#38bdf8', 6, 'end', 'bold');
+
+ // Lifetime 1/e markers
+ var xTauQ = pxD + (tau_q / 60.0) * pwD;
+ var yTauQ = pyD + phD - 0.368 * phD;
+ svg += '<line x1="' + xTauQ + '" y1="' + pyD + '" x2="' + xTauQ + '" y2="' + (pyD + phD) + '" stroke="#facc15" stroke-width="1" stroke-dasharray="2,2"/>';
+ svg += circle(xTauQ, yTauQ, 4, '#facc15', '#ffffff', 1.2);
+ svg += text(xTauQ + 4, yTauQ - 4, '1/e (τ)', '#facc15', 5.5, 'start');
+
+ // --- RIGHT SECTION: SMOLUCHOWSKI DYNAMICS (x: 495 to 705) ---
+ svg += rect(495, 55, 210, 250, '#0f172a', '#334155', 1.5, 6);
+ svg += text(505, 74, "DIFFUSION-CONTROLLED DYNAMICS", '#f8fafc', 7.5, 'start', 'bold');
+
+ var smolLines = [
+  "• Smoluchowski Diffusion Equation:",
+  "  k_diff = 4π N_A (D_F + D_Q) (R_F + R_Q)",
+  "  k_diff (H₂O, 25 °C) ≈ 7.4 × 10⁹ M⁻¹·s⁻¹",
+  "• Empirical Quenching Constant:",
+  "  k_q = 5.68 × 10⁹ M⁻¹·s⁻¹",
+  "• Collision Efficiency (γ = k_q / k_diff):",
+  "  γ = 0.77 (77% of collisions quench)",
+  "• Mean Collisional Encounter Time:",
+  "  t_coll = 1 / (k_q · [Cl⁻])",
+  "  At " + (cq * 1000).toFixed(1) + " mM: t_coll = " + (1.0 / (5.68e9 * cq) * 1e9).toFixed(2) + " ns",
+  "• Stokes-Einstein Radii:",
+  "  R_quinine ≈ 0.52 nm, R_Cl⁻ ≈ 0.18 nm",
+  "• Halide Quenching Order (Spin-Orbit):",
+  "  F⁻ (no quench) << Cl⁻ < Br⁻ < I⁻ (100%)"
+ ];
+ for (var s_idx = 0; s_idx < smolLines.length; s_idx++) {
+  var isHead = (s_idx === 0 || s_idx === 3 || s_idx === 5 || s_idx === 7 || s_idx === 10 || s_idx === 12);
+  svg += text(505, 95 + s_idx * 14.5, smolLines[s_idx], isHead ? '#38bdf8' : '#cbd5e1', 5.5, 'start', isHead ? 'bold' : 'normal');
+ }
+
+ return svg;
+}
+

@@ -3,6 +3,16 @@
 const round=(v,n)=>Math.round((v+Number.EPSILON)*10**n)/10**n;
 
 function predict(slug,input){
+  if(slug==='fluorescence-quenching-stern-volmer'){
+   const c_q=Number(input);
+   const table_raw={0.0020:82.64, 0.0050:65.57, 0.0100:48.78, 0.0150:38.83, 0.0200:32.26, 0.0250:27.59};
+   const table_y={0.0020:1.2101, 0.0050:1.5251, 0.0100:2.0500, 0.0150:2.5753, 0.0200:3.0998, 0.0250:3.6245};
+   const key=round(c_q, 4);
+   let raw_val=table_raw.hasOwnProperty(key)?table_raw[key]:round(100.00 / (1.0 + 105.0 * c_q), 2);
+   let x_val=c_q;
+   let y_val=table_y.hasOwnProperty(key)?table_y[key]:round(100.00 / raw_val, 4);
+   return {raw:raw_val,ideal:raw_val,period:1.0,x:x_val,y:y_val,valid:c_q>=0.0005&&c_q<=0.0350};
+  }
   if(slug==='job-method-continuous-variation-complex-stoichiometry'){
    const vl=Number(input);
    const table_raw={1.00:0.573, 2.00:1.060, 3.00:1.435, 4.00:1.674, 5.00:1.756, 6.00:1.674};
@@ -542,6 +552,14 @@ function predict(slug,input){
 
 function reading(slug,input,raw){
  let x=Number(input),y=Number(raw);
+  if(slug==='fluorescence-quenching-stern-volmer'){
+   const c_q=Number(input);
+   const raw_val=Number(raw);
+   const table_y={0.0020:1.2101, 0.0050:1.5251, 0.0100:2.0500, 0.0150:2.5753, 0.0200:3.0998, 0.0250:3.6245};
+   const key=round(c_q, 4);
+   x=c_q;
+   y=table_y.hasOwnProperty(key)?table_y[key]:round(100.00 / raw_val, 4);
+  }
   if(slug==='job-method-continuous-variation-complex-stoichiometry'){
    const vl=Number(input);
    const table_x={1.00:-4.139, 2.00:-3.784, 3.00:-3.551, 4.00:-3.369, 5.00:-3.215, 6.00:-3.082};
@@ -864,6 +882,11 @@ function fit(rows){
 }
 
 function estimate(slug,f){
+  if(slug==='fluorescence-quenching-stern-volmer'){
+   const k_sv_est=f.m;
+   const se=f.slopeSE || 0.05;
+   return {value:k_sv_est,se:se,reference:105.0};
+  }
   if(slug==='job-method-continuous-variation-complex-stoichiometry'){
    const n_est=f.m;
    const se=f.slopeSE || 0.005;
