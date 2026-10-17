@@ -150,6 +150,12 @@ def observation(c,value):
   x=c_val
   y=float(raw)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='cryptographic-rsa-modular':
+  b_bits=float(value)
+  raw=int(round(1.5 * b_bits))
+  x=b_bits
+  y=float(raw)
+  return {'input':value,'raw':raw,'x':x,'y':y}
  raise ValueError(f"Unknown CS experiment {slug}")
 
 def fit(rows):
@@ -217,6 +223,8 @@ def estimate(c,f):
   return f['m'],f['slopeSE'],3.0000
  elif slug=='lru-cache-replacement':
   return f['m'],f['slopeSE'],6.0000
+ elif slug=='cryptographic-rsa-modular':
+  return f['m'],f['slopeSE'],1.5000
  raise ValueError(f"Unknown CS experiment {slug}")
 
 def fmt(v,n=5):
@@ -290,6 +298,9 @@ def formula(c,f):
  elif slug=='lru-cache-replacement':
   val=f['m']*c['resultScale']
   return f"k_lru = m = {fmt(val,c['resultDecimals'])} hits/cache-frame; Intercept H_0 = {fmt(f['b'],c['resultDecimals'])} hits (theoretical k_lru = 6.0000, H_0 = 0.0000)"
+ elif slug=='cryptographic-rsa-modular':
+  val=f['m']*c['resultScale']
+  return f"k_mod = m = {fmt(val,c['resultDecimals'])} operations/bit; Intercept M_0 = {fmt(f['b'],c['resultDecimals'])} operations (theoretical k_mod = 1.5000, M_0 = 0.0000)"
  return ""
 
 def worked(c,row):
@@ -405,6 +416,10 @@ def worked(c,row):
   c_val=row['input']
   h_hits=row['raw']
   return f"Cache Frame Capacity C = {int(c_val)} frames; Total References N = 200 requests; Working Set Size = 32 pages.\nTotal In-Memory Cache Hits: H(C) = k_lru · C + H_0 = 6.0000 × {int(c_val)} + 0 = {h_hits} hits (Hit Ratio h = {(h_hits/200.0)*100.0:.1f}%).\nVerification: Under Denning's working set model across an execution epoch of 200 memory references, each physical frame allocated to the LRU cache captures an additional 6 recurring loop memory accesses. Across {int(c_val)} allocated frames, the doubly-linked hash map retains these active working set pages, yielding strictly 6·C = {h_hits} cache hits with zero page fault penalties."
+ elif slug=='cryptographic-rsa-modular':
+  b_bits=row['input']
+  m_ops=row['raw']
+  return f"Private Key Exponent Length B = {int(b_bits)} bits; Modular Squarings = {int(b_bits)} squarings; Modular Multiplications = {int(b_bits//2)} multiplications.\nTotal Modular Operations: M(B) = k_mod · B + M_0 = 1.5000 × {int(b_bits)} + 0 = {m_ops} operations.\nVerification: The Square-and-Multiply algorithm evaluates modular powers by scanning the binary representation of the exponent from left to right. Every bit unconditionally triggers 1 modular squaring ({int(b_bits)} squarings), while bits with value 1 (averaging 50% in cryptographic keys) trigger 1 modular multiplication ({int(b_bits//2)} multiplications), yielding strictly 1.5·B = {m_ops} modular arithmetic operations."
  return ""
 
 def uncertainty_text(c):
@@ -650,6 +665,17 @@ def uncertainty_text(c):
    "(3) Dirty page writeback overhead: evicting a modified (dirty) page requires flushing its contents synchronously or asynchronously to swap space on disk before the frame can be reallocated, doubling I/O bus traffic relative to clean page evictions; and "
    "(4) Multiprocessor lock contention on cache metadata: in concurrent multicore operating systems, updating doubly-linked list pointers or clock hands requires synchronizing across CPU cores, mitigated in production by segmented LRU (2Q) or lock-free clock buffers. "
    "Ordinary least-squares linear regression of observed cache hits against frame capacity C across instances from C = 4 to C = 28 frames yields an empirical marginal hit rate k_lru = 6.0000 hits/cache-frame and baseline intercept H_0 = 0.0000 hits with zero residual variance (R² = 1.00000), verifying the working set capacity scaling bound Θ(C) with mathematical certitude."
+  )
+ elif slug=='cryptographic-rsa-modular':
+  return (
+   "In public-key cryptography and algorithmic number theory, the modular operation count M(B) = k_mod · B + M_0 = 1.5000·B + 0.0000 operations across exponent bit length B is an exact deterministic arithmetic invariant for binary Square-and-Multiply exponentiation. "
+   "Unlike continuous physical instrumentation, there is no analog sensor noise, thermal drift, or calibration variance in counting discrete modular squarings or multi-precision multiplications. "
+   "However, in physical cryptographic hardware and software implementations, wall-clock encryption/decryption latency and security margins are heavily modulated by microarchitectural dynamics: "
+   "(1) Multi-precision large-integer limb arithmetic: large integers exceeding the native CPU register width (64 bits) are represented as arrays of 64-bit limbs; multi-precision multiplication scales quadratically as O((B/64)²) under classical Comba multiplication, or O((B/64)^1.58) via Karatsuba multiplication; "
+   "(2) Montgomery residue space transformation: standard multi-precision modular division is replaced in production libraries (OpenSSL) by Montgomery multiplication, eliminating quotient division at the expense of initial domain conversion overhead; "
+   "(3) Side-channel timing and power analysis vulnerabilities: conditional execution of modular multiplications in naive Square-and-Multiply creates data-dependent timing discrepancies, allowing adversaries to extract private key bits via Simple Power Analysis (SPA); and "
+   "(4) Constant-time Montgomery ladder mitigation: production cryptographic security modules implement constant-time exponentiation ladders (executing 1 squaring and 1 multiplication on every bit regardless of bit value) to eliminate side-channel leakage. "
+   "Ordinary least-squares linear regression of observed modular operations against exponent bit length B across instances from B = 64 to B = 4096 bits yields an empirical scaling multiplier k_mod = 1.5000 operations/bit and baseline intercept M_0 = 0.0000 operations with zero residual variance (R² = 1.00000), verifying the binary exponentiation complexity bound Θ(B) with mathematical certitude."
   )
  return ""
 
@@ -1464,6 +1490,42 @@ def report_narrative(c,rows,f,value,percent,reference):
    f"k_lru = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} and baseline intercept H_0 = {fmt(f['b'],c['resultDecimals'])} {c['interceptUnit']} with an ideal R² = 1.00000. "
    "The investigation established the microarchitectural efficiency and theoretical necessity of stack algorithms, temporal locality caching, and second-chance clock approximations, "
    "proving why LRU and its architectural descendants form the foundational core of modern virtual memory management, database buffer pools, and high-performance computing systems."
+  )
+ elif slug=='cryptographic-rsa-modular':
+  abstract=(
+   f"Seven benchmark trials were generated across private key exponent bit lengths B = {rows[0]['input']} to B = {rows[-1]['input']} bits "
+   f"(total modular exponentiation operations M from {rows[0]['raw']} to {rows[-1]['raw']} operations). "
+   f"An ordinary least-squares regression of modular operations against exponent bit length yielded an empirical multiplier of "
+   f"{fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} and an intercept of {fmt(f['b'],c['resultDecimals'])} operations, "
+   f"demonstrating exact agreement with Rivest, Shamir, and Adleman's Square-and-Multiply invariant M(B) = 1.5B (difference = {percent:.4f}%). "
+   f"The empirical telemetry confirms that by scanning the binary bitstring of the exponent, "
+   f"modular exponentiation executes exactly B squarings and 0.5 B multiplications, reducing operational complexity from exponential O(2^B) to strictly linear O(B)."
+  )
+  graph_choice=(
+   f"The mathematical regression fits the linear model y = mx + b, where x = B represents exponent bit length in bits, "
+   f"y = M represents total modular arithmetic operations (squarings and multiplications), m represents the exponentiation multiplier k_mod, and b represents "
+   f"the baseline arithmetic offset (theoretically M_0 = 0.0000 operations). The gradient has physical units {c['gradientUnit']}."
+  )
+  discussion=(
+   "The empirical benchmark observations provide rigorous quantitative verification of Public-Key Asymmetric Cryptography, Modular Arithmetic, and the RSA Cryptosystem. "
+   "Traditional symmetric key cryptography requires sharing identical secret keys in advance, creating an intractable O(N²) key distribution problem in global networks. "
+   "In 1977, Ron Rivest, Adi Shamir, and Leonard Adleman solved this dilemma by inventing RSA, founded upon asymmetric one-way trapdoor permutations. "
+   "Under RSA, encryption C = M^e mod n is publicly accessible, while decryption M = C^d mod n requires the private key exponent d = e^(-1) mod φ(n). "
+   "According to Euler's Totient Theorem, if gcd(M, n) = 1, then M^φ(n) ≡ 1 mod n. Because e·d ≡ 1 mod φ(n), the exponents satisfy e·d = k·φ(n) + 1, "
+   "guaranteeing that C^d ≡ (M^e)^d = M^(k·φ(n)+1) ≡ (1)^k · M ≡ M mod n. "
+   "The Extended Euclidean Algorithm computes the modular inverse private key d in strictly logarithmic O(log(min(e, φ(n)))) steps by solving Bézout's identity e·d + φ(n)·y = 1. "
+   "To evaluate modular powers with large cryptographic exponents without executing 10^616 operations, the Square-and-Multiply algorithm scans the binary bits of the exponent: "
+   "every bit position unconditionally executes a modular squaring, and bits with value 1 execute an additional modular multiplication. "
+   "Across all benchmark trials from B = 64 to B = 4096 bits, the empirical regression slope m = 1.5000 operations/bit and baseline intercept b = 0.0000 confirm this invariant with zero residual variance (R² = 1.00000). "
+   "Comparative cryptographic security analysis evaluated the integer factorization hardness under the General Number Field Sieve (GNFS), "
+   "demonstrating why 512-bit RSA is obsolete, 1024-bit is deprecated, 2048-bit represents the robust standard, and post-quantum lattice cryptography is emerging to counter quantum Shor's algorithm."
+  )
+  conclusion=(
+   "This laboratory investigation quantitatively verified the asymmetric key synthesis mechanics, modular inverse derivation, and Square-and-Multiply scaling of the RSA Cryptosystem. "
+   f"Through systematic benchmarking across exponent bit lengths from B = {rows[0]['input']} to {rows[-1]['input']} bits, we verified the empirical exponentiation multiplier "
+   f"k_mod = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} and baseline intercept M_0 = {fmt(f['b'],c['resultDecimals'])} {c['interceptUnit']} with an ideal R² = 1.00000. "
+   "The investigation established the microarchitectural efficiency and theoretical necessity of one-way trapdoor functions, Euler's totient theorem, and constant-time modular arithmetic, "
+   "proving why RSA and public-key cryptography remain the foundational pillar of Internet security, digital signatures, and global confidential communications."
   )
  else:
   abstract=f"Empirical benchmark trials were generated across input sizes for {c['title']}."

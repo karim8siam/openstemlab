@@ -4831,5 +4831,248 @@
     ],
     "limitations": "The simulated benchmark environment models idealized memory access streams where physical cache capacities C ∈ [4, 28] frames execute deterministically (H(C) = 6C hits). In physical computer systems, real-world cache throughput is heavily modulated by CPU hardware TLB miss latencies, multi-core false sharing on cache lines, kernel page fault interrupt servicing overhead (context switches, disk controller interrupts), dirty page writeback delays (swapping out dirty pages requires disk writes vs. clean pages which can be overwritten), and memory bus bandwidth saturation.",
     "theory": "### Theoretical Foundations of Operating Systems Memory Hierarchies, Page Replacement & LRU Cache Architectures\n\nIn modern computer architecture, memory is organized into an uncompromising hierarchical pyramid designed to balance access speed, physical density, volatile persistence, and semiconductor manufacturing cost:\n1. **Processor Registers & L1/L2/L3 Caches**: Fabricated directly on the CPU die from Static RAM (SRAM) flip-flop latches, operating at $0.5$ to $10$ nanoseconds ($10^{-9}$ s) with capacities from kilobytes to megabytes;\n2. **Main Memory (DRAM)**: Volatile dynamic RAM connected via high-speed memory buses (DDR4/DDR5), operating at $50$ to $100$ nanoseconds with capacities of tens to hundreds of gigabytes;\n3. **Secondary Storage (Solid-State Drives & Flash)**: Non-volatile NAND flash memory accessed through PCIe/NVMe protocols, operating at $10$ to $50$ microseconds ($10^{-5}$ s) with capacities of terabytes;\n4. **Tertiary Storage (Magnetic Hard Disks & Cloud Tiers)**: Mechanical platters or remote network storage, operating at $5$ to $10$ milliseconds ($10^{-3}$ s).\n\nBecause primary DRAM is fundamentally finite, operating systems virtualize memory space through **Virtual Memory Management**: processes execute within vast virtual address spaces (e.g. $2^{64}$ bytes in x86-64), while the operating system kernel and hardware Memory Management Unit (MMU) partition memory into fixed-size units called **pages** (typically $4096$ bytes, or $4$ KB). The operating system maps virtual pages into physical memory frames. When a thread accesses a virtual page that is not currently resident in physical DRAM, the MMU hardware triggers a **Page Fault Exception**, transferring control to the kernel's page fault handler. The kernel must fetch the requested page from secondary storage (swap space or file system), allocate a free physical frame, and update the page table.\n\nHowever, when physical memory frames are completely occupied, loading a new page demands an eviction: the kernel must choose an existing resident page to swap out. The algorithmic policy governing this decision is the **Page Replacement Algorithm**. A poor replacement policy induces **thrashing**—a catastrophic performance collapse where the CPU spends over $99\\%$ of its time waiting for disk I/O page faults, grinding the system to a complete halt!\n\n#### 1. The Principle of Locality & Denning's Working Set Model\nCaching and virtual memory operate successfully only because computer programs do not access memory uniformly at random. In 1968, Peter J. Denning formalized the **Principle of Locality**, identifying two complementary microarchitectural phenomena:\n1. **Temporal Locality**: If a particular memory location is referenced at time $t$, it is highly probable that the exact same location will be referenced again in the near future $t + \\Delta t$ (e.g., loop index variables, accumulator counters, call stack activation records).\n2. **Spatial Locality**: If a particular memory location is referenced at address $A$, it is highly probable that nearby memory locations $A \\pm \\delta$ will be referenced soon (e.g., sequential array iterations, instruction fetch pipelines, struct field access).\n\n##### Denning's Working Set Model:\nDenning defined the **Working Set** $W(t, \\Delta)$ of a process at time $t$ as the set of distinct virtual pages referenced during the preceding time window $[t - \\Delta, t]$ of length $\\Delta$:\n$$W(t, \\Delta) = \\{ p \\in \\text{Pages} \\mid p \\text{ was referenced in } [t - \\Delta, t] \\}$$\nThe size of the working set $|W(t, \\Delta)|$ represents the minimum number of physical frames required to execute the process without thrashing. As long as the operating system allocates at least $|W(t, \\Delta)|$ frames to the process, page faults remain rare.\n\n#### 2. Classic Page Replacement Algorithms\n\n##### 1. Belady's Optimal Algorithm (OPT / MIN):\nIn 1966, Laszlo A. Belady proved that the theoretical minimum page fault rate is achieved by the following rule:\n$$\\text{Evict the resident page whose next reference occurs furthest in the future.}$$\nIf a page will never be referenced again, it is evicted immediately.\n- **Optimality**: Belady's algorithm is provably optimal: no online or offline algorithm can achieve fewer page faults on a given reference string.\n- **Impracticability**: Because general-purpose operating systems cannot predict the future with clairvoyance, OPT cannot be implemented in production kernels. It serves solely as an ideal offline theoretical benchmark to measure online algorithm efficiency.\n\n##### 2. First-In, First-Out (FIFO):\nFIFO maintains resident pages in a FIFO queue:\n$$\\text{Evict the page that has resided in memory for the longest continuous time.}$$\nWhile trivial to implement with a circular ring buffer, FIFO suffers from severe theoretical defects: the oldest page in memory might be an active, critical data structure referenced every millisecond. Evicting it causes an immediate page fault.\n\n##### 3. Least Recently Used (LRU):\nLRU exploits temporal locality by using the immediate past as an optimal statistical predictor of the near future:\n$$\\text{Evict the resident page that has not been referenced for the longest period of time.}$$\nLRU pairs the optimality intuition of Belady's MIN with backward-looking temporal history. Whenever a page is accessed, its recency timestamp is refreshed. Under typical software execution patterns, LRU achieves page fault rates remarkably close to Belady's optimal bound.\n\n#### 3. Belady's Anomaly & The Theory of Stack Algorithms\nCommon engineering intuition suggests that increasing physical memory (allocating more page frames) must monotonically reduce, or at least maintain, the number of page faults. In 1969, Laszlo Belady, Robert Nelson, and Gerald Shedler published a shocking mathematical counterexample: under FIFO replacement, allocating **more** page frames can actually **increase** the total number of page faults! This phenomenon is universally known as **Belady's Anomaly**.\n\n##### Concrete Demonstration of Belady's Anomaly:\nConsider the 12-reference page access string:\n$$\\sigma = \\langle 1, 2, 3, 4, 1, 2, 5, 1, 2, 3, 4, 5 \\rangle$$\n- **Case 1: Cache with $C = 3$ Frames (FIFO)**:\n  Simulating FIFO step-by-step produces exactly **$9$ page faults**.\n- **Case 2: Cache with $C = 4$ Frames (FIFO)**:\n  Simulating FIFO on the exact same string with a larger cache produces **$10$ page faults** ($+11\\%$ more page faults despite $33\\%$ more memory!).\n\n##### Mattson's Inclusion Property & Stack Algorithms:\nIn 1970, Richard L. Mattson and colleagues at IBM characterized the exact class of page replacement algorithms that are mathematically immune to Belady's Anomaly, formalizing the concept of **Stack Algorithms**.\n\nLet $S_t(C)$ denote the set of resident pages in a cache of size $C$ at time step $t$. An algorithm is a **Stack Algorithm** if and only if it satisfies the **Inclusion Property**:\n$$S_t(C) \\subseteq S_t(C + 1), \\quad \\forall C \\ge 1, \\forall t \\ge 0$$\nUnder a stack algorithm, increasing cache capacity from $C$ to $C + 1$ guarantees that the larger cache contains every single page that the smaller cache would have retained, plus one additional candidate.\n- **Immunity Proof**: Under the inclusion property, any page reference that hits in cache size $C$ ($p \\in S_t(C)$) must also hit in cache size $C + 1$ ($p \\in S_t(C+1)$). Therefore, the hit count monotonically increases with capacity:\n$$H(C + 1) \\ge H(C), \\quad \\forall C$$\nBelady's Anomaly is mathematically impossible in any stack algorithm!\n- **Classification**:\n  - **Stack Algorithms (Immune)**: LRU, LFU (Least Frequently Used), Belady's OPT.\n  - **Non-Stack Algorithms (Susceptible)**: FIFO, Second-Chance Clock, Random Replacement.\n\n#### 4. Microarchitectural Implementation: Hash Map + Doubly-Linked List\nIn software systems (e.g. database buffer pools, Web browser HTTP caches, Redis, Memcached, Python's `functools.lru_cache`), an LRU cache must execute two core operations:\n1. `get(key)`: Retrieve the cached value associated with `key` and mark it as most recently used.\n2. `put(key, value)`: Insert a new key-value pair. If the cache exceeds capacity $C$, evict the least recently used item.\n\nA naive array or singly-linked list requires $O(C)$ linear time to search for a key or shift elements upon access, degrading throughput. To achieve strict **$O(1)$ worst-case time complexity** for both `get` and `put`, the standard architecture combines two complementary data structures:\n1. **Doubly-Linked List**:\n   - Maintains all cached nodes ordered strictly by temporal recency.\n   - The head sentinel `head` is adjacent to the **Most Recently Used (MRU)** node.\n   - The tail sentinel `tail` is adjacent to the **Least Recently Used (LRU)** node.\n   - Because each node contains both `prev` and `next` pointers, any node can be spliced out and moved to the head in exactly $4$ pointer assignments without traversing the list ($O(1)$ time).\n2. **Hash Map (Hash Table)**:\n   - Maps each `key` to its corresponding `Node*` memory pointer.\n   - Provides $O(1)$ expected lookup, eliminating list scans.\n\n##### The $O(1)$ Access Routine:\nWhen key $K$ is accessed:\n1. Lookup $K$ in the Hash Map ($O(1)$ time) $\\to$ retrieves pointer to node $N$;\n2. Unlink node $N$: `N.prev.next = N.next; N.next.prev = N.prev;`\n3. Prepend node $N$ right after `head`: `N.next = head.next; N.prev = head; head.next.prev = N; head.next = N;`\nTotal time: strictly $O(1)$ scalar machine instructions.\n\n##### The $O(1)$ Eviction Routine:\nWhen capacity $C$ is reached on insertion:\n1. Isolate the victim node $V = \\text{tail.prev}$;\n2. Remove $V$ from the doubly-linked list ($4$ pointer updates);\n3. Erase key $V.\\text{key}$ from the Hash Map ($O(1)$ time);\n4. Deallocate or recycle node $V$.\n\n#### 5. Kernel-Level Approximation: The Second-Chance Clock Algorithm\nWhile the Hash Map + Doubly-Linked List architecture is ideal for user-space software caching, executing $4$ memory pointer writes on **every single CPU instruction access** in hardware would destroy microprocessor performance.\n\nTo implement LRU-like behavior at operating system scale without tracking continuous timestamps, computer engineers developed the **Second-Chance Clock Algorithm**:\n1. **Hardware Reference Bit ($R$)**: The CPU MMU hardware includes a single reference bit ($R \\in \\{0, 1\\}$) in each page table entry. Whenever a page is accessed by any machine instruction, the hardware automatically sets $R = 1$ in zero clock cycles.\n2. **Circular Buffer with Clock Hand**: Physical memory frames are organized in a logical circular ring. A pointer (the \"clock hand\") indicates the next candidate frame for inspection.\n3. **Inspection & Second Chance Logic**:\n   When a page fault requires an eviction:\n   - The kernel inspects the frame pointed to by the clock hand:\n     - If $R = 0$: This page has not been accessed since the hand last swept past. It is selected as the victim and evicted immediately!\n     - If $R = 1$: The page was accessed recently. The kernel gives it a \"second chance\": it clears $R = 0$, leaves the page in memory, and advances the clock hand to the next frame.\n   - The hand advances circularly until a frame with $R = 0$ is found (guaranteed to terminate within at most two full rotations).\n\nThe Clock algorithm approximates true LRU with negligible CPU overhead, serving as the foundational page replacement engine in UNIX, Linux, FreeBSD, and Windows NT.\n\n#### 6. Effective Memory Access Time (EMAT) & Page Fault Penalties\nThe performance penalty of page faults is governed by the **Effective Memory Access Time (EMAT)**:\n$$\\text{EMAT} = h \\cdot t_{\\text{hit}} + (1 - h) \\cdot t_{\\text{fault}}$$\nwhere:\n- $h \\in [0, 1]$ is the Cache Hit Ratio ($H / N$);\n- $1 - h = p$ is the Page Fault Rate ($M / N$);\n- $t_{\\text{hit}}$ is the DRAM access latency ($\\approx 100$ ns);\n- $t_{\\text{fault}}$ is the page fault servicing time ($\\approx 10$ \\u00b5s on NVMe SSD, or $10,000$ ns; $\\approx 8$ ms on mechanical HDD, or $8,000,000$ ns).\n\n##### Numerical Example:\nIf DRAM access takes $100$ ns and NVMe SSD page fault servicing takes $10$ \\u00b5s ($10,000$ ns):\n- At $h = 99\\%$ ($p = 1\\%$ page faults):\n  $$\\text{EMAT} = 0.99 \\times 100 \\text{ ns} + 0.01 \\times 10,000 \\text{ ns} = 99 + 100 = 199 \\text{ ns (2\\times slowdown)}$$\n- At $h = 90\\%$ ($p = 10\\%$ page faults):\n  $$\\text{EMAT} = 0.90 \\times 100 \\text{ ns} + 0.10 \\times 10,000 \\text{ ns} = 90 + 1000 = 1,090 \\text{ ns (11\\times slowdown!)}$$\nEven a minuscule degradation in cache hit ratio produces catastrophic degradation in processor instruction execution rates, proving why optimizing page replacement algorithms is critical to computational performance!"
+  },
+  {
+    "slug": "cryptographic-rsa-modular",
+    "number": 23,
+    "title": "Public-Key Cryptography & Modular Arithmetic: RSA Key Generation, Square-and-Multiply Exponentiation, Extended Euclidean Algorithm, and Miller-Rabin Primality",
+    "shortTitle": "RSA & Modular Arithmetic",
+    "category": "Security & Cryptography",
+    "difficulty": "Advanced",
+    "duration": "3 Hours",
+    "featured": true,
+    "subject": "Computer Science",
+    "page_path": "/computer-science/cryptographic-rsa-modular/",
+    "published": true,
+    "min": 64,
+    "max": 4096,
+    "step": 64,
+    "initial": 512,
+    "shortInput": "B",
+    "inputDecimals": 0,
+    "angle": false,
+    "timed": false,
+    "observationLabel": "Modular multiplication operations",
+    "xAxis": "Exponent bit length B (bits)",
+    "yAxis": "Modular operations M(B) = 1.5000 · B + 0.0000 (operations)",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "target": "k_mod",
+    "targetName": "Exponentiation Multiplier k_mod",
+    "targetSymbol": "k_{\\text{mod}}",
+    "targetValue": "1.5000",
+    "resultUnit": "operations/bit",
+    "resultScale": 1.0,
+    "resultDecimals": 4,
+    "interceptSymbol": "M_0",
+    "interceptValue": "0.0000",
+    "interceptUnit": "operations",
+    "measureLabel": "Execute Modular Exponentiation",
+    "emptyX": [
+      0,
+      4500
+    ],
+    "emptyY": [
+      0,
+      6500
+    ],
+    "samples": [
+      64,
+      128,
+      256,
+      512,
+      1024,
+      2048,
+      4096
+    ],
+    "intercept": 0.0,
+    "interceptLabel": "Baseline Operation Intercept M_0",
+    "gradientUnit": "operations/bit",
+    "reference": 1.5,
+    "tolerance": 0.05,
+    "fitEquation": "M(B) = k_mod · B + M_0 = 1.5000 · B + 0.0000 operations",
+    "inputLabel": "Exponent Bit Length B",
+    "inputUnit": "bits",
+    "inputDefault": 512,
+    "inputMin": 64,
+    "inputMax": 4096,
+    "inputStep": 64,
+    "rawLabel": "Modular Operations M(B)",
+    "rawUnit": "operations",
+    "rawDecimals": 0,
+    "xLabel": "Exponent Bit Length B",
+    "xUnit": "bits",
+    "xDecimals": 0,
+    "yLabel": "Total Modular Operations y = M(B)",
+    "yUnit": "operations",
+    "yDecimals": 0,
+    "resultLabel": "Exponentiation Multiplier k_mod",
+    "referenceValue": 1.5,
+    "aim": "To investigate the algorithmic principles of public-key asymmetric cryptography, evaluate the mathematical foundations of the RSA cryptosystem, analyze Euler's Totient Theorem (M^(ed) ≡ M mod n), execute the Extended Euclidean Algorithm to compute modular multiplicative inverses d = e^(-1) mod φ(n), assess strong pseudo-prime generation via the Miller-Rabin test, verify the linear arithmetic scaling law M(B) = k_mod · B + M_0 = 1.5000 · B + 0.0000 operations across exponent bit lengths B ∈ [64, 4096] in Square-and-Multiply modular exponentiation, and evaluate integer factorization complexity under the General Number Field Sieve (GNFS).",
+    "intro": "Modern digital communication, global commerce, and national defense rely on public-key cryptography to establish secure channels over untrusted public networks. In 1977, Ron Rivest, Adi Shamir, and Leonard Adleman created the RSA cryptosystem, realizing Diffie and Hellman's vision of asymmetric trapdoor one-way functions. RSA leverages the profound computational asymmetry between modular exponentiation and prime factorization: multiplying two massive prime numbers p and q to form modulus n = p · q executes in microseconds, whereas factoring n back into p and q requires astronomical computational energy under the best known classical sub-exponential algorithms (the General Number Field Sieve, GNFS). Under RSA, public encryption C = M^e mod n is accessible to all, while decryption M = C^d mod n requires the private exponent d = e^(-1) mod φ(n), calculated via the Extended Euclidean Algorithm. To evaluate modular powers with 2048-bit exponents without performing 10^616 sequential multiplications, cryptographic hardware utilizes the Square-and-Multiply algorithm. By scanning the binary bitstring of the exponent, the algorithm executes exactly B modular squarings and an average of 0.5 B modular multiplications, establishing the deterministic linear scaling law M(B) = 1.5000 · B operations. In this laboratory investigation, students benchmark modular exponentiation across key lengths B ∈ [64, 4096], verify the linear scaling law M(B) = 1.5000 · B + 0.0000 via ordinary least-squares regression, execute the Extended Euclidean Algorithm, analyze Miller-Rabin primality testing bounds, and contrast classical factorization hardness with quantum Shor's algorithm threat models.",
+    "modelExtra": "In the Square-and-Multiply modular exponentiation benchmark across private key exponent bit lengths B in [64, 4096] bits (where the exponent d is an IEEE large integer with uniform Hamming weight W ≈ 0.5 · B, representing realistic cryptographic keys), exponentiation proceeds via binary scanning from the most significant bit to the least significant bit. At each bit position i ∈ [0..B-1], the algorithm unconditionally executes exactly 1 modular squaring operation (acc = acc² mod n) to double the binary weight. Additionally, whenever the current bit b_i = 1, the algorithm executes exactly 1 modular multiplication (acc = acc · base mod n). Across an exponent of bit length B, the cumulative arithmetic operation count is strictly governed by the exact deterministic linear invariant M(B) = B + 0.5 · B = 1.5000 · B + 0.0000 modular operations. Plotting modular operations against exponent bit length B yields an ordinary least-squares regression slope k_mod = 1.5000 operations/bit and baseline intercept M_0 = 0.0000 operations with an ideal coefficient of determination R² = 1.000000.",
+    "settings": [
+      "Modular arithmetic: Multi-precision big integer arithmetic modulo composite n = p · q.",
+      "Public exponent: Standard Fermat prime e = 65537 = 2^16 + 1.",
+      "Private exponent d: Evaluated via the Extended Euclidean Algorithm d = e^(-1) mod φ(n).",
+      "Exponent bit lengths tested: B ∈ [64, 128, 256, 512, 1024, 2048, 4096] bits.",
+      "Exponentiation algorithm: Binary Square-and-Multiply modular exponentiation."
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "🔬",
+        "label": "Workbench (Square-and-Multiply Binary Exponentiation Telemetry)",
+        "desc": "Inspect real-time binary exponent scanning, observe modular squarings and conditional multiplications, monitor intermediate accumulator state modulo n, and verify the scaling law M(B) = 1.5B."
+      },
+      {
+        "id": "compare",
+        "icon": "⚖️",
+        "label": "Cryptographic Key Hardness Comparison (RSA-512 vs 1024 vs 2048 vs 4096)",
+        "desc": "Compare encryption/decryption execution times against General Number Field Sieve (GNFS) factorization core-years, sub-exponential complexity curves, and post-quantum security margins."
+      },
+      {
+        "id": "sandbox",
+        "icon": "🧪",
+        "label": "Interactive RSA Keygen & Extended Euclidean Sandbox",
+        "desc": "Generate custom prime pairs, calculate Euler's totient φ(n), solve Bézout's identity to derive private key d, execute Miller-Rabin primality tests, and encrypt/decrypt custom text blocks."
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Square-and-Multiply Binary Exponentiation Unit",
+        "purpose": "Evaluates multi-precision modular powers C = M^e mod n and M = C^d mod n in O(log e) operations via bitwise squarings and conditional multiplications."
+      },
+      {
+        "name": "Extended Euclidean Modular Inverter",
+        "purpose": "Solves Bézout's identity e · d + φ(n) · y = 1 to compute the modular multiplicative inverse private key exponent d = e^(-1) mod φ(n)."
+      },
+      {
+        "name": "Miller-Rabin Probabilistic Primality Tester",
+        "purpose": "Verifies cryptographic strong pseudo-prime candidates using witness bases and quadratic congruence checks with composite error probability < 2^(-80)."
+      },
+      {
+        "name": "Euler Totient & Key Synthesis Engine",
+        "purpose": "Computes composite modulus n = p · q, Euler's totient φ(n) = (p-1)(q-1), and verifies that public exponent e is coprime to φ(n)."
+      },
+      {
+        "name": "Montgomery Modular Multiplication Accelerator",
+        "purpose": "Transforms large-integer operands into Montgomery residue space to replace multi-precision division with fast bitwise shifts and additions."
+      },
+      {
+        "name": "Cryptographic Telemetry & Operation Logger",
+        "purpose": "Tracks modular squarings, multiplications, calculates Effective Memory Access Time (EMAT), and validates linear regression against M(B) = 1.5B."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Prime Candidate Generation & Primality Verification",
+        "text": "Generate large random odd integers p and q across benchmark bit lengths B ∈ [64, 128, 256, 512, 1024, 2048, 4096]. Execute 40 rounds of Miller-Rabin primality testing per candidate to guarantee composite error probability < 2^(-80)."
+      },
+      {
+        "title": "Modulus & Euler Totient Synthesis",
+        "text": "Multiply prime factors to compute the composite public modulus n = p · q. Calculate Euler's totient function φ(n) = (p - 1)(q - 1)."
+      },
+      {
+        "title": "Public Exponent Validation & Modular Inversion",
+        "text": "Select the standard Fermat prime public exponent e = 65537, verifying that gcd(e, φ(n)) = 1. Execute the Extended Euclidean Algorithm to calculate the private decryption exponent d satisfying e · d ≡ 1 (mod φ(n))."
+      },
+      {
+        "title": "Binary Exponent Scanning & Square-and-Multiply Execution",
+        "text": "Decompose the private key exponent d into its binary representation (b_{B-1} ... b_0)_2. Initialize accumulator acc = 1. For each bit from most significant to least significant, execute a modular squaring acc = acc² mod n (incrementing operation counter by 1); if the bit is 1, execute a modular multiplication acc = (acc · base) mod n (incrementing counter by 1)."
+      },
+      {
+        "title": "Decryption Verification via Euler's Totient Theorem",
+        "text": "Encrypt a test plaintext integer M < n into ciphertext C = M^e mod n. Decrypt using C^d mod n and verify that M' matches original message M exactly, confirming Euler's theorem M^(ed) ≡ M mod n."
+      },
+      {
+        "title": "Linear Regression & Complexity Model Validation",
+        "text": "Plot recorded modular operations M(B) against exponent bit length B. Perform ordinary least-squares regression to verify the theoretical slope k_mod = 1.5000 operations/bit, intercept M_0 = 0.0000, and correlation coefficient R² = 1.00000."
+      }
+    ],
+    "topics": [
+      {
+        "question": "What is the foundational difference between Symmetric and Asymmetric (Public-Key) Cryptography?",
+        "answer": "Symmetric cryptography uses the exact same secret key for both encryption and decryption (e.g. AES). In an open network with N participants, pairwise communication requires sharing and storing N(N-1)/2 keys, creating a massive key distribution bottleneck. Asymmetric cryptography (Diffie-Hellman, RSA) uses a mathematically linked key pair: a public key (openly distributed) for encryption and a private key (kept secret) for decryption. Anyone can encrypt a message using the recipient's public key, but only the recipient holding the corresponding private key can decrypt it, solving the key distribution problem completely."
+      },
+      {
+        "question": "How does the RSA cryptosystem work, and what is the role of Euler's Totient Theorem?",
+        "answer": "RSA chooses two large primes p and q, computing modulus n = pq and Euler's totient φ(n) = (p-1)(q-1). A public exponent e is chosen coprime to φ(n), and the private exponent d is computed as the modular inverse: ed ≡ 1 (mod φ(n)). Encryption evaluates C = M^e mod n; decryption evaluates M' = C^d mod n. According to Euler's Totient Theorem, if gcd(M, n) = 1, then M^φ(n) ≡ 1 (mod n). Because ed = k·φ(n) + 1, we have C^d ≡ (M^e)^d = M^(k·φ(n)+1) = (M^φ(n))^k · M ≡ (1)^k · M ≡ M (mod n), guaranteeing flawless mathematical decryption."
+      },
+      {
+        "question": "How does the Extended Euclidean Algorithm compute the private key exponent d?",
+        "answer": "The condition ed ≡ 1 (mod φ(n)) can be rewritten as the linear Diophantine equation e·d + φ(n)·y = gcd(e, φ(n)) = 1. The Extended Euclidean Algorithm evaluates the sequence of quotients and remainders from the standard Euclidean algorithm backwards to determine the integer Bézout coefficients x and y satisfying a·x + b·y = gcd(a, b). For inputs e and φ(n), the resulting coefficient x represents the exact modular multiplicative inverse d = e^(-1) mod φ(n), computed in strictly logarithmic O(log(min(e, φ(n)))) operations."
+      },
+      {
+        "question": "Why is the Square-and-Multiply algorithm used for modular exponentiation, and what is its operational complexity?",
+        "answer": "Evaluating a^b mod n naively by multiplying a by itself b times requires b multiplications. For a 2048-bit exponent b, b ≈ 10^616, which would take billions of years. The Square-and-Multiply algorithm scans the binary bits of b from left to right. At each bit position, it squares the current accumulator (acc = acc² mod n); if the bit is 1, it additionally multiplies by the base (acc = acc·a mod n). For a B-bit exponent, this evaluates exactly B squarings and an average of B/2 multiplications (assuming 50% ones in the binary key), completing in strictly M(B) = 1.5 B modular operations (a few thousand operations for a 2048-bit key, executing in milliseconds)."
+      },
+      {
+        "question": "How does the Miller-Rabin test verify whether massive integers are prime?",
+        "answer": "The Miller-Rabin test is a randomized polynomial-time algorithm based on Fermat's Little Theorem and the property that 1 has only two square roots modulo a prime: 1 and -1. For odd candidate n, it factors n-1 = 2^s · d. For a random witness base a, it evaluates x = a^d mod n. If x = 1 or x = n-1, n passes. Otherwise, it squares x repeatedly up to s-1 times: if x becomes n-1, it passes; if the loop terminates without seeing n-1, n is proven composite. If n is composite, at least 75% of all bases are witnesses. By running k = 40 independent rounds with random bases, the probability of falsely accepting a composite as prime is bounded by (1/4)^40 = 2^(-80) < 10^(-24)."
+      },
+      {
+        "question": "What is the best known algorithm for breaking RSA, and why is 2048-bit RSA considered secure?",
+        "answer": "The security of RSA relies on the computational difficulty of factoring the composite modulus n into primes p and q. The fastest known classical factoring algorithm is the General Number Field Sieve (GNFS), which runs in sub-exponential time L_n[1/3, c] = exp((c + o(1)) (ln n)^(1/3) (ln ln n)^(2/3)). While 512-bit RSA was factored in 1999 and 768-bit in 2009, 2048-bit RSA has a modulus with 617 decimal digits. Factoring a 2048-bit modulus using GNFS would require an estimated 10^9 to 10^11 core-years of continuous computing, far exceeding global computational capabilities."
+      },
+      {
+        "question": "What threat do quantum computers pose to RSA, and how does Shor's algorithm work?",
+        "answer": "In 1994, Peter Shor demonstrated that a sufficiently large fault-tolerant quantum computer can factor composite integers in polynomial time O((log n)³). Shor's algorithm reduces factoring to finding the period r of the modular exponential function f(x) = a^x mod n, which can be computed in polynomial time using the Quantum Fourier Transform (QFT). Once the period r is found, gcd(a^(r/2) ± 1, n) yields the non-trivial prime factors of n with high probability. A quantum computer with approximately 4,000 logical qubits could break 2048-bit RSA in hours, driving the transition to post-quantum cryptography (PQC)."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "In the RSA cryptosystem, why is the public exponent e commonly chosen as the Fermat prime 65537 (2^16 + 1)?",
+        "options": [
+          "Because its binary representation contains only two 1s, enabling fast encryption in only 17 modular multiplications while being coprime to almost all totients",
+          "Because it is the largest prime number that can fit inside a 16-bit CPU register",
+          "Because it prevents quantum computers from factoring the modulus",
+          "Because it makes the private key exponent d equal to 1"
+        ],
+        "correct": 0,
+        "explanation": "65537 in binary is 10000000000000001₂ (16 zeros and two 1s). Under Square-and-Multiply, this requires 16 squarings and only 1 multiplication (17 operations total), accelerating encryption while minimizing side-channel exposure."
+      },
+      {
+        "question": "For an exponent of bit length B with equal distribution of 0s and 1s, how many total modular multiplications (including squarings) are executed by the Square-and-Multiply algorithm?",
+        "options": [
+          "1.5 · B operations (B squarings and 0.5 B multiplications)",
+          "B² operations",
+          "2^B operations",
+          "0.5 · B operations"
+        ],
+        "correct": 0,
+        "explanation": "Every bit requires 1 modular squaring (B squarings). The bits that are 1 (on average 50% in random cryptographic keys) require 1 modular multiplication (0.5 B multiplications), totaling 1.5 B operations."
+      },
+      {
+        "question": "What mathematical theorem guarantees that (M^e)^d ≡ M (mod n) for every plaintext block M coprime to n?",
+        "options": [
+          "Euler's Totient Theorem: M^φ(n) ≡ 1 (mod n)",
+          "Pythagorean Theorem",
+          "Central Limit Theorem",
+          "Master Theorem for Divide-and-Conquer"
+        ],
+        "correct": 0,
+        "explanation": "Because e·d ≡ 1 (mod φ(n)), e·d = k·φ(n) + 1. Euler's Totient Theorem states M^φ(n) ≡ 1 (mod n), so M^(ed) = (M^φ(n))^k · M ≡ (1)^k · M ≡ M (mod n)."
+      },
+      {
+        "question": "How does the Extended Euclidean Algorithm compute the private decryption exponent d from public exponent e and totient φ(n)?",
+        "options": [
+          "By solving Bézout's identity e · d + φ(n) · y = 1 to find the modular multiplicative inverse",
+          "By factoring φ(n) into individual prime components",
+          "By evaluating the discrete Fourier transform of e",
+          "By performing binary search between 1 and n"
+        ],
+        "correct": 0,
+        "explanation": "Bézout's identity states that integers x and y exist such that a·x + b·y = gcd(a, b). When gcd(e, φ(n)) = 1, e·x + φ(n)·y = 1, meaning e·x ≡ 1 (mod φ(n)), making x the private key exponent d."
+      }
+    ],
+    "precautions": [
+      "In production RSA implementations, never use textbook unpadded RSA; always apply Optimal Asymmetric Encryption Padding (OAEP) to prevent chosen-ciphertext attacks (CCA2) and Coppersmith attacks.",
+      "Ensure that private primes p and q are chosen with large difference |p - q| > 2^(B/2 - 100) to prevent Fermat's factorization method from factoring n in seconds.",
+      "In hardware cryptographic engines, implement Montgomery ladder or dummy multiplication branches to ensure constant-time execution, preventing timing and power analysis side-channel attacks.",
+      "Securely zeroize and purge prime factors p and q and totient φ(n) from volatile memory immediately following private key generation to prevent cold boot memory extraction."
+    ],
+    "limitations": "The simulated benchmark environment models idealized big-integer modular arithmetic where Square-and-Multiply modular operations scale deterministically (M(B) = 1.5B operations). In physical hardware cryptographic security modules (HSMs) and software libraries (OpenSSL), wall-clock latency is heavily modulated by multi-precision word sizes (e.g. 64-bit limbs vs. AVX-512 vector arithmetic), Montgomery residue space reduction overhead, cache line access patterns during sliding-window exponentiation, and constant-time side-channel countermeasure padding.",
+    "theory": "### Theoretical Foundations of Public-Key Cryptography, Modular Arithmetic & RSA Key Generation\n\nFor millennia, cryptography relied exclusively on **Symmetric Key Ciphers** (such as the Caesar cipher, Vigenère cipher, Enigma, and modern standards like AES): both communicating parties had to securely share an identical secret key in advance before any encrypted transmission could commence. In a distributed global network with millions of participants, pre-sharing pairwise secret keys across every pair of communicators requires $\\Theta(N^2)$ secret exchanges—a logistical impossibility.\n\nIn 1976, Whitfield Diffie and Martin Hellman revolutionized information security by formulating the concept of **Public-Key (Asymmetric) Cryptography**. In 1977, Ron Rivest, Adi Shamir, and Leonard Adleman at the Massachusetts Institute of Technology (MIT) realized this vision by inventing the **RSA Cryptosystem**. RSA relies on asymmetric mathematical **Trapdoor One-Way Permutations**: functions that are computationally effortless to evaluate in the forward direction, but computationally intractable to reverse unless one possesses a secret mathematical key (the \"trapdoor\").\n\nIn RSA, the forward operation is modular multiplication and exponentiation—evaluable in milliseconds. The inverse operation is the **Integer Factorization Problem**: decomposing a massive composite number $n$ into its constituent prime factors $p$ and $q$—a problem for which no polynomial-time classical algorithm is known. Today, RSA and modular arithmetic secure global Internet commerce (TLS/HTTPS), digital signatures, code signing certificates, electronic banking, and cryptocurrency key exchanges.\n\n#### 1. Mathematical Principles of Modular Arithmetic\nModular arithmetic formalizes computation over cyclic finite rings $\\mathbb{Z}_n = \\{0, 1, \\dots, n-1\\}$. Two integers $a, b \\in \\mathbb{Z}$ are **congruent modulo $n$** (denoted $a \\equiv b \\pmod n$) if their difference is an exact integer multiple of $n$:\n$$n \\mid (a - b) \\iff a = q \\cdot n + b$$\n\n##### Fundamental Algebraic Properties:\nFor all $a, b, c, d \\in \\mathbb{Z}$:\n1. **Addition Compatibility**: $(a + b) \\pmod n = ((a \\pmod n) + (b \\pmod n)) \\pmod n$\n2. **Multiplication Compatibility**: $(a \\cdot b) \\pmod n = ((a \\pmod n) \\cdot (b \\pmod n)) \\pmod n$\n3. **Exponentiation Compatibility**: $(a^b) \\pmod n = (a \\pmod n)^b \\pmod n$\n\n##### Euler's Totient Function $\\phi(n)$:\nEuler's totient function $\\phi(n)$ counts the number of positive integers up to $n$ that are relatively prime (coprime) to $n$:\n$$\\phi(n) = |\\{ k \\in \\{1, 2, \\dots, n\\} \\mid \\gcd(k, n) = 1 \\}|$$\nFor prime numbers $p$, every positive integer less than $p$ is coprime to $p$:\n$$\\phi(p) = p - 1$$\nBecause $\\phi$ is a multiplicative arithmetic function, for the product of two distinct primes $n = p \\cdot q$:\n$$\\phi(n) = \\phi(p) \\cdot \\phi(q) = (p - 1)(q - 1) = n - (p + q) + 1$$\n\n##### Euler's Totient Theorem:\nEuler generalized Fermat's Little Theorem ($a^{p-1} \\equiv 1 \\pmod p$) to arbitrary composite moduli $n$.\n> **Theorem (Euler's Totient Theorem):**\n> If $a$ and $n$ are coprime integers ($\\gcd(a, n) = 1$), then:\n> $$a^{\\phi(n)} \\equiv 1 \\pmod n$$\n\nThis theorem is the foundational engine of RSA! Multiplying by $a$ on both sides yields:\n$$a^{k \\cdot \\phi(n) + 1} = (a^{\\phi(n)})^k \\cdot a \\equiv 1^k \\cdot a \\equiv a \\pmod n$$\nAny exponent of the form $k \\cdot \\phi(n) + 1$ acts as an identity operator under modular exponentiation!\n\n#### 2. The RSA Cryptosystem Protocol\n\n##### Phase 1: Key Generation\n1. **Prime Generation**: Select two massive, independent random prime numbers $p$ and $q$ of equal bit length (e.g. $1024$ bits each for 2048-bit RSA) using the Miller-Rabin primality test.\n2. **Modulus Calculation**: Compute the public modulus:\n   $$n = p \\cdot q$$\n   The bit length of $n$ determines the key strength.\n3. **Euler's Totient**: Compute:\n   $$\\phi(n) = (p - 1)(q - 1)$$\n4. **Public Exponent Selection**: Choose an integer $e$ coprime to $\\phi(n)$ ($\\gcd(e, \\phi(n)) = 1$) such that $1 < e < \\phi(n)$.\n   In modern practice, the Fermat prime **$e = 65537 = 2^{16} + 1$** is standard worldwide.\n5. **Private Exponent Inversion**: Compute the private key exponent $d$ as the modular multiplicative inverse of $e$ modulo $\\phi(n)$:\n   $$e \\cdot d \\equiv 1 \\pmod{\\phi(n)}$$\n   evaluated efficiently via the **Extended Euclidean Algorithm**.\n6. **Key Distribution**:\n   - **Public Key**: $(e, n)$ — published openly to the entire world.\n   - **Private Key**: $(d, n)$ (or secret tuple $\\{p, q, d\\}$) — kept strictly confidential. Primes $p$ and $q$ are purged from RAM.\n\n##### Phase 2: Encryption (Sender Alice $\\to$ Receiver Bob)\nGiven Bob's public key $(e, n)$ and a message encoded as an integer $M < n$:\n$$C = M^e \\pmod n$$\nAlice transmits ciphertext integer $C$ over an insecure public channel.\n\n##### Phase 3: Decryption (Receiver Bob)\nBob uses his private key exponent $d$:\n$$M' = C^d \\pmod n$$\n\n##### Mathematical Proof of Correctness:\nSubstituting ciphertext $C = M^e \\pmod n$:\n$$M' \\equiv (M^e)^d \\equiv M^{e \\cdot d} \\pmod n$$\nBecause $e \\cdot d \\equiv 1 \\pmod{\\phi(n)}$, there exists an integer $k$ such that $e \\cdot d = k \\cdot \\phi(n) + 1$. Therefore:\n$$M^{e \\cdot d} = M^{k \\cdot \\phi(n) + 1} = (M^{\\phi(n)})^k \\cdot M \\pmod n$$\nBy Euler's Totient Theorem, if $\\gcd(M, n) = 1$, then $M^{\\phi(n)} \\equiv 1 \\pmod n$, yielding:\n$$M' \\equiv (1)^k \\cdot M \\equiv M \\pmod n$$\n(By the Chinese Remainder Theorem, the congruence holds unconditionally even if $\\gcd(M, n) \\ne 1$). Decryption reconstructs the original plaintext $M$ with mathematical certitude!\n\n#### 3. The Extended Euclidean Algorithm & Modular Multiplicative Inverses\nTo compute the private key $d$ satisfying $e \\cdot d \\equiv 1 \\pmod{\\phi(n)}$, we must solve the linear Diophantine equation:\n$$e \\cdot d + \\phi(n) \\cdot y = \\gcd(e, \\phi(n)) = 1$$\n**Bézout's Identity** states that for any integers $a$ and $b$, there exist integers $x$ and $y$ such that $a x + b y = \\gcd(a, b)$. The **Extended Euclidean Algorithm** evaluates these coefficients in $O(\\log(\\min(a, b)))$ divisions:\n\n##### Algorithm Procedure:\nLet $r_0 = \\phi(n), r_1 = e, x_0 = 0, x_1 = 1$.\nAt step $i$:\n$$q_i = \\lfloor r_{i-1} / r_i \\rfloor$$\n$$r_{i+1} = r_{i-1} - q_i \\cdot r_i$$\n$$x_{i+1} = x_{i-1} - q_i \\cdot x_i$$\nIterate until remainder $r_{k+1} = 0$. The coefficient $x_k$ is the modular inverse. If $x_k < 0$, add $\\phi(n)$ to ensure $d \\in [1, \\phi(n) - 1]$.\n\n#### 4. Binary Square-and-Multiply Exponentiation\nEvaluating $C = M^e \\pmod n$ by multiplying $M$ by itself $e$ times requires $e$ multiplications. For a 2048-bit key, $e \\approx 2^{2048} \\approx 10^{616}$, which would require more operations than there are atoms in the observable universe ($10^{80}$)!\n\nThe **Square-and-Multiply Algorithm** (also known as binary modular exponentiation) reduces the time complexity from exponential $O(e)$ to logarithmic $O(\\log_2 e)$ by exploiting the binary representation of the exponent:\n$$e = \\sum_{i=0}^{B-1} b_i 2^i = (b_{B-1} b_{B-2} \\dots b_1 b_0)_2$$\n\n##### Algorithm Trace:\n```text\nacc = 1\nFor i from B-1 down to 0:\n    acc = (acc * acc) mod n       // Modular Squaring (executed for EVERY bit)\n    If b_i == 1:\n        acc = (acc * base) mod n  // Modular Multiplication (executed ONLY if bit is 1)\nReturn acc\n```\n\n##### Computational Complexity & Linear Regression Basis:\nFor an exponent of bit length $B$:\n- **Modular Squarings**: Exactly $B$ squarings are executed (one per bit).\n- **Modular Multiplications**: In a random cryptographic private key $d$, half the bits are `0` and half are `1` on average (Hamming weight $W \\approx 0.5 \\cdot B$). Therefore, exactly $0.5 \\cdot B$ multiplications are executed.\n- **Total Modular Operations**:\n$$M(B) = B + 0.5 \\cdot B = 1.5000 \\cdot B + 0.0000 \\text{ operations}$$\nThis exact deterministic arithmetic scaling law provides the linear regression foundation of this laboratory!\n\n#### 5. Miller-Rabin Probabilistic Primality Testing\nTo generate the 1024-bit primes $p$ and $q$, trial division up to $\\sqrt{p} \\approx 2^{512}$ is impossible. Cryptosystems rely on the **Miller-Rabin Primality Test** (1975, Gary Miller & Michael Rabin):\n\nGiven candidate odd integer $n > 2$, write $n - 1 = 2^s \\cdot d$ where $d$ is odd.\nPick a random base witness $a \\in [2, n - 2]$. Compute $x = a^d \\pmod n$.\nIf $x \\equiv 1$ or $x \\equiv n - 1 \\pmod n$, $n$ passes the test for base $a$.\nOtherwise, repeatedly square $x \\gets x^2 \\pmod n$ up to $s - 1$ times:\nIf $x \\equiv n - 1 \\pmod n$, $n$ passes.\nIf the loop finishes without reaching $n - 1$, $n$ is **definitively composite**!\n\n> **Error Bound Theorem:**\n> For any composite odd integer $n$, at least $3/4$ of all bases $a$ are witnesses to its compositeness. Repeating the test across $k$ independent random bases bounds the probability of mistakenly accepting a composite number to:\n> $$P(\\text{Composite Error}) \\le \\left(\\frac{1}{4}\\right)^k = 2^{-2k}$$\nFor $k = 40$ rounds, $P(\\text{Error}) \\le 2^{-80} \\approx 10^{-24}$—statistically rarer than cosmic ray hardware bit-flips!\n\n#### 6. Cryptanalysis & Integer Factorization Hardness\nThe security of RSA rests entirely on the asymmetry between multiplication and factorization:\n- **Multiplying Primes**: Multi-precision integer multiplication of two $B$-bit numbers takes $O(B^2)$ (or $O(B \\log B)$ via Karatsuba / Schönhage-Strassen). For $B = 1024$, this completes in microseconds.\n- **Factoring Modulus $n$**: The fastest known classical algorithm for integer factorization is the **General Number Field Sieve (GNFS)**, which operates in sub-exponential asymptotic complexity:\n  $$L_n\\left[\\frac{1}{3}, c\\right] = \\exp\\left( \\left(c + o(1)\\right) (\\ln n)^{1/3} (\\ln \\ln n)^{2/3} \\right)$$\n  where $c = \\sqrt[3]{64/9} \\approx 1.923$.\n\n##### Historical Factorization Records:\n- **RSA-512 (155 decimal digits)**: Factored in 1999 using 300 workstations. 512-bit keys are completely insecure today.\n- **RSA-768 (232 decimal digits)**: Factored in 2009 using 1500 core-years.\n- **RSA-829 (250 decimal digits)**: Factored in 2020 using 2700 core-years.\n- **RSA-2048 (617 decimal digits)**: Factoring 2048-bit RSA requires an estimated $10^9$ to $10^{11}$ core-years of computation—exceeding the energy output of global computing infrastructure for decades!\n- **Quantum Horizon (Shor's Algorithm)**: In 1994, Peter Shor proved that a sufficiently large quantum computer running quantum phase estimation and modular order finding can factor $n$ in polynomial time $O((\\log n)^3)$. Post-quantum cryptography (lattice-based, code-based) is being standardized by NIST to defend against future quantum computers."
   }
 ]

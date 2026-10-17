@@ -138,6 +138,13 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:raw/200.0,x,y,valid:n>=4&&n<=16};
  }
+ if(slug==='cryptographic-rsa-modular'){
+  const b=Number(input);
+  const raw=Math.round(1.5 * b);
+  const x=b;
+  const y=raw;
+  return {raw,ideal:raw,period:raw/2000.0,x,y,valid:b>=64&&b<=4096};
+ }
  if(slug==='lru-cache-replacement'){
   const c=Number(input);
   const raw=Math.round(6 * c);
@@ -258,6 +265,10 @@ function reading(slug,input,raw){
   x=n * log2n;
   y=raw;
  }
+ if(slug==='cryptographic-rsa-modular'){
+  x=Number(input);
+  y=raw;
+ }
  if(slug==='lru-cache-replacement'){
   x=Number(input);
   y=raw;
@@ -350,6 +361,9 @@ function estimate(slug,f){
  }
  if(slug==='fast-fourier-transform'){
   return {value:f.m,se:f.slopeSE,reference:0.5000};
+ }
+ if(slug==='cryptographic-rsa-modular'){
+  return {value:f.m,se:f.slopeSE,reference:1.5000};
  }
  if(slug==='lru-cache-replacement'){
   return {value:f.m,se:f.slopeSE,reference:6.0000};
