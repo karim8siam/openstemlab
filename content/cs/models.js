@@ -79,6 +79,14 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:raw/500.0,x,y,valid:v>=50&&v<=1000};
  }
+ if(slug==='dynamic-programming-memoization'){
+  const n=Number(input);
+  const w_cap=100;
+  const raw=Math.round(w_cap * n);
+  const x=n;
+  const y=raw;
+  return {raw,ideal:raw,period:raw/1000.0,x,y,valid:n>=10&&n<=200};
+ }
  throw Error('Unknown CS experiment: '+slug);
 }
 
@@ -129,6 +137,10 @@ function reading(slug,input,raw){
   y=raw;
  }
  if(slug==='graph-traversal-shortest-paths'){
+  x=Number(input);
+  y=raw;
+ }
+ if(slug==='dynamic-programming-memoization'){
   x=Number(input);
   y=raw;
  }
@@ -185,6 +197,9 @@ function estimate(slug,f){
  }
  if(slug==='graph-traversal-shortest-paths'){
   return {value:f.m,se:f.slopeSE,reference:5.0000};
+ }
+ if(slug==='dynamic-programming-memoization'){
+  return {value:f.m,se:f.slopeSE,reference:100.0000};
  }
  throw Error('Unknown CS experiment: '+slug);
 }

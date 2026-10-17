@@ -140,6 +140,60 @@ function drawComparativeSim(t,p,v,ink,soft,orange){
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
+ if(cfg.slug==='dynamic-programming-memoization'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'DYNAMIC PROGRAMMING COMPUTATIONAL STRATEGIES (n = '+p.input+', W = 100)','#e2f0f8',11);
+
+  const n=p.input;
+  const w=100;
+  const c_tab1d=n * w;
+  const c_tab2d=n * w;
+  const c_memo=Math.round(n * w * 1.35);
+  const c_greedy=Math.round(n * Math.log2(Math.max(2, n)));
+  const c_naive=n>=30?1000000000:Math.pow(2, n);
+
+  const strategies=[
+   {name:'Bottom-Up Tabulation (1D Rolling)',col:'#10b981',cost:c_tab1d,scale:'O(nW) time, O(W) space',desc:'Optimal reverse scan (W down to w_i); 100% L1 cache resident; zero pointer chasing'},
+   {name:'Bottom-Up Tabulation (2D Matrix)',col:'#38bdf8',cost:c_tab2d,scale:'O(nW) time, O(nW) space',desc:'Sequential row-major matrix; enables O(n) backtracking subset recovery'},
+   {name:'Top-Down Memoization (Cached)',col:'#f97316',cost:c_memo,scale:'O(nW) time, O(nW) space',desc:'On-demand recursive evaluation; skips unreachable states; AMD64 stack overhead'},
+   {name:'Greedy Value Density Heuristic',col:'#a855f7',cost:c_greedy,scale:'O(n log n) sub-optimal',desc:'Sorts by v_i/w_i ratio; fast approximation but fails discrete 0/1 optimality'},
+   {name:'Naive Recursive Call Tree',col:'#ef4444',cost:c_naive,scale:'Θ(2ⁿ) exponential tree',desc:'Full inclusion/exclusion tree; duplicate subproblem explosion; intractable for n>35'}
+  ];
+
+  strategies.forEach((item,idx)=>{
+   const rowY=cY+16+idx*42;
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+12)+'" fill="#dcebf2" font-size="8.5" font-weight="bold">'+item.name+'</text>';
+   const costStr=item.cost>=1000000000?'>1.0B (2ⁿ)':item.cost>=1000000?(item.cost/1000000).toFixed(1)+'M':item.cost>=1000?(item.cost/1000).toFixed(1)+'k':item.cost;
+   svg+='<text x="'+(cX+cW-15)+'" y="'+(rowY+12)+'" text-anchor="end" fill="'+item.col+'" font-size="8.5" font-family="monospace" font-weight="bold">'+costStr+' ops ('+item.scale+')</text>';
+   
+   const barX=cX+15,barY=rowY+16,barMaxW=cW-30;
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barMaxW+'" height="7" rx="2" fill="#16242c"/>';
+   const maxVal=1000000000;
+   const frac=Math.min(1.0,Math.log10(item.cost+1)/Math.log10(maxVal+1));
+   const fillW=Math.max(4,frac*barMaxW);
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+fillW+'" height="7" rx="2" fill="'+item.col+'"/>';
+  });
+
+  const bX=460,bY=45,bW=220,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">PRUNING SPEEDUP (vs 2ⁿ NAIVE)</text>';
+  const speedupStr=n>=30?'10¹²×+':((Math.pow(2, n))/(c_tab1d)).toFixed(1)+'×';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+speedupStr+'</text>';
+  svg+='<text x="'+(bX+110)+'" y="'+(bY+46)+'" fill="#dcebf2" font-size="10">DP vs Naive Tree</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#7e9bab" font-size="9">MEMORY COMPRESSION</text>';
+  const mem2d=( ((n+1)*(w+1)*8)/1024 ).toFixed(1);
+  const mem1d=( ((w+1)*8)/1024 ).toFixed(2);
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="15" font-family="monospace" font-weight="bold">'+mem1d+' vs '+mem2d+' KiB</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+124)+'" fill="#8ba5b5" font-size="8">1D Rolling Array vs 2D Matrix (W vs n·W)</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+136)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+136)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+154)+'" fill="#7e9bab" font-size="9">PSEUDO-POLYNOMIAL BOUND</text>';
+  svg+=text(bX+bW/2,bY+180,'T(n, W) = n · W = 100.0000 · n','#10b981',9.5);
+  svg+=text(bX+bW/2,bY+202,'Polynomial in numeric W; Weak NP-C',orange,8.5);
+  svg+=text(360,305,'Comparative Invariant: Dynamic Programming eliminates exponential recursion Θ(2ⁿ) ⟶ pseudo-polynomial Θ(nW)',soft,10);
+  return svg;
+ }
+
  if(cfg.slug==='graph-traversal-shortest-paths'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
   svg+=text(cX+cW/2,cY-14,'GRAPH ALGORITHM & REPRESENTATION BENCHMARK (|V| = '+p.input+')','#e2f0f8',11);
@@ -651,6 +705,57 @@ function drawDynamicSandbox(t,p,v,ink,soft,orange){
  const cX=45,cY=45,cW=400,cH=230;
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+ if(cfg.slug==='dynamic-programming-memoization'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'BELLMAN RECURRENCE & OPTIMAL DECISION SANDBOX (n = '+p.input+', W = 100)','#e2f0f8',11);
+
+  svg+='<text x="'+(cX+15)+'" y="'+(cY+22)+'" fill="#10b981" font-size="8.5" font-weight="bold">BELLMAN EQUATION: DP[i][w] = max(DP[i-1][w], DP[i-1][w - w_i] + v_i)</text>';
+
+  const c1X=cX+50, c1Y=cY+50, cBoxW=105, cBoxH=42;
+  const c2X=cX+245, c2Y=cY+50;
+  const c3X=cX+140, c3Y=cY+118, c3W=120, c3H=46;
+
+  svg+='<rect x="'+c1X+'" y="'+c1Y+'" width="'+cBoxW+'" height="'+cBoxH+'" rx="4" fill="#0f172a" stroke="#64748b" stroke-width="1.5"/>';
+  svg+='<text x="'+(c1X+cBoxW/2)+'" y="'+(c1Y+14)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5" font-family="monospace">DP[3][40] (Exclude)</text>';
+  svg+='<text x="'+(c1X+cBoxW/2)+'" y="'+(c1Y+32)+'" text-anchor="middle" fill="#dcebf2" font-size="14" font-weight="bold">Val: 62</text>';
+
+  svg+='<rect x="'+c2X+'" y="'+c2Y+'" width="'+cBoxW+'" height="'+cBoxH+'" rx="4" fill="#064e3b" stroke="#10b981" stroke-width="1.5"/>';
+  svg+='<text x="'+(c2X+cBoxW/2)+'" y="'+(c2Y+14)+'" text-anchor="middle" fill="#6ee7b7" font-size="7.5" font-family="monospace">DP[3][25] + v₄=35</text>';
+  svg+='<text x="'+(c2X+cBoxW/2)+'" y="'+(c2Y+32)+'" text-anchor="middle" fill="#34d399" font-size="14" font-weight="bold">45 + 35 = 80</text>';
+
+  svg+='<path d="M '+(c1X+cBoxW/2)+' '+(c1Y+cBoxH)+' Q '+(c1X+cBoxW/2)+' '+(c3Y+15)+' '+(c3X)+' '+(c3Y+15)+'" fill="none" stroke="#64748b" stroke-width="1.5" stroke-dasharray="3,2"/>';
+  svg+='<polygon points="'+(c3X)+','+(c3Y+15)+' '+(c3X-6)+','+(c3Y+11)+' '+(c3X-6)+','+(c3Y+19)+'" fill="#64748b"/>';
+
+  svg+='<path d="M '+(c2X+cBoxW/2)+' '+(c2Y+cBoxH)+' Q '+(c2X+cBoxW/2)+' '+(c3Y+15)+' '+(c3X+c3W)+' '+(c3Y+15)+'" fill="none" stroke="'+orange+'" stroke-width="2.5"/>';
+  svg+='<polygon points="'+(c3X+c3W)+','+(c3Y+15)+' '+(c3X+c3W+6)+','+(c3Y+11)+' '+(c3X+c3W+6)+','+(c3Y+19)+'" fill="'+orange+'"/>';
+
+  svg+='<rect x="'+c3X+'" y="'+c3Y+'" width="'+c3W+'" height="'+c3H+'" rx="5" fill="#431407" stroke="'+orange+'" stroke-width="2"/>';
+  svg+='<text x="'+(c3X+c3W/2)+'" y="'+(c3Y+16)+'" text-anchor="middle" fill="#fca5a5" font-size="8" font-family="monospace">DP[4][40] = max(62, 80)</text>';
+  svg+='<text x="'+(c3X+c3W/2)+'" y="'+(c3Y+36)+'" text-anchor="middle" fill="'+orange+'" font-size="16" font-weight="bold">80 (INCLUDE!)</text>';
+
+  const cdX=cX+15,cdY=cY+172,cdW=cW-30,cdH=48;
+  svg+='<rect x="'+cdX+'" y="'+cdY+'" width="'+cdW+'" height="'+cdH+'" rx="4" fill="#050b0e" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(cdX+12)+'" y="'+(cdY+16)+'" fill="#38bdf8" font-size="7.5" font-family="monospace">Item 4 Metadata: Weight w₄ = 15 kg · Valuation v₄ = 35 credits</text>';
+  svg+='<text x="'+(cdX+12)+'" y="'+(cdY+30)+'" fill="#10b981" font-size="7.5" font-family="monospace">Evaluation: max(DP[3][40], DP[3][40 - 15] + 35) = max(62, 45 + 35) = 80</text>';
+  svg+='<text x="'+(cdX+12)+'" y="'+(cdY+42)+'" fill="'+orange+'" font-size="7.5" font-family="monospace">Backtracking Decision: x₄ = 1 (Item 4 selected; residual capacity = 25 kg)</text>';
+
+  const bX=465,bY=45,bW=210,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#7e9bab" font-size="9">MAXIMUM CELL VALUE</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+54)+'" fill="'+orange+'" font-size="24" font-family="monospace" font-weight="bold">80</text>';
+  svg+='<text x="'+(bX+75)+'" y="'+(bY+50)+'" fill="#10b981" font-size="11">(+18 over exclude)</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+84)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+84)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+102)+'" fill="#7e9bab" font-size="9">OPTIMAL SUBSTRUCTURE</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+124)+'" fill="'+ink+'" font-size="15" font-family="monospace" font-weight="bold">DP[3][25] is Optimal</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+140)+'" fill="#8ba5b5" font-size="8">Cut-and-paste proof guarantees global max</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+154)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+154)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+172)+'" fill="#7e9bab" font-size="9">DECISION VECTOR</text>';
+  svg+=text(bX+bW/2,bY+194,'x = [ 1, 0, 1, 1, ... ]','#38bdf8',9.5);
+  svg+=text(bX+bW/2,bY+212,'O(n) linear backward reconstruction',orange,8.5);
+  svg+=text(360,305,'Sandbox Invariant: Bellman recurrence balances marginal value against remaining capacity: max(62, 45+35) = 80',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='graph-traversal-shortest-paths'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
@@ -1336,6 +1441,106 @@ function draw(t){
  const ink='#38bdf8',soft='#7e9bab',orange='#f97316';
  if(currentSimMode==='compare'){$('apparatusDiagram').innerHTML=drawComparativeSim(t,p,v,ink,soft,orange);return;}
  if(currentSimMode==='sandbox'){$('apparatusDiagram').innerHTML=drawDynamicSandbox(t,p,v,ink,soft,orange);return;}
+
+ if(cfg.slug==='dynamic-programming-memoization'){
+  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
+  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+  const n=p.input;
+  const w_cap=100;
+  const t_states=v.raw;
+
+  svg+='<rect x="35" y="38" width="410" height="235" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+=text(240,24,'2D 0/1 Knapsack Tabulation Matrix & Bellman Dependency Geometry');
+
+  svg+='<text x="50" y="56" fill="#7e9bab" font-size="8.5" font-weight="bold">TABULATION GRID [n = '+n+', W = 100] · '+t_states+' TOTAL CELLS · ROW-MAJOR STREAMING</text>';
+
+  const cols=[
+   {w:0,x:60},
+   {w:15,x:115},
+   {w:25,x:175},
+   {w:40,x:245},
+   {w:60,x:315},
+   {w:100,x:385}
+  ];
+
+  cols.forEach(c=>{
+   svg+='<text x="'+c.x+'" y="78" text-anchor="middle" fill="#64748b" font-size="7" font-family="monospace">w='+c.w+'</text>';
+  });
+
+  const r3Y=88, rowH=24, cellW=44;
+  svg+='<text x="48" y="'+(r3Y+16)+'" fill="#94a3b8" font-size="7.5" font-family="monospace">i=3</text>';
+  const r3Vals=[
+   {x:60,val:'0',col:'#475569',bg:'#0b151b'},
+   {x:115,val:'25',col:'#475569',bg:'#0b151b'},
+   {x:175,val:'45',col:'#10b981',bg:'#064e3b',isInc:true},
+   {x:245,val:'62',col:'#64748b',bg:'#0f172a',isExc:true},
+   {x:315,val:'78',col:'#475569',bg:'#0b151b'},
+   {x:385,val:'95',col:'#475569',bg:'#0b151b'}
+  ];
+  r3Vals.forEach(c=>{
+   const strokeCol=c.isInc?'#10b981':c.isExc?'#64748b':'#1e293b';
+   svg+='<rect x="'+(c.x-cellW/2)+'" y="'+r3Y+'" width="'+cellW+'" height="'+rowH+'" rx="3" fill="'+c.bg+'" stroke="'+strokeCol+'" stroke-width="1.2"/>';
+   svg+='<text x="'+c.x+'" y="'+(r3Y+16)+'" text-anchor="middle" fill="'+c.col+'" font-size="8" font-family="monospace" font-weight="bold">'+c.val+'</text>';
+  });
+
+  const r4Y=120;
+  svg+='<text x="48" y="'+(r4Y+16)+'" fill="'+orange+'" font-size="7.5" font-family="monospace">i=4*</text>';
+  const r4Vals=[
+   {x:60,val:'0',col:'#475569',bg:'#0b151b'},
+   {x:115,val:'35',col:'#475569',bg:'#0b151b'},
+   {x:175,val:'45',col:'#475569',bg:'#0b151b'},
+   {x:245,val:'80',col:orange,bg:'#431407',isTarget:true},
+   {x:315,val:'97',col:'#475569',bg:'#0b151b'},
+   {x:385,val:'115',col:'#475569',bg:'#0b151b'}
+  ];
+  r4Vals.forEach(c=>{
+   const strokeCol=c.isTarget?orange:'#1e293b';
+   svg+='<rect x="'+(c.x-cellW/2)+'" y="'+r4Y+'" width="'+cellW+'" height="'+rowH+'" rx="3" fill="'+c.bg+'" stroke="'+strokeCol+'" stroke-width="'+(c.isTarget?1.8:1.2)+'"/>';
+   svg+='<text x="'+c.x+'" y="'+(r4Y+16)+'" text-anchor="middle" fill="'+c.col+'" font-size="8" font-family="monospace" font-weight="bold">'+c.val+'</text>';
+  });
+
+  svg+='<line x1="235" y1="'+(r3Y+rowH)+'" x2="235" y2="'+r4Y+'" stroke="#64748b" stroke-width="1.5" stroke-dasharray="2,2"/>';
+  svg+='<polygon points="235,'+r4Y+' 232,'+(r4Y-4)+' 238,'+(r4Y-4)+'" fill="#64748b"/>';
+
+  svg+='<path d="M 175 '+(r3Y+rowH)+' Q 195 '+(r4Y-2)+' 245 '+r4Y+'" fill="none" stroke="'+orange+'" stroke-width="2"/>';
+  svg+='<polygon points="245,'+r4Y+' 240,'+(r4Y-6)+' 248,'+(r4Y-3)+'" fill="'+orange+'"/>';
+  svg+='<text x="210" y="117" text-anchor="middle" fill="'+orange+'" font-size="6.5" font-weight="bold">+35</text>';
+
+  const fsX=50,fsY=152,fsW=380,fsH=40;
+  svg+='<rect x="'+fsX+'" y="'+fsY+'" width="'+fsW+'" height="'+fsH+'" rx="4" fill="#081016" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(fsX+10)+'" y="'+(fsY+14)+'" fill="'+orange+'" font-size="7.5" font-family="monospace">Item 4 (w₄=15, v₄=35): DP[4][40] = max(DP[3][40], DP[3][40-15] + 35)</text>';
+  svg+='<text x="'+(fsX+10)+'" y="'+(fsY+26)+'" fill="#10b981" font-size="7.5" font-family="monospace">Evaluation: max(62, 45 + 35) = max(62, 80) = 80 [Optimal: Include Item 4]</text>';
+  svg+='<text x="'+(fsX+10)+'" y="'+(fsY+36)+'" fill="#38bdf8" font-size="6.5" font-family="monospace">1D Space Compression: Traverse w from 100 down to 15 to prevent item reuse</text>';
+
+  const cbX=50,cbY=198,cbW=380,cbH=68;
+  svg+='<rect x="'+cbX+'" y="'+cbY+'" width="'+cbW+'" height="'+cbH+'" rx="4" fill="#081016" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(cbX+10)+'" y="'+(cbY+16)+'" fill="#38bdf8" font-size="7.5" font-family="monospace">Complexity Invariant: T(n) = W · n = 100 × '+n+' = '+t_states+' evaluations</text>';
+  svg+='<text x="'+(cbX+10)+'" y="'+(cbY+30)+'" fill="#dcebf2" font-size="7" font-family="monospace">Linear Model: k_dp = 100.0000 states/item · Intercept T_0 = 0.0000</text>';
+  const mem2dBytes=(n+1)*101*8;
+  const mem1dBytes=101*8;
+  svg+='<text x="'+(cbX+10)+'" y="'+(cbY+44)+'" fill="#8ba5b5" font-size="6.5">Spatial Footprint: 2D Matrix = '+mem2dBytes+' B ('+(mem2dBytes/1024).toFixed(1)+' KiB) · 1D Rolling Buffer = '+mem1dBytes+' B (L1 resident)</text>';
+  svg+='<text x="'+(cbX+10)+'" y="'+(cbY+56)+'" fill="#8ba5b5" font-size="6.5">Cache Streaming: 64-byte L1 cache line brings 8 contiguous cells; 100% prefetch hit rate</text>';
+
+  const bX=465,bY=38,bW=220,bH=235;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#7e9bab" font-size="9">TOTAL STATE EVALUATIONS T(n)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+54)+'" fill="'+orange+'" font-size="24" font-family="monospace" font-weight="bold">'+t_states+'</text>';
+  svg+='<text x="'+(bX+95)+'" y="'+(bY+50)+'" fill="#8ba5b5" font-size="11">operations</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+84)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+84)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+102)+'" fill="#7e9bab" font-size="9">PROBLEM SCALE</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+126)+'" fill="'+ink+'" font-size="16" font-family="monospace" font-weight="bold">n='+n+' items, W=100</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+142)+'" fill="#8ba5b5" font-size="8">Table Dimensions: '+(n+1)+' × 101 cells</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+156)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+156)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+174)+'" fill="#7e9bab" font-size="9">PSEUDO-POLYNOMIAL BOUND</text>';
+  svg+=text(bX+bW/2,bY+196,'T(n) = W · n = 100.0000 · n','#10b981',10);
+  svg+=text(bX+bW/2,bY+214,'Linear Coordinate: n (items)',orange,8.5);
+
+  svg+=text(360,305,'Mathematical Model: T(n) = 100.0000 · n + 0.0000 operations · R² = 1.000000 · Diff = 0.0000%',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='graph-traversal-shortest-paths'){
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
