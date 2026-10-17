@@ -159,6 +159,17 @@ def observation(c,value):
   v0_mM=raw / 1000.0
   y=rnd(1.0 / v0_mM, 2)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='polarography-dropping-mercury-ilkovic':
+  c_mM=float(value)
+  table_raw={0.200:1.27, 0.500:3.19, 1.000:6.37, 1.500:9.56, 2.000:12.74, 2.500:15.93}
+  key=round(c_mM, 3)
+  if key in table_raw:
+   raw=table_raw[key]
+  else:
+   raw=round(6.372 * c_mM, 2)
+  x=c_mM
+  y=raw
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='cyclic-voltammetry-ferricyanide-diffusion':
   v_mV=float(value)
   v_Vs=v_mV * 1e-3
@@ -539,6 +550,16 @@ def estimate(c,f):
   D_scaled=D_est * 1e6
   se=abs(f.get('slopeSE', 0.05)) / prefactor * 2.0 * math.sqrt(D_est) * 1e6
   return D_scaled, se, 7.60
+ elif slug=='polarography-dropping-mercury-ilkovic':
+  m=f['m']
+  n=2
+  m_Hg=2.000
+  t_drop=3.500
+  prefactor=607.0 * n * (m_Hg**(2.0/3.0)) * (t_drop**(1.0/6.0))
+  D_est=(m / prefactor)**2
+  D_scaled=D_est * 1e6
+  se=abs(f.get('slopeSE', 0.005)) / prefactor * 2.0 * math.sqrt(D_est) * 1e6
+  return D_scaled, se, 7.20
  elif slug=='solubility-product-conductometric-silver-halides':
   R=8.31446
   dH = -f['m'] * R
@@ -719,6 +740,16 @@ def formula(c,f):
   D_est=((m * 1e-6) / prefactor)**2
   D_scaled=D_est * 1e6
   return f"Randles-Ševčík Fit: i_pc = {fmt(m,2)}·ν¹/² + {fmt(b,3)} μA; Diffusion Coefficient D = {fmt(D_scaled,2)} × 10⁻⁶ cm²·s⁻¹; Peak Separation ΔE_p = 59.2 mV"
+ elif slug=='polarography-dropping-mercury-ilkovic':
+  m=f['m']
+  b=f['b']
+  n=2
+  m_Hg=2.000
+  t_drop=3.500
+  prefactor=607.0 * n * (m_Hg**(2.0/3.0)) * (t_drop**(1.0/6.0))
+  D_est=(m / prefactor)**2
+  D_scaled=D_est * 1e6
+  return f"Ilkovič Linear Fit: i_d = {fmt(m,3)}·c + {fmt(b,3)} μA; Cadmium Diffusion Coefficient D = {fmt(D_scaled,2)} × 10⁻⁶ cm²·s⁻¹; Half-Wave Potential E_1/2 = -0.600 V vs SCE"
  elif slug=='solubility-product-conductometric-silver-halides':
   R=8.31446
   dH = -f['m'] * R
@@ -1255,6 +1286,43 @@ def worked(c,row):
    f"   Scaled diffusion coefficient: D = {fmt(D_scaled, 2)} × 10⁻⁶ cm²·s⁻¹.\n"
    f"   Literature reference benchmark at 25.00 °C: D = 7.60 × 10⁻⁶ cm²·s⁻¹ (percentage difference = {fmt(abs(D_scaled - 7.60)/7.60*100.0, 4)}%).\n"
    f"   Transient Nernst diffusion layer thickness at ν = {fmt(v_val,1)} mV/s: δ ≈ √(π·D·t) = {fmt(math.sqrt(math.pi * D_est * (0.70/(v_val*1e-3)))*1e4, 1)} μm."
+  )
+ elif slug=='polarography-dropping-mercury-ilkovic':
+  c_val=row['input']
+  raw=row['raw']
+  x=row['x']
+  y=row['y']
+  n=2
+  m_Hg=2.000
+  t_drop=3.500
+  m_slope=6.37194
+  b_int=-0.00066
+  prefactor=607.0 * n * (m_Hg**(2.0/3.0)) * (t_drop**(1.0/6.0))
+  D_est=(m_slope / prefactor)**2
+  D_scaled=D_est * 1e6
+  return (
+   f"1. Raw Experimental Observables & Operating Polarographic Coordinates:\n"
+   f"   Cadmium(II) ion concentration: c = {fmt(c_val,3)} mM = {fmt(c_val*1e-3, 6)} mol·L⁻¹ in 0.100 M KCl supporting electrolyte.\n"
+   f"   Measured mean limiting diffusion current: i_d = {fmt(raw,2)} μA.\n"
+   f"   Half-wave potential: E_1/2 = -0.600 V vs SCE (invariance across all c coordinates verifies ideal reversibility).\n"
+   f"\n"
+   f"2. Calibrated Capillary Characteristics of the Dropping Mercury Electrode (DME):\n"
+   f"   Mercury column height: h = 50.0 cm.\n"
+   f"   Mercury mass flow rate: m = {fmt(m_Hg, 3)} mg·s⁻¹ (measured via gravimetric collection of 50 drops under water).\n"
+   f"   Individual drop lifetime: t = {fmt(t_drop, 3)} s (measured via optical photodiode chronometer).\n"
+   f"   Capillary constant: m²/³ t¹/⁶ = ({fmt(m_Hg,3)})²/³ × ({fmt(t_drop,3)})¹/⁶ = {fmt((m_Hg**(2/3))*(t_drop**(1/6)), 5)} mg²/³·s⁻¹/².\n"
+   f"\n"
+   f"3. Multi-Point Ilkovič Linear Least-Squares Regression:\n"
+   f"   Linearized theoretical equation: i_d = m_slope · c + b_int.\n"
+   f"   Regression slope: m = {fmt(m_slope, 4)} μA·mM⁻¹.\n"
+   f"   Regression Y-intercept: b = {fmt(b_int, 4)} μA (consistent with zero diffusion current at zero concentration within ±0.005 μA).\n"
+   f"   Coefficient of determination: R² = 0.9999996.\n"
+   f"\n"
+   f"4. Extraction of Aqueous Cadmium(II) Diffusion Coefficient D:\n"
+   f"   Ilkovič constant prefactor = 607 · n · m²/³ · t¹/⁶ = 607 × 2 × {fmt((m_Hg**(2/3))*(t_drop**(1/6)), 5)} = {fmt(prefactor, 2)} μA·mM⁻¹·(cm²·s⁻¹)⁻¹/².\n"
+   f"   Diffusion coefficient: D = [ m_slope / prefactor ]² = [ {fmt(m_slope, 4)} / {fmt(prefactor, 2)} ]² = {fmt(D_est, 10)} cm²·s⁻¹.\n"
+   f"   Scaled diffusion coefficient: D = {fmt(D_scaled, 2)} × 10⁻⁶ cm²·s⁻¹.\n"
+   f"   Accepted electroanalytical reference benchmark at 25.00 °C: D = 7.20 × 10⁻⁶ cm²·s⁻¹ (percentage difference = {fmt(abs(D_scaled - 7.20)/7.20*100.0, 4)}%)."
   )
  elif slug=='solubility-product-conductometric-silver-halides':
   t=row['input']
@@ -2045,6 +2113,27 @@ def uncertainty_text(c):
    "propagate as u_r(D) = √[ 4(u(m)/m)² + 4(u(A)/A)² + 4(u(c)/c)² + (u(T)/T)² ] = √[ 4(0.0001)² + 4(0.0033)² + 4(0.0012)² + (0.00007)² ] = 0.70%. "
    "For an empirical diffusion coefficient D = 7.60 × 10⁻⁶ cm²·s⁻¹, the expanded uncertainty at the 95% confidence level (coverage factor k = 2) "
    "is U(D) = ±0.11 × 10⁻⁶ cm²·s⁻¹ (1.4%), confirming exceptional concordance with the authoritative literature benchmark (7.60 ± 0.05 × 10⁻⁶ cm²·s⁻¹)."
+  )
+ elif slug=='polarography-dropping-mercury-ilkovic':
+  return (
+   "In the high-precision determination of heavy metal diffusion coefficients via classical polarography and the Ilkovič equation, "
+   "metrological uncertainties and physical electroanalytical boundary conditions are rigorously quantified across capillary, "
+   "gravimetric, potentiostatic, and chemical domains: "
+   "(1) Mercury Mass Flow Rate Gravimetry: Mercury flow rate m is calibrated by collecting 50 successive drops under deionized water "
+   "into a tared weighing bottle on a calibrated 5-decimal analytical balance. The certified mass flow rate is m = 2.000 ± 0.005 mg·s⁻¹, "
+   "yielding a relative flow rate uncertainty u(m)/m = 0.25%. Hydrostatic head is fixed at 50.0 ± 0.1 cm using a cathetometer. "
+   "(2) Drop-Time Optical Chronometry: Drop lifetimes are monitored using an optical infrared photodiode gate linked to a digital chronometer "
+   "with microsecond timebase. For t_drop = 3.500 s, cycle-to-cycle repeatability across 100 drops yields a standard uncertainty u(t) = 0.005 s (0.14%). "
+   "(3) Maxima Suppression & Capillary Cleanliness: Addition of exactly 0.002% w/v Triton X-100 completely suppresses Marangoni streaming maxima. "
+   "The residual non-faradaic charging current is measured between -0.20 V and -0.40 V and subtracted from the total limiting current to isolate "
+   "pure faradaic diffusion current i_d with a baseline subtraction uncertainty u(i_base) = 0.02 μA. "
+   "(4) Multi-Point Least-Squares Regression & Uncertainty Propagation: The empirical Ilkovič slope m = 6.3719 μA·mM⁻¹ is evaluated by ordinary "
+   "least-squares regression over six discrete concentration coordinates (0.200 to 2.500 mM). The standard error of the slope is s_m = 0.0035 μA·mM⁻¹ "
+   "(relative uncertainty 0.055%), yielding a coefficient of determination R² = 0.9999996. "
+   "(5) Combined Uncertainty Budget: Because D is proportional to [m / (m_Hg²/³ t¹/⁶ c)]², standard uncertainties propagate as "
+   "u_r(D) = √[ 4(u(m)/m)² + (16/9)(u(m_Hg)/m_Hg)² + (1/9)(u(t)/t)² + 4(u(c)/c)² ] = 0.39%. "
+   "For an empirical diffusion coefficient D = 7.20 × 10⁻⁶ cm²·s⁻¹, the expanded uncertainty at the 95% confidence level (coverage factor k = 2) "
+   "is U(D) = ±0.06 × 10⁻⁶ cm²·s⁻¹ (0.8%), confirming sub-0.5% experimental agreement with accepted electroanalytical reference benchmarks."
   )
  elif slug=='solubility-product-conductometric-silver-halides':
   return (
@@ -3455,6 +3544,66 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"invariant peak potential separation ΔE_p = 59.2 mV and current ratio |i_pa / i_pc| = 1.000 confirming ideal Nernstian reversibility. The extracted "
    f"diffusion coefficient agrees with authoritative electrochemistry literature benchmarks within {fmt(abs(D_val - 7.60)/7.60*100.0, 4)}% relative deviation, "
    f"demonstrating the high metrological precision of the Randles-Ševčík formulation for diagnostic electrochemistry."
+  )
+  
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='polarography-dropping-mercury-ilkovic':
+  m_val=f['m']
+  b_val=f['b']
+  D_val=value
+  r2_val=f['r2']
+  
+  abstract=(
+   f"The polarographic reduction of cadmium(II) ions in 0.1000 M potassium chloride supporting electrolyte was investigated across the concentration "
+   f"range 0.200 mM to 2.500 mM at 25.00 ± 0.02 °C using classical DC polarography at a calibrated dropping mercury electrode (DME) versus a saturated "
+   f"calomel electrode (SCE). An inert surfactant, Triton X-100 (0.002% w/v), was incorporated to suppress polarographic streaming maxima of the first kind. "
+   f"Linear potential ramps (-0.200 V to -1.000 V vs SCE at 2.0 mV·s⁻¹) yielded smooth, highly reproducible sigmoidal polarographic waves with an invariant "
+   f"half-wave potential E_1/2 = -0.600 ± 0.002 V vs SCE, verifying reversible two-electron reduction into the expanding mercury drop to form cadmium amalgam. "
+   f"Mean limiting diffusion currents i_d increased strictly linearly from 1.27 μA at 0.200 mM to 15.93 μA at 2.500 mM. Ordinary least-squares regression "
+   f"of i_d against cadmium concentration c yielded an empirical slope m = {fmt(m_val, 4)} μA·mM⁻¹ with an exceptional coefficient of determination "
+   f"R² = {fmt(r2_val, 6)} and an intercept b = {fmt(b_val, 4)} μA. Using the calibrated capillary characteristics (m_Hg = 2.000 mg·s⁻¹, t_drop = 3.500 s), "
+   f"application of the Ilkovič equation extracted an aqueous cadmium(II) diffusion coefficient D = ({fmt(D_val, 2)} ± 0.06) × 10⁻⁶ cm²·s⁻¹, "
+   f"demonstrating extraordinary concordance with the authoritative electroanalytical literature benchmark (7.20 × 10⁻⁶ cm²·s⁻¹) with a percentage "
+   f"difference of only {fmt(abs(D_val - 7.20)/7.20*100.0, 4)}%."
+  )
+  
+  graph_choice=(
+   f"The primary analytical visualization presents the mean limiting diffusion current i_d (in μA) as a function of cadmium(II) ion concentration c (in mM). "
+   f"A linear Cartesian coordinate system is selected based directly on the first-principles Ilkovič boundary value solution for transient convective-diffusive "
+   f"transport to an expanding spherical mercury droplet: i_d = 607 · n · D¹/² · m²/³ · t¹/⁶ · c. Under strictly constant capillary hydrostatic head "
+   f"and unvarying drop lifetime, the capillary characteristic m²/³ t¹/⁶ remains constant, requiring that diffusion current scale strictly linearly "
+   f"with analyte concentration and pass through the origin. Multi-point linear least-squares regression across all six experimental concentrations "
+   f"confirms rigorous linearity (R² = {fmt(r2_val, 6)}) with an empirical Y-intercept b = {fmt(b_val, 4)} μA (indistinguishable from zero within experimental "
+   f"uncertainty). The empirical slope d(i_d)/dc = {fmt(m_val, 4)} μA·mM⁻¹ enables direct, highly robust extraction of the diffusion coefficient D."
+  )
+  
+  discussion=(
+   f"The experimental polarograms provide profound insights into convective-diffusive mass transport and electrocapillary interfacial phenomena. "
+   f"The observed half-wave potential E_1/2 = -0.600 V vs SCE remained completely stationary across the entire 12.5-fold concentration range from 0.200 mM "
+   f"to 2.500 mM. According to the Heyrovský-Ilkovič equation, E_1/2 = E°' - (RT/2nF)·ln(D_Cd²⁺/D_Cd(Hg)), which depends solely on the intrinsic thermodynamics "
+   f"of cadmium amalgam formation and is independent of concentration and capillary geometry. The logarithmic analysis of the rising wave (plotting E vs "
+   f"log₁₀[i / (i_d − i)]) yielded a slope of -29.6 mV/decade, in exact agreement with the theoretical Nernstian prediction -59.2 mV / n for a two-electron "
+   f"reduction (n = 2), confirming that electron transfer is fast and thermodynamically reversible.\n\n"
+   f"The unique advantages of the dropping mercury electrode were vividly demonstrated by the remarkable reproducibility of the limiting diffusion plateau. "
+   f"Unlike solid electrodes, where reaction products deposit irreversibly on the surface causing time-dependent electrode fouling and history effects, each "
+   f"mercury droplet exposes a pristine, fresh liquid metal surface. When the drop detaches, the cadmium amalgam formed within the droplet is physically "
+   f"carried away into the bottom mercury pool, resetting the working interface to zero every 3.50 seconds.\n\n"
+   f"The incorporation of 0.002% w/v Triton X-100 was crucial in eliminating polarographic streaming maxima. Without surfactant, non-uniform current densities "
+   f"between the shielded neck and unshielded bottom pole of the drop create interfacial tension gradients (the Marangoni effect) that induce violent vortex "
+   f"streaming, surging the current artificially by 300% to 500%. The adsorbed Triton X-100 monolayer creates an elastic surface pressure that completely "
+   f"arrests tangential slip, restoring quiescent Fickian diffusion. The 0.100 M KCl supporting electrolyte suppressed the migration transference number of Cd²⁺ "
+   f"to < 0.5%, ensuring that mass transport occurred purely via molecular diffusion. The extracted diffusion coefficient D = ({fmt(D_val, 2)} ± 0.06) × 10⁻⁶ cm²·s⁻¹ "
+   f"matches the Stokes-Einstein prediction for a hydrated divalent metal cation in water (hydrodynamic radius r_h ≈ 0.34 nm), validating the enduring authority "
+   f"of the Ilkovič equation in physical electrochemistry."
+  )
+  
+  conclusion=(
+   f"The aqueous diffusion coefficient of the cadmium(II) ion in 0.1000 M KCl at 25.00 °C was successfully determined as "
+   f"D = ({fmt(D_val, 2)} ± 0.06) × 10⁻⁶ cm²·s⁻¹ using classical DC polarography at a dropping mercury electrode. The experimental limiting "
+   f"diffusion currents exhibited exceptional linear adherence to the Ilkovič equation (R² = {fmt(r2_val, 6)}) across the 0.200 to 2.500 mM concentration "
+   f"range, with an invariant half-wave potential E_1/2 = -0.600 V vs SCE confirming ideal Nernstian reversibility. The extracted diffusion coefficient "
+   f"agrees with accepted literature benchmarks within {fmt(abs(D_val - 7.20)/7.20*100.0, 4)}% relative deviation, establishing an authoritative "
+   f"experimental verification of convective-diffusive transport to expanding spherical liquid electrodes."
   )
   
   return abstract, graph_choice, discussion, conclusion

@@ -3,6 +3,15 @@
 const round=(v,n)=>Math.round((v+Number.EPSILON)*10**n)/10**n;
 
 function predict(slug,input){
+ if(slug==='polarography-dropping-mercury-ilkovic'){
+  const c_mM=Number(input);
+  const table_raw={0.200:1.27, 0.500:3.19, 1.000:6.37, 1.500:9.56, 2.000:12.74, 2.500:15.93};
+  const key=round(c_mM, 3);
+  const raw_val=table_raw.hasOwnProperty(key)?table_raw[key]:round(6.372 * c_mM, 2);
+  const x=c_mM;
+  const y=raw_val;
+  return {raw:raw_val,ideal:raw_val,period:1.0,x,y,valid:c_mM>=0.100&&c_mM<=3.000};
+ }
  if(slug==='cyclic-voltammetry-ferricyanide-diffusion'){
   const v_mV=Number(input);
   const v_Vs=v_mV * 1e-3;
@@ -470,6 +479,12 @@ function predict(slug,input){
 
 function reading(slug,input,raw){
  let x=Number(input),y=Number(raw);
+ if(slug==='polarography-dropping-mercury-ilkovic'){
+  const c_mM=Number(input);
+  const raw_val=Number(raw);
+  x=c_mM;
+  y=raw_val;
+ }
  if(slug==='cyclic-voltammetry-ferricyanide-diffusion'){
   const v_mV=Number(input);
   const raw_val=Number(raw);
@@ -750,6 +765,17 @@ function fit(rows){
 }
 
 function estimate(slug,f){
+ if(slug==='polarography-dropping-mercury-ilkovic'){
+  const m=f.m;
+  const n=2;
+  const m_Hg=2.000;
+  const t_drop=3.500;
+  const prefactor=607.0 * n * Math.pow(m_Hg, 2.0/3.0) * Math.pow(t_drop, 1.0/6.0);
+  const D_est=Math.pow(m / prefactor, 2);
+  const D_scaled=D_est * 1e6;
+  const se=Math.abs(f.slopeSE || 0.005) / prefactor * 2.0 * Math.sqrt(D_est) * 1e6;
+  return {value:D_scaled,se:se,reference:7.20};
+ }
  if(slug==='cyclic-voltammetry-ferricyanide-diffusion'){
   const m=f.m;
   const n=1;

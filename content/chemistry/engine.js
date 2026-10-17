@@ -87,6 +87,18 @@ function update(){
   $('apparatusDiagram').innerHTML=drawEnzymeKineticsBenchView(p,rawVal);
   return;
  }
+ if(cfg.slug==='polarography-dropping-mercury-ilkovic'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawPolarographyCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawPolarographySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawPolarographyBenchView(p,rawVal);
+  return;
+ }
  if(cfg.slug==='cyclic-voltammetry-ferricyanide-diffusion'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawVoltammetryCompareView(p,rawVal);
@@ -252,7 +264,19 @@ function update(){
   const dA_dt = v0_uM * 0.0185;
   $('liveState').textContent='Photometric trace recorded: v₀ = '+v0_uM.toFixed(2)+' μM/min (dA/dt = '+(dA_dt/1000).toFixed(4)+' AU/min).';
   message('Assay complete: v₀ = '+v0_uM.toFixed(2)+' μM/min (1/v₀ = '+inv_v0.toFixed(2)+' min/mM, 1/[S] = '+inv_s.toFixed(2)+' mM⁻¹). Record in notebook.');
- }else if(cfg.slug==='cyclic-voltammetry-ferricyanide-diffusion'){
+ }else if(cfg.slug==='polarography-dropping-mercury-ilkovic'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawPolarographyCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawPolarographySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawPolarographyBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='cyclic-voltammetry-ferricyanide-diffusion'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawVoltammetryCompareView(p,rawVal);
    return;
@@ -12632,6 +12656,329 @@ function drawVoltammetrySandboxView(p, rawVal) {
  svg += '<text x="'+(rpX - 22)+'" y="'+(rpY + rpH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7" transform="rotate(-90 '+(rpX-22)+' '+(rpY+rpH/2)+')">Peak Current i_pc (μA)</text>';
 
  svg += text(360, 314, 'Diffusion Layer: Faster scan rates yield thinner diffusion layers δ, steepening (∂c/∂x) and driving higher peak currents.', '#789c80', 8, 'middle');
+
+ return svg;
+}
+
+// ======================================================================
+// Lab 38: Classical Polarography & Ilkovič Diffusion Kinetics
+// ======================================================================
+
+function drawPolarographyBenchView(p, rawVal) {
+ var c_mM = p.input || 1.000;
+ var rawId = rawVal || 6.37; // in uA
+ var m_Hg = 2.000; // mg/s
+ var t_drop = 3.50; // s
+ var E_half = -0.600; // V vs SCE
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0c131d');
+ svg += '<defs>';
+ svg += '<linearGradient id="dmeGlass38" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#38bdf8" stop-opacity="0.2"/><stop offset="50%" stop-color="#38bdf8" stop-opacity="0.05"/><stop offset="100%" stop-color="#38bdf8" stop-opacity="0.25"/></linearGradient>';
+ svg += '<linearGradient id="hgDrop38" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f8fafc"/><stop offset="50%" stop-color="#cbd5e1"/><stop offset="100%" stop-color="#64748b"/></linearGradient>';
+ svg += '<linearGradient id="cdSol38" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#38bdf8" stop-opacity="0.1"/><stop offset="100%" stop-color="#0284c7" stop-opacity="0.3"/></linearGradient>';
+ svg += '</defs>';
+
+ // Header Banner
+ svg += text(20, 24, 'LABORATORY BENCH: CLASSICAL POLAROGRAPHY & ILKOVIČ DIFFUSION (DME)', '#e2e8f0', 12, 'bold');
+ svg += text(20, 40, 'Dropping Mercury Electrode (h = 50.0 cm, m = 2.000 mg/s) · SCE Reference · 0.100 M KCl + 0.002% Triton X-100 (25.0 °C)', '#38bdf8', 9);
+
+ // --- LEFT REGION: DME ASSEMBLY & POLAROGRAPHIC H-CELL (x: 20 to 320) ---
+ // Mercury Leveling Bulb & Stand (x: 35, y: 55, w: 40, h: 65)
+ svg += rect(35, 55, 35, 45, 'url(#hgDrop38)', '#475569', 1.2, 4);
+ svg += text(52, 80, 'Hg', '#0f172a', 8, 'middle', 'bold');
+ svg += text(52, 48, 'h = 50 cm', '#facc15', 6.5, 'middle', 'bold');
+
+ // Flexible Tygon Tubing from bulb to capillary
+ svg += '<path d="M 52 100 Q 52 140 120 140 L 140 140" fill="none" stroke="#64748b" stroke-width="3"/>';
+
+ // Jacketed Polarographic Cell (x: 85, y: 130, w: 185, h: 155)
+ var clX = 85, clY = 130, clW = 185, clH = 155;
+ svg += rect(clX, clY, clW, clH, 'url(#dmeGlass38)', '#0284c7', 1.5, 6);
+ svg += text(clX + 12, clY + 14, 'Jacketed H-Cell (25.00 °C)', '#38bdf8', 6.5, 'start', 'bold');
+
+ // Solution: Cd²⁺ in 0.1 M KCl
+ svg += rect(clX + 6, clY + 30, clW - 12, clH - 45, 'url(#cdSol38)', 'none', 0, 3);
+ svg += text(clX + clW/2, clY + clH - 20, 'c(Cd²⁺) = ' + c_mM.toFixed(3) + ' mM in 0.1 M KCl', '#cbd5e1', 7, 'middle', 'bold');
+
+ // Mercury Pool Anode at Cell Bottom
+ svg += rect(clX + 6, clY + clH - 15, clW - 12, 12, 'url(#hgDrop38)', '#334155', 1, 2);
+ svg += text(clX + clW/2, clY + clH - 6, 'Quiet Mercury Pool Anode', '#0f172a', 6, 'middle', 'bold');
+
+ // Central Marine Capillary (DME)
+ var capX = 140, capY = 100;
+ svg += rect(capX - 3, capY, 6, 80, '#f8fafc', '#64748b', 1); // glass tube
+ svg += '<line x1="'+capX+'" y1="'+capY+'" x2="'+capX+'" y2="'+(capY+80)+'" stroke="#64748b" stroke-width="1.2"/>'; // internal bore
+
+ // Growing Spherical Mercury Droplet at Capillary Tip
+ var dropR = 5.5; // ~0.5 mm radius
+ svg += circle(capX, capY + 80 + dropR, dropR, 'url(#hgDrop38)', '#334155', 1);
+ svg += text(capX + 14, capY + 84, 'DME Drop', '#facc15', 6.5, 'start', 'bold');
+ svg += text(capX + 14, capY + 94, 't = 3.50 s', '#cbd5e1', 5.5, 'start');
+
+ // Reference Electrode (SCE) on Left Neck
+ svg += rect(clX + 18, clY + 20, 10, 80, 'rgba(56,189,248,0.2)', '#0284c7', 1);
+ svg += text(clX + 23, clY + 16, 'SCE', '#38bdf8', 6, 'middle', 'bold');
+
+ // N2 Deoxygenation Line on Right Neck
+ svg += '<line x1="'+(clX + clW - 25)+'" y1="110" x2="'+(clX + clW - 25)+'" y2="'+(clY + 60)+'" stroke="#94a3b8" stroke-width="2"/>';
+ svg += text(clX + clW - 25, 105, 'N₂ Purge', '#a7f3d0', 6, 'middle', 'bold');
+
+ // Wires to Polarograph
+ svg += '<path d="M '+capX+' 100 Q '+capX+' 70 310 70" fill="none" stroke="#ef4444" stroke-width="1.8"/>';
+ svg += '<path d="M '+(clX + clW/2)+' '+(clY + clH - 5)+' Q '+(clX + clW + 20)+' '+(clY + clH - 5)+' 310 85" fill="none" stroke="#38bdf8" stroke-width="1.8"/>';
+
+ // --- RIGHT REGION: DIGITAL POLAROGRAPH & SIGMOIDAL WAVE (x: 310 to 700) ---
+ // Instrument Telemetry (x: 310, y: 55, w: 185, h: 105)
+ var pX = 310, pY = 55, pW = 185, pH = 105;
+ svg += rect(pX, pY, pW, pH, '#131d2e', '#334155', 1.5, 6);
+ svg += rect(pX + 10, pY + 10, pW - 20, 36, '#09131f', '#0284c7', 1, 4);
+ svg += text(pX + pW/2, pY + 28, rawId.toFixed(2) + ' μA', '#38bdf8', 16, 'middle', 'bold');
+ svg += text(pX + pW/2, pY + 40, 'LIMITING DIFFUSION CURRENT i_d', '#94a3b8', 6, 'middle');
+
+ svg += text(pX + 15, pY + 62, 'Analyte c(Cd²⁺): ' + c_mM.toFixed(3) + ' mM', '#facc15', 7, 'start', 'bold');
+ svg += text(pX + 15, pY + 76, 'Half-Wave Potential E_1/2: -0.600 V vs SCE', '#4ade80', 7);
+ svg += text(pX + 15, pY + 90, 'Mercury Flow Rate m: 2.000 mg·s⁻¹', '#cbd5e1', 7);
+ svg += text(pX + 15, pY + 102, 'Drop Life t: 3.500 s (τ_RC = 1.0 s)', '#7dd3fc', 6.5);
+
+ // Ilkovič Parameters Card (x: 310, y: 170, w: 185, h: 120)
+ var ipX = 310, ipY = 170, ipW = 185, ipH = 120;
+ svg += rect(ipX, ipY, ipW, ipH, '#131d2e', '#334155', 1.5, 6);
+ svg += text(ipX + ipW/2, ipY + 16, 'ILKOVIČ EQUATION PARAMETERS', '#818cf8', 7.5, 'middle', 'bold');
+
+ var ilkovRows = [
+  ['Stoichiometry n', '2 electrons (Cd²⁺ + 2e⁻)'],
+  ['Capillary Factor m²/³ t¹/⁶', '1.956 mg²/³·s⁻¹/²'],
+  ['Diffusion Coeff D', '7.20 × 10⁻⁶ cm²·s⁻¹'],
+  ['Ilkovič Constant I_L', '3.258 μA·mM⁻¹·mg⁻²/³·s¹/⁶'],
+  ['Ilkovič Slope d(i_d)/dc', '6.372 μA·mM⁻¹'],
+  ['Supporting Electrolyte', '0.100 M KCl (I = 0.1 M)']
+ ];
+
+ for (var k = 0; k < ilkovRows.length; k++) {
+  var ry = ipY + 34 + k * 14;
+  svg += text(ipX + 12, ry, ilkovRows[k][0] + ':', '#94a3b8', 6.5, 'start');
+  svg += text(ipX + ipW - 12, ry, ilkovRows[k][1], '#cbd5e1', 6.5, 'end', 'bold');
+ }
+
+ // Sigmoidal Polarographic Wave Plot (x: 510, y: 55, w: 195, h: 235)
+ var wX = 545, wY = 75, wW = 150, wH = 175;
+ svg += rect(wX - 35, wY - 20, wW + 45, wH + 50, '#131d2e', '#334155', 1, 6);
+ svg += text(wX + wW/2, wY - 6, 'POLAROGRAPHIC WAVE: i vs E', '#38bdf8', 8, 'middle', 'bold');
+
+ // Axes: E vs SCE from -0.20 V (left) to -1.00 V (right)
+ // Current i from 0 uA (bottom) to 18 uA (top)
+ svg += '<line x1="'+wX+'" y1="'+(wY+wH)+'" x2="'+(wX+wW)+'" y2="'+(wY+wH)+'" stroke="#475569" stroke-width="1.2"/>';
+ svg += '<line x1="'+wX+'" y1="'+wY+'" x2="'+wX+'" y2="'+(wY+wH)+'" stroke="#475569" stroke-width="1.2"/>';
+
+ function polMapE(e) { return wX + ((-0.20 - e) / 0.80) * wW; }
+ function polMapI(i) { return (wY + wH) - (i / 18.0) * wH; }
+
+ // Draw Polarographic Wave: i = i_d / (1 + exp((nF/RT)(E - E_half)))
+ var wavePath = 'M ' + polMapE(-0.20).toFixed(1) + ' ' + polMapI(0.2).toFixed(1);
+ for (var step = 1; step <= 40; step++) {
+  var curE = -0.20 - (step / 40.0) * 0.80;
+  // Logistic Nernstian sigmoid
+  var curI = rawId / (1.0 + Math.exp((2.0 * 96485.3 / (8.31446 * 298.15)) * (curE - E_half))) + 0.2;
+  // Add small drop oscillation ripple
+  var ripple = Math.sin(step * 2.5) * 0.15 * (curI / rawId);
+  wavePath += ' L ' + polMapE(curE).toFixed(1) + ' ' + polMapI(curI + ripple).toFixed(1);
+ }
+ svg += '<path d="'+wavePath+'" fill="none" stroke="#38bdf8" stroke-width="2"/>';
+
+ // Half-Wave Potential marker (E = -0.600 V, i = i_d / 2)
+ var hwX = polMapE(-0.600), hwY = polMapI(rawId / 2.0 + 0.2);
+ svg += '<line x1="'+hwX+'" y1="'+wY+'" x2="'+hwX+'" y2="'+(wY+wH)+'" stroke="#facc15" stroke-width="1" stroke-dasharray="2,2"/>';
+ svg += circle(hwX, hwY, 4.5, '#ef4444', '#facc15', 1.2);
+ svg += text(hwX + 6, hwY - 6, 'E_1/2 = -0.600 V', '#fef08a', 6.5, 'start', 'bold');
+
+ // Limiting plateau level line
+ var limY = polMapI(rawId + 0.2);
+ svg += '<line x1="'+polMapE(-0.75)+'" y1="'+limY+'" x2="'+(wX+wW)+'" y2="'+limY+'" stroke="#4ade80" stroke-width="1.5" stroke-dasharray="3,2"/>';
+ svg += text(wX + wW - 4, limY - 5, 'i_d = ' + rawId.toFixed(2) + ' μA', '#4ade80', 6.5, 'end', 'bold');
+
+ // Axis labels
+ svg += text(wX + wW/2, wY + wH + 20, 'Potential E (V vs SCE)', '#94a3b8', 6.5, 'middle');
+ svg += '<text x="'+(wX - 22)+'" y="'+(wY + wH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="6.5" transform="rotate(-90 '+(wX-22)+' '+(wY+wH/2)+')">Diffusion Current i (μA)</text>';
+
+ svg += text(360, 316, 'Ilkovič Invariant: Diffusion current slope d(i_d)/dc = 6.372 μA·mM⁻¹ isolates Cd²⁺ diffusion coefficient D = 7.20 × 10⁻⁶ cm²·s⁻¹ with R² = 1.00000.', '#789c80', 8, 'middle');
+
+ return svg;
+}
+
+function drawPolarographyCompareView(p, rawVal) {
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0c131d');
+
+ svg += text(20, 24, 'COMPARATIVE POLAROGRAPHY: MULTI-CONCENTRATION WAVES & MAXIMUM SUPPRESSION', '#e2e8f0', 12, 'bold');
+ svg += text(20, 40, 'Polarographic Wave Family (0.2 to 2.5 mM) · Invariant E_1/2 Benchmark · Marangoni Streaming Suppression', '#38bdf8', 9);
+
+ // Left: Multi-Concentration Polarographic Wave Family (x: 20 to 350)
+ var gX = 55, gY = 65, gW = 280, gH = 225;
+ svg += rect(gX - 35, gY - 15, gW + 45, gH + 45, '#131d2e', '#334155', 1, 6);
+ svg += text(gX + gW/2, gY - 4, 'POLAROGRAPHIC WAVES (0.20, 0.50, 1.00, 1.50, 2.00, 2.50 mM Cd²⁺)', '#38bdf8', 7.5, 'middle', 'bold');
+
+ // Axes
+ svg += '<line x1="'+gX+'" y1="'+(gY+gH)+'" x2="'+(gX+gW)+'" y2="'+(gY+gH)+'" stroke="#475569" stroke-width="1.2"/>';
+ svg += '<line x1="'+gX+'" y1="'+gY+'" x2="'+gX+'" y2="'+(gY+gH)+'" stroke="#475569" stroke-width="1.2"/>';
+
+ function cE(e) { return gX + ((-0.20 - e) / 0.80) * gW; }
+ function cI(i) { return (gY + gH) - (i / 18.0) * gH; }
+
+ var concWaves = [
+  {c: 0.200, col: '#818cf8', id: 1.27},
+  {c: 0.500, col: '#38bdf8', id: 3.19},
+  {c: 1.000, col: '#4ade80', id: 6.37},
+  {c: 1.500, col: '#facc15', id: 9.56},
+  {c: 2.000, col: '#fb923c', id: 12.74},
+  {c: 2.500, col: '#ef4444', id: 15.93}
+ ];
+
+ for (var w = 0; w < concWaves.length; w++) {
+  var cw = concWaves[w];
+  var wp = 'M ' + cE(-0.20).toFixed(1) + ' ' + cI(0.2).toFixed(1);
+  for (var st = 1; st <= 40; st++) {
+   var curE = -0.20 - (st / 40.0) * 0.80;
+   var curI = cw.id / (1.0 + Math.exp(77.84 * (curE - (-0.600)))) + 0.2;
+   wp += ' L ' + cE(curE).toFixed(1) + ' ' + cI(curI).toFixed(1);
+  }
+  svg += '<path d="'+wp+'" fill="none" stroke="'+cw.col+'" stroke-width="1.6"/>';
+  svg += text(cE(-0.95), cI(cw.id + 0.2) - 4, cw.c.toFixed(2) + ' mM (' + cw.id.toFixed(1) + ' μA)', cw.col, 6, 'end', 'bold');
+ }
+
+ // Common E_1/2 vertical dashed line
+ svg += '<line x1="'+cE(-0.600)+'" y1="'+gY+'" x2="'+cE(-0.600)+'" y2="'+(gY+gH)+'" stroke="#facc15" stroke-width="1" stroke-dasharray="2,2"/>';
+ svg += text(cE(-0.600), gY + 12, 'Invariant E_1/2 = -0.600 V', '#facc15', 6.5, 'middle', 'bold');
+
+ svg += text(gX + gW/2, gY + gH + 18, 'Potential E (V vs SCE)', '#94a3b8', 7, 'middle');
+ svg += '<text x="'+(gX - 22)+'" y="'+(gY + gH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7" transform="rotate(-90 '+(gX-22)+' '+(gY+gH/2)+')">Diffusion Current i_d (μA)</text>';
+
+ // Right: Maxima Suppression Panel (x: 380 to 700)
+ var rX = 380, rY = 55, rW = 320, rH = 240;
+ svg += rect(rX, rY, rW, rH, '#131d2e', '#334155', 1, 6);
+ svg += text(rX + rW/2, rY + 18, 'POLAROGRAPHIC MAXIMA & TRITON X-100 SUPPRESSION', '#facc15', 7.5, 'middle', 'bold');
+
+ var maxCases = [
+  {
+   title: '1. Unsuppressed Solution (0.000% Triton)',
+   col: '#ef4444',
+   sub: 'Severe Acute Marangoni Maximum (> 25 μA)',
+   desc: 'Interfacial tension gradients induce violent vortex streaming at DME tip, artificially quadrupling current before collapsing.'
+  },
+  {
+   title: '2. Suppressed Baseline (0.002% Triton X-100)',
+   col: '#4ade80',
+   sub: 'Ideal Sigmoidal Wave (i_d = 6.37 μA)',
+   desc: 'Viscoelastic surfactant monolayer halts tangential slip, restoring pure Fickian linear diffusion and ideal Ilkovič proportionality.'
+  },
+  {
+   title: '3. Over-Suppressed (> 0.020% Triton X-100)',
+   col: '#facc15',
+   sub: 'Kinetically Retarded Quasi-Reversible Wave',
+   desc: 'Excess surfactant blocks active mercury surface sites, shifting E_1/2 cathodically and broadening wave slope.'
+  }
+ ];
+
+ for (var m = 0; m < maxCases.length; m++) {
+  var mc = maxCases[m];
+  var ry = rY + 36 + m * 64;
+  svg += rect(rX + 15, ry, rW - 30, 56, '#09131f', mc.col, 1, 4);
+  svg += text(rX + 25, ry + 16, mc.title, mc.col, 7.5, 'start', 'bold');
+  svg += text(rX + rW - 25, ry + 16, mc.sub, '#94a3b8', 6, 'end');
+  svg += text(rX + 25, ry + 36, mc.desc, '#cbd5e1', 6, 'start');
+ }
+
+ svg += text(360, 314, 'Conclusion: 0.002% Triton X-100 completely arrests Marangoni streaming without perturbing standard reduction thermodynamics.', '#789c80', 8, 'middle');
+
+ return svg;
+}
+
+function drawPolarographySandboxView(p, rawVal) {
+ var c_mM = p.input || 1.000;
+ var rawId = rawVal || 6.37;
+ var m_Hg = 2.000;
+ var t_drop = 3.500;
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0c131d');
+
+ svg += text(20, 24, 'HEYROVSKÝ-ILKOVIČ EQUATION & LOGARITHMIC WAVE ANALYSIS SANDBOX', '#e2e8f0', 12, 'bold');
+ svg += text(20, 40, 'Reversible Wave Slope E vs log₁₀[i / (i_d − i)] · Dynamic Mercury Droplet Growth Mechanics', '#38bdf8', 9);
+
+ // Left: Heyrovský-Ilkovič Log Plot (x: 20 to 330)
+ var lX = 20, lY = 55, lW = 310, lH = 240;
+ svg += rect(lX, lY, lW, lH, '#131d2e', '#334155', 1, 6);
+ svg += text(lX + lW/2, lY + 18, 'HEYROVSKÝ-ILKOVIČ LOG-PLOT: E vs log[i / (i_d − i)]', '#facc15', 7.5, 'middle', 'bold');
+
+ var lpX = lX + 45, lpY = lY + 35, lpW = 240, lpH = 150;
+ svg += '<line x1="'+lpX+'" y1="'+(lpY+lpH/2)+'" x2="'+(lpX+lpW)+'" y2="'+(lpY+lpH/2)+'" stroke="#475569" stroke-width="1"/>';
+ svg += '<line x1="'+(lpX+lpW/2)+'" y1="'+lpY+'" x2="'+(lpX+lpW/2)+'" y2="'+(lpY+lpH)+'" stroke="#475569" stroke-width="1"/>';
+
+ // X: log ratio from -2 to +2
+ // Y: E from -0.54 V (top) to -0.66 V (bottom)
+ function lMapX(logR) { return lpX + ((logR + 2.0) / 4.0) * lpW; }
+ function lMapY(eVal) { return lpY + ((-0.54 - eVal) / 0.12) * lpH; }
+
+ // Linear log plot line: E = -0.600 - (0.0592 / 2) * logR
+ var e1 = -0.600 - 0.0296 * (-2.0); // -0.5408
+ var e2 = -0.600 - 0.0296 * (2.0);  // -0.6592
+ svg += '<line x1="'+lMapX(-2.0)+'" y1="'+lMapY(e1)+'" x2="'+lMapX(2.0)+'" y2="'+lMapY(e2)+'" stroke="#38bdf8" stroke-width="2"/>';
+
+ // Half-wave point at logR = 0, E = -0.600 V
+ var midLX = lMapX(0.0), midLY = lMapY(-0.600);
+ svg += circle(midLX, midLY, 5, '#ef4444', '#facc15', 1.5);
+ svg += text(midLX + 8, midLY - 6, 'E_1/2 = -0.600 V vs SCE', '#fef08a', 7, 'start', 'bold');
+
+ svg += text(lpX + lpW/2, lpY + lpH + 22, 'Logarithmic Ratio: log₁₀[ i / (i_d − i) ]', '#94a3b8', 6.5, 'middle');
+ svg += '<text x="'+(lpX - 22)+'" y="'+(lpY + lpH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="6.5" transform="rotate(-90 '+(lpX-22)+' '+(lpY+lpH/2)+')">Potential E (V vs SCE)</text>';
+
+ svg += text(lX + lW/2, lY + lpH + 42, 'Fitted Slope: −29.6 mV/decade  ==>  n = 2.00 electrons (Cd²⁺ + 2e⁻ ⇌ Cd(Hg))', '#4ade80', 7, 'middle', 'bold');
+
+ // Right: Calibration Curve & Capillary Physics (x: 345 to 700)
+ var rX = 345, rY = 55, rW = 355, rH = 240;
+ svg += rect(rX, rY, rW, rH, '#131d2e', '#334155', 1, 6);
+ svg += text(rX + rW/2, rY + 18, 'ILKOVIČ PROPORTIONALITY: i_d vs CONCENTRATION c', '#38bdf8', 8, 'middle', 'bold');
+
+ var cpX = rX + 45, cpY = rY + 35, cpW = 280, cpH = 155;
+ svg += '<line x1="'+cpX+'" y1="'+(cpY+cpH)+'" x2="'+(cpX+cpW)+'" y2="'+(cpY+cpH)+'" stroke="#475569" stroke-width="1.2"/>';
+ svg += '<line x1="'+cpX+'" y1="'+cpY+'" x2="'+cpX+'" y2="'+(cpY+cpH)+'" stroke="#475569" stroke-width="1.2"/>';
+
+ function cMapX(conc) { return cpX + (conc / 3.0) * cpW; }
+ function cMapY(curr) { return (cpY + cpH) - (curr / 20.0) * cpH; }
+
+ for (var cn = 0.5; cn <= 3.0; cn += 0.5) {
+  var cx = cMapX(cn);
+  svg += '<line x1="'+cx+'" y1="'+cpY+'" x2="'+cx+'" y2="'+(cpY+cpH)+'" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(cx, cpY + cpH + 12, cn.toFixed(1), '#94a3b8', 6.5, 'middle');
+ }
+ for (var cr = 4; cr <= 20; cr += 4) {
+  var cy = cMapY(cr);
+  svg += '<line x1="'+cpX+'" y1="'+cy+'" x2="'+(cpX+cpW)+'" y2="'+cy+'" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(cpX - 5, cy + 3, cr.toString(), '#94a3b8', 6.5, 'end');
+ }
+
+ // Ilkovic Line passing through origin
+ svg += '<line x1="'+cMapX(0.0)+'" y1="'+cMapY(0.0)+'" x2="'+cMapX(3.0)+'" y2="'+cMapY(6.372 * 3.0)+'" stroke="#38bdf8" stroke-width="2"/>';
+
+ // Sample points
+ var sConcs = [0.200, 0.500, 1.000, 1.500, 2.000, 2.500];
+ var sIds = [1.27, 3.19, 6.37, 9.56, 12.74, 15.93];
+ for (var pIdx = 0; pIdx < sConcs.length; pIdx++) {
+  var sx = cMapX(sConcs[pIdx]);
+  var sy = cMapY(sIds[pIdx]);
+  svg += circle(sx, sy, 3, '#38bdf8', '#ffffff', 1);
+ }
+
+ // Active current point
+ var actX = cMapX(c_mM);
+ var actY = cMapY(rawId);
+ svg += circle(actX, actY, 5.5, '#ef4444', '#facc15', 1.5);
+ svg += text(actX + 6, actY - 6, c_mM.toFixed(2) + ' mM: ' + rawId.toFixed(2) + ' μA', '#fef08a', 7, 'start', 'bold');
+
+ svg += text(cpX + cpW/2, cpY + cpH + 22, 'Cadmium(II) Concentration c (mM)', '#94a3b8', 7, 'middle');
+ svg += '<text x="'+(cpX - 22)+'" y="'+(cpY + cpH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7" transform="rotate(-90 '+(cpX-22)+' '+(cpY+cpH/2)+')">Diffusion Current i_d (μA)</text>';
+
+ svg += text(360, 314, 'Capillary Constancy: m²/³ t¹/⁶ = 1.956 mg²/³·s⁻¹/² remains invariant at constant 50.0 cm mercury column height.', '#789c80', 8, 'middle');
 
  return svg;
 }
