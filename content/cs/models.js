@@ -138,6 +138,14 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:raw/200.0,x,y,valid:n>=4&&n<=16};
  }
+ if(slug==='fast-fourier-transform'){
+  const n=Number(input);
+  const log2n=Math.round(Math.log2(n));
+  const raw=Math.round(0.5 * n * log2n);
+  const x=n * log2n;
+  const y=raw;
+  return {raw,ideal:raw,period:raw/2000.0,x,y,valid:n>=64&&n<=4096};
+ }
  if(slug==='b-tree-disk-indexing'){
   const h=Number(input);
   const raw=Math.round(8 * h);
@@ -230,6 +238,12 @@ function reading(slug,input,raw){
   x=Number(input);
   y=raw;
  }
+ if(slug==='fast-fourier-transform'){
+  const n=Number(input);
+  const log2n=Math.round(Math.log2(n));
+  x=n * log2n;
+  y=raw;
+ }
  if(slug==='b-tree-disk-indexing'){
   x=Number(input);
   y=raw;
@@ -311,6 +325,9 @@ function estimate(slug,f){
  }
  if(slug==='backtracking-n-queens-sat'){
   return {value:f.m,se:f.slopeSE,reference:4.0000};
+ }
+ if(slug==='fast-fourier-transform'){
+  return {value:f.m,se:f.slopeSE,reference:0.5000};
  }
  if(slug==='b-tree-disk-indexing'){
   return {value:f.m,se:f.slopeSE,reference:8.0000};
