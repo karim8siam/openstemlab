@@ -138,6 +138,13 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:raw/200.0,x,y,valid:n>=4&&n<=16};
  }
+ if(slug==='concurrency-synchronization-deadlock'){
+  const n=Number(input);
+  const raw=Math.round(4 * n);
+  const x=n;
+  const y=raw;
+  return {raw,ideal:raw,period:raw/200.0,x,y,valid:n>=2&&n<=14};
+ }
  if(slug==='cryptographic-rsa-modular'){
   const b=Number(input);
   const raw=Math.round(1.5 * b);
@@ -265,6 +272,10 @@ function reading(slug,input,raw){
   x=n * log2n;
   y=raw;
  }
+ if(slug==='concurrency-synchronization-deadlock'){
+  x=Number(input);
+  y=raw;
+ }
  if(slug==='cryptographic-rsa-modular'){
   x=Number(input);
   y=raw;
@@ -361,6 +372,9 @@ function estimate(slug,f){
  }
  if(slug==='fast-fourier-transform'){
   return {value:f.m,se:f.slopeSE,reference:0.5000};
+ }
+ if(slug==='concurrency-synchronization-deadlock'){
+  return {value:f.m,se:f.slopeSE,reference:4.0000};
  }
  if(slug==='cryptographic-rsa-modular'){
   return {value:f.m,se:f.slopeSE,reference:1.5000};

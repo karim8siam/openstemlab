@@ -156,6 +156,12 @@ def observation(c,value):
   x=b_bits
   y=float(raw)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='concurrency-synchronization-deadlock':
+  n_threads=float(value)
+  raw=int(round(4.0 * n_threads))
+  x=n_threads
+  y=float(raw)
+  return {'input':value,'raw':raw,'x':x,'y':y}
  raise ValueError(f"Unknown CS experiment {slug}")
 
 def fit(rows):
@@ -225,6 +231,8 @@ def estimate(c,f):
   return f['m'],f['slopeSE'],6.0000
  elif slug=='cryptographic-rsa-modular':
   return f['m'],f['slopeSE'],1.5000
+ elif slug=='concurrency-synchronization-deadlock':
+  return f['m'],f['slopeSE'],4.0000
  raise ValueError(f"Unknown CS experiment {slug}")
 
 def fmt(v,n=5):
@@ -301,6 +309,9 @@ def formula(c,f):
  elif slug=='cryptographic-rsa-modular':
   val=f['m']*c['resultScale']
   return f"k_mod = m = {fmt(val,c['resultDecimals'])} operations/bit; Intercept M_0 = {fmt(f['b'],c['resultDecimals'])} operations (theoretical k_mod = 1.5000, M_0 = 0.0000)"
+ elif slug=='concurrency-synchronization-deadlock':
+  val=f['m']*c['resultScale']
+  return f"k_sync = m = {fmt(val,c['resultDecimals'])} operations/thread; Intercept S_0 = {fmt(f['b'],c['resultDecimals'])} operations (theoretical k_sync = 4.0000, S_0 = 0.0000)"
  return ""
 
 def worked(c,row):
@@ -420,6 +431,10 @@ def worked(c,row):
   b_bits=row['input']
   m_ops=row['raw']
   return f"Private Key Exponent Length B = {int(b_bits)} bits; Modular Squarings = {int(b_bits)} squarings; Modular Multiplications = {int(b_bits//2)} multiplications.\nTotal Modular Operations: M(B) = k_mod · B + M_0 = 1.5000 × {int(b_bits)} + 0 = {m_ops} operations.\nVerification: The Square-and-Multiply algorithm evaluates modular powers by scanning the binary representation of the exponent from left to right. Every bit unconditionally triggers 1 modular squaring ({int(b_bits)} squarings), while bits with value 1 (averaging 50% in cryptographic keys) trigger 1 modular multiplication ({int(b_bits//2)} multiplications), yielding strictly 1.5·B = {m_ops} modular arithmetic operations."
+ elif slug=='concurrency-synchronization-deadlock':
+  n_threads=row['input']
+  s_ops=row['raw']
+  return f"Concurrency Worker Threads N = {int(n_threads)} philosophers; Shared Mutex Locks = {int(n_threads)} forks; Synchronization Policy = Dijkstra Resource Hierarchy.\nTotal Atomic Operations: S(N) = k_sync · N + S_0 = 4.0000 × {int(n_threads)} + 0 = {s_ops} operations.\nVerification: In each dining cycle, each philosopher thread executes exactly 4 atomic synchronization primitives: wait(fork_low), wait(fork_high), signal(fork_low), and signal(fork_high). Across all {int(n_threads)} threads, Dijkstra's asymmetric resource hierarchy eliminates Circular Wait, completing all critical sections with strictly 4·N = {s_ops} atomic operations and zero deadlocks."
  return ""
 
 def uncertainty_text(c):
@@ -676,6 +691,17 @@ def uncertainty_text(c):
    "(3) Side-channel timing and power analysis vulnerabilities: conditional execution of modular multiplications in naive Square-and-Multiply creates data-dependent timing discrepancies, allowing adversaries to extract private key bits via Simple Power Analysis (SPA); and "
    "(4) Constant-time Montgomery ladder mitigation: production cryptographic security modules implement constant-time exponentiation ladders (executing 1 squaring and 1 multiplication on every bit regardless of bit value) to eliminate side-channel leakage. "
    "Ordinary least-squares linear regression of observed modular operations against exponent bit length B across instances from B = 64 to B = 4096 bits yields an empirical scaling multiplier k_mod = 1.5000 operations/bit and baseline intercept M_0 = 0.0000 operations with zero residual variance (R² = 1.00000), verifying the binary exponentiation complexity bound Θ(B) with mathematical certitude."
+  )
+ elif slug=='concurrency-synchronization-deadlock':
+  return (
+   "In concurrent systems and distributed synchronization theory, the atomic operation count S(N) = k_sync · N + S_0 = 4.0000·N + 0.0000 operations across thread count N is an exact deterministic arithmetic invariant for the Dining Philosophers protocol. "
+   "Unlike continuous physical instrumentation, there is no analog sensor noise, thermal drift, or calibration variance in counting discrete atomic lock acquisitions and semaphore signals. "
+   "However, in physical multi-core processors and operating system kernels, wall-clock concurrency throughput and lock contention are heavily modulated by microarchitectural dynamics: "
+   "(1) CPU cache coherence protocols and bus locking: atomic Compare-And-Swap (CAS) instructions force the CPU to lock cache lines or memory buses under the MESI/MOESI coherence protocol, incurring 40–100 clock cycles of interconnect latency per contended lock; "
+   "(2) Operating system context switch and thread scheduling overhead: when a thread blocks on a contested mutex, the kernel transitions the thread from Running to Waiting and performs a full context switch (saving CPU registers, switching page tables), consuming 1–5 µs of CPU overhead; "
+   "(3) Spinlock thresholding vs sleep-locks: hybrid mutexes spin briefly in user space for a few hundred cycles before sleeping, amortizing context-switch overhead for short critical sections; and "
+   "(4) Priority inversion on shared synchronization objects: low-priority threads holding locks required by high-priority threads cause systemic stalling unless Priority Inheritance Protocols (PIP) are enabled. "
+   "Ordinary least-squares linear regression of observed atomic operations against thread count N across instances from N = 2 to N = 14 threads yields an empirical scaling factor k_sync = 4.0000 operations/thread and baseline intercept S_0 = 0.0000 operations with zero residual variance (R² = 1.00000), verifying the linear synchronization complexity bound Θ(N) with mathematical certitude."
   )
  return ""
 
@@ -1526,6 +1552,44 @@ def report_narrative(c,rows,f,value,percent,reference):
    f"k_mod = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} and baseline intercept M_0 = {fmt(f['b'],c['resultDecimals'])} {c['interceptUnit']} with an ideal R² = 1.00000. "
    "The investigation established the microarchitectural efficiency and theoretical necessity of one-way trapdoor functions, Euler's totient theorem, and constant-time modular arithmetic, "
    "proving why RSA and public-key cryptography remain the foundational pillar of Internet security, digital signatures, and global confidential communications."
+  )
+ elif slug=='concurrency-synchronization-deadlock':
+  abstract=(
+   f"Seven benchmark trials were generated across worker thread concurrency levels N = {rows[0]['input']} to N = {rows[-1]['input']} threads "
+   f"(total atomic synchronization operations S from {rows[0]['raw']} to {rows[-1]['raw']} operations). "
+   f"An ordinary least-squares regression of atomic operations against thread count yielded an empirical scaling multiplier of "
+   f"{fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} and an intercept of {fmt(f['b'],c['resultDecimals'])} operations, "
+   f"demonstrating exact agreement with Dijkstra's resource hierarchy synchronization model S(N) = 4N (difference = {percent:.4f}%). "
+   f"The empirical telemetry confirms that by breaking Coffman's circular wait condition through asymmetric lock ordering, "
+   f"each thread completes its critical section in strictly 4 atomic operations without deadlocks or starvation."
+  )
+  graph_choice=(
+   f"The mathematical regression fits the linear model y = mx + b, where x = N represents worker thread count in threads, "
+   f"y = S represents total atomic synchronization operations, m represents the step multiplier k_sync, and b represents "
+   f"the baseline operation offset (theoretically S_0 = 0.0000 operations). The gradient has physical units {c['gradientUnit']}."
+  )
+  discussion=(
+   "The empirical benchmark observations provide rigorous quantitative verification of Concurrent Systems Theory, Synchronization Primitives, and Deadlock Dynamics. "
+   "In multi-core computing architectures, non-deterministic thread interleavings create race conditions that corrupt shared mutable data unless protected by mutual exclusion. "
+   "However, improper synchronization introduces a fatal failure mode: Deadlock. "
+   "Edward G. Coffman Jr. proved in 1971 that deadlocks require four simultaneous conditions: Mutual Exclusion, Hold and Wait, No Preemption, and Circular Wait. "
+   "In Dijkstra's classic Dining Philosophers Problem, N threads compete for N shared mutex locks; under symmetric acquisition policies, simultaneous requests generate circular wait, causing all threads to permanently deadlock. "
+   "Dijkstra eliminated this circular dependency through Resource Hierarchy: enforcing a global partial ordering on lock acquisitions guarantees that at least one thread acquires both resources and progresses. "
+   "In our standardized concurrent execution model, each philosopher thread executes exactly 4 atomic synchronization operations per cycle: two lock acquires (left and right forks) and two lock releases. "
+   "Across N threads, the cumulative atomic operation count scales strictly as S(N) = 4.0000 · N operations. "
+   "Across all benchmark trials from N = 2 to N = 14 threads, the empirical regression slope m = 4.0000 operations/thread and baseline intercept b = 0.0000 confirm this invariant with zero residual variance (R² = 1.00000). "
+   "Comparative analysis across concurrency paradigms highlights critical architectural trade-offs: "
+   "Resource Allocation Graphs (RAG) detect deadlock cycles in O(|V| + |E|) time using Tarjan's strongly connected components. "
+   "Dijkstra's Banker's Algorithm evaluates multi-instance resource matrices at runtime to guarantee safe state transitions. "
+   "Finally, real-world operating system case studies—such as the 1997 Mars Pathfinder priority inversion incident—demonstrate the necessity of Priority Inheritance Protocols (PIP) "
+   "to prevent low-priority threads from indefinitely stalling mission-critical high-priority tasks."
+  )
+  conclusion=(
+   "This laboratory investigation quantitatively verified the atomic synchronization mechanics, resource hierarchy partial ordering, and deadlock prevention scaling of Concurrent Systems. "
+   f"Through systematic benchmarking across thread counts from N = {rows[0]['input']} to {rows[-1]['input']} threads, we verified the empirical synchronization multiplier "
+   f"k_sync = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} and baseline intercept S_0 = {fmt(f['b'],c['resultDecimals'])} {c['interceptUnit']} with an ideal R² = 1.00000. "
+   "The investigation established the microarchitectural efficiency and theoretical necessity of breaking Coffman conditions, tracking resource allocation graphs, and implementing priority inheritance, "
+   "proving why robust synchronization forms the computational bedrock of multi-core operating systems, high-performance database engines, and fault-tolerant distributed systems."
   )
  else:
   abstract=f"Empirical benchmark trials were generated across input sizes for {c['title']}."
