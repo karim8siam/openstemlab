@@ -100,6 +100,7 @@ def experiment_index(experiments):
     'second-order-saponification-conductivity': 'second order ester saponification ethyl acetate conductivity kohlrausch ionic mobility half life impedance',
     'first-order-kinetics-ester-hydrolysis': 'first order ester hydrolysis methyl acetate acid catalysis rate constant titrimetry guggenheim half life',
     'activation-energy-arrhenius-acetone-iodination': 'arrhenius activation energy acetone iodination reaction kinetics zero order enolization transition state eyring rate constant temperature dependence',
+    'potentiometric-redox-titration-fe-ce': 'potentiometric redox titration iron cerium formal reduction potential nernst equation platinum electrode equivalence point half cell emf',
     'chemical-kinetics-iodine-clock-persulfate':'chemical kinetics iodine clock persulfate iodide reaction order initial rates rate constant thiosulfate starch bronsted bjerrum salt effect transition state photodiode timer'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})

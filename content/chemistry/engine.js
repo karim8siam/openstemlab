@@ -81,6 +81,18 @@ function update(){
   $('apparatusDiagram').innerHTML=drawEnzymeKineticsBenchView(p,rawVal);
   return;
  }
+ if(cfg.slug==='potentiometric-redox-titration-fe-ce'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawPotentiometricCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawPotentiometricSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawPotentiometricBenchView(p,rawVal);
+  return;
+ }
  if(cfg.slug==='oscillating-reaction-belousov-zhabotinsky'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawBZCompareView(p,rawVal);
@@ -162,6 +174,14 @@ function update(){
   const dA_dt = v0_uM * 0.0185;
   $('liveState').textContent='Photometric trace recorded: v₀ = '+v0_uM.toFixed(2)+' μM/min (dA/dt = '+(dA_dt/1000).toFixed(4)+' AU/min).';
   message('Assay complete: v₀ = '+v0_uM.toFixed(2)+' μM/min (1/v₀ = '+inv_v0.toFixed(2)+' min/mM, 1/[S] = '+inv_s.toFixed(2)+' mM⁻¹). Record in notebook.');
+ }else if(cfg.slug==='potentiometric-redox-titration-fe-ce'){
+  const v = p.input;
+  const E_meas = raw;
+  const V_eq = 25.00;
+  const ratio = v / (V_eq - v);
+  const ln_ratio = Math.log(ratio);
+  $('liveState').textContent='Equilibrium potential steady: V(Ce⁴⁺) = '+v.toFixed(2)+' mL, E = '+E_meas.toFixed(2)+' mV vs SHE.';
+  message('Potentiometric reading logged: E = '+E_meas.toFixed(2)+' mV (ln[V/(V_eq−V)] = '+ln_ratio.toFixed(4)+') at V = '+v.toFixed(2)+' mL. Record in notebook.');
  }else if(cfg.slug==='oscillating-reaction-belousov-zhabotinsky'){
   const c_ma = p.input;
   const nu = raw;
@@ -10363,5 +10383,185 @@ function drawBZSandboxView(p, rawVal){
  svg += '<text x="'+(pX-15)+'" y="'+(pY+pH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7" transform="rotate(-90 '+(pX-15)+' '+(pY+pH/2)+')">log [HBrO₂] (Autocatalytic Variable)</text>';
 
  svg += text(360, 312, 'Oregonator Attractor: Subcritical/supercritical Hopf bifurcation generates robust, autonomous limit-cycle oscillations.', '#789c80', 8.5);
+ return svg;
+}
+
+
+// ======================================================================
+// LAB 31: POTENTIOMETRIC REDOX TITRATION (FE-CE SYSTEM)
+// ======================================================================
+function drawPotentiometricBenchView(p, rawVal){
+ const v = p.input;
+ const raw = measurement ? measurement.raw : (busy ? rawVal * 0.9 : (rawVal || 679.99));
+ const E_meas = raw;
+ const V_eq = 25.00;
+ const ratio = v / (V_eq - v);
+ const ln_ratio = (Math.log(ratio)).toFixed(4);
+
+ let svg = header('Potentiometric Redox Titration Bench (Fe²⁺ + Ce⁴⁺ ⇄ Fe³⁺ + Ce³⁺)', 'High-Impedance Millivoltmeter Logging & Pt / Ag-AgCl Electrode Cell');
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // Left: Titration Station with Electrodes and Burette (x: 35, y: 60, w: 320, h: 225)
+ const bX = 35, bY = 60, bW = 320, bH = 225;
+ svg += '<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(bX+8)+'" y="'+(bY+8)+'" width="'+(bW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(bX+bW/2)+'" y="'+(bY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">JACKETED REDOX TITRATOR (T = 298.15 K)</text>';
+
+ // Magnetic Stirrer Base
+ svg += '<rect x="'+(bX+60)+'" y="'+(bY+160)+'" width="200" height="28" rx="4" fill="#1e293b" stroke="#334155"/>';
+ svg += '<circle cx="'+(bX+85)+'" cy="'+(bY+174)+'" r="4.5" fill="#22c55e"/>';
+ svg += '<text x="'+(bX+98)+'" y="'+(bY+177)+'" fill="#94a3b8" font-size="6.5">Stirrer: 400 RPM</text>';
+
+ // Glass Jacketed Beaker
+ const flkX = bX + 85, flkY = bY + 65, flkW = 150, flkH = 95;
+ svg += '<rect x="'+flkX+'" y="'+flkY+'" width="'+flkW+'" height="'+flkH+'" rx="6" fill="#0284c7" fill-opacity="0.1" stroke="#38bdf8" stroke-width="1.5"/>';
+
+ // Analyte Solution: light green Fe2+ oxidizing to pale amber Fe3+
+ const solAlpha = Math.min(0.7, 0.2 + (v / V_eq) * 0.4);
+ svg += '<rect x="'+(flkX+4)+'" y="'+(flkY+25)+'" width="'+(flkW-8)+'" height="'+(flkH-29)+'" rx="3" fill="#ca8a04" fill-opacity="'+solAlpha+'"/>';
+
+ // Stir bar
+ svg += '<rect x="'+(flkX+flkW/2-15)+'" y="'+(flkY+flkH-8)+'" width="30" height="5" rx="2.5" fill="#ffffff" stroke="#94a3b8"/>';
+
+ // Class A Burette dropping Ce(IV) titrant
+ const buX = flkX + 25, buY = bY + 30;
+ svg += '<rect x="'+buX+'" y="'+buY+'" width="12" height="60" rx="2" fill="#0284c7" fill-opacity="0.15" stroke="#38bdf8" stroke-width="1.2"/>';
+ svg += '<rect x="'+(buX+2)+'" y="'+(buY+15)+'" width="8" height="40" fill="#eab308" fill-opacity="0.75"/>';
+ svg += '<line x1="'+(buX+6)+'" y1="'+(buY+60)+'" x2="'+(buX+6)+'" y2="'+(flkY+15)+'" stroke="#38bdf8" stroke-width="1.2"/>';
+ svg += '<circle cx="'+(buX+6)+'" cy="'+(flkY+20)+'" r="2" fill="#eab308"/>';
+ svg += '<text x="'+(buX+6)+'" y="'+(buY-4)+'" text-anchor="middle" fill="#eab308" font-size="6">Ce⁴⁺</text>';
+
+ // Platinum wire electrode (middle)
+ svg += '<line x1="'+(flkX+75)+'" y1="'+(bY+35)+'" x2="'+(flkX+75)+'" y2="'+(flkY+70)+'" stroke="#cbd5e1" stroke-width="2"/>';
+ svg += '<circle cx="'+(flkX+75)+'" cy="'+(flkY+70)+'" r="2.5" fill="#f8fafc"/>';
+ svg += '<text x="'+(flkX+75)+'" y="'+(bY+30)+'" text-anchor="middle" fill="#cbd5e1" font-size="6">Pt Wire</text>';
+
+ // Ag/AgCl Double Junction Reference Electrode (right)
+ svg += '<rect x="'+(flkX+115)+'" y="'+(bY+35)+'" width="14" height="85" rx="3" fill="#1e293b" stroke="#64748b"/>';
+ svg += '<text x="'+(flkX+122)+'" y="'+(bY+30)+'" text-anchor="middle" fill="#94a3b8" font-size="6">Ag/AgCl</text>';
+
+ // Bottom annotation
+ svg += '<rect x="'+(bX+20)+'" y="'+(bY+195)+'" width="280" height="22" rx="3" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(bX+30)+'" y="'+(bY+210)+'" fill="#94a3b8" font-size="7">Medium: <tspan fill="#38bdf8" font-weight="bold">1.00 M H₂SO₄</tspan> | Reference: <tspan fill="#4ade80" font-weight="bold">Ag/AgCl (+210 mV vs SHE)</tspan></text>';
+
+ // Right: High-Impedance Digital Electrometer Telemetry (x: 365, y: 60, w: 320, h: 225)
+ const tX = 365, tY = 60, tW = 320, tH = 225;
+ svg += '<rect x="'+tX+'" y="'+tY+'" width="'+tW+'" height="'+tH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(tX+8)+'" y="'+(tY+8)+'" width="'+(tW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(tX+tW/2)+'" y="'+(tY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">POTENTIOMETRIC EMF TELEMETRY</text>';
+
+ // Digital Multimeter Display Screen
+ svg += '<rect x="'+(tX+25)+'" y="'+(tY+40)+'" width="270" height="60" rx="6" fill="#051009" stroke="#38bdf8" stroke-width="1.2"/>';
+ svg += '<text x="'+(tX+160)+'" y="'+(tY+65)+'" text-anchor="middle" fill="#38bdf8" font-family="monospace" font-size="18" font-weight="bold">'+E_meas.toFixed(2)+' mV</text>';
+ svg += '<text x="'+(tX+160)+'" y="'+(tY+85)+'" text-anchor="middle" fill="#94a3b8" font-size="7">CELL POTENTIAL vs SHE (Z_in > 10¹² Ω)</text>';
+
+ // Nernstian Parameter Table
+ svg += '<rect x="'+(tX+25)+'" y="'+(tY+110)+'" width="270" height="95" rx="4" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(tX+35)+'" y="'+(tY+130)+'" fill="#94a3b8" font-size="7.5">Cerium Titrant Volume V: <tspan fill="#facc15" font-weight="bold">'+v.toFixed(2)+' mL</tspan></text>';
+ svg += '<text x="'+(tX+35)+'" y="'+(tY+148)+'" fill="#94a3b8" font-size="7.5">Equivalence Volume V_eq: <tspan fill="#4ade80" font-weight="bold">25.00 mL</tspan></text>';
+ svg += '<text x="'+(tX+35)+'" y="'+(tY+166)+'" fill="#94a3b8" font-size="7.5">Nernst Log Ratio ln[V/(V_eq−V)]: <tspan fill="#38bdf8" font-weight="bold">'+ln_ratio+'</tspan></text>';
+ svg += '<text x="'+(tX+35)+'" y="'+(tY+184)+'" fill="#94a3b8" font-size="7.5">Half-Equivalence Formal Potential E°\': <tspan fill="#86efac" font-weight="bold">680.0 mV vs SHE</tspan></text>';
+
+ svg += text(360, 312, 'Nernstian Invariant: At V = 12.50 mL, [Fe³⁺] = [Fe²⁺] and ln(1.0) = 0, isolating E°\' = 680.0 mV vs SHE.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawPotentiometricCompareView(p, rawVal){
+ let svg = header('Full Sigmoidal Titration Curve & Derivatives', 'Cell Potential E(V) and First Derivative ΔE/ΔV Peak at Equivalence (V_eq = 25.00 mL)');
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ const cX = 35, cY = 60, cW = 650, cH = 225;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+
+ const pX = cX + 60, pY = cY + 30, pW = 520, pH = 145;
+ svg += '<line x1="'+pX+'" y1="'+(pY+pH)+'" x2="'+(pX+pW)+'" y2="'+(pY+pH)+'" stroke="#334155" stroke-width="1.2"/>';
+ svg += '<line x1="'+pX+'" y1="'+pY+'" x2="'+pX+'" y2="'+(pY+pH)+'" stroke="#334155" stroke-width="1.2"/>';
+
+ // Sigmoidal Titration Curve: Fe plateau (680 mV) -> steep jump at 25 mL (1060 mV) -> Ce plateau (1440 mV)
+ // Scale E from 500 mV to 1600 mV
+ const E_to_Y = e => (pY + pH) - ((e - 500.0) / 1100.0) * pH;
+ const V_to_X = v => pX + (v / 35.0) * pW;
+
+ let pathSig = 'M ' + V_to_X(1.0).toFixed(1) + ' ' + E_to_Y(600.0).toFixed(1);
+ for(let v_i = 2; v_i <= 34; v_i += 1){
+  let E_val = 0;
+  if(v_i < 24.8){
+   const r = v_i / (25.0 - v_i);
+   E_val = 680.0 + 25.693 * Math.log(r);
+  } else if(v_i > 25.2){
+   const r = (v_i - 25.0) / 25.0;
+   E_val = 1440.0 + 25.693 * Math.log(r);
+  } else {
+   E_val = 1060.0;
+  }
+  pathSig += ' L ' + V_to_X(v_i).toFixed(1) + ' ' + E_to_Y(E_val).toFixed(1);
+ }
+ svg += '<path d="'+pathSig+'" fill="none" stroke="#38bdf8" stroke-width="2.5"/>';
+
+ // Derivative spike ΔE/ΔV at V = 25.0 mL
+ const eqX = V_to_X(25.0);
+ svg += '<line x1="'+eqX+'" y1="'+(pY+pH)+'" x2="'+eqX+'" y2="'+(pY+15)+'" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3,3"/>';
+ svg += '<circle cx="'+eqX+'" cy="'+E_to_Y(1060.0)+'" r="4.5" fill="#ef4444" stroke="#facc15" stroke-width="1.2"/>';
+ svg += '<text x="'+(eqX+8)+'" y="'+(E_to_Y(1060.0)+4)+'" fill="#ef4444" font-size="7" font-weight="bold">Equivalence Point V_eq = 25.00 mL (E_eq = 1060 mV)</text>';
+
+ // Half-equivalence callout
+ const halfX = V_to_X(12.5);
+ svg += '<circle cx="'+halfX+'" cy="'+E_to_Y(680.0)+'" r="4" fill="#4ade80"/>';
+ svg += '<text x="'+halfX+'" y="'+(E_to_Y(680.0)-10)+'" text-anchor="middle" fill="#4ade80" font-size="7" font-weight="bold">Half-Eq V = 12.50 mL: E°\'(Fe) = 680 mV</text>';
+
+ svg += '<text x="'+(pX+pW/2)+'" y="'+(pY+pH+18)+'" text-anchor="middle" fill="#94a3b8" font-size="7">Cerium(IV) Titrant Volume V (mL)</text>';
+ svg += '<text x="'+(pX-15)+'" y="'+(pY+pH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7" transform="rotate(-90 '+(pX-15)+' '+(pY+pH/2)+')">Potential E vs SHE (mV)</text>';
+
+ svg += text(360, 312, 'Symmetric Sigmoid: Pre-equivalence governed by Fe³⁺/Fe²⁺; Post-equivalence governed by Ce⁴⁺/Ce³⁺.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawPotentiometricSandboxView(p, rawVal){
+ let svg = header('Nernstian Logarithmic Linearization Sandbox', 'E vs ln[V / (V_eq − V)] in Pre-Equivalence Buffer Zone (V_eq = 25.00 mL)');
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ const cX = 35, cY = 60, cW = 650, cH = 225;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+
+ const pX = cX + 60, pY = cY + 30, pW = 520, pH = 145;
+ svg += '<line x1="'+pX+'" y1="'+(pY+pH)+'" x2="'+(pX+pW)+'" y2="'+(pY+pH)+'" stroke="#334155" stroke-width="1.2"/>';
+ svg += '<line x1="'+pX+'" y1="'+pY+'" x2="'+pX+'" y2="'+(pY+pH)+'" stroke="#334155" stroke-width="1.2"/>';
+
+ // Linear fit line: E = 25.693 * x + 680.0
+ // x from -2.0 to +2.0 (range = 4.0).
+ // At x = -2.0: E = 680 - 51.38 = 628.62 mV. At x = +2.0: E = 680 + 51.38 = 731.38 mV.
+ // E range 620 to 740 (delta = 120 mV)
+ const x_to_px = x => pX + ((x + 2.0) / 4.0) * pW;
+ const e_to_py = e => (pY + pH) - ((e - 620.0) / 120.0) * pH;
+
+ const px1 = x_to_px(-2.0), py1 = e_to_py(680.0 - 25.693 * 2.0);
+ const px2 = x_to_px(2.0), py2 = e_to_py(680.0 + 25.693 * 2.0);
+ svg += '<line x1="'+px1+'" y1="'+py1+'" x2="'+px2+'" y2="'+py2+'" stroke="#38bdf8" stroke-width="2.5"/>';
+
+ const pts = [
+  {v: 5.0, x: -1.3863, e: 644.36},
+  {v: 8.0, x: -0.7538, e: 660.62},
+  {v: 10.0, x: -0.4055, e: 669.62},
+  {v: 12.5, x: 0.0000, e: 679.99},
+  {v: 15.0, x: 0.4055, e: 690.38},
+  {v: 20.0, x: 1.3863, e: 715.65}
+ ];
+
+ pts.forEach(pt => {
+  const px = x_to_px(pt.x);
+  const py = e_to_py(pt.e);
+  svg += '<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="4" fill="#facc15" stroke="#ef4444" stroke-width="1.2"/>';
+ });
+
+ // Y-axis at x = 0 (ln_ratio = 0)
+ const zeroX = x_to_px(0.0);
+ svg += '<line x1="'+zeroX+'" y1="'+pY+'" x2="'+zeroX+'" y2="'+(pY+pH)+'" stroke="#64748b" stroke-width="1" stroke-dasharray="2,2"/>';
+ svg += '<circle cx="'+zeroX+'" cy="'+e_to_py(680.0)+'" r="5" fill="#ef4444" stroke="#facc15" stroke-width="1.5"/>';
+ svg += '<text x="'+(zeroX+10)+'" y="'+(e_to_py(680.0)-6)+'" fill="#ef4444" font-size="7.5" font-weight="bold">Formal Potential E°\' = 680.0 mV vs SHE</text>';
+
+ svg += '<text x="'+(pX+pW/2)+'" y="'+(pY+pH+18)+'" text-anchor="middle" fill="#94a3b8" font-size="7">Nernst Log Ratio ln[V / (V_eq − V)]</text>';
+ svg += '<text x="'+(pX-15)+'" y="'+(pY+pH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7" transform="rotate(-90 '+(pX-15)+' '+(pY+pH/2)+')">Potential E vs SHE (mV)</text>';
+
+ svg += text(360, 312, 'Regression Parameters: Slope = RT/F = 25.70 mV, Y-Intercept = E°\' = 680.0 mV vs SHE with R² = 1.00000.', '#789c80', 8.5);
  return svg;
 }

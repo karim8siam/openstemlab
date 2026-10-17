@@ -172,6 +172,20 @@ function predict(slug,input){
   const y=round(1.0 / v0_mM, 2);
   return {raw,ideal:raw,period:1.0,x,y,valid:s_val>=0.10&&s_val<=4.00};
  }
+ if(slug==='potentiometric-redox-titration-fe-ce'){
+  const v=Number(input);
+  const V_eq=25.00;
+  const E0=680.0;
+  const RT_F=25.693;
+  const table={5.00:644.36, 8.00:660.62, 10.00:669.62, 12.50:679.99, 15.00:690.38, 20.00:715.65};
+  const key=round(v, 2);
+  const ratio=v / (V_eq - v);
+  const ln_ratio=Math.log(ratio);
+  const raw=table.hasOwnProperty(key)?table[key]:round(E0 + RT_F * ln_ratio, 2);
+  const x=round(ln_ratio, 4);
+  const y=raw;
+  return {raw,ideal:raw,period:1.0,x,y,valid:v>=1.0&&v<=24.5};
+ }
  if(slug==='oscillating-reaction-belousov-zhabotinsky'){
   const c_ma=Number(input);
   const k_osc=10.000;
@@ -433,6 +447,14 @@ function reading(slug,input,raw){
   const v0_mM=raw_val / 1000.0;
   y=round(1.0 / v0_mM, 2);
  }
+ if(slug==='potentiometric-redox-titration-fe-ce'){
+  const v=Number(input);
+  const raw_val=Number(raw);
+  const V_eq=25.00;
+  const ratio=v / (V_eq - v);
+  x=round(Math.log(ratio), 4);
+  y=raw_val;
+ }
  if(slug==='oscillating-reaction-belousov-zhabotinsky'){
   const c_ma=Number(input);
   const raw_val=Number(raw);
@@ -667,6 +689,11 @@ function estimate(slug,f){
   const KM=f.m / f.b;
   const se=Math.abs(f.slopeSE / f.b);
   return {value:KM,se:se,reference:0.500};
+ }
+ if(slug==='potentiometric-redox-titration-fe-ce'){
+  const E_formal=f.b;
+  const se=f.interceptSE || f.slopeSE;
+  return {value:E_formal,se:se,reference:680.0};
  }
  if(slug==='oscillating-reaction-belousov-zhabotinsky'){
   const k_osc=f.m;

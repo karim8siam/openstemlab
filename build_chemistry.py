@@ -159,6 +159,16 @@ def observation(c,value):
   v0_mM=raw / 1000.0
   y=rnd(1.0 / v0_mM, 2)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='potentiometric-redox-titration-fe-ce':
+  v=float(value)
+  table={5.00:644.36, 8.00:660.62, 10.00:669.62, 12.50:679.99, 15.00:690.38, 20.00:715.65}
+  V_eq=25.00
+  ratio=v / (V_eq - v)
+  ln_ratio=math.log(ratio)
+  raw=table.get(round(v, 2), round(680.0 + 25.693 * ln_ratio, 2))
+  x=rnd(ln_ratio, 4)
+  y=raw
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='oscillating-reaction-belousov-zhabotinsky':
   c_ma=float(value)
   table={0.050:0.4998, 0.100:1.0000, 0.150:1.5008, 0.200:2.0000, 0.250:2.4990, 0.300:3.0000}
@@ -405,6 +415,10 @@ def estimate(c,f):
   ref=0.500
   se=abs(f.get('slopeSE', 0.05) / b) if b > 0 else 0.002
   return KM, se, ref
+ elif slug=='potentiometric-redox-titration-fe-ce':
+  E_formal=f['b']
+  se=f.get('interceptSE', f.get('slopeSE', 0.05))
+  return E_formal, se, 680.0
  elif slug=='oscillating-reaction-belousov-zhabotinsky':
   k_osc=f['m']
   se=f['slopeSE']
@@ -532,6 +546,10 @@ def formula(c,f):
   Vmax=1.0 / b
   KM=m / b
   return f"Slope K_M/V_max = {fmt(m,4)} min; Intercept 1/V_max = {fmt(b,4)} min·mM⁻¹ (V_max = {fmt(Vmax*1000.0,2)} μM/min, K_M = {fmt(KM,4)} mM)"
+ elif slug=='potentiometric-redox-titration-fe-ce':
+  E_formal=f['b']
+  slope=f['m']
+  return f"Formal Potential E°' = {fmt(E_formal,2)} mV vs SHE; Thermal Slope RT/F = {fmt(slope,3)} mV; E = {fmt(slope,3)}·ln[V/(V_eq−V)] + {fmt(E_formal,2)}"
  elif slug=='oscillating-reaction-belousov-zhabotinsky':
   k_osc=f['m']
   return f"Oscillation Scaling Constant k_osc = {fmt(k_osc,4)} min⁻¹·M⁻¹; Intercept ν₀ = {fmt(f['b'],5)} min⁻¹; ν = {fmt(k_osc,4)}·[MA]₀ + {fmt(f['b'],5)}"
@@ -925,6 +943,24 @@ def worked(c,row):
    f"   Linearized equation: 1/v₀ = (K_M / V_max) · (1/[S]) + 1/V_max.\n"
    f"   Slope m = K_M / V_max = 12.50 min; Y-intercept b = 1/V_max = 25.00 min·mM⁻¹.\n"
    f"   Extracted parameters: V_max = 1/b = 0.0400 mM/min (40.0 μM/min); K_M = m / b = 0.500 mM with R² = 1.00000."
+  )
+ elif slug=='potentiometric-redox-titration-fe-ce':
+  v=row['input']
+  raw=row['raw']
+  x=row['x']
+  y=row['y']
+  return (
+   f"Representative calculation for potentiometric redox titration run at titrant addition V = {v:.2f} mL:\n"
+   f"1. Redox System & Titration Stoichiometry (25.00 mL of 0.0500 M Fe²⁺ titrated with 0.0500 M Ce⁴⁺ in 1.0 M H₂SO₄):\n"
+   f"   Reaction: Fe²⁺ + Ce⁴⁺ ⇄ Fe³⁺ + Ce³⁺ with stoichiometric equivalence volume V_eq = 25.00 mL.\n"
+   f"   Logged cell potential on platinum indicator electrode vs SHE: E = {raw:.2f} mV.\n"
+   f"2. Nernstian Logarithmic Coordinate Mapping:\n"
+   f"   Ratio: [Fe³⁺]/[Fe²⁺] = V / (V_eq − V) = {v:.2f} / (25.00 − {v:.2f}) = {v/(25.0-v):.4f}.\n"
+   f"   Abscissa: x = ln[V / (V_eq − V)] = ln({v/(25.0-v):.4f}) = {x:.4f}.\n"
+   f"   Ordinate: y = E = {y:.2f} mV.\n"
+   f"3. Linear Least-Squares Formal Potential Extraction:\n"
+   f"   Linearized Nernst model: E = (RT/F) · ln[V / (V_eq − V)] + E°'(Fe³⁺/Fe²⁺).\n"
+   f"   Multi-point regression yields empirical slope RT/F = 25.70 mV and Y-intercept E°' = 680.0 mV vs SHE with R² = 1.00000."
   )
  elif slug=='oscillating-reaction-belousov-zhabotinsky':
   c_ma=row['input']
@@ -1559,6 +1595,27 @@ def uncertainty_text(c):
    "covariance matrix through the regression parameters gives u(K_M) / K_M = √[ (u(m)/m)² + (u(b)/b)² - 2·cov(m,b)/(m·b) ]. "
    "The high negative correlation between slope and intercept (r ≈ -0.88) substantially attenuates overall uncertainty, yielding an "
    "expanded uncertainty U(K_M) = 0.015 mM (coverage factor k = 2, 95% confidence level)."
+  )
+ elif slug=='potentiometric-redox-titration-fe-ce':
+  return (
+   "In the high-precision potentiometric investigation of formal redox reduction potentials in the iron(II)-cerium(IV) system, "
+   "metrological uncertainties and electroanalytical boundary factors are rigorously evaluated across electrochemical, "
+   "thermostatic, volumetric, and regression domains: "
+   "(1) High-Impedance Electrometer and Cell Polarization: Electromotive force (EMF) measurements are recorded using an ultra-high "
+   "input impedance electrometer (Z_in > 10¹² Ω), ensuring that measurement current draw is strictly below 10⁻¹² A. This nullifies "
+   "indicator electrode polarization and eliminates uncompensated ohmic drops (i · R_cell < 10⁻⁸ V) across the high-resistance acidic medium. "
+   "(2) Reference Electrode Liquid Junction Potential Stability: A double-junction silver/silver chloride electrode equipped with an "
+   "outer 1.0 M KNO₃ salt bridge prevents chloride leakage into the sulfate analyte. Liquid junction potential drift across the porous "
+   "ceramic frit is calibrated to within ±0.5 mV against a certified saturated calomel electrode (SCE). "
+   "(3) Volumetric Dispensing and Equivalence Uncertainty: Titrant volumes delivered via Class A burettes (ISO 385, tolerance ±0.03 mL) "
+   "contribute a relative volumetric uncertainty u_r(V) < 0.20%. Equivalence volume determination via the second-derivative Gran method "
+   "yields V_eq = 25.00 ± 0.03 mL, restricting Nernst logarithmic coordinate distortion to less than ±0.002. "
+   "(4) Thermostatic Regulation and Thermal Voltage Sensitivity: The thermal Nernst voltage factor RT/F = 25.693 mV has a temperature "
+   "derivative of d(RT/F)/dT = R/F = +0.0862 mV/K. The circulating water jacket maintains cell temperature at T = 298.15 ± 0.05 K, "
+   "holding thermal Nernst slope uncertainty to less than ±0.004 mV. "
+   "(5) Multi-Point Least-Squares Nernstian Regression: Ordinary linear regression of E against ln[V / (V_eq − V)] across six buffer "
+   "coordinates yields an empirical slope RT/F = 25.704 ± 0.012 mV and an intercept providing formal potential E°'(Fe³⁺/Fe²⁺) = "
+   "680.0 ± 0.4 mV vs SHE, with an expanded uncertainty U(E°') = 0.8 mV (coverage factor k = 2, 95% confidence level)."
   )
  elif slug=='oscillating-reaction-belousov-zhabotinsky':
   return (
@@ -2674,6 +2731,78 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"reversible enzyme inhibition mechanisms."
   )
   
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='potentiometric-redox-titration-fe-ce':
+  slope_val=f['m']
+  E_formal_val=f['b']
+  r2_val=f['r2']
+  
+  abstract=(
+   f"The potentiometric redox titration of iron(II) with standardized cerium(IV) sulfate was quantitatively investigated at "
+   f"298.15 ± 0.05 K (25.00 °C) in an acidic matrix (1.00 M H₂SO₄) using a bright platinum indicator electrode paired with a "
+   f"double-junction Ag/AgCl reference electrode. Six pre-equivalence titration coordinates spanning titrant volumes V = {rows[0]['input']:.2f} mL "
+   f"to {rows[-1]['input']:.2f} mL were logged under continuous 400 RPM magnetic stirring following cell potential stabilization. "
+   f"The measured electromotive force tracked the thermodynamic speciation of the Fe³⁺/Fe²⁺ couple, increasing smoothly from E = {rows[0]['raw']:.2f} mV "
+   f"to {rows[-1]['raw']:.2f} mV vs SHE. Linear regression of cell potential E against the Nernstian logarithmic ratio ln[V / (V_eq − V)] "
+   f"(with stoichiometric equivalence volume V_eq = 25.00 mL) yielded ideal Nernstian linearity (R² = {r2_val:.5f}). The empirical slope "
+   f"m = {slope_val:.3f} mV closely matched the theoretical thermal voltage coefficient RT/F = 25.693 mV. The extracted formal reduction "
+   f"potential for the Fe³⁺/Fe²⁺ couple was E°' = {E_formal_val:.2f} ± {f.get('interceptSE', 0.05):.2f} mV vs SHE, differing by only "
+   f"{percent:.3f}% from the certified electroanalytical benchmark ({reference:.1f} mV vs SHE). Beyond the equivalence zone, a steep +400 mV "
+   f"potential jump established the equivalence potential E_eq = 1060.0 mV and confirmed the quantitative nature of cerimetric analysis."
+  )
+
+  graph_choice=(
+   f"The primary analytical graphic presents the Nernstian logarithmic linearization master plot: the measured cell potential "
+   f"y = E (in mV vs SHE) plotted against the logarithmic concentration ratio x = ln[V / (V_eq − V)] across the pre-equivalence buffer zone "
+   f"(with V_eq = 25.00 mL). In accordance with the Nernst equation E = E°'(Fe³⁺/Fe²⁺) + (RT/F) ln[V / (V_eq − V)], the experimental "
+   f"data conform strictly to a straight line (R² = {r2_val:.5f}). The Y-intercept b = {E_formal_val:.2f} mV directly isolates the formal "
+   f"reduction potential E°'(Fe³⁺/Fe²⁺) at half-equivalence (ln(1.0) = 0), while the slope m = {slope_val:.3f} mV reproduces the natural "
+   f"thermal voltage constant RT/F. A secondary comparative graphic illustrates the complete sigmoidal titration profile E versus V "
+   f"(from 0 to 35 mL) alongside the numerical first derivative ΔE/ΔV, prominently highlighting the sharp equivalence peak at V_eq = 25.00 mL "
+   f"(E_eq = 1060 mV) and the post-equivalence plateau governed by the Ce⁴⁺/Ce³⁺ couple (E°' = 1440 mV vs SHE)."
+  )
+
+  discussion=(
+   f"Potentiometric titrimetry is founded upon the reversible thermodynamic response of an inert metallic indicator electrode to "
+   f"redox-active chemical couples in solution. In the oxidation of iron(II) by cerium(IV) in strongly acidic medium (1.00 M H₂SO₄):\n"
+   f"  Fe²⁺(aq) + Ce⁴⁺(aq) ⇄ Fe³⁺(aq) + Ce³⁺(aq)\n"
+   f"both half-reactions involve a clean, univalent electron transfer without proton participation in their elementary redox steps:\n"
+   f"  Fe³⁺ + e⁻ ⇄ Fe²⁺    (E°' = +0.680 V vs SHE in 1.0 M H₂SO₄)\n"
+   f"  Ce⁴⁺ + e⁻ ⇄ Ce³⁺    (E°' = +1.440 V vs SHE in 1.0 M H₂SO₄)\n"
+   f"The difference in formal reduction potentials (ΔE°' = 1.440 − 0.680 = 0.760 V) establishes a colossal thermodynamic equilibrium constant:\n"
+   f"  K_eq = exp[F · ΔE°' / (RT)] = exp[(96485.3 C/mol × 0.760 V) / (8.3145 J/mol·K × 298.15 K)] ≈ 7.1 × 10¹²\n"
+   f"ensuring that the reaction proceeds to 99.999% completion at the equivalence point.\n\n"
+   f"Throughout the titration trajectory, the potential of the platinum indicator electrode adopts the equilibrium value shared by both "
+   f"coexisting redox couples. In the pre-equivalence zone (0 < V < V_eq), the vast excess of iron ions holds the potential tightly to "
+   f"the Fe³⁺/Fe²⁺ couple according to the Nernst equation:\n"
+   f"  E = E°'(Fe³⁺/Fe²⁺) + (RT/F) ln([Fe³⁺] / [Fe²⁺])\n"
+   f"Because [Fe³⁺] is proportional to titrant volume V and [Fe²⁺] is proportional to unreacted volume (V_eq − V), the Nernst relation "
+   f"takes the linear form:\n"
+   f"  E = E°'(Fe³⁺/Fe²⁺) + (RT/F) ln[V / (V_eq − V)]\n"
+   f"At the half-equivalence point (V = V_eq / 2 = 12.50 mL), [Fe³⁺] equals [Fe²⁺], setting ln(1.0) = 0 and reducing the expression to "
+   f"E = E°'(Fe³⁺/Fe²⁺). The experimental value recorded at half-equivalence was {E_formal_val:.2f} mV vs SHE, differing by only {percent:.3f}% "
+   f"from the established formal potential standard ({reference:.1f} mV vs SHE).\n\n"
+   f"A critical thermodynamic distinction must be made between standard reduction potentials E° (which refer to hypothetical ideal solutions "
+   f"at infinite dilution where activity coefficients γ_i = 1.0) and formal reduction potentials E°'. In 1.00 M H₂SO₄, the ionic strength is "
+   f"substantial (I ≈ 1.2 M) and sulfate anions form strong coordination complexes with both iron and cerium species. Iron(III) forms stable "
+   f"mono- and di-sulfate complexes ([Fe(SO₄)]⁺ and [Fe(SO₄)₂]⁻) that stabilize Fe³⁺ relative to Fe²⁺, depressing the formal potential from "
+   f"the standard potential E° = +0.771 V (in pure water) down to E°' = +0.680 V in 1.0 M H₂SO₄. Conversely, cerium(IV) forms exceptionally "
+   f"stable sulfato complexes ([Ce(SO₄)₃]²⁻), reducing its formal potential from +1.70 V (in perchloric acid) to +1.44 V in sulfuric acid. "
+   f"At the stoichiometric equivalence point (V_eq = 25.00 mL), both couples achieve mutual equilibrium at equal concentrations, yielding a "
+   f"symmetrical equivalence potential E_eq = (E°'_Fe + E°'_Ce) / 2 = (0.680 + 1.440) / 2 = 1.060 V vs SHE (1060 mV), marked by an acute "
+   f"inflection jump (ΔE/ΔV > 1200 mV/mL). These results provide authoritative empirical verification of electrochemical Nernstian equilibria."
+  )
+
+  conclusion=(
+   f"The potentiometric redox titration of iron(II) with cerium(IV) in sulfuric acid has rigorously established: "
+   f"(1) strict conformity of the pre-equivalence cell potential to the Nernstian logarithmic relationship across the titrant range 5.00 to 20.00 mL; "
+   f"(2) an experimental formal reduction potential E°'(Fe³⁺/Fe²⁺) = {E_formal_val:.2f} ± {f.get('interceptSE', 0.05):.2f} mV vs SHE in 1.0 M H₂SO₄, "
+   f"differing by only {percent:.3f}% from the accepted literature benchmark of {reference:.1f} mV vs SHE; "
+   f"(3) an empirical Nernstian slope RT/F = {slope_val:.3f} mV closely matching the theoretical thermal voltage of 25.693 mV at 298.15 K; "
+   f"and (4) an equivalence potential E_eq = 1060.0 mV at V_eq = 25.00 mL, confirming quantitative single-electron stoichiometry. "
+   f"These findings establish the high fidelity of potentiometric titrimetry for fundamental thermodynamic and electroanalytical investigations."
+  )
+
   return abstract, graph_choice, discussion, conclusion
  elif slug=='oscillating-reaction-belousov-zhabotinsky':
   slope_val=f['m']
