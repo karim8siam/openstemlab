@@ -160,6 +160,15 @@ function predict(slug,input){
   const y=round(Math.log(ksp_calc), 4);
   return {raw,ideal:raw,period:1.0,x,y,valid:t>=30.0&&t<=55.0};
  }
+ if(slug==='heat-capacity-ratio-gases-clement-desormes'){
+  const h1=Number(input);
+  const gamma=1.400;
+  const slope=(gamma - 1.0) / gamma;
+  const raw=round(h1 * slope, 2);
+  const x=h1;
+  const y=raw;
+  return {raw,ideal:raw,period:1.0,x,y,valid:h1>=15.0&&h1<=40.0};
+ }
  throw Error('Unknown Chemistry experiment predict: '+slug);
 }
 
@@ -238,6 +247,10 @@ function reading(slug,input,raw){
   const s_calc=V / 20.0;
   const ksp_calc=4.0 * Math.pow(s_calc, 3);
   y=round(Math.log(ksp_calc), 4);
+ }
+ if(slug==='heat-capacity-ratio-gases-clement-desormes'){
+  x=Number(input);
+  y=Number(raw);
  }
  return {input:Number(input),raw:Number(raw),x,y};
 }
@@ -359,6 +372,11 @@ function estimate(slug,f){
   const dH_est= -f.m * 8.31446;
   const se= f.slopeSE * 8.31446;
   return {value:dH_est,se:se,reference:110.0};
+ }
+ if(slug==='heat-capacity-ratio-gases-clement-desormes'){
+  const gamma_est= 1.0 / (1.0 - f.m);
+  const se= (gamma_est * gamma_est) * f.slopeSE;
+  return {value:gamma_est,se:se,reference:1.400};
  }
  throw Error('Unknown Chemistry experiment estimate: '+slug);
 }

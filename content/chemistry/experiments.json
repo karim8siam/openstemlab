@@ -3392,5 +3392,217 @@
       "Neutralize all acidic titration waste with dilute sodium carbonate before disposing of it in the aqueous waste container."
     ],
     "limitations": "The standard van 't Hoff linear model assumes that the molar enthalpy of dissolution ΔH° and entropy ΔS° remain constant over the 30–55 °C interval, and that the activity coefficient product γ_±³ remains close to unity. In reality, ionic strength increases from 0.17 M to 0.51 M across this temperature range, which causes a modest ~1.5% suppression of activity that is effectively averaged out by ordinary least-squares regression."
+  },
+  {
+    "slug": "heat-capacity-ratio-gases-clement-desormes",
+    "title": "Determination of the Heat Capacity Ratio of Gases (γ = Cp/Cv) via the Clément-Desormes Adiabatic Expansion Method",
+    "shortTitle": "Heat Capacity Ratio of Gases",
+    "subject": "chemistry",
+    "number": 17,
+    "published": true,
+    "min": 15.0,
+    "max": 40.0,
+    "step": 5.0,
+    "initial": 25.0,
+    "inputLabel": "Initial excess gas pressure h₁ (cm)",
+    "shortInput": "initial excess pressure",
+    "inputUnit": "cm",
+    "inputDecimals": 1,
+    "rawLabel": "Final re-equilibrated pressure h₂",
+    "rawUnit": "cm",
+    "rawDecimals": 2,
+    "angle": false,
+    "timed": false,
+    "observationLabel": "Manometric excess pressure measurement",
+    "xAxis": "Initial excess pressure h₁ (cm)",
+    "yAxis": "Final re-equilibrated pressure h₂ (cm)",
+    "xScale": 1,
+    "yScale": 1,
+    "target": "HeatCapacityRatio_Air",
+    "resultUnit": "",
+    "resultScale": 1,
+    "resultDecimals": 3,
+    "emptyX": [
+      0,
+      45.0
+    ],
+    "emptyY": [
+      0,
+      15.0
+    ],
+    "samples": [
+      15.0,
+      20.0,
+      25.0,
+      30.0,
+      35.0,
+      40.0
+    ],
+    "measureLabel": "Release valve, seal after 0.8 s & record re-equilibrated h₂",
+    "aim": "Determine the heat capacity ratio (γ = C_p/C_v) and adiabatic index of dry atmospheric air using the classical Clément-Desormes method, analyzing the rapid adiabatic expansion and subsequent isochoric thermal re-warming cycles, and extracting γ via ordinary least-squares linear regression.",
+    "fitEquation": "h₂ = [(γ − 1) / γ] · h₁ + h₀  ==>  h₂ = 0.2857 · h₁",
+    "gradientUnit": "",
+    "settings": [
+      "Heavy-duty 15-liter glass carboy expansion vessel fitted with a wide-bore (20 mm) ground-glass quick-release stopper valve.",
+      "Low-volatility open-ended liquid manometer filled with colored dibutyl phthalate (density ρ = 1.047 g/cm³, sensitivity 13× higher than mercury).",
+      "Hand-operated rubber bellows pressurization bulb equipped with inline anhydrous calcium chloride desiccant drying tube.",
+      "Digital precision timing solenoid (0.80 ± 0.02 s) controlling the instantaneous adiabatic vent opening and re-sealing interval."
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "🌬️",
+        "label": "1. Clément-Desormes Carboy & Liquid Manometer"
+      },
+      {
+        "id": "compare",
+        "icon": "⚖️",
+        "label": "2. Monatomic vs Diatomic vs Polyatomic & Rüchhardt"
+      },
+      {
+        "id": "sandbox",
+        "icon": "📊",
+        "label": "3. P-V Indicator Diagram & Equipartition Degrees of Freedom"
+      }
+    ],
+    "intro": "The heat capacity ratio γ = C_p / C_v, also known as the adiabatic index or isentropic expansion factor, is a fundamental dimensionless thermodynamic parameter governing gas dynamics, sound propagation velocity, shock wave formation, and heat engine cycles. From the equipartition theorem of classical statistical thermodynamics, the molar heat capacity at constant volume of an ideal gas is determined by its accessible microscopic degrees of freedom: C_v = (f / 2) R. According to Mayer's thermodynamic relation for ideal gases, C_p = C_v + R = (f/2 + 1) R, yielding the theoretical ratio: γ = C_p / C_v = (f + 2) / f. For dry atmospheric air, which consists predominantly of diatomic nitrogen (N₂) and oxygen (O₂) molecules with three translational and two active rotational degrees of freedom at room temperature (f = 5, vibrational modes inactive below 600 K), the theoretical adiabatic index is exactly γ = 7/5 = 1.400. Nicolas Clément and Charles Desormes designed a brilliant, elegant three-step thermodynamic cycle to determine γ without requiring calorimetric heat measurements: (1) State 1 (Pressurized Initial State): A dry gas sample in a large insulated glass carboy (15 L) is pressurized slightly above ambient barometric pressure P₀: P₁ = P₀ + h₁, where h₁ is the excess pressure indicated by an open liquid manometer, at room temperature T₁ = T₀. (2) State 2 (Adiabatic Expansion): A wide-bore valve is opened rapidly for approximately 0.8 seconds until the internal pressure equalizes with the atmosphere: P₂ = P₀. Because expansion is rapid, heat transfer from the walls is negligible (dq = 0, adiabatic), causing the gas to cool to T₂ < T₀ according to P₁^(1−γ) T₁^γ = P₂^(1−γ) T₂^γ. (3) State 3 (Isochoric Re-Warming): The valve is closed immediately. The cold, enclosed gas remains at constant volume (V₃ = V₂) and warms slowly back to room temperature T₃ = T₀ by absorbing heat through the glass walls. The pressure rises to a final steady value P₃ = P₀ + h₂. Combining the adiabatic expansion relation with the ideal gas law for isochoric warming, and using the Taylor expansion ln(1 + h/P₀) ≈ h/P₀ for h << P₀, yields the direct linear relation: h₂ = [(γ − 1) / γ] · h₁. Plotting the re-equilibrated excess pressure h₂ against the initial excess pressure h₁ across six manometer settings (15.0 to 40.0 cm) yields an empirical slope m_slope = 0.2857. Inverting via γ = 1 / (1 − m_slope) isolates γ = 1.400 with 0.00% error, providing a timeless demonstration of kinetic molecular theory and classical thermodynamics.",
+    "modelExtra": "The physical simulation model calculates the final isochoric re-equilibrated manometer pressure h₂ via the linearized Clément-Desormes relation h₂ = [ (γ − 1) / γ ] · h₁ + h₀. Thermodynamic parameters: dry diatomic gas (atmospheric air, 78% N₂, 21% O₂); equipartition degrees of freedom f = 5 (3 translational + 2 rotational); accepted theoretical adiabatic index: γ = C_p / C_v = 7/5 = 1.4000. Theoretical regression slope: m_slope = (γ − 1) / γ = (1.400 − 1.0) / 1.400 = 0.400 / 1.400 = 2/7 = 0.285714. For initial excess pressures h₁ from 15.0 cm to 40.0 cm (dibutyl phthalate manometer fluid, density ρ = 1.047 g/cm³), re-equilibrated pressures span h₂ = 4.29 cm to 11.43 cm. Ordinary least-squares linear regression isolates γ = 1 / (1 − m_slope) with R² = 1.00000; the multi-point linear regression method eliminates zero-point parallax errors and valve oscillation offsets into the intercept h₀.",
+    "apparatus": [
+      {
+        "name": "15-Liter Heavy-Walled Glass Carboy Vessel",
+        "purpose": "Provides a large gas expansion volume ensuring that bulk gas in the center undergoes true adiabatic expansion unperturbed by boundary layer heat conduction from the vessel walls."
+      },
+      {
+        "name": "Large-Bore Ground-Glass Quick-Release Stopper Valve (20 mm)",
+        "purpose": "Opens rapidly to allow instantaneous pressure equalization with ambient atmosphere (0.8 s) and seals hermetically without gas leakage."
+      },
+      {
+        "name": "Open-Ended U-Tube Liquid Manometer (Dibutyl Phthalate)",
+        "purpose": "Measures fine excess gas pressures (h₁ and h₂) with 13× greater sensitivity than mercury, containing low-volatility colored fluid (ρ = 1.047 g/cm³)."
+      },
+      {
+        "name": "Hand Rubber Bellows Pump and Inline Desiccant Drying Tube",
+        "purpose": "Pressurizes the carboy with dry air while scrubbing water vapor through anhydrous calcium chloride granules to prevent moisture-induced heat capacity distortions."
+      },
+      {
+        "name": "Digital Millisecond Solenoid Actuator and Timing Controller",
+        "purpose": "Standardizes the valve opening duration to precisely 0.80 ± 0.02 seconds, eliminating human reaction time variability and preventing acoustic resonance oscillations."
+      },
+      {
+        "name": "Precision Cathetometer / Optical Mirror Scale (±0.05 cm)",
+        "purpose": "Reads the liquid meniscus height difference across both arms of the U-tube manometer with zero parallax error."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "System Sealing and Desiccant Check",
+        "text": "Inspect the 15-liter glass carboy, ground-glass valve, and rubber tubing connections for airtight integrity. Ensure the inline drying tube is filled with active anhydrous calcium chloride granules to guarantee that dry air enters the system."
+      },
+      {
+        "title": "Initial Carboy Pressurization",
+        "text": "Close the main release valve. Using the hand bellows pump, gently pump dry air through the desiccant tube into the carboy until the dibutyl phthalate manometer shows an initial excess pressure slightly above the assigned h₁ value (e.g., ~27 cm for h₁ = 25.0 cm). Seal the intake clamp."
+      },
+      {
+        "title": "Thermal Pre-Equilibration",
+        "text": "Allow the carboy to stand undisturbed for 3 to 5 minutes. Compression of the gas during pumping causes a slight initial temperature rise; observe the manometer as the gas cools back to room temperature T₀, settling at the exact target initial excess pressure h₁."
+      },
+      {
+        "title": "Rapid Adiabatic Expansion",
+        "text": "Trigger the quick-release valve mechanism. The large-bore stopper opens, allowing excess air to rush out until internal pressure drops to atmospheric (P₂ = P₀), and automatically snaps shut after exactly 0.80 seconds. The gas inside cools adiabatically."
+      },
+      {
+        "title": "Isochoric Thermal Re-Warming and Final Pressure Logging",
+        "text": "With the vessel sealed at constant volume (V₃ = V₂), observe the manometer liquid level rise as the chilled gas slowly absorbs heat from the room through the glass walls. After 3 to 5 minutes, when the pressure stabilizes at a constant maximum plateau, record the final re-equilibrated excess pressure h₂."
+      },
+      {
+        "title": "Multi-Pressure Series and Linear Regression",
+        "text": "Repeat the measurement across six initial excess pressures: h₁ = 15.0, 20.0, 25.0, 30.0, 35.0, and 40.0 cm. Perform ordinary least-squares linear regression of h₂ against h₁, extract the slope m_slope, and compute the adiabatic index γ = 1 / (1 − m_slope)."
+      }
+    ],
+    "topics": [
+      {
+        "question": "Derive the Clément-Desormes equation h₂ = [(γ − 1) / γ] · h₁ from the thermodynamic relations of the cycle.",
+        "answer": "The Clément-Desormes process consists of three states: (1) Initial State 1: P₁ = P₀ + h₁, T₁ = T₀. (2) Post-expansion State 2: P₂ = P₀, T₂ < T₀. (3) Re-equilibrated State 3: P₃ = P₀ + h₂, T₃ = T₀. Step 1 ⟶ 2 is adiabatic and reversible: P₁^(1−γ) T₁^γ = P₂^(1−γ) T₂^γ, which rearranges to: (T₁ / T₂) = (P₁ / P₂)^((γ−1)/γ) = (P₁ / P₀)^((γ−1)/γ). Step 2 ⟶ 3 is an isochoric warming of an ideal gas at constant volume (V₂ = V₃): P₂ / T₂ = P₃ / T₃. Since T₃ = T₁ = T₀ and P₂ = P₀, this gives: (T₁ / T₂) = (P₃ / P₀). Equating the two expressions for (T₁ / T₂): (P₃ / P₀) = (P₁ / P₀)^((γ−1)/γ). Taking natural logarithms: ln(P₃ / P₀) = [(γ − 1) / γ] · ln(P₁ / P₀). Expressing pressures as P = P₀ + h: ln(1 + h₂/P₀) = [(γ − 1) / γ] · ln(1 + h₁/P₀). Because excess pressures are small relative to atmospheric pressure (h << P₀, typically h/P₀ < 0.03), applying the first-order Taylor expansion ln(1 + x) ≈ x yields: h₂ / P₀ = [(γ − 1) / γ] · (h₁ / P₀), which simplifies directly to: h₂ = [(γ − 1) / γ] · h₁."
+      },
+      {
+        "question": "How does the equipartition theorem predict the theoretical heat capacity ratio for monatomic, diatomic, and triatomic gases?",
+        "answer": "The classical equipartition theorem allocates (1/2) R to the molar heat capacity at constant volume C_v for every active quadratic degree of freedom f: C_v = (f / 2) R. Using Mayer's relation C_p = C_v + R = (f/2 + 1) R, the heat capacity ratio is γ = C_p / C_v = (f + 2) / f. (1) Monatomic gases (He, Ne, Ar): Possess only 3 translational degrees of freedom (f = 3, rotational/vibrational absent). Thus C_v = (3/2) R, C_p = (5/2) R, yielding γ = 5/3 = 1.667. (2) Linear Diatomic gases (N₂, O₂, CO) at room temperature: Possess 3 translational and 2 rotational degrees of freedom (f = 5; vibrational modes require quantum excitation and are 'frozen out' at 298 K). Thus C_v = (5/2) R, C_p = (7/2) R, yielding γ = 7/5 = 1.400. (3) Non-linear Polyatomic gases (H₂O, CH₄, CO₂): Possess 3 translational and 3 rotational degrees of freedom (f = 6), yielding C_v = 3 R, C_p = 4 R, and γ = 4/3 = 1.333 (or slightly lower if low-frequency vibrational bends contribute)."
+      },
+      {
+        "question": "Why is the valve opening time critically optimized to approximately 0.8 seconds in the Clément-Desormes experiment?",
+        "answer": "The valve opening duration represents a delicate compromise between two opposing sources of error: (1) Under-expansion Error (Valve open too briefly, <0.4 s): The air in the carboy cannot completely discharge through the valve orifice down to ambient atmospheric pressure. The expansion is incomplete (P₂ > P₀), causing the observed temperature drop to be truncated, resulting in an erroneously low h₂ and an underestimated γ. (2) Heat-Leak Error (Valve open too long, >1.5 s): The cooled gas in the vessel begins absorbing heat from the room air through the open orifice and carboy walls during the expansion itself. Heat conduction violates the adiabatic assumption (dq > 0), causing partial warming before the valve is closed, again lowering h₂ and underestimating γ. Furthermore, the inertia of the rushing air column can cause acoustic resonance / standing wave oscillations in the neck. An opening time of 0.80 ± 0.05 seconds ensures complete pressure equilibration while maintaining strict adiabaticity in the bulk gas core."
+      },
+      {
+        "question": "Why is a 15-liter carboy utilized instead of a small laboratory flask?",
+        "answer": "When a gas expands, heat immediately begins diffusing inward from the room through the glass walls into the adjacent gas boundary layer. The rate of heat conduction is proportional to the surface-area-to-volume ratio (A/V) of the container. For a sphere or cylindrical vessel of radius r, A/V = 3/r, which means larger containers have a significantly smaller surface-area-to-volume ratio. In a small 1-liter flask (r ≈ 6 cm), thermal boundary layers rapidly penetrate the entire volume within 0.5 seconds, destroying adiabaticity. In a large 15-liter carboy (r ≈ 15 cm), the inward thermal penetration during the 0.8 s expansion is restricted to a thin peripheral boundary layer of a few millimeters; the vast bulk core of the gas undergoes pure, unperturbed isentropic adiabatic expansion."
+      },
+      {
+        "question": "Why is dibutyl phthalate used as the manometer fluid instead of mercury or pure water?",
+        "answer": "Dibutyl phthalate (DBP) is the premier manometric fluid for Clément-Desormes apparatus for three compelling physical reasons: (1) High Sensitivity: With a density of ρ = 1.047 g/cm³ compared to mercury (ρ = 13.55 g/cm³), DBP provides nearly 13 times greater meniscus displacement for the same pressure difference, allowing millimeter-level resolution on small excess pressures (15–40 cm). (2) Vanishing Vapor Pressure: Unlike water, which has a significant room-temperature vapor pressure (~24 mmHg at 25 °C) that would evaporate into the carboy and introduce condensable water vapor, DBP has a negligible vapor pressure (P_vap < 10⁻⁵ mmHg), ensuring zero contamination of the dry gas phase. (3) Meniscus Stability: DBP wets glass cleanly without the clinging droplets, irregular contact angles, or meniscus hysteresis seen with water, providing smooth, reproducible levels."
+      },
+      {
+        "question": "How does the Rüchhardt method compare with the Clément-Desormes method for determining γ?",
+        "answer": "The Rüchhardt method is an alternative dynamic technique where a precision-machined steel or glass ball of mass m bounces harmonically inside a vertical precision-bore glass tube attached to a gas carboy. The bouncing ball acts as an undamped piston that periodically compresses and expands the enclosed gas adiabatically. The frequency of oscillation f is governed by the restoring pressure force: f = (1 / 2π) · √[ (γ · P · A²) / (m · V) ], where A is the tube cross-sectional area and V is the carboy volume. While Rüchhardt's method is dynamic and avoids manual valve timing, it suffers from friction between the ball and tube walls, gas leakage past the ball, and requires complex optical timing gates. The Clément-Desormes method remains the premier static thermodynamic benchmark."
+      },
+      {
+        "question": "How does multi-point linear regression insulate the determination of γ from zero-setting and barometric drift errors?",
+        "answer": "If an experimenter performs only a single measurement, any small offset—such as zero-point misalignment on the manometer scale, slight barometric pressure drift during the 5-minute wait, or residual pressure pulse from closing the valve—enters directly into the single-point formula γ = h₁ / (h₁ − h₂), producing errors up to 5–10%. In contrast, conducting a systematic multi-point series across six initial pressures (15.0 to 40.0 cm) generates a linear dataset governed by h₂ = [ (γ − 1) / γ ] · h₁ + h₀. In ordinary least-squares regression, any constant zero-datum offset or barometric shift is absorbed completely into the intercept h₀, leaving the empirical slope m_slope entirely pure and unbiased. Inverting this slope via γ = 1 / (1 − m_slope) extracts the true adiabatic index with extraordinary accuracy."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "For a diatomic gas like dry air (N₂ + O₂) with 5 active degrees of freedom at room temperature, what is the theoretical value of the heat capacity ratio γ = Cp/Cv?",
+        "options": [
+          "1.667 (5/3)",
+          "1.400 (7/5)",
+          "1.333 (4/3)",
+          "1.286 (9/7)"
+        ],
+        "correct": 1,
+        "explanation": "Diatomic molecules have 3 translational and 2 rotational degrees of freedom (f = 5). By equipartition, C_v = (5/2) R and C_p = C_v + R = (7/2) R. Therefore, γ = C_p / C_v = (7/2) / (5/2) = 7/5 = 1.400."
+      },
+      {
+        "question": "In the Clément-Desormes experiment, an ordinary least-squares linear regression of h₂ versus h₁ yields a slope of m_slope = 0.2857. What is the calculated adiabatic index γ?",
+        "options": [
+          "1.400",
+          "1.667",
+          "1.286",
+          "1.333"
+        ],
+        "correct": 0,
+        "explanation": "Because m_slope = (γ − 1) / γ = 1 − 1/γ, rearranging gives γ = 1 / (1 − m_slope) = 1 / (1 − 0.285714) = 1 / 0.714286 = 1.400."
+      },
+      {
+        "question": "Why does the gas pressure inside the carboy rise from atmospheric P₀ to P₀ + h₂ in Step 3 after the valve is closed?",
+        "options": [
+          "More gas leaks into the carboy through the sealed valve",
+          "The gas was cooled below room temperature by adiabatic expansion and warms back to room temperature at constant volume",
+          "The manometer fluid evaporates rapidly into the carboy",
+          "The glass carboy contracts due to atmospheric pressure"
+        ],
+        "correct": 1,
+        "explanation": "During rapid adiabatic expansion (Step 1 -> 2), the gas does work and its temperature drops below room temperature (T₂ < T₀). When sealed at constant volume (Step 2 -> 3), heat conducts inward from the room, warming the gas back to T₀, which causes an isochoric pressure rise (P₃ = P₀ + h₂)."
+      },
+      {
+        "question": "What happens if the valve in a Clément-Desormes apparatus is left open for too long (e.g., 5 seconds instead of 0.8 seconds)?",
+        "options": [
+          "The carboy will implode due to vacuum",
+          "Heat transfers from the room during the expansion itself, violating adiabaticity and causing an underestimation of γ",
+          "The adiabatic index increases to 1.667",
+          "The gas undergoes a chemical phase transition to liquid"
+        ],
+        "correct": 1,
+        "explanation": "If the valve remains open too long, room air warms the expanding gas while it is still exiting, violating the adiabatic assumption (dq = 0). This dampens the temperature drop, resulting in a smaller subsequent re-equilibrated pressure h₂ and an erroneously low calculated γ."
+      }
+    ],
+    "precautions": [
+      "Never pressurize the 15-liter glass carboy above 50 cm of liquid manometer pressure (~5 kPa excess); excessive overpressure can cause explosive mechanical failure of large glass vessels.",
+      "Enclose the large glass carboy in a protective wire mesh cage or shatter-resistant transparent enclosure to prevent injury in the rare event of glass fracture.",
+      "Ensure all rubber stoppers, ground-glass valves, and clamps are properly lubricated with high-vacuum silicone grease and seated firmly.",
+      "Do not pull vacuum on thin-walled standard glass carboys; use only vessels certified for slight positive pressure.",
+      "Release the quick-release valve smoothly to avoid splashing the manometer liquid out of the open U-tube.",
+      "Maintain the laboratory at a stable ambient temperature away from direct drafts, radiators, or sunlight during the measurement series."
+    ],
+    "limitations": "The Clément-Desormes formula assumes ideal gas behavior, strictly adiabatic expansion of the bulk gas without acoustic wave dissipation, negligible heat transfer during the 0.8 s valve release, and valid first-order Taylor expansion ln(1 + h/P0) ≈ h/P0 for small excess pressures (h/P0 < 0.03). At h = 40 cm DBP (~4 kPa), the second-order Taylor term contributes <0.2% error, which is effectively minimized by multi-point linear regression."
   }
 ]

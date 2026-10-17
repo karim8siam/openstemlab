@@ -59,6 +59,9 @@ function update(){
  }else if(cfg.slug==='gibbs-free-energy-solubility-van-t-hoff'){
   $('liveState').textContent='Ready to equilibrate saturated borax slurry at '+p.input.toFixed(1)+' °C.';
   message('Equilibrate borax flask, pre-warm filter pipette, draw 5.00 mL aliquot & titrate with 0.50 M HCl.');
+ }else if(cfg.slug==='heat-capacity-ratio-gases-clement-desormes'){
+  $('liveState').textContent='Ready to pressurize 15 L carboy with dry air to h₁ = '+p.input.toFixed(1)+' cm.';
+  message('Pressurize carboy with bellows pump, pre-equilibrate temperature, vent for 0.8 s & record h₂.');
  }else{
   $('liveState').textContent='Ready to dispense '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+' of liquid.';
   message('Adjust '+cfg.shortInput+' V, then weigh the dispensed aliquot.');
@@ -94,6 +97,7 @@ $('measure').onclick=async()=>{
  if(cfg.slug==='heat-solution-crystallization-calorimetry') msgStart='Pouring KNO3 crystals into Dewar, motorized stirring at 200 rpm, endothermic cooling plunge & logging ΔT_drop…';
  if(cfg.slug==='vapor-pressure-liquid-clausius-clapeyron') msgStart='Regulating water bath, throttling air-bleed needle valve, nulling U-tube menisci & reading transducer…';
  if(cfg.slug==='gibbs-free-energy-solubility-van-t-hoff') msgStart='Filtering 5.00 mL saturated borax aliquot, adding bromocresol green, titrating dropwise to yellow endpoint…';
+ if(cfg.slug==='heat-capacity-ratio-gases-clement-desormes') msgStart='Triggering quick-release valve, rapid adiabatic expansion (0.80 s), isochoric thermal re-warming…';
  message(msgStart);
  await new Promise(resolve=>setTimeout(resolve,400));
  const raw=prediction.raw;
@@ -161,6 +165,10 @@ $('measure').onclick=async()=>{
   const ln_Ksp = Math.log(Ksp);
   $('liveState').textContent='Titration endpoint reached: V_HCl = '+raw.toFixed(2)+' mL at '+p.input.toFixed(1)+' °C.';
   message('Titration complete: V_HCl = '+raw.toFixed(2)+' mL (s = '+s.toFixed(4)+' M, K_sp = '+Ksp.toExponential(3)+', ln K_sp = '+ln_Ksp.toFixed(3)+'). Record in notebook.');
+ }else if(cfg.slug==='heat-capacity-ratio-gases-clement-desormes'){
+  const gamma_calc = p.input / (p.input - raw);
+  $('liveState').textContent='Cycle complete: h₂ = '+raw.toFixed(2)+' cm for h₁ = '+p.input.toFixed(1)+' cm.';
+  message('Clément-Desormes expansion complete: h₂ = '+raw.toFixed(2)+' cm (γ = '+gamma_calc.toFixed(3)+'). Record in notebook.');
  }else{
   $('liveState').textContent='Analytical balance stabilized: '+raw.toFixed(cfg.rawDecimals)+' g net mass.';
   message('Gravimetric measurement complete: '+raw.toFixed(cfg.rawDecimals)+' '+cfg.rawUnit+' for '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+'. Record in notebook.');
@@ -450,6 +458,18 @@ function draw(t){
    return;
   }
   $('apparatusDiagram').innerHTML=drawHoffBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='heat-capacity-ratio-gases-clement-desormes'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClementCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClementSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClementBenchView(p,rawVal);
   return;
  }
  if(currentSimMode==='compare'){
@@ -4681,5 +4701,271 @@ function drawHoffSandboxView(p, rawVal){
  });
 
  svg += text(360, 305, 'Thermodynamic Invariant: van 't Hoff analysis provides complete state function derivation.', '#789c80', 8.5);
+ return svg;
+}
+
+
+// --- LAB 17: HEAT CAPACITY RATIO OF GASES (CLÉMENT-DESORMES METHOD) ---
+
+function drawClementBenchView(p, rawVal){
+ const h1 = (p && p.input) ? p.input : 25.0;
+ const gamma_true = 1.400;
+ const slope_true = 0.285714;
+ const h2 = rawVal !== null ? rawVal : (h1 * slope_true);
+ const gamma_calc = h1 / (h1 - h2);
+
+ let svg = '';
+ svg += '<rect x="0" y="0" width="720" height="320" fill="#051009"/>';
+ svg += text(360, 24, 'CLÉMENT-DESORMES GAS EXPANSION APPARATUS (ADIABATIC INDEX)', '#4ade80', 13);
+ svg += text(360, 39, 'Dry Atmospheric Air (N2 + O2) | Adiabatic Index γ = Cp/Cv = 7/5 = 1.400 (5 Active Degrees of Freedom)', '#94a3b8', 9);
+
+ // --- LEFT PANEL: 15-LITER GLASS CARBOY & DBP MANOMETER ---
+ const cX = 140, cY = 70;
+
+ // Protective mesh wire cage around carboy
+ svg += '<rect x="'+(cX-70)+'" y="'+(cY+35)+'" width="95" height="155" rx="10" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="4,4"/>';
+
+ // 15-Liter Glass Carboy Body
+ svg += '<path d="M '+(cX-30)+' '+(cY+45)+' L '+(cX-15)+' '+(cY+45)+' L '+(cX-15)+' '+(cY+55)+' Q '+(cX-55)+' '+(cY+75)+' '+(cX-55)+' '+(cY+120)+' L '+(cX-55)+' '+(cY+165)+' Q '+(cX-55)+' '+(cY+180)+' '+(cX-40)+' '+(cY+180)+' L '+(cX-5)+' '+(cY+180)+' Q '+(cX+10)+' '+(cY+180)+' '+(cX+10)+' '+(cY+165)+' L '+(cX+10)+' '+(cY+120)+' Q '+(cX+10)+' '+(cY+75)+' '+(cX-30)+' '+(cY+55)+' Z" fill="#0284c7" fill-opacity="0.12" stroke="#cbd5e1" stroke-width="1.8"/>';
+ svg += '<text x="'+(cX-22)+'" y="'+(cY+130)+'" text-anchor="middle" fill="#bae6fd" font-size="8" font-weight="bold">15 L Carboy</text>';
+ svg += '<text x="'+(cX-22)+'" y="'+(cY+142)+'" text-anchor="middle" fill="#38bdf8" font-size="6.5">Dry Air (f = 5)</text>';
+
+ // Quick-release ground-glass valve at top of carboy
+ svg += '<rect x="'+(cX-26)+'" y="'+(cY+20)+'" width="12" height="25" fill="#94a3b8" stroke="#cbd5e1" stroke-width="1"/>';
+ // Valve lever / Solenoid
+ svg += '<rect x="'+(cX-34)+'" y="'+(cY+15)+'" width="28" height="8" rx="2" fill="#ef4444"/>';
+ svg += '<text x="'+(cX-20)+'" y="'+(cY+11)+'" text-anchor="middle" fill="#f87171" font-size="6">0.80s Valve</text>';
+
+ // Side connecting tube from carboy to manometer and bellows
+ svg += '<path d="M '+(cX-15)+' '+(cY+50)+' L '+(cX+35)+' '+(cY+50)+'" fill="none" stroke="#cbd5e1" stroke-width="2.5"/>';
+
+ // Hand bellows pump and drying tube on far left
+ svg += '<ellipse cx="'+(cX-78)+'" cy="'+(cY+95)+'" rx="10" ry="16" fill="#475569" stroke="#334155"/>';
+ svg += '<rect x="'+(cX-72)+'" y="'+(cY+70)+'" width="16" height="6" rx="1.5" fill="#facc15" stroke="#ca8a04"/>';
+ svg += '<text x="'+(cX-64)+'" y="'+(cY+64)+'" text-anchor="middle" fill="#facc15" font-size="5.5">CaCl₂ Tube</text>';
+ svg += '<path d="M '+(cX-64)+' '+(cY+76)+' L '+(cX-64)+' '+(cY+50)+' L '+(cX-30)+' '+(cY+50)+'" fill="none" stroke="#94a3b8" stroke-width="1.5"/>';
+
+ // Open-ended U-Tube Manometer with Dibutyl Phthalate (colored fluid)
+ const mX = cX + 45, mY = cY + 50;
+ const uW = 16, uH = 135;
+ svg += '<path d="M '+mX+' '+mY+' L '+mX+' '+(mY+uH)+' Q '+(mX+uW/2)+' '+(mY+uH+8)+' '+(mX+uW)+' '+(mY+uH)+' L '+(mX+uW)+' '+(mY-15)+'" fill="none" stroke="#cbd5e1" stroke-width="3"/>';
+
+ // Manometer fluid levels (Left arm pushed down, right arm pushed up by h)
+ const dispH = Math.min(45, (h2 / 40.0) * 45);
+ const leftLvl = mY + uH/2 + dispH;
+ const rightLvl = mY + uH/2 - dispH;
+ svg += '<path d="M '+mX+' '+leftLvl+' L '+mX+' '+(mY+uH)+' Q '+(mX+uW/2)+' '+(mY+uH+8)+' '+(mX+uW)+' '+(mY+uH)+' L '+(mX+uW)+' '+rightLvl+'" fill="none" stroke="#ef4444" stroke-width="2"/>';
+
+ // Height difference indicator bracket
+ svg += '<line x1="'+(mX+uW+4)+'" y1="'+leftLvl+'" x2="'+(mX+uW+12)+'" y2="'+leftLvl+'" stroke="#facc15" stroke-width="1"/>';
+ svg += '<line x1="'+(mX+uW+4)+'" y1="'+rightLvl+'" x2="'+(mX+uW+12)+'" y2="'+rightLvl+'" stroke="#facc15" stroke-width="1"/>';
+ svg += '<line x1="'+(mX+uW+8)+'" y1="'+leftLvl+'" x2="'+(mX+uW+8)+'" y2="'+rightLvl+'" stroke="#facc15" stroke-width="1"/>';
+ svg += '<text x="'+(mX+uW+14)+'" y="'+((leftLvl+rightLvl)/2+3)+'" fill="#facc15" font-size="7" font-weight="bold">h₂ = '+h2.toFixed(1)+' cm</text>';
+
+
+ // --- RIGHT PANEL: DIGITAL MANOMETER DISPLAY & ADIABATIC AUDIT ---
+ const rX = 260, rY = 55, rW = 435, rH = 240;
+ svg += '<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+
+ // Digital Reading Readout
+ svg += '<rect x="'+(rX+15)+'" y="'+(rY+12)+'" width="200" height="72" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1.2"/>';
+ svg += '<text x="'+(rX+25)+'" y="'+(rY+26)+'" fill="#86efac" font-size="8" font-weight="bold">RE-EQUILIBRATED PRESSURE h₂ (DBP)</text>';
+ svg += '<text x="'+(rX+25)+'" y="'+(rY+56)+'" fill="#facc15" font-size="22" font-family="monospace" font-weight="bold">'+h2.toFixed(2)+' cm</text>';
+ svg += '<text x="'+(rX+140)+'" y="'+(rY+44)+'" fill="#94a3b8" font-size="7.5">h₁ = '+h1.toFixed(1)+' cm</text>';
+ svg += '<text x="'+(rX+140)+'" y="'+(rY+56)+'" fill="#4ade80" font-size="7.5" font-weight="bold">γ = '+gamma_calc.toFixed(3)+'</text>';
+ svg += '<text x="'+(rX+140)+'" y="'+(rY+68)+'" fill="#38bdf8" font-size="7">±0.05 cm Res.</text>';
+
+ // Mini h2 vs h1 Linear Regression Profile
+ const cX = rX + 225, cY = rY + 12, cW = 195, cH = 72;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1.2"/>';
+ svg += '<text x="'+(cX+8)+'" y="'+(cY+12)+'" fill="#94a3b8" font-size="7">Linear Fit: h₂ = [(γ−1)/γ] · h₁</text>';
+ // Axes inside mini box
+ svg += '<line x1="'+(cX+15)+'" y1="'+(cY+60)+'" x2="'+(cX+185)+'" y2="'+(cY+60)+'" stroke="#162e1e" stroke-width="1"/>';
+ svg += '<line x1="'+(cX+15)+'" y1="'+(cY+18)+'" x2="'+(cX+15)+'" y2="'+(cY+60)+'" stroke="#162e1e" stroke-width="1"/>';
+ // Sloping line with m = 2/7 = 0.2857
+ svg += '<line x1="'+(cX+15)+'" y1="'+(cY+60)+'" x2="'+(cX+180)+'" y2="'+(cY+20)+'" stroke="#4ade80" stroke-width="1.8"/>';
+ // Current data point
+ const ptX = cX + 15 + (h1 / 45.0) * 165;
+ const ptY = cY + 60 - (h2 / 14.0) * 40;
+ svg += '<circle cx="'+ptX+'" cy="'+ptY+'" r="3.5" fill="#facc15" stroke="#ef4444" stroke-width="1"/>';
+ svg += '<text x="'+(cX+185)+'" y="'+(cY+22)+'" text-anchor="end" fill="#facc15" font-size="6.8" font-weight="bold">Slope = 0.2857</text>';
+
+ // State Matrix Grid
+ const gY = rY + 92;
+ const metrics = [
+  {label: 'Initial Excess Pressure h₁', val: h1.toFixed(1) + ' cm DBP (' + (h1*0.1027).toFixed(2) + ' kPa)', col: '#86efac', sub: 'P₁ = P₀ + h₁ (at room temperature T₀)'},
+  {label: 'Re-Equilibrated Pressure h₂', val: h2.toFixed(2) + ' cm DBP (' + (h2*0.1027).toFixed(2) + ' kPa)', col: '#38bdf8', sub: 'P₃ = P₀ + h₂ (post isochoric re-warming)'},
+  {label: 'Regression Slope m_slope', val: '0.2857 (2/7 exact)', col: '#facc15', sub: 'm_slope = (γ − 1) / γ'},
+  {label: 'Derived Adiabatic Index γ', val: '1.400 (7/5 Diatomic)', col: '#f87171', sub: 'γ = 1 / (1 − m_slope) = Cp/Cv'}
+ ];
+
+ metrics.forEach((mi, idx)=>{
+  const mx = rX + 15 + (idx % 2) * 205;
+  const my = gY + Math.floor(idx / 2) * 52;
+  svg += '<rect x="'+mx+'" y="'+my+'" width="195" height="46" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1"/>';
+  svg += '<text x="'+(mx+10)+'" y="'+(my+13)+'" fill="#94a3b8" font-size="7">'+mi.label+'</text>';
+  svg += '<text x="'+(mx+10)+'" y="'+(my+28)+'" fill="'+mi.col+'" font-size="9" font-weight="bold">'+mi.val+'</text>';
+  svg += '<text x="'+(mx+10)+'" y="'+(my+39)+'" fill="#64748b" font-size="6.5">'+mi.sub+'</text>';
+ });
+
+ // Bottom Verification Banner
+ svg += '<rect x="'+(rX+15)+'" y="'+(rY+200)+'" width="405" height="30" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1"/>';
+ svg += '<text x="'+(rX+217)+'" y="'+(rY+218)+'" text-anchor="middle" fill="#4ade80" font-size="8.2" font-family="monospace" font-weight="bold">Clément-Desormes Invariant: γ = 1 / (1 − 0.285714) = 1.400 (R² = 1.000, 0.00% Error)</text>';
+
+ svg += text(360, 310, 'Rapid adiabatic expansion followed by isochoric thermal recovery isolates the heat capacity ratio directly.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawClementCompareView(p, rawVal){
+ let svg = '';
+ svg += '<rect x="0" y="0" width="720" height="320" fill="#051009"/>';
+ svg += text(360, 24, 'GAS MOLECULAR ARCHITECTURE & ADIABATIC EXPANSION INDICES', '#4ade80', 13);
+ svg += text(360, 39, 'Monatomic (γ = 1.667) vs Diatomic (γ = 1.400) vs Polyatomic (γ = 1.333) vs Dynamic Rüchhardt', '#94a3b8', 9);
+
+ const cards = [
+  {
+   title: '1. Monatomic Gas',
+   sub: 'Helium, Argon, Neon (f = 3)',
+   color: '#38bdf8',
+   border: '#0369a1',
+   items: [
+    'Degrees of Freedom: 3 translational (f = 3; no rotation/vibration)',
+    'Constant-Volume Heat Capacity: C_v = (3/2) R = 12.47 J/(mol·K)',
+    'Constant-Pressure Heat Capacity: C_p = (5/2) R = 20.79 J/(mol·K)',
+    'Adiabatic Index: γ = 5/3 = 1.667',
+    'Clément-Desormes Slope: m_slope = (γ−1)/γ = 2/5 = 0.4000',
+    'Acoustic Velocity: Fastest speed of sound per unit molecular weight'
+   ]
+  },
+  {
+   title: '2. Diatomic Gas (★)',
+   sub: 'Dry Air, N2, O2, CO (f = 5)',
+   color: '#4ade80',
+   border: '#166534',
+   items: [
+    'Degrees of Freedom: 3 trans + 2 rot (f = 5 at 298 K; vib frozen)',
+    'Constant-Volume Heat Capacity: C_v = (5/2) R = 20.79 J/(mol·K)',
+    'Constant-Pressure Heat Capacity: C_p = (7/2) R = 29.10 J/(mol·K)',
+    'Adiabatic Index: γ = 7/5 = 1.400',
+    'Clément-Desormes Slope: m_slope = (γ−1)/γ = 2/7 = 0.2857',
+    'Laboratory Benchmark: Diatomic atmospheric air investigated here'
+   ]
+  },
+  {
+   title: '3. Polyatomic / Rüchhardt',
+   sub: 'CO2, CH4 (f = 6) & Dynamic Piston',
+   color: '#facc15',
+   border: '#854d0e',
+   items: [
+    'Degrees of Freedom: 3 trans + 3 rot (f = 6), C_v = 3 R, C_p = 4 R',
+    'Adiabatic Index: γ = 4/3 = 1.333 (CO2 reaches ~1.30 with bending)',
+    'Rüchhardt Method: Precision steel ball oscillates harmonically in tube',
+    'Oscillation Frequency: f = (1/2π) · √[ (γ · P · A²) / (m · V) ]',
+    'Comparison: Dynamic Rüchhardt suffers from ball friction & tube leakage',
+    'Clément-Desormes Superiority: Static equilibrium purges frictional errors'
+   ]
+  }
+ ];
+
+ cards.forEach((c, idx)=>{
+  const x = 20 + idx * 230, y = 50, w = 220, h = 240;
+  svg += '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="6" fill="#0d1f14" stroke="'+c.border+'" stroke-width="1.5"/>';
+  svg += '<rect x="'+(x+8)+'" y="'+(y+8)+'" width="'+(w-16)+'" height="34" rx="4" fill="#051009"/>';
+  svg += '<text x="'+(x+w/2)+'" y="'+(y+22)+'" text-anchor="middle" fill="'+c.color+'" font-size="9" font-weight="bold">'+c.title+'</text>';
+  svg += '<text x="'+(x+w/2)+'" y="'+(y+35)+'" text-anchor="middle" fill="#94a3b8" font-size="7">'+c.sub+'</text>';
+
+  c.items.forEach((item, ii)=>{
+   const iy = y + 54 + ii * 29;
+   svg += '<circle cx="'+(x+14)+'" cy="'+(iy-3)+'" r="2" fill="'+c.color+'"/>';
+   svg += '<foreignObject x="'+(x+22)+'" y="'+(iy-10)+'" width="'+(w-28)+'" height="29"><p xmlns="http://www.w3.org/1999/xhtml" style="font-size:7.2px;color:#cbd5e1;line-height:1.2;margin:0">'+item+'</p></foreignObject>';
+  });
+ });
+
+ svg += text(360, 305, 'Thermodynamic Invariant: Classical equipartition dictates γ = (f + 2) / f directly from molecular geometry.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawClementSandboxView(p, rawVal){
+ let svg = '';
+ svg += '<rect x="0" y="0" width="720" height="320" fill="#051009"/>';
+ svg += text(360, 24, 'THERMODYNAMIC P-V INDICATOR DIAGRAM & ERROR AUDIT', '#4ade80', 13);
+ svg += text(360, 39, 'Adiabatic Isentrope (PV^γ = const) vs Isothermal (PV = const) vs Isochoric Warming (V = const)', '#94a3b8', 9);
+
+ // --- LEFT PANEL: P-V INDICATOR DIAGRAM ---
+ const lX = 25, lY = 50, lW = 390, lH = 240;
+ svg += '<rect x="'+lX+'" y="'+lY+'" width="'+lW+'" height="'+lH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+18)+'" text-anchor="middle" fill="#86efac" font-size="9.5" font-weight="bold">THERMODYNAMIC P-V CYCLE TRAJECTORY</text>';
+
+ const gX = lX + 45, gY = lY + 35, gW = 325, gH = 155;
+ svg += '<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#051009" stroke="#162e1e" stroke-width="1"/>';
+
+ // Grid lines
+ for(let gy = gY + 30; gy < gY + gH; gy += 30){
+  svg += '<line x1="'+gX+'" y1="'+gy+'" x2="'+(gX+gW)+'" y2="'+gy+'" stroke="#162e1e" stroke-width="0.8" stroke-dasharray="2,2"/>';
+ }
+ for(let gx = gX + 65; gx < gX + gW; gx += 65){
+  svg += '<line x1="'+gx+'" y1="'+gY+'" x2="'+gx+'" y2="'+(gY+gH)+'" stroke="#162e1e" stroke-width="0.8" stroke-dasharray="2,2"/>';
+ }
+
+ // Labels
+ svg += '<text x="'+(gX+gW/2)+'" y="'+(gY+gH+14)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5">Gas Specific Volume V</text>';
+ svg += '<text x="'+(gX-8)+'" y="'+(gY+gH/2)+'" text-anchor="middle" transform="rotate(-90 '+(gX-8)+' '+(gY+gH/2)+')" fill="#94a3b8" font-size="7.5">Absolute Pressure P</text>';
+
+ // State 1: (V1, P1) = (low V, high P)
+ const s1 = {x: gX + 50, y: gY + 25};
+ // State 2: (V2, P2 = P0) = (high V, atm P) via steep adiabatic expansion
+ const s2 = {x: gX + 260, y: gY + gH - 25};
+ // State 3: (V3 = V2, P3 = P0 + h2) via vertical isochoric warming
+ const s3 = {x: gX + 260, y: gY + 65};
+
+ // Adiabatic curve 1 -> 2 (steep red line)
+ svg += '<path d="M '+s1.x+' '+s1.y+' Q '+(s1.x+90)+' '+(s1.y+65)+' '+s2.x+' '+s2.y+'" fill="none" stroke="#ef4444" stroke-width="2.5"/>';
+ svg += '<text x="'+(s1.x+70)+'" y="'+(s1.y+40)+'" fill="#ef4444" font-size="7" font-weight="bold">Adiabatic PV^γ = const (0.8s)</text>';
+
+ // Isochoric line 2 -> 3 (vertical green line at V2 = const)
+ svg += '<line x1="'+s2.x+'" y1="'+s2.y+'" x2="'+s3.x+'" y2="'+s3.y+'" stroke="#4ade80" stroke-width="2.5"/>';
+ svg += '<text x="'+(s3.x+8)+'" y="'+((s2.y+s3.y)/2)+'" fill="#4ade80" font-size="7" font-weight="bold">Isochoric Warming (V=const)</text>';
+
+ // Isothermal curve 1 -> 3 (gentle dashed blue line T0 = const)
+ svg += '<path d="M '+s1.x+' '+s1.y+' Q '+(s1.x+110)+' '+(s1.y+20)+' '+s3.x+' '+s3.y+'" fill="none" stroke="#38bdf8" stroke-width="1.8" stroke-dasharray="3,2"/>';
+ svg += '<text x="'+((s1.x+s3.x)/2)+'" y="'+(s1.y+10)+'" text-anchor="middle" fill="#38bdf8" font-size="7">Isothermal PV = const (T₀)</text>';
+
+ // Points
+ svg += '<circle cx="'+s1.x+'" cy="'+s1.y+'" r="4" fill="#38bdf8"/>';
+ svg += '<text x="'+(s1.x-8)+'" y="'+(s1.y-5)+'" fill="#38bdf8" font-size="7.5" font-weight="bold">State 1 (P₀+h₁, T₀)</text>';
+
+ svg += '<circle cx="'+s2.x+'" cy="'+s2.y+'" r="4" fill="#ef4444"/>';
+ svg += '<text x="'+(s2.x+8)+'" y="'+(s2.y+2)+'" fill="#ef4444" font-size="7.5" font-weight="bold">State 2 (P₀, T₂<T₀)</text>';
+
+ svg += '<circle cx="'+s3.x+'" cy="'+s3.y+'" r="4" fill="#4ade80"/>';
+ svg += '<text x="'+(s3.x-8)+'" y="'+(s3.y-5)+'" text-anchor="end" fill="#4ade80" font-size="7.5" font-weight="bold">State 3 (P₀+h₂, T₀)</text>';
+
+ // Bottom invariant badge
+ svg += '<rect x="'+(lX+15)+'" y="'+(lY+198)+'" width="'+(lW-30)+'" height="32" rx="3" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+218)+'" text-anchor="middle" fill="#86efac" font-size="8" font-family="monospace" font-weight="bold">Thermodynamic Invariant: Adiabatic curve is steeper than Isotherm by exactly factor γ = 1.400</text>';
+
+
+ // --- RIGHT PANEL: SOURCES OF BIAS & SYSTEM AUDIT ---
+ const rX = 425, rY = 50, rW = 275, rH = 240;
+ svg += '<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<text x="'+(rX+rW/2)+'" y="'+(rY+18)+'" text-anchor="middle" fill="#86efac" font-size="9.5" font-weight="bold">SOURCES OF BIAS & SYSTEM AUDIT</text>';
+
+ const lossItems = [
+  {label: 'Valve Actuation Window', desc: '0.80 s solenoid timing prevents boundary heat conduction', val: 'Timing error < 0.02 s', col: '#4ade80'},
+  {label: '15 L Volume Core Shielding', desc: 'Large volume confines wall heat diffusion to thin outer skin', val: '>95% bulk isentropic', col: '#38bdf8'},
+  {label: 'Low-Volatility DBP Fluid', desc: 'Zero vapor pressure prevents condensable solvent evaporation', val: 'P_vap < 10⁻⁵ mmHg', col: '#86efac'},
+  {label: 'Desiccant Inline Purging', desc: 'Anhydrous CaCl2 removes triatomic H2O vapor (γ = 1.33)', val: '<0.05% Rel. Humidity', col: '#facc15'},
+  {label: 'Multi-Point OLS Regression', desc: 'Slope eliminates zero-point parallax and barometric drift', val: 'R² = 1.00000 Unbiased', col: '#4ade80'}
+ ];
+
+ lossItems.forEach((li, idx)=>{
+  const ly = rY + 30 + idx * 40;
+  svg += '<rect x="'+(rX+8)+'" y="'+ly+'" width="'+(rW-16)+'" height="34" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg += '<text x="'+(rX+14)+'" y="'+(ly+12)+'" fill="'+li.col+'" font-size="7.5" font-weight="bold">'+li.label+'</text>';
+  svg += '<text x="'+(rX+14)+'" y="'+(ly+25)+'" fill="#94a3b8" font-size="6.8">'+li.desc+'</text>';
+  svg += '<text x="'+(rX+rW-14)+'" y="'+(ly+12)+'" text-anchor="end" fill="'+li.col+'" font-size="7.5" font-family="monospace">'+li.val+'</text>';
+ });
+
+ svg += text(360, 305, 'Thermodynamic Invariant: Slope m = 0.2857 yields γ = 1.400 with zero baseline offset.', '#789c80', 8.5);
  return svg;
 }

@@ -149,6 +149,14 @@ def observation(c,value):
   ksp_calc=4.0 * (s_calc**3)
   y=rnd(math.log(ksp_calc), 4)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='heat-capacity-ratio-gases-clement-desormes':
+  h1=float(value)
+  gamma=1.400
+  slope=(gamma - 1.0) / gamma
+  raw=rnd(h1 * slope, 2)
+  x=h1
+  y=raw
+  return {'input':value,'raw':raw,'x':x,'y':y}
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fit(rows):
@@ -243,6 +251,10 @@ def estimate(c,f):
   dH_est= -f['m'] * 8.31446
   se=f['slopeSE'] * 8.31446
   return dH_est, se, 110.0
+ elif slug=='heat-capacity-ratio-gases-clement-desormes':
+  gamma_est= 1.0 / (1.0 - f['m'])
+  se= (gamma_est**2) * f['slopeSE']
+  return gamma_est, se, 1.400
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fmt(v,n=5):
@@ -303,6 +315,9 @@ def formula(c,f):
   conv_S= f['b'] * 8.31446
   dG_298= conv_H - (298.15 * conv_S * 0.001)
   return f"ΔH° = −m_slope · (1000·R) = −({fmt(f['m'],4)}) × 8.3145 = {fmt(conv_H,1)} kJ/mol; ΔS° = b · R = {fmt(conv_S,1)} J/(mol·K); ΔG°(298K) = {fmt(dG_298,1)} kJ/mol; Intercept b = {fmt(f['b'],4)}"
+ elif slug=='heat-capacity-ratio-gases-clement-desormes':
+  gamma= 1.0 / (1.0 - f['m'])
+  return f"γ = 1 / (1 − m_slope) = 1 / (1 − {fmt(f['m'],4)}) = {fmt(gamma,3)}; Intercept h₀ = {fmt(f['b'],4)} cm"
  return ""
 
 def worked(c,row):
@@ -628,6 +643,21 @@ def worked(c,row):
    f"and intercept b = 39.723, isolating ΔH° = +110.1 kJ/mol and ΔS° = +330.3 J/(mol·K) with R² = 1.00000, "
    f"confirming the accepted literature thermodynamic parameters for borax dissolution."
   )
+ elif slug=='heat-capacity-ratio-gases-clement-desormes':
+  h1=row['input']
+  h2=row['raw']
+  gamma_single= h1 / (h1 - h2)
+  return (
+   f"Investigated Working Gas: Dry Atmospheric Air (78% N₂, 21% O₂, molar mass M = 28.96 g/mol).\n"
+   f"Initial Pressurized Excess Pressure: h₁ = {h1:.1f} cm (open DBP manometer, room temperature T₀ = 298.15 K).\n"
+   f"Adiabatic Expansion Event: Rapid release valve venting for 0.80 s to atmospheric pressure P₀ (chilled gas T₂ < T₀).\n"
+   f"Isochoric Re-Equilibrated Pressure: h₂ = {h2:.2f} cm (sealed constant-volume warming back to room temperature T₀).\n"
+   f"Single-Trial Adiabatic Index: γ = h₁ / (h₁ − h₂) = {h1:.1f} / ({h1:.1f} − {h2:.2f}) = {gamma_single:.3f}.\n"
+   f"Equipartition Prediction: Diatomic molecules possess 5 active degrees of freedom (3 trans + 2 rot) => γ_theory = (5 + 2)/5 = 7/5 = 1.400.\n"
+   f"Verification: Across the full six-point series from 15.0 to 40.0 cm initial excess pressure, ordinary least-squares "
+   f"linear regression of h₂ against h₁ extracts the empirical slope m_slope = 0.2857, inverting via γ = 1 / (1 − m_slope) "
+   f"to isolate the adiabatic index γ = 1.400 with R² = 1.00000, confirming classical thermodynamic equipartition."
+  )
  return ""
 
 def uncertainty_text(c):
@@ -935,6 +965,27 @@ def uncertainty_text(c):
    "Ordinary least-squares linear regression across six independent temperatures extracts the van 't Hoff slope "
    "m_slope = −13.241 K with an ideal coefficient of determination R² = 1.00000, isolating the standard enthalpy of dissolution "
    "ΔH° = +110.1 kJ/mol and standard entropy of dissolution ΔS° = +330.3 J/(mol·K) within 0.09% of accepted thermodynamic literature."
+  )
+ elif slug=='heat-capacity-ratio-gases-clement-desormes':
+  return (
+   "In the determination of the heat capacity ratio γ = C_p/C_v via the Clément-Desormes method governed by "
+   "h₂ = [ (γ − 1) / γ ] · h₁ + h₀, "
+   "experimental measurement uncertainty is evaluated across thermodynamic, thermal, manometric, pneumatic, and kinetic contributions: "
+   "(1) Manometer Height Resolution & Cathetometer Precision: The open-ended U-tube manometer contains dibutyl phthalate (density ρ = 1.047 g/cm³), "
+   "providing 13 times greater displacement sensitivity than mercury. Meniscus positions are read with an optical cathetometer to ±0.05 cm. "
+   "For excess pressures spanning h₁ = 15.0 to 40.0 cm, relative manometric uncertainty is δh₁/h₁ ≈ 0.05 / 27.5 ≈ 1.8 × 10⁻³ (0.18%). "
+   "(2) Valve Actuation Timing: The large-bore (20 mm) ground-glass stopper is actuated by a millisecond electronic solenoid timer "
+   "set to 0.80 ± 0.02 seconds. This duration ensures complete depressurization down to atmospheric pressure (P₂ = P₀) without allowing room air "
+   "to conduct heat through the open throat, restricting non-adiabatic expansion error to less than ±0.15%. "
+   "(3) Vessel Boundary Layer Insulation: The 15-liter glass carboy has a small surface-area-to-volume ratio (A/V ≈ 0.2 cm⁻¹). "
+   "During the 0.8 s expansion, thermal conduction from the glass walls penetrates only 2–3 mm into the outer boundary layer, "
+   "leaving >95% of the central gas core in pristine isentropic adiabatic expansion. "
+   "(4) Gas Dryness & Moisture Exclusion: Ambient air was pumped through an inline desiccant column packed with anhydrous calcium chloride (CaCl₂), "
+   "suppressing water vapor to <0.05% relative humidity. This prevents triatomic water vapor (γ = 1.33) from depressing the diatomic air ratio. "
+   "(5) Taylor Approximation Validity: For h₁ ≤ 40 cm DBP (corresponding to ~4.1 kPa excess pressure), the ratio h₁ / P₀ is 4.1 / 101.3 ≈ 0.040. "
+   "The second-order Taylor expansion term is (1/2)(h₁/P₀)² ≈ 0.0008 (<0.08%), which is seamlessly absorbed by the linear regression slope. "
+   "Ordinary least-squares linear regression across six independent initial excess pressures (15.0 to 40.0 cm) extracts the empirical slope "
+   "m_slope = 0.2857 with an ideal coefficient of determination R² = 1.00000, isolating the heat capacity ratio γ = 1.400 with 0.00% error relative to diatomic theory."
   )
  return ""
 
@@ -1669,6 +1720,53 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    "The investigation verified that endothermic dissolution is driven spontaneously by massive entropy generation from crystal lattice and hydrate water release, "
    "demonstrated the power of the van 't Hoff equation to extract thermal quantities without calorimetry, "
    "and proved that pre-warmed filter-plugged pipetting eliminates crystallization and suspended particle errors."
+  )
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='heat-capacity-ratio-gases-clement-desormes':
+  abstract=(
+   f"Six precision Clément-Desormes adiabatic expansion trials were conducted on dry atmospheric air (predominantly N₂ and O₂) "
+   f"in a heavy-duty 15-liter glass carboy apparatus across initial excess pressures from h₁ = {rows[0]['input']:.1f} cm to {rows[-1]['input']:.1f} cm "
+   f"of dibutyl phthalate manometer fluid (density ρ = 1.047 g/cm³) at 25.0 °C. "
+   f"Following rapid solenoid-actuated valve release for exactly 0.80 seconds to atmospheric pressure and subsequent isochoric thermal re-warming "
+   f"back to ambient temperature, final re-equilibrated excess pressures ranged from h₂ = {rows[0]['raw']:.2f} cm to {rows[-1]['raw']:.2f} cm. "
+   f"Ordinary least-squares linear regression of re-equilibrated pressure h₂ against initial pressure h₁ yielded an empirical slope of "
+   f"m_slope = {fmt(f['m'],4)} and an intercept of h₀ = {fmt(f['b'],4)} cm with an ideal coefficient of determination R² = 1.00000. "
+   f"Inverting the empirical slope via the thermodynamic relation γ = 1 / (1 − m_slope) isolated an experimental heat capacity ratio of "
+   f"γ = {fmt(value*c['resultScale'],c['resultDecimals'])} with a fit standard error of {fmt(se*c['resultScale'])} and a percentage difference of {percent:.4f}% "
+   f"relative to classical equipartition theory (reference γ = 7/5 = 1.400)."
+  )
+  graph_choice=(
+   f"The mathematical regression models the linearized Clément-Desormes equation h₂ = [ (γ − 1) / γ ] · h₁ + h₀, "
+   f"where h₁ represents the initial pressurized excess height in cm of manometer fluid, h₂ represents the final re-equilibrated excess height in cm, "
+   f"γ = C_p / C_v is the dimensionless adiabatic index, and h₀ represents the baseline zero-offset intercept in cm. "
+   f"Inverting the empirical regression slope via γ = 1 / (1 − m_slope) directly isolates the heat capacity ratio, "
+   f"while any small scale parallax or barometric drift offsets are absorbed cleanly into the intercept h₀."
+  )
+  discussion=(
+   "The experimental observations provide rigorous quantitative verification of Classical Equipartition of Energy, Adiabatic Gas Dynamics, and Mayer's Thermodynamic Relation. "
+   "According to the kinetic molecular theory of gases, the heat capacity at constant volume of an ideal gas reflects its active molecular degrees of freedom: C_v = (f/2) R. "
+   "For diatomic air molecules (N₂ and O₂) at 298 K, thermal energy excites 3 translational and 2 rotational degrees of freedom (f = 5), while vibrational modes remain quantized in their ground state. "
+   "By Mayer's relation C_p = C_v + R = (7/2) R, the theoretical adiabatic index is γ = C_p / C_v = 7/5 = 1.400. "
+   "The Clément-Desormes thermodynamic cycle links three equilibrium and non-equilibrium states: "
+   "(1) Initial pressurized state (P₁ = P₀ + h₁, T₁ = T₀); "
+   "(2) Rapid adiabatic expansion to atmospheric pressure (P₂ = P₀, with adiabatic cooling to T₂ < T₀ governed by isentropic law P₁^(1−γ) T₁^γ = P₂^(1−γ) T₂^γ); and "
+   "(3) Isochoric thermal re-equilibration (V₃ = V₂, warming back to room temperature T₃ = T₀, producing pressure rise P₃ = P₀ + h₂). "
+   "Across all six initial excess pressures from 15.0 cm to 40.0 cm DBP, the re-equilibrated pressure h₂ exhibited impeccable linear proportionality to h₁. "
+   "The ordinary least-squares regression line h₂ = 0.2857 · h₁ − 0.0005 cm produced an ideal coefficient of determination R² = 1.00000. "
+   "Inverting this empirical slope via γ = 1 / (1 − m_slope) = 1 / (1 − 0.285714) isolated an experimental adiabatic index of γ = 1.400, "
+   "matching the theoretical prediction of 1.400 to within 0.0000%. "
+   "The 15-liter carboy volume ensured that thermal conduction from the walls was confined to a thin peripheral boundary layer, maintaining isentropic conditions in the bulk gas core, "
+   "while the 0.80-second solenoid opening window provided complete depressurization without acoustic back-oscillations."
+  )
+  conclusion=(
+   "This laboratory investigation successfully determined the heat capacity ratio (γ = C_p/C_v) of dry atmospheric air using the classical Clément-Desormes method. "
+   f"Through systematic manometric measurements across initial excess pressures from {rows[0]['input']:.1f} cm to {rows[-1]['input']:.1f} cm in a calibrated 15-liter carboy apparatus, we extracted an "
+   f"experimental adiabatic index of γ = {fmt(value*c['resultScale'],c['resultDecimals'])} with a fit standard error of "
+   f"{fmt(se*c['resultScale'])} and an ideal coefficient of determination R² = 1.00000. "
+   f"The observed thermodynamic ratio confirms the accepted theoretical value for a diatomic gas (γ = 7/5 = 1.400) with a percentage difference of {percent:.4f}%. "
+   "The investigation verified the equipartition theorem prediction of 5 active degrees of freedom in diatomic air at room temperature, "
+   "demonstrated the power of reversible thermodynamic cycles to measure thermal properties without calorimetric hardware, "
+   "and proved that multi-point manometric regression delivers supreme accuracy free from single-point zero-parallax biases."
   )
   return abstract, graph_choice, discussion, conclusion
  return "","","",""
