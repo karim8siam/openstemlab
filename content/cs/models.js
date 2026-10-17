@@ -138,6 +138,13 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:raw/200.0,x,y,valid:n>=4&&n<=16};
  }
+ if(slug==='relational-query-optimization'){
+  const n=Number(input);
+  const raw=Math.round(2 * n);
+  const x=n;
+  const y=raw;
+  return {raw,ideal:raw,period:raw/2000.0,x,y,valid:n>=1000&&n<=7000};
+ }
  if(slug==='concurrency-synchronization-deadlock'){
   const n=Number(input);
   const raw=Math.round(4 * n);
@@ -272,6 +279,10 @@ function reading(slug,input,raw){
   x=n * log2n;
   y=raw;
  }
+ if(slug==='relational-query-optimization'){
+  x=Number(input);
+  y=raw;
+ }
  if(slug==='concurrency-synchronization-deadlock'){
   x=Number(input);
   y=raw;
@@ -372,6 +383,9 @@ function estimate(slug,f){
  }
  if(slug==='fast-fourier-transform'){
   return {value:f.m,se:f.slopeSE,reference:0.5000};
+ }
+ if(slug==='relational-query-optimization'){
+  return {value:f.m,se:f.slopeSE,reference:2.0000};
  }
  if(slug==='concurrency-synchronization-deadlock'){
   return {value:f.m,se:f.slopeSE,reference:4.0000};
