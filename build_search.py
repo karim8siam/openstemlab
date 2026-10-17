@@ -52,7 +52,8 @@ def experiment_index(experiments):
     'linked-list-architectures':'linked list doubly singly pointer hopping cache locality spatial prefetcher sentinel dummy node unrolled list intrusive list container_of dynamic memory fragmentation',
     'binary-search-trees':'binary search tree bst tree height balance factor avl red black tree rotations b-tree degeneracy internal path length search depth',
     'binary-heaps-priority-queues':'binary heap priority queue max heap min heap floyd build_heap sift down sift up heapsort d-ary heap 4-way heap dijkstra scheduler',
-    'hash-tables-collision-resolution':'hash table collision resolution separate chaining open addressing linear probing quadratic probing double hashing load factor clustering swiss table robin hood knuth probe length'}
+    'hash-tables-collision-resolution':'hash table collision resolution separate chaining open addressing linear probing quadratic probing double hashing load factor clustering swiss table robin hood knuth probe length',
+    'graph-traversal-shortest-paths':'graph traversal breadth first search depth first search bfs dfs dijkstra shortest path adjacency matrix adjacency list compressed sparse row csr edge relaxation priority queue'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   sub='computer-science' if '/computer-science/' in exp.get('page_path','') else 'physics'

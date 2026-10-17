@@ -140,6 +140,60 @@ function drawComparativeSim(t,p,v,ink,soft,orange){
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
+ if(cfg.slug==='graph-traversal-shortest-paths'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'GRAPH ALGORITHM & REPRESENTATION BENCHMARK (|V| = '+p.input+')','#e2f0f8',11);
+
+  const n=p.input;
+  const e=4*n;
+  const c_csr=n + e;
+  const c_adj=n + e;
+  const c_dijkstra=Math.round((n + e) * Math.log2(n));
+  const c_matrix=n * n;
+  const c_floyd=Math.min(100000000, n * n * n);
+
+  const strategies=[
+   {name:'Compressed Sparse Row (CSR)',col:'#10b981',cost:c_csr,scale:'O(|V|+|E|) flat arrays',desc:'Packed contiguous edge & row pointers; zero pointer chasing; SIMD vectorized'},
+   {name:'Adjacency List (Dynamic Vectors)',col:'#38bdf8',cost:c_adj,scale:'O(|V|+|E|) optimal',desc:'Optimal sparse graph memory; neighbor scan time proportional to out-degree'},
+   {name:'Dijkstra Shortest Path (Min-Heap)',col:'#f97316',cost:c_dijkstra,scale:'O((|V|+|E|) log |V|)',desc:'Non-negative edge weights; priority queue extracts minimal tentative distance'},
+   {name:'Adjacency Matrix (Dense 2D)',col:'#ef4444',cost:c_matrix,scale:'O(|V|²) matrix scan',desc:'O(1) edge lookup, but catastrophic quadratic memory and full-row scans'},
+   {name:'Floyd-Warshall All-Pairs SP',col:'#a855f7',cost:c_floyd,scale:'O(|V|³) cubic scan',desc:'Dynamic programming all-pairs shortest paths; scans triple nested loops'}
+  ];
+
+  strategies.forEach((item,idx)=>{
+   const rowY=cY+16+idx*42;
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+12)+'" fill="#dcebf2" font-size="8.5" font-weight="bold">'+item.name+'</text>';
+   const costStr=item.cost>=1000000?(item.cost/1000000).toFixed(1)+'M':item.cost>=1000?(item.cost/1000).toFixed(1)+'k':item.cost;
+   svg+='<text x="'+(cX+cW-15)+'" y="'+(rowY+12)+'" text-anchor="end" fill="'+item.col+'" font-size="8.5" font-family="monospace" font-weight="bold">'+costStr+' ops ('+item.scale+')</text>';
+   
+   const barX=cX+15,barY=rowY+16,barMaxW=cW-30;
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barMaxW+'" height="7" rx="2" fill="#16242c"/>';
+   const maxVal=Math.max(10, c_matrix);
+   const frac=Math.min(1.0,Math.log10(item.cost+1)/Math.log10(maxVal+1));
+   const fillW=Math.max(4,frac*barMaxW);
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+fillW+'" height="7" rx="2" fill="'+item.col+'"/>';
+  });
+
+  const bX=460,bY=45,bW=220,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">SPARSE GRAPH SPEEDUP</text>';
+  const matrixSpeedup=(c_matrix / Math.max(1, c_adj)).toFixed(1);
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+matrixSpeedup+'×</text>';
+  svg+='<text x="'+(bX+95)+'" y="'+(bY+46)+'" fill="#dcebf2" font-size="10">List vs Matrix</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#7e9bab" font-size="9">MEMORY SCALING FOOTPRINT</text>';
+  const memList=( (n*8 + e*16)/1024 ).toFixed(1);
+  const memMat=( (n*n)/1024 ).toFixed(1);
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="15" font-family="monospace" font-weight="bold">'+memList+' vs '+memMat+' KiB</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+124)+'" fill="#8ba5b5" font-size="8">List: Θ(|V|+|E|) · Matrix: Θ(|V|²)</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+136)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+136)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+154)+'" fill="#7e9bab" font-size="9">SHORTEST PATH COMPLEXITY</text>';
+  svg+=text(bX+bW/2,bY+180,'BFS (Unweighted): O(|V| + |E|) FIFO','#10b981',9.5);
+  svg+=text(bX+bW/2,bY+202,'Dijkstra (Weighted): O((V+E) log V)',orange,8.5);
+  svg+=text(360,305,'Comparative Invariant: Adjacency List achieves optimal O(|V| + |E|) traversal, avoiding quadratic O(|V|²) matrix scanning waste',soft,10);
+  return svg;
+ }
+
  if(cfg.slug==='hash-tables-collision-resolution'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
   svg+=text(cX+cW/2,cY-14,'COLLISION RESOLUTION PROBE COMPARISON (m = 1000 · n = '+p.input+')','#e2f0f8',11);
@@ -597,6 +651,75 @@ function drawDynamicSandbox(t,p,v,ink,soft,orange){
  const cX=45,cY=45,cW=400,cH=230;
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+ if(cfg.slug==='graph-traversal-shortest-paths'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'DIJKSTRA EDGE RELAXATION & SHORTEST PATH SANDBOX (|V| = '+p.input+')','#e2f0f8',11);
+
+  // Top header for network sub-graph
+  svg+='<text x="'+(cX+15)+'" y="'+(cY+22)+'" fill="#10b981" font-size="8.5" font-weight="bold">TRIANGULAR INEQUALITY RELAXATION: dist[v] &gt; dist[u] + w(u, v)</text>';
+
+  // Vertices coordinates
+  const sX=cX+60,sY=cY+90;
+  const uX=cX+180,uY=cY+55;
+  const aX=cX+180,aY=cY+130;
+  const vX=cX+320,vY=cY+90;
+
+  // Edges: S -> U (w=4), S -> A (w=5), A -> V (w=7, old path), U -> V (w=3, relaxing edge)
+  // S -> U
+  svg+='<line x1="'+sX+'" y1="'+sY+'" x2="'+uX+'" y2="'+uY+'" stroke="#10b981" stroke-width="2"/>';
+  svg+='<text x="'+((sX+uX)/2-10)+'" y="'+((sY+uY)/2-6)+'" fill="#10b981" font-size="7.5" font-weight="bold">w=4</text>';
+
+  // S -> A
+  svg+='<line x1="'+sX+'" y1="'+sY+'" x2="'+aX+'" y2="'+aY+'" stroke="#334155" stroke-width="1.5"/>';
+  svg+='<text x="'+((sX+aX)/2-10)+'" y="'+((sY+aY)/2+14)+'" fill="#64748b" font-size="7.5" font-weight="bold">w=5</text>';
+
+  // A -> V (Old path, weight 7, total cost 12)
+  svg+='<line x1="'+aX+'" y1="'+aY+'" x2="'+vX+'" y2="'+vY+'" stroke="#475569" stroke-width="1.5" stroke-dasharray="3,2"/>';
+  svg+='<text x="'+((aX+vX)/2+10)+'" y="'+((aY+vY)/2+14)+'" fill="#64748b" font-size="7.5">w=7 (old: 5+7=12)</text>';
+
+  // U -> V (Relaxing edge, weight 3, new cost 4+3=7)
+  svg+='<line x1="'+uX+'" y1="'+uY+'" x2="'+vX+'" y2="'+vY+'" stroke="'+orange+'" stroke-width="2.5"/>';
+  svg+='<text x="'+((uX+vX)/2+10)+'" y="'+((uY+vY)/2-6)+'" fill="'+orange+'" font-size="8" font-weight="bold">w=3 (RELAX! 4+3=7)</text>';
+
+  // Draw vertices
+  const gNodes=[
+   {name:'S',x:sX,y:sY,dist:'0',col:'#10b981',fill:'#064e3b'},
+   {name:'U',x:uX,y:uY,dist:'4',col:'#10b981',fill:'#064e3b'},
+   {name:'A',x:aX,y:aY,dist:'5',col:'#334155',fill:'#0f172a'},
+   {name:'V',x:vX,y:vY,dist:'12 ⟶ 7',col:orange,fill:'#431407'}
+  ];
+
+  gNodes.forEach(nd=>{
+   svg+='<circle cx="'+nd.x+'" cy="'+nd.y+'" r="15" fill="'+nd.fill+'" stroke="'+nd.col+'" stroke-width="2"/>';
+   svg+='<text x="'+nd.x+'" y="'+(nd.y+4)+'" text-anchor="middle" fill="#dcebf2" font-size="8.5" font-weight="bold">'+nd.name+'</text>';
+   svg+='<text x="'+nd.x+'" y="'+(nd.y+26)+'" text-anchor="middle" fill="'+nd.col+'" font-size="7" font-family="monospace">d:'+nd.dist+'</text>';
+  });
+
+  // Code sequence box at bottom
+  const cdX=cX+15,cdY=cY+148,cdW=cW-30,cdH=72;
+  svg+='<rect x="'+cdX+'" y="'+cdY+'" width="'+cdW+'" height="'+cdH+'" rx="4" fill="#050b0e" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(cdX+12)+'" y="'+(cdY+16)+'" fill="#38bdf8" font-size="8" font-weight="bold">DIJKSTRA EDGE RELAXATION PRIMITIVE (TRIANGULAR SHORTENING)</text>';
+  svg+='<text x="'+(cdX+12)+'" y="'+(cdY+32)+'" fill="#10b981" font-size="7.5" font-family="monospace">1: if (dist[v] &gt; dist[u] + w(u, v)) { // 12 &gt; 4 + 3</text>';
+  svg+='<text x="'+(cdX+12)+'" y="'+(cdY+46)+'" fill="#10b981" font-size="7.5" font-family="monospace">2:   dist[v] = dist[u] + w(u, v); prev[v] = u; // Tentative dist updated to 7</text>';
+  svg+='<text x="'+(cdX+12)+'" y="'+(cdY+60)+'" fill="'+orange+'" font-size="7.5" font-family="monospace">3:   min_heap.decrease_key(v, 7); }           // O(log V) priority queue shift</text>';
+
+  const bX=465,bY=45,bW=210,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#7e9bab" font-size="9">TENTATIVE DISTANCE DELTA</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+54)+'" fill="'+orange+'" font-size="24" font-family="monospace" font-weight="bold">12 ⟶ 7</text>';
+  svg+='<text x="'+(bX+110)+'" y="'+(bY+50)+'" fill="#10b981" font-size="11">(-5 cost)</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+84)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+84)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+102)+'" fill="#7e9bab" font-size="9">GREEDY CHOICE PROPERTY</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+124)+'" fill="'+ink+'" font-size="16" font-family="monospace" font-weight="bold">dist[u*] = δ(S, u*)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+140)+'" fill="#8ba5b5" font-size="8">Optimal sub-structure guarantees finality</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+154)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+154)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+172)+'" fill="#7e9bab" font-size="9">WEIGHT NON-NEGATIVITY BOUND</text>';
+  svg+=text(bX+bW/2,bY+194,'w(u, v) ≥ 0 required','#38bdf8',9.5);
+  svg+=text(bX+bW/2,bY+212,'Negative weights require Bellman-Ford',orange,8.5);
+  svg+=text(360,305,'Sandbox Invariant: Dijkstra greedily settles minimal unvisited vertex; negative edges break triangular inequality invariant',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='hash-tables-collision-resolution'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
@@ -1213,6 +1336,84 @@ function draw(t){
  const ink='#38bdf8',soft='#7e9bab',orange='#f97316';
  if(currentSimMode==='compare'){$('apparatusDiagram').innerHTML=drawComparativeSim(t,p,v,ink,soft,orange);return;}
  if(currentSimMode==='sandbox'){$('apparatusDiagram').innerHTML=drawDynamicSandbox(t,p,v,ink,soft,orange);return;}
+
+ if(cfg.slug==='graph-traversal-shortest-paths'){
+  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
+  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+  const n=p.input;
+  const e_count=4*n;
+  const t_ops=v.raw;
+
+  svg+='<rect x="35" y="38" width="410" height="235" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+=text(240,24,'Directed Graph Traversal & Adjacency List Traversal Frontier');
+
+  svg+='<text x="50" y="56" fill="#7e9bab" font-size="8.5" font-weight="bold">DIRECTED GRAPH G = (V, E) · |V| = '+n+' VERTICES · |E| = '+e_count+' EDGES (d_avg = 4.0)</text>';
+
+  const nodes=[
+   {id:'V0',x:75,y:120,col:'#10b981',st:'Settled',d:'d=0'},
+   {id:'V1',x:165,y:85,col:orange,st:'Frontier',d:'d=2'},
+   {id:'V2',x:165,y:155,col:orange,st:'Frontier',d:'d=5'},
+   {id:'V3',x:275,y:85,col:'#38bdf8',st:'Discovered',d:'d=5'},
+   {id:'V4',x:275,y:155,col:'#38bdf8',st:'Discovered',d:'d=6'},
+   {id:'V5',x:380,y:120,col:'#64748b',st:'Unvisited',d:'d=8'}
+  ];
+
+  const edges=[
+   {u:0,v:1,w:'w:2',col:'#10b981',wCol:'#10b981'},
+   {u:0,v:2,w:'w:5',col:'#10b981',wCol:'#10b981'},
+   {u:1,v:3,w:'w:3',col:orange,wCol:orange},
+   {u:1,v:4,w:'w:4',col:orange,wCol:orange},
+   {u:2,v:4,w:'w:1',col:orange,wCol:orange},
+   {u:3,v:5,w:'w:3',col:'#38bdf8',wCol:'#38bdf8'},
+   {u:4,v:5,w:'w:2',col:'#38bdf8',wCol:'#38bdf8'},
+   {u:2,v:3,w:'w:2',col:'#334155',wCol:'#64748b',dash:'3,2'}
+  ];
+
+  edges.forEach(e=>{
+   const u=nodes[e.u],v=nodes[e.v];
+   const dashAttr=e.dash?' stroke-dasharray="'+e.dash+'"':'';
+   svg+='<line x1="'+u.x+'" y1="'+u.y+'" x2="'+v.x+'" y2="'+v.y+'" stroke="'+e.col+'" stroke-width="1.5"'+dashAttr+'/>';
+   const midX=(u.x+v.x)/2, midY=(u.y+v.y)/2 - 4;
+   svg+='<text x="'+midX+'" y="'+midY+'" text-anchor="middle" fill="'+e.wCol+'" font-size="6.5" font-family="monospace">'+e.w+'</text>';
+  });
+
+  nodes.forEach(nd=>{
+   svg+='<circle cx="'+nd.x+'" cy="'+nd.y+'" r="14" fill="#081016" stroke="'+nd.col+'" stroke-width="2"/>';
+   svg+='<text x="'+nd.x+'" y="'+(nd.y+4)+'" text-anchor="middle" fill="#dcebf2" font-size="8.5" font-family="monospace" font-weight="bold">'+nd.id+'</text>';
+   svg+='<text x="'+nd.x+'" y="'+(nd.y+22)+'" text-anchor="middle" fill="'+nd.col+'" font-size="6.5" font-family="monospace">'+nd.d+'</text>';
+  });
+
+  const fsX=50,fsY=182,fsW=380,fsH=34;
+  svg+='<rect x="'+fsX+'" y="'+fsY+'" width="'+fsW+'" height="'+fsH+'" rx="4" fill="#081016" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(fsX+10)+'" y="'+(fsY+14)+'" fill="'+orange+'" font-size="7.5" font-family="monospace">FIFO Queue / Min-Heap Frontier: [ V1 (dist=2), V2 (dist=5) ]</text>';
+  svg+='<text x="'+(fsX+10)+'" y="'+(fsY+26)+'" fill="#10b981" font-size="7.5" font-family="monospace">Settled Set S = { V0 } · Adjacent Neighbors Scanned: Adj[V0] ⟶ (V1, 2) ⟶ (V2, 5)</text>';
+
+  const cbX=50,cbY=222,cbW=380,cbH=44;
+  svg+='<rect x="'+cbX+'" y="'+cbY+'" width="'+cbW+'" height="'+cbH+'" rx="4" fill="#081016" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(cbX+10)+'" y="'+(cbY+14)+'" fill="#38bdf8" font-size="7.5" font-family="monospace">Handshaking Sum: ∑ out_deg(v) = |E| = '+e_count+' edges</text>';
+  svg+='<text x="'+(cbX+10)+'" y="'+(cbY+26)+'" fill="#dcebf2" font-size="7" font-family="monospace">Traversal Complexity: T(|V|) = |V| + |E| = '+n+' + '+e_count+' = '+t_ops+' ops</text>';
+  svg+='<text x="'+(cbX+10)+'" y="'+(cbY+38)+'" fill="#8ba5b5" font-size="6.5">Memory Layout: 8|V| head pointers + 16|E| edge nodes = '+(8*n + 16*e_count)+' bytes</text>';
+
+  const bX=465,bY=38,bW=220,bH=235;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#7e9bab" font-size="9">TOTAL TRAVERSAL OPS T(|V|)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+54)+'" fill="'+orange+'" font-size="24" font-family="monospace" font-weight="bold">'+t_ops+'</text>';
+  svg+='<text x="'+(bX+95)+'" y="'+(bY+50)+'" fill="#8ba5b5" font-size="11">operations</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+84)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+84)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+102)+'" fill="#7e9bab" font-size="9">GRAPH TOPOLOGY</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+126)+'" fill="'+ink+'" font-size="16" font-family="monospace" font-weight="bold">|V|='+n+', |E|='+e_count+'</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+142)+'" fill="#8ba5b5" font-size="8">Average Out-Degree d = 4.0 edges/node</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+156)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+156)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+174)+'" fill="#7e9bab" font-size="9">LINEAR TRAVERSAL BOUND</text>';
+  svg+=text(bX+bW/2,bY+196,'T(|V|) = |V| + |E| = 5.0000 · |V|','#10b981',10);
+  svg+=text(bX+bW/2,bY+214,'Linear Coordinate: |V| (nodes)',orange,8.5);
+
+  svg+=text(360,305,'Mathematical Model: T(|V|) = 5.0000 · |V| + 0.0000 operations · R² = 1.000000 · Diff = 0.0000%',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='hash-tables-collision-resolution'){
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';

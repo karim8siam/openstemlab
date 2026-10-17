@@ -71,6 +71,14 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:raw/5.0,x,y,valid:n>=100&&n<=950};
  }
+ if(slug==='graph-traversal-shortest-paths'){
+  const v=Number(input);
+  const e=4*v;
+  const raw=Math.round(v + e);
+  const x=v;
+  const y=raw;
+  return {raw,ideal:raw,period:raw/500.0,x,y,valid:v>=50&&v<=1000};
+ }
  throw Error('Unknown CS experiment: '+slug);
 }
 
@@ -118,6 +126,10 @@ function reading(slug,input,raw){
   const m_cap=1000;
   const alpha=n/m_cap;
   x=1/(1 - alpha);
+  y=raw;
+ }
+ if(slug==='graph-traversal-shortest-paths'){
+  x=Number(input);
   y=raw;
  }
  return {input,raw,x,y};
@@ -170,6 +182,9 @@ function estimate(slug,f){
  }
  if(slug==='hash-tables-collision-resolution'){
   return {value:f.m,se:f.slopeSE,reference:1.0000};
+ }
+ if(slug==='graph-traversal-shortest-paths'){
+  return {value:f.m,se:f.slopeSE,reference:5.0000};
  }
  throw Error('Unknown CS experiment: '+slug);
 }

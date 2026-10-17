@@ -67,6 +67,13 @@ def observation(c,value):
   raw=rnd(x, 4)
   y=float(raw)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='graph-traversal-shortest-paths':
+  v=float(value)
+  e=4.0*v
+  raw=int(round(v + e))
+  x=v
+  y=float(raw)
+  return {'input':value,'raw':raw,'x':x,'y':y}
  raise ValueError(f"Unknown CS experiment {slug}")
 
 def fit(rows):
@@ -108,6 +115,8 @@ def estimate(c,f):
   return f['m'],f['slopeSE'],2.0000
  elif slug=='hash-tables-collision-resolution':
   return f['m'],f['slopeSE'],1.0000
+ elif slug=='graph-traversal-shortest-paths':
+  return f['m'],f['slopeSE'],5.0000
  raise ValueError(f"Unknown CS experiment {slug}")
 
 def fmt(v,n=5):
@@ -142,6 +151,9 @@ def formula(c,f):
  elif slug=='hash-tables-collision-resolution':
   val=f['m']*c['resultScale']
   return f"k_hash = m = {fmt(val,c['resultDecimals'])} probes/interval; Intercept P_0 = {fmt(f['b'],c['resultDecimals'])} probes (theoretical k_hash = 1.0000, P_0 = 0.0000)"
+ elif slug=='graph-traversal-shortest-paths':
+  val=f['m']*c['resultScale']
+  return f"k_graph = m = {fmt(val,c['resultDecimals'])} operations/vertex; Intercept T_0 = {fmt(f['b'],c['resultDecimals'])} operations (theoretical k_graph = 5.0000, T_0 = 0.0000)"
  return ""
 
 def worked(c,row):
@@ -195,6 +207,11 @@ def worked(c,row):
   x_coord=row['x']
   p_probes=row['raw']
   return f"Table Capacity m = 1000 slots; Key Dataset Size n = {int(n)} keys; Load Factor α = {int(n)} / 1000 = {alpha:.4f}.\nTransformed Load Coordinate: x = 1 / (1 − α) = 1 / (1 − {alpha:.4f}) = {x_coord:.4f}.\nExpected Unsuccessful Search Probe Depth: E[P] = 1 / (1 − α) = {p_probes:.4f} memory probes.\nVerification: Under uniform hashing, the probability of requiring at least i probes is α^(i-1); summing the geometric tail series ∑_{{j=0}}^∞ α^j yields strictly 1 / (1 − α) = {p_probes:.4f} probes."
+ elif slug=='graph-traversal-shortest-paths':
+  v=row['input']
+  e=4.0*float(v)
+  t_ops=row['raw']
+  return f"Network Vertices |V| = {int(v)} vertices; Average Out-Degree d = 4.0 edges/vertex; Total Edges |E| = 4 × {int(v)} = {int(e)} edges.\nTotal Elementary Traversal Operations: T(|V|) = |V| + |E| = {int(v)} + {int(e)} = {t_ops} operations.\nVerification: In an Adjacency List representation, BFS and DFS discover and push every reachable vertex exactly once ({int(v)} vertex visits) and inspect every incident directed edge exactly once ({int(e)} edge scans), converging to strictly |V| + |E| = 5·|V| = {t_ops} operations."
  return ""
 
 def uncertainty_text(c):
@@ -297,6 +314,17 @@ def uncertainty_text(c):
    "(3) Branch predictor mispredictions during probe loop termination checks (`if (table[slot] == NULL)`), which stall superscalar execution pipelines by 15–20 clock cycles; and "
    "(4) Hash function computational overhead, where high-entropy 64-bit avalanche functions (MurmurHash3, SipHash) eliminate bucket resonance at the cost of 5–15 CPU instructions per hash. "
    "Ordinary least-squares linear regression of observed probe lengths against transformed load coordinates x = 1 / (1 − α) yields an empirical scaling slope k_hash = 1.0000 probes/interval with zero residual variance (R² = 1.00000), verifying Knuth's uniform hashing theorem with mathematical certitude."
+  )
+ elif slug=='graph-traversal-shortest-paths':
+  return (
+   "In discrete graph algorithm analysis, the elementary operation count T(|V|) = |V| + |E| = 5.0000·|V| for Adjacency List BFS/DFS traversal is an exact combinatorial identity for 4-regular networks. "
+   "Unlike continuous physical instrumentation, there is no analog sensor noise, thermal drift, or calibration variance in counting discrete vertex queue pushes or edge iterations. "
+   "However, in physical semiconductor microprocessors, wall-clock graph traversal latency is strongly modulated by memory hierarchy and pipeline dynamics: "
+   "(1) Pointer chasing cache line misses: in linked adjacency lists, vertex neighbor sequences reside at non-contiguous heap addresses, causing cold CPU L1/L2 data cache stalls (~100–250 CPU cycles) once graph footprint exceeds cache capacity; "
+   "(2) Hardware spatial prefetcher failure: non-linear graph topologies prevent hardware stream prefetchers from predicting memory accesses, giving contiguous Compressed Sparse Row (CSR) arrays a 3× to 5× throughput advantage over linked lists; "
+   "(3) Branch predictor mispredictions during neighbor iteration loops and visited bitmask checks (`if (!visited[v])`), which stall superscalar execution pipelines by 15–20 clock cycles; and "
+   "(4) Priority queue overhead in Dijkstra's algorithm: min-heap extract_min and decrease_key operations introduce an additional log|V| factor, scaling execution time to O((|V| + |E|) log |V|). "
+   "Ordinary least-squares linear regression of observed traversal operations against vertex count |V| across networks from 50 to 1000 vertices yields an empirical scaling slope k_graph = 5.0000 operations/vertex with zero residual variance (R² = 1.00000), verifying the linear time complexity bound Θ(|V| + |E|) with mathematical certitude."
   )
  return ""
 
@@ -632,6 +660,39 @@ def report_narrative(c,rows,f,value,percent,reference):
    f"k_hash = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with an ideal R² = 1.00000. "
    "The investigation established the microarchitectural trade-offs between cache-friendly contiguous arrays and pointer-based chaining, proving why Double Hashing, "
    "Robin Hood equalized probing, and SIMD control-byte Swiss Tables form the core dictionary implementation of modern operating systems, database indexes, and high-throughput compilers."
+  )
+ elif slug=='graph-traversal-shortest-paths':
+  abstract=(
+   f"Seven benchmark trials were generated across network sizes |V| = {rows[0]['input']} to |V| = {rows[-1]['input']} vertices "
+   f"in a connected network with average out-degree d = 4 edges/vertex (|E| = {4*rows[0]['input']} to |E| = {4*rows[-1]['input']} edges, "
+   f"traversal operations T from {rows[0]['raw']} to {rows[-1]['raw']} operations). "
+   f"An ordinary least-squares regression of traversal operations against vertex count yielded an empirical complexity scaling coefficient of "
+   f"{fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']}, demonstrating exact agreement with the linear Adjacency List bound "
+   f"(difference = {percent:.4f}%). The empirical telemetry proves that Breadth-First Search (BFS) and Depth-First Search (DFS) achieve optimal "
+   f"linear O(|V| + |E|) complexity on Adjacency Lists, outperforming quadratic Adjacency Matrix representations by over 200× at |V| = 1000 vertices."
+  )
+  graph_choice=(
+   f"The mathematical regression fits the linear model y = mx + b, where x = |V| represents the graph vertex count in vertices, "
+   f"y = T represents total elementary traversal operations, m represents the complexity scaling factor k_graph, and b represents "
+   f"the baseline operation offset (theoretically b = 0.0000 operations). The gradient has physical units {c['gradientUnit']}."
+  )
+  discussion=(
+   "The empirical benchmark observations provide rigorous quantitative verification of the fundamental linear scaling theorem governing graph traversals. "
+   "In an Adjacency List representation, every vertex is discovered and enqueued exactly once (|V| operations), and every incident directed edge is traversed "
+   "exactly once during neighbor exploration (|E| = 4|V| operations). The total operation count T(|V|) = |V| + 4|V| = 5|V| scales in strict linear proportion "
+   "to network size. The regression slope m = 5.0000 confirms this invariant with zero residual variance (R² = 1.00000). Comparative analysis across graph "
+   "representations highlights critical systems trade-offs: an Adjacency Matrix requires Θ(|V|²) memory (1 million entries at |V| = 1000) and forces neighbor "
+   "iterations to scan all |V| columns (taking 1,000,000 operations), whereas an Adjacency List consumes only Θ(|V| + |E|) memory (5,000 elements) and completes "
+   "traversal in 5,000 operations—a 200-fold performance advantage. Furthermore, the Dijkstra sandbox demonstrates how greedy edge relaxation computes Single-Source "
+   "Shortest Paths in O((|V| + |E|) log |V|) time using a Min-Heap, illustrating why non-negative edge weights are mathematically required to preserve the greedy choice property. "
+   "Finally, the investigation explores modern Compressed Sparse Row (CSR) formats, showing how contiguous array packing eliminates pointer chasing and maximizes CPU L1 cache utilization."
+  )
+  conclusion=(
+   "This laboratory investigation quantitatively verified the memory representations, traversal dynamics, and asymptotic scaling of Graph Algorithms. "
+   f"Through systematic benchmarking across networks from |V| = {rows[0]['input']} to {rows[-1]['input']} vertices, we verified the empirical traversal scaling factor "
+   f"k_graph = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with an ideal R² = 1.00000. "
+   "The investigation established the microarchitectural superiority of sparse adjacency structures over dense matrices, proving why Adjacency Lists, Compressed Sparse Row (CSR), "
+   "and Min-Heap priority queues form the core computational engine of network routing protocols, social network graphs, and large-scale distributed analytics."
   )
  else:
   abstract=f"Empirical benchmark trials were generated across input sizes for {c['title']}."
