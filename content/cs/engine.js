@@ -140,6 +140,461 @@ function drawComparativeSim(t,p,v,ink,soft,orange){
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
+ if(cfg.slug==='relational-query-optimization'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'PHYSICAL JOIN OPERATOR COMPLEXITY (N = '+p.input+' tuples)','#e2f0f8',11);
+  const n=p.input;
+  const c_nlj=Math.min(1e9, n*n);
+  const c_bnlj=Math.round(n/50 + Math.ceil((n/50)/62)*(n/50));
+  const c_smj=Math.round(2*n*Math.log2(n) + 2*n);
+  const c_hj=Math.round(2*n);
+  const strategies=[
+   {name:'In-Memory Hash Join (HJ)',col:'#10b981',cost:c_hj,scale:'O(N) = '+(2*n)+' ops',desc:'Build hash table on R + probe with S; optimal linear CPU throughput'},
+   {name:'Sort-Merge Join (SMJ)',col:'#38bdf8',cost:c_smj,scale:'O(N log N) = '+c_smj+' ops',desc:'Sorts R and S on join key then linear merge; preserves interesting sort orders'},
+   {name:'Block Nested Loop Join (BNLJ)',col:'#f59e0b',cost:c_bnlj,scale:'O(N²/B) = '+c_bnlj+' I/Os',desc:'Batches B-2 memory pages of R to scan S; superior to tuple NLJ'},
+   {name:'Tuple Nested Loop Join (TNLJ)',col:'#ef4444',cost:c_nlj,scale:'O(N²) = '+(c_nlj>=1e6?(c_nlj/1e6).toFixed(1)+'M':c_nlj)+' comps',desc:'Exhaustive inner scan for every outer tuple; catastrophic for large N'}
+  ];
+  strategies.forEach((item,idx)=>{
+   const rowY=cY+18+idx*50;
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+12)+'" fill="#dcebf2" font-size="8.5" font-weight="bold">'+item.name+'</text>';
+   svg+='<text x="'+(cX+cW-15)+'" y="'+(rowY+12)+'" text-anchor="end" fill="'+item.col+'" font-size="8.5" font-family="monospace" font-weight="bold">'+item.scale+'</text>';
+   const barX=cX+15,barY=rowY+16,barMaxW=cW-30;
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barMaxW+'" height="7" rx="2" fill="#16242c"/>';
+   const logCost=Math.log10(Math.max(1, item.cost));
+   const logMax=Math.log10(Math.max(1, c_nlj));
+   const barW=Math.max(8, Math.min(barMaxW, (logCost/logMax)*barMaxW));
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barW+'" height="7" rx="2" fill="'+item.col+'"/>';
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+32)+'" fill="#7e9bab" font-size="7">'+item.desc+'</text>';
+  });
+  const bX=450,bY=45,bW=230,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">RELATION CARDINALITY (N)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+n+'</text>';
+  svg+='<text x="'+(bX+110)+'" y="'+(bY+46)+'" fill="#8ba5b5" font-size="11">tuples</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+64)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+64)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+82)+'" fill="#7e9bab" font-size="9">HASH JOIN ADVANTAGE OVER NLJ</text>';
+  const speedup=((n*n)/(2*n)).toFixed(0);
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+106)+'" fill="'+ink+'" font-size="18" font-family="monospace" font-weight="bold">'+speedup+'×</text>';
+  svg+='<text x="'+(bX+110)+'" y="'+(bY+104)+'" fill="#8ba5b5" font-size="10">fewer operations</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+120)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+120)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+138)+'" fill="#7e9bab" font-size="9">SELECTIVITY TIPPING POINT (s*)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+164)+'" fill="#fde047" font-size="18" font-family="monospace" font-weight="bold">≈ 5.0%</text>';
+  svg+='<text x="'+(bX+95)+'" y="'+(bY+160)+'" fill="#8ba5b5" font-size="9">Index vs Full Scan</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+178)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+178)+'" stroke="#1e3340"/>';
+  svg+=text(bX+bW/2,bY+200,'T_hash = 2.0000 · N (Build + Probe)',ink,10);
+  svg+=text(bX+bW/2,bY+218,'System R Dynamic Programming Left-Deep Tree',orange,8.5);
+  svg+=text(360,305,'Cost-Based Optimization: Relational Algebra Rewrite · Left-Deep Join Enumeration · Index Selectivity Tipping Point',soft,10);
+  return svg;
+ }
+
+ if(cfg.slug==='concurrency-synchronization-deadlock'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'CONCURRENCY & DEADLOCK MITIGATION PARADIGMS (N = '+p.input+' threads)','#e2f0f8',11);
+  const n=p.input;
+  const strategies=[
+   {name:'Dijkstra Resource Hierarchy',col:'#10b981',prob:'0% Deadlock',ops:(4*n)+' atomic ops',desc:'Enforces linear lock order min(i, i+1); mathematically eliminates Circular Wait'},
+   {name:'Banker's Safety Algorithm',col:'#38bdf8',prob:'0% Deadlock',ops:'O(N²·M) checks',desc:'Dynamically evaluates Max/Need matrices to ensure existence of a safe sequence'},
+   {name:'Arbitrator (Central Token)',col:'#f59e0b',prob:'0% Deadlock',ops:'Central Bottleneck',desc:'Global lock on all resource requests; prevents concurrency scaling on multicore'},
+   {name:'Naive Symmetric Lock Acquire',col:'#ef4444',prob:'100% Deadlock Risk',ops:'Circular Stall',desc:'Each thread acquires left fork then right; simultaneous hungry triggers deadlock'}
+  ];
+  strategies.forEach((item,idx)=>{
+   const rowY=cY+18+idx*50;
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+12)+'" fill="#dcebf2" font-size="8.5" font-weight="bold">'+item.name+'</text>';
+   svg+='<text x="'+(cX+cW-15)+'" y="'+(rowY+12)+'" text-anchor="end" fill="'+item.col+'" font-size="8.5" font-family="monospace" font-weight="bold">'+item.prob+' ('+item.ops+')</text>';
+   const barX=cX+15,barY=rowY+16,barMaxW=cW-30;
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barMaxW+'" height="7" rx="2" fill="#16242c"/>';
+   const barW=idx===0?barMaxW:idx===1?barMaxW*0.75:idx===2?barMaxW*0.45:barMaxW*0.1;
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barW+'" height="7" rx="2" fill="'+item.col+'"/>';
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+32)+'" fill="#7e9bab" font-size="7">'+item.desc+'</text>';
+  });
+  const bX=450,bY=45,bW=230,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">WORKER THREADS (N)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+n+'</text>';
+  svg+='<text x="'+(bX+85)+'" y="'+(bY+46)+'" fill="#8ba5b5" font-size="11">philosophers</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+64)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+64)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+82)+'" fill="#7e9bab" font-size="9">COFFMAN CONDITIONS VIOLATED</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+106)+'" fill="'+ink+'" font-size="17" font-family="monospace" font-weight="bold">Circular Wait</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+120)+'" fill="#8ba5b5" font-size="8">Partial order ensures acyclic resource graph</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+132)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+132)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+148)+'" fill="#7e9bab" font-size="9">ATOMIC SYNC OPERATIONS</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+174)+'" fill="#fde047" font-size="20" font-family="monospace" font-weight="bold">'+(4*n)+'</text>';
+  svg+='<text x="'+(bX+85)+'" y="'+(bY+170)+'" fill="#8ba5b5" font-size="9">4 ops/philosopher</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+186)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+186)+'" stroke="#1e3340"/>';
+  svg+=text(bX+bW/2,bY+204,'S(N) = 4.0000 · N Atomic Operations',ink,9.5);
+  svg+=text(bX+bW/2,bY+220,'Deadlock-Free · Starvation-Free Progress',orange,8.5);
+  svg+=text(360,305,'Concurrent Synchronization: Dijkstra Hierarchy · 4 Coffman Conditions · Resource Allocation Graph (RAG)',soft,10);
+  return svg;
+ }
+
+ if(cfg.slug==='cryptographic-rsa-modular'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'MODULAR EXPONENTIATION PARADIGMS (B = '+p.input+' bits)','#e2f0f8',11);
+  const b=p.input;
+  const strategies=[
+   {name:'Square-and-Multiply (Binary)',col:'#10b981',scale:'1.5 B = '+(1.5*b).toFixed(0)+' ops',desc:'Scans binary exponent bits; 1 squaring unconditionally + 1 mult on bit 1'},
+   {name:'Montgomery Ladder (Constant-Time)',col:'#38bdf8',scale:'2.0 B = '+(2*b)+' ops',desc:'Executes 1 sqr + 1 mult on every bit; eliminates SPA side-channel timing leaks'},
+   {name:'Sliding Window (k = 4)',col:'#f59e0b',scale:'1.25 B = '+(1.25*b).toFixed(0)+' ops',desc:'Precomputes small odd powers; processes k bits per window to reduce mults'},
+   {name:'Naive Iterative Multiplication',col:'#ef4444',scale:'2^B = O(2^'+b+') ops',desc:'Direct modular multiplication loops; intractable for keys larger than 30 bits'}
+  ];
+  strategies.forEach((item,idx)=>{
+   const rowY=cY+18+idx*50;
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+12)+'" fill="#dcebf2" font-size="8.5" font-weight="bold">'+item.name+'</text>';
+   svg+='<text x="'+(cX+cW-15)+'" y="'+(rowY+12)+'" text-anchor="end" fill="'+item.col+'" font-size="8.5" font-family="monospace" font-weight="bold">'+item.scale+'</text>';
+   const barX=cX+15,barY=rowY+16,barMaxW=cW-30;
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barMaxW+'" height="7" rx="2" fill="#16242c"/>';
+   const barW=idx===0?barMaxW*0.65:idx===1?barMaxW*0.8:idx===2?barMaxW*0.5:barMaxW;
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barW+'" height="7" rx="2" fill="'+item.col+'"/>';
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+32)+'" fill="#7e9bab" font-size="7">'+item.desc+'</text>';
+  });
+  const bX=450,bY=45,bW=230,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">PRIVATE KEY LENGTH (B)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+b+'</text>';
+  svg+='<text x="'+(bX+85)+'" y="'+(bY+46)+'" fill="#8ba5b5" font-size="11">bits</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+64)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+64)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+82)+'" fill="#7e9bab" font-size="9">MODULAR SQUARINGS</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+106)+'" fill="'+ink+'" font-size="18" font-family="monospace" font-weight="bold">'+b+'</text>';
+  svg+='<text x="'+(bX+85)+'" y="'+(bY+104)+'" fill="#8ba5b5" font-size="10">unconditional</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+120)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+120)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+138)+'" fill="#7e9bab" font-size="9">MODULAR MULTIPLICATIONS</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+164)+'" fill="#fde047" font-size="20" font-family="monospace" font-weight="bold">'+(0.5*b).toFixed(0)+'</text>';
+  svg+='<text x="'+(bX+85)+'" y="'+(bY+160)+'" fill="#8ba5b5" font-size="9">50% hamming weight</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+178)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+178)+'" stroke="#1e3340"/>';
+  svg+=text(bX+bW/2,bY+200,'M(B) = 1.5000 · B Modular Ops',ink,10);
+  svg+=text(bX+bW/2,bY+218,'Euler Totient: M^(φ(n)) ≡ 1 mod n',orange,9);
+  svg+=text(360,305,'Public-Key Cryptography: RSA Asymmetric Trapdoors · Extended Euclidean Inversion · Miller-Rabin Primality',soft,10);
+  return svg;
+ }
+
+ if(cfg.slug==='lru-cache-replacement'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'VIRTUAL MEMORY PAGE REPLACEMENT (C = '+p.input+' frames)','#e2f0f8',11);
+  const c=p.input;
+  const strategies=[
+   {name:'Belady's Optimal (MIN)',col:'#10b981',scale:'Max Hits (Upper Bound)',desc:'Evicts page needed furthest in future; offline theoretical gold standard'},
+   {name:'Least Recently Used (LRU)',col:'#38bdf8',scale:'H(C) = '+(6*c)+' hits / 200',desc:'Stack algorithm satisfying Mattson's inclusion property (S(C) ⊆ S(C+1))'},
+   {name:'Second-Chance Clock',col:'#f59e0b',scale:'≈ 95% of LRU efficiency',desc:'Uses circular buffer + single reference bit R; zero pointer-update overhead'},
+   {name:'First-In, First-Out (FIFO)',col:'#ef4444',scale:'Vulnerable to Belady Anomaly',desc:'Evicts oldest loaded page; adding frames can paradoxically increase faults!'}
+  ];
+  strategies.forEach((item,idx)=>{
+   const rowY=cY+18+idx*50;
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+12)+'" fill="#dcebf2" font-size="8.5" font-weight="bold">'+item.name+'</text>';
+   svg+='<text x="'+(cX+cW-15)+'" y="'+(rowY+12)+'" text-anchor="end" fill="'+item.col+'" font-size="8.5" font-family="monospace" font-weight="bold">'+item.scale+'</text>';
+   const barX=cX+15,barY=rowY+16,barMaxW=cW-30;
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barMaxW+'" height="7" rx="2" fill="#16242c"/>';
+   const barW=idx===0?barMaxW:idx===1?barMaxW*(6*c/200):idx===2?barMaxW*(6*c/200)*0.95:barMaxW*0.6;
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+Math.min(barMaxW, barW)+'" height="7" rx="2" fill="'+item.col+'"/>';
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+32)+'" fill="#7e9bab" font-size="7">'+item.desc+'</text>';
+  });
+  const bX=450,bY=45,bW=230,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">FRAME CAPACITY (C)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+c+'</text>';
+  svg+='<text x="'+(bX+85)+'" y="'+(bY+46)+'" fill="#8ba5b5" font-size="11">frames</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+64)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+64)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+82)+'" fill="#7e9bab" font-size="9">CACHE HIT RATIO</text>';
+  const hitRate=((6*c)/200*100).toFixed(1);
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+106)+'" fill="'+ink+'" font-size="18" font-family="monospace" font-weight="bold">'+hitRate+'%</text>';
+  svg+='<text x="'+(bX+85)+'" y="'+(bY+104)+'" fill="#8ba5b5" font-size="10">of 200 refs</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+120)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+120)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+138)+'" fill="#7e9bab" font-size="9">PAGE FAULTS AVOIDED</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+164)+'" fill="#fde047" font-size="20" font-family="monospace" font-weight="bold">'+(6*c)+'</text>';
+  svg+='<text x="'+(bX+85)+'" y="'+(bY+160)+'" fill="#8ba5b5" font-size="9">disk I/Os saved</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+178)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+178)+'" stroke="#1e3340"/>';
+  svg+=text(bX+bW/2,bY+200,'H(C) = 6.0000 · C Hits',ink,10);
+  svg+=text(bX+bW/2,bY+218,'Mattson Inclusion: S(C) ⊆ S(C+1)',orange,9);
+  svg+=text(360,305,'Virtual Memory: O(1) Doubly-Linked Hash Map · Second-Chance Clock · Working Set Dynamics',soft,10);
+  return svg;
+ }
+
+ if(cfg.slug==='a-star-pathfinding-heuristics'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'GRAPH PATHFINDING PARADIGMS (D = '+p.input+' steps)','#e2f0f8',11);
+  const d=p.input;
+  const c_dijk=Math.round(d*d*0.8);
+  const c_gbfs=Math.round(1.5*d);
+  const c_astar=Math.round(3*d);
+  const c_jps=Math.round(1.2*d);
+  const strategies=[
+   {name:'A* Manhattan Search (Admissible)',col:'#10b981',cost:c_astar,scale:'E(D) = '+(3*d)+' nodes',desc:'Balances cost g(n) + heuristic h(n); guarantees shortest path corridor'},
+   {name:'Jump Point Search (JPS)',col:'#38bdf8',cost:c_jps,scale:'E ≈ '+(1.2*d).toFixed(0)+' nodes',desc:'Prunes symmetric grid paths by jumping between turning obstacle points'},
+   {name:'Greedy Best-First Search',col:'#f59e0b',cost:c_gbfs,scale:'Fast but Sub-Optimal',desc:'Evaluates only h(n); susceptible to concave dead-end obstacle traps'},
+   {name:'Dijkstra Algorithm (Uniform Cost)',col:'#ef4444',cost:c_dijk,scale:'O(D²) = '+c_dijk+' nodes',desc:'Uninformed search; expands full circular wavefront across state space'}
+  ];
+  strategies.forEach((item,idx)=>{
+   const rowY=cY+18+idx*50;
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+12)+'" fill="#dcebf2" font-size="8.5" font-weight="bold">'+item.name+'</text>';
+   svg+='<text x="'+(cX+cW-15)+'" y="'+(rowY+12)+'" text-anchor="end" fill="'+item.col+'" font-size="8.5" font-family="monospace" font-weight="bold">'+item.scale+'</text>';
+   const barX=cX+15,barY=rowY+16,barMaxW=cW-30;
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barMaxW+'" height="7" rx="2" fill="#16242c"/>';
+   const barW=idx===3?barMaxW:Math.max(12, (item.cost/c_dijk)*barMaxW);
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+Math.min(barMaxW, barW)+'" height="7" rx="2" fill="'+item.col+'"/>';
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+32)+'" fill="#7e9bab" font-size="7">'+item.desc+'</text>';
+  });
+  const bX=450,bY=45,bW=230,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">OPTIMAL DISTANCE (D)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+d+'</text>';
+  svg+='<text x="'+(bX+85)+'" y="'+(bY+46)+'" fill="#8ba5b5" font-size="11">grid steps</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+64)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+64)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+82)+'" fill="#7e9bab" font-size="9">DIJKSTRA NODE REDUCTION</text>';
+  const speedup=(c_dijk/(3*d)).toFixed(1);
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+106)+'" fill="'+ink+'" font-size="18" font-family="monospace" font-weight="bold">'+speedup+'×</text>';
+  svg+='<text x="'+(bX+85)+'" y="'+(bY+104)+'" fill="#8ba5b5" font-size="10">fewer expansions</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+120)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+120)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+138)+'" fill="#7e9bab" font-size="9">CLOSED SET EXPANSIONS</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+164)+'" fill="#fde047" font-size="20" font-family="monospace" font-weight="bold">'+(3*d)+'</text>';
+  svg+='<text x="'+(bX+85)+'" y="'+(bY+160)+'" fill="#8ba5b5" font-size="9">nodes explored</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+178)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+178)+'" stroke="#1e3340"/>';
+  svg+=text(bX+bW/2,bY+200,'f(n) = g(n) + h(n)',ink,10);
+  svg+=text(bX+bW/2,bY+218,'Admissibility: h(n) <= h*(n)',orange,9);
+  svg+=text(360,305,'Heuristic Search: Triangle Inequality Consistency · Priority Queue Open Set · State Space Exploration',soft,10);
+  return svg;
+ }
+
+ if(cfg.slug==='fast-fourier-transform'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'FOURIER TRANSFORM COMPLEXITY (N = '+p.input+' points)','#e2f0f8',11);
+  const n=p.input;
+  const log2n=Math.round(Math.log2(n));
+  const c_dft=n*n;
+  const c_fft=Math.round(0.5*n*log2n);
+  const c_split=Math.round(0.4*n*log2n);
+  const strategies=[
+   {name:'Radix-2 Cooley-Tukey FFT',col:'#10b981',cost:c_fft,scale:'(N/2)log₂ N = '+c_fft+' butterflies',desc:'Decimation-in-time; butterfly networks reuse twiddle factors'},
+   {name:'Split-Radix FFT',col:'#38bdf8',cost:c_split,scale:'≈ '+c_split+' operations',desc:'Combines Radix-2 and Radix-4 kernels for minimal arithmetic count'},
+   {name:'Direct Matrix DFT',col:'#ef4444',cost:c_dft,scale:'N² = '+(c_dft>=1e6?(c_dft/1e6).toFixed(1)+'M':c_dft)+' mults',desc:'Direct matrix-vector multiplication; completely unviable for large signals'}
+  ];
+  strategies.forEach((item,idx)=>{
+   const rowY=cY+25+idx*60;
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+12)+'" fill="#dcebf2" font-size="8.5" font-weight="bold">'+item.name+'</text>';
+   svg+='<text x="'+(cX+cW-15)+'" y="'+(rowY+12)+'" text-anchor="end" fill="'+item.col+'" font-size="8.5" font-family="monospace" font-weight="bold">'+item.scale+'</text>';
+   const barX=cX+15,barY=rowY+16,barMaxW=cW-30;
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barMaxW+'" height="7" rx="2" fill="#16242c"/>';
+   const barW=idx===2?barMaxW:Math.max(12, (item.cost/c_dft)*barMaxW);
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+Math.min(barMaxW, barW)+'" height="7" rx="2" fill="'+item.col+'"/>';
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+32)+'" fill="#7e9bab" font-size="7">'+item.desc+'</text>';
+  });
+  const bX=450,bY=45,bW=230,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">TRANSFORM LENGTH (N)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+n+'</text>';
+  svg+='<text x="'+(bX+85)+'" y="'+(bY+46)+'" fill="#8ba5b5" font-size="11">points</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+64)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+64)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+82)+'" fill="#7e9bab" font-size="9">ALGORITHMIC SPEEDUP</text>';
+  const speedup=(c_dft/c_fft).toFixed(0);
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+106)+'" fill="'+ink+'" font-size="18" font-family="monospace" font-weight="bold">'+speedup+'×</text>';
+  svg+='<text x="'+(bX+85)+'" y="'+(bY+104)+'" fill="#8ba5b5" font-size="10">faster than DFT</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+120)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+120)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+138)+'" fill="#7e9bab" font-size="9">BUTTERFLY OPERATIONS</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+164)+'" fill="#fde047" font-size="20" font-family="monospace" font-weight="bold">'+c_fft+'</text>';
+  svg+='<text x="'+(bX+85)+'" y="'+(bY+160)+'" fill="#8ba5b5" font-size="9">kernels</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+178)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+178)+'" stroke="#1e3340"/>';
+  svg+=text(bX+bW/2,bY+200,'B(N) = 0.5000 · (N log₂ N)',ink,10);
+  svg+=text(bX+bW/2,bY+218,'Convolution Theorem: F{f * g} = F{f} · F{g}',orange,8.5);
+  svg+=text(360,305,'Fast Fourier Transform: Cooley-Tukey Radix-2 · Twiddle Factors · Bit-Reversal Permutation',soft,10);
+  return svg;
+ }
+ if(cfg.slug==='relational-query-optimization'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'SELINGER DYNAMIC PROGRAMMING & HISTOGRAM SANDBOX (N = '+p.input+')','#e2f0f8',11);
+  const n=p.input;
+  svg+='<text x="'+(cX+15)+'" y="'+(cY+18)+'" fill="#10b981" font-size="8.5" font-weight="bold">BOTTOM-UP LEFT-DEEP JOIN ENUMERATION & EQUIVALENCE REWRITES</text>';
+  const plans=[
+   {tree:'((R ⋈ S) ⋈ T)',cost:(2*n).toFixed(0)+' ops',status:'OPTIMAL PLAN (Retained)',col:'#10b981'},
+   {tree:'(R ⋈ (S ⋈ T))',cost:(4.5*n).toFixed(0)+' ops',status:'Bushy Tree (Materialized Disk)',col:'#f59e0b'},
+   {tree:'((S ⋈ T) ⋈ R)',cost:(3.2*n).toFixed(0)+' ops',status:'Sub-Optimal Order (Pruned)',col:'#ef4444'},
+   {tree:'(σ_A(R) ⋈ S)',cost:(0.4*n).toFixed(0)+' ops',status:'Predicate Pushdown ⟹ 80% Reduction',col:'#38bdf8'}
+  ];
+  plans.forEach((pl,idx)=>{
+   const py=cY+32+idx*42;
+   svg+='<rect x="'+(cX+15)+'" y="'+py+'" width="'+(cW-30)+'" height="34" rx="4" fill="#0d1c24" stroke="'+pl.col+'" stroke-width="1"/>';
+   svg+='<text x="'+(cX+25)+'" y="'+(py+15)+'" fill="#e2f0f8" font-size="9" font-family="monospace" font-weight="bold">'+pl.tree+'</text>';
+   svg+='<text x="'+(cX+cW-25)+'" y="'+(py+15)+'" text-anchor="end" fill="'+pl.col+'" font-size="9" font-family="monospace" font-weight="bold">'+pl.cost+'</text>';
+   svg+='<text x="'+(cX+25)+'" y="'+(py+27)+'" fill="#7e9bab" font-size="7.5">'+pl.status+'</text>';
+  });
+  const bX=465,bY=45,bW=220,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">EQUI-DEPTH HISTOGRAM</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+44)+'" fill="#38bdf8" font-size="8.5">Buckets: 10 · Width: Dynamic</text>';
+  for(let b=0; b<8; b++){
+   const hx=bX+15+b*23;
+   const hH=20+Math.sin(b*1.2)*12+8;
+   svg+='<rect x="'+hx+'" y="'+(bY+100-hH)+'" width="18" height="'+hH+'" fill="#1e3e52" stroke="#38bdf8" stroke-width="1"/>';
+   svg+='<text x="'+(hx+9)+'" y="'+(bY+112)+'" text-anchor="middle" fill="#5a7687" font-size="6.5">B'+(b+1)+'</text>';
+  }
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+125)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+125)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+142)+'" fill="#7e9bab" font-size="9">CARDINALITY ESTIMATE</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+164)+'" fill="#fde047" font-size="16" font-family="monospace" font-weight="bold">'+(0.1*n).toFixed(0)+'</text>';
+  svg+='<text x="'+(bX+95)+'" y="'+(bY+160)+'" fill="#8ba5b5" font-size="9">intermediate tuples</text>';
+  svg+=text(bX+bW/2,bY+190,'Selinger: Memoize lowest cost subplan',ink,8);
+  svg+=text(bX+bW/2,bY+208,'Preserve interesting sort orders',orange,8);
+  svg+=text(360,305,'System R Optimizer: Dynamic Programming · Left-Deep Join Search · Equi-Depth Histograms',soft,10);
+  return svg;
+ }
+
+ if(cfg.slug==='concurrency-synchronization-deadlock'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'RESOURCE ALLOCATION GRAPH (RAG) CYCLE DETECTOR (N = '+p.input+')','#e2f0f8',11);
+  const n=p.input;
+  svg+='<text x="'+(cX+15)+'" y="'+(cY+18)+'" fill="#10b981" font-size="8.5" font-weight="bold">BIPARTITE GRAPH: THREADS T_i ⟷ MUTEX FORKS R_j</text>';
+  const midX=cX+cW/2, midY=cY+cH/2+5, rad=75;
+  const numP=Math.min(8, n);
+  for(let i=0; i<numP; i++){
+   const ang=(i/numP)*2*Math.PI - Math.PI/2;
+   const px=midX+rad*Math.cos(ang), py=midY+rad*Math.sin(ang);
+   svg+='<circle cx="'+px+'" cy="'+py+'" r="14" fill="#0f2634" stroke="#38bdf8" stroke-width="1.5"/>';
+   svg+='<text x="'+px+'" y="'+(py+3.5)+'" text-anchor="middle" fill="#dcebf2" font-size="8" font-family="monospace">T'+i+'</text>';
+   const fAng=((i+0.5)/numP)*2*Math.PI - Math.PI/2;
+   const fx=midX+(rad*0.55)*Math.cos(fAng), fy=midY+(rad*0.55)*Math.sin(fAng);
+   svg+='<rect x="'+(fx-8)+'" y="'+(fy-8)+'" width="16" height="16" rx="2" fill="#241a0e" stroke="#f97316" stroke-width="1"/>';
+   svg+='<text x="'+fx+'" y="'+(fy+3.5)+'" text-anchor="middle" fill="#fde047" font-size="7" font-family="monospace">F'+i+'</text>';
+   svg+='<line x1="'+px+'" y1="'+py+'" x2="'+fx+'" y2="'+fy+'" stroke="#10b981" stroke-width="1.2" stroke-dasharray="3,2"/>';
+  }
+  const bX=465,bY=45,bW=220,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">GRAPH TOPOLOGY STATUS</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+46)+'" fill="#10b981" font-size="14" font-weight="bold">ACYCLIC (Safe)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+62)+'" fill="#8ba5b5" font-size="8">Cycle test: Tarjan SCC O(|V|+|E|)</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+74)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+74)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+92)+'" fill="#7e9bab" font-size="9">DIJKSTRA ASYMMETRY</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+112)+'" fill="#38bdf8" font-size="8.5" font-family="monospace">P0..P'+(numP-2)+': pick left then right</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+128)+'" fill="#f97316" font-size="8.5" font-family="monospace">P'+(numP-1)+': pick F0 then F'+(numP-1)+'</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+146)+'" fill="#8ba5b5" font-size="7.5">Circular Wait is broken mathematically!</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+160)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+160)+'" stroke="#1e3340"/>';
+  svg+=text(bX+bW/2,bY+185,'4 Operations / Philosopher Cycle',ink,9);
+  svg+=text(bX+bW/2,bY+205,'Zero Deadlock · Zero Starvation',orange,8.5);
+  svg+=text(360,305,'Resource Allocation Graph: Single-Unit Cycle Sufficiency · Tarjan SCC · Dijkstra Asymmetry',soft,10);
+  return svg;
+ }
+
+ if(cfg.slug==='cryptographic-rsa-modular'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'EXTENDED EUCLIDEAN INVERSION & TOTIENT SANDBOX (B = '+p.input+')','#e2f0f8',11);
+  const b=p.input;
+  svg+='<text x="'+(cX+15)+'" y="'+(cY+18)+'" fill="#10b981" font-size="8.5" font-weight="bold">BÉZOUT IDENTITY LATTICE: e · d + φ(n) · y = gcd(e, φ(n)) = 1</text>';
+  const rows=[
+   {step:1,q:3,r1:65537,r2:160,s1:1,s2:0},
+   {step:2,q:2,r1:160,r2:97,s1:0,s2:1},
+   {step:3,q:1,r1:97,r2:63,s1:1,s2:-3},
+   {step:4,q:1,r1:63,r2:34,s1:-3,s2:7},
+   {step:5,q:1,r1:34,r2:1,s1:7,s2:-10}
+  ];
+  rows.forEach((r,idx)=>{
+   const ry=cY+32+idx*35;
+   svg+='<rect x="'+(cX+15)+'" y="'+ry+'" width="'+(cW-30)+'" height="28" rx="3" fill="#0d1b22" stroke="#1e3a4a" stroke-width="1"/>';
+   svg+='<text x="'+(cX+25)+'" y="'+(ry+18)+'" fill="#38bdf8" font-size="8" font-family="monospace">Step '+r.step+': r = '+r.r1+' mod '+r.r2+' ⟹ Remainder = '+(r.r1%r.r2)+' (Quotient = '+r.q+')</text>';
+  });
+  const bX=465,bY=45,bW=220,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">EULER TOTIENT φ(n)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+46)+'" fill="'+ink+'" font-size="12" font-family="monospace" font-weight="bold">(p - 1)(q - 1)</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+60)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+60)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+78)+'" fill="#7e9bab" font-size="9">MODULAR INVERSE (d)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+102)+'" fill="'+orange+'" font-size="14" font-family="monospace" font-weight="bold">d = e⁻¹ mod φ(n)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+120)+'" fill="#8ba5b5" font-size="8">Calculated in O(log(min(e, φ)))</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+134)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+134)+'" stroke="#1e3340"/>';
+  svg+=text(bX+bW/2,bY+160,'Public Exponent: e = 65537',ink,9);
+  svg+=text(bX+bW/2,bY+180,'Key Entropy: '+b+' bits',orange,9);
+  svg+=text(bX+bW/2,bY+205,'Miller-Rabin Primality: 40 tests',soft,8);
+  svg+=text(360,305,'Cryptographic Foundations: Extended Euclidean Algorithm · Modular Inverses · Bézout Identity',soft,10);
+  return svg;
+ }
+
+ if(cfg.slug==='lru-cache-replacement'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'SECOND-CHANCE CLOCK ALGORITHM SANDBOX (C = '+p.input+')','#e2f0f8',11);
+  const c=p.input;
+  svg+='<text x="'+(cX+15)+'" y="'+(cY+18)+'" fill="#10b981" font-size="8.5" font-weight="bold">CIRCULAR BUFFER WITH HARDWARE REFERENCE BITS (R ∈ {0, 1})</text>';
+  const midX=cX+cW/2, midY=cY+cH/2+5, rad=72;
+  const numF=Math.min(10, c);
+  for(let i=0; i<numF; i++){
+   const ang=(i/numF)*2*Math.PI - Math.PI/2;
+   const fx=midX+rad*Math.cos(ang), fy=midY+rad*Math.sin(ang);
+   const isR=i%2===0;
+   svg+='<circle cx="'+fx+'" cy="'+fy+'" r="14" fill="#0e2330" stroke="'+(isR?'#10b981':'#ef4444')+'" stroke-width="1.5"/>';
+   svg+='<text x="'+fx+'" y="'+(fy+3)+'" text-anchor="middle" fill="#dcebf2" font-size="7.5" font-family="monospace">P'+(i*3+1)+'</text>';
+   svg+='<text x="'+fx+'" y="'+(fy+22)+'" text-anchor="middle" fill="'+(isR?'#10b981':'#ef4444')+'" font-size="7" font-weight="bold">R='+(isR?1:0)+'</text>';
+  }
+  svg+='<polygon points="'+midX+','+(midY-25)+' '+(midX-5)+','+midY+' '+(midX+5)+','+midY+'" fill="'+orange+'"/>';
+  svg+='<circle cx="'+midX+'" cy="'+midY+'" r="4" fill="'+orange+'"/>';
+  const bX=465,bY=45,bW=220,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">CLOCK REPLACEMENT RULE</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+44)+'" fill="#dcebf2" font-size="8">1. If R == 0 ⟹ Evict page</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+60)+'" fill="#dcebf2" font-size="8">2. If R == 1 ⟹ Set R=0, advance hand</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+74)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+74)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+92)+'" fill="#7e9bab" font-size="9">HARDWARE OVERHEAD</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+114)+'" fill="'+ink+'" font-size="14" font-weight="bold">1 Bit / Frame</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+130)+'" fill="#8ba5b5" font-size="8">vs 64-bit LRU timestamps</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+144)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+144)+'" stroke="#1e3340"/>';
+  svg+=text(bX+bW/2,bY+172,'Zero Pointer-Update Lock Thrashing',ink,8.5);
+  svg+=text(bX+bW/2,bY+192,'Standard Linux Kernel Page Eviction',orange,8.5);
+  svg+=text(360,305,'Clock Page Replacement: Second-Chance Bit Sweeping · MMU Reference Bits · Zero-Lock Overhead',soft,10);
+  return svg;
+ }
+
+ if(cfg.slug==='a-star-pathfinding-heuristics'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'WEIGHTED A* HEURISTIC SEARCH SANDBOX (D = '+p.input+')','#e2f0f8',11);
+  const d=p.input;
+  svg+='<text x="'+(cX+15)+'" y="'+(cY+18)+'" fill="#10b981" font-size="8.5" font-weight="bold">EVALUATION METRIC: f(n) = g(n) + ε · h(n)</text>';
+  const modes=[
+   {name:'ε = 0.0 (Dijkstra Algorithm)',exp:(d*d*0.8).toFixed(0)+' nodes',opt:'Guaranteed Optimal',col:'#ef4444'},
+   {name:'ε = 1.0 (Standard A* Manhattan)',exp:(3*d)+' nodes',opt:'Guaranteed Optimal (Admissible)',col:'#10b981'},
+   {name:'ε = 1.5 (Weighted A* Speedup)',exp:(1.8*d).toFixed(0)+' nodes',opt:'Bounded ε-Suboptimal',col:'#38bdf8'},
+   {name:'ε = 3.0 (Greedy Best-First)',exp:(1.3*d).toFixed(0)+' nodes',opt:'Sub-Optimal (Fastest)',col:'#f59e0b'}
+  ];
+  modes.forEach((m,idx)=>{
+   const my=cY+32+idx*42;
+   svg+='<rect x="'+(cX+15)+'" y="'+my+'" width="'+(cW-30)+'" height="34" rx="4" fill="#0d1b22" stroke="'+m.col+'" stroke-width="1"/>';
+   svg+='<text x="'+(cX+25)+'" y="'+(my+15)+'" fill="#e2f0f8" font-size="9" font-weight="bold">'+m.name+'</text>';
+   svg+='<text x="'+(cX+cW-25)+'" y="'+(my+15)+'" text-anchor="end" fill="'+m.col+'" font-size="9" font-family="monospace" font-weight="bold">'+m.exp+'</text>';
+   svg+='<text x="'+(cX+25)+'" y="'+(my+27)+'" fill="#7e9bab" font-size="7.5">'+m.opt+'</text>';
+  });
+  const bX=465,bY=45,bW=220,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">ADMISSIBILITY PROPERTY</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+46)+'" fill="'+ink+'" font-size="13" font-family="monospace" font-weight="bold">h(n) ≤ h*(n)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+62)+'" fill="#8ba5b5" font-size="8">Never overestimates true distance</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+74)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+74)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+92)+'" fill="#7e9bab" font-size="9">CONSISTENCY (MONOTONICITY)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+114)+'" fill="'+orange+'" font-size="12" font-family="monospace" font-weight="bold">h(n) ≤ c(n, p) + h(p)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+130)+'" fill="#8ba5b5" font-size="8">Triangle inequality holds across edges</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+144)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+144)+'" stroke="#1e3340"/>';
+  svg+=text(bX+bW/2,bY+170,'Priority Queue Min-Heap: O(log |Open|)',ink,8.5);
+  svg+=text(bX+bW/2,bY+190,'Zero Re-Expansions Under Consistency',orange,8.5);
+  svg+=text(360,305,'Heuristic Exploration: Admissibility · Monotonicity · Priority Queue Open Set Invariant',soft,10);
+  return svg;
+ }
+
+ if(cfg.slug==='fast-fourier-transform'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'SPECTRAL FREQUENCY DOMAIN SANDBOX (N = '+p.input+')','#e2f0f8',11);
+  const n=p.input;
+  svg+='<text x="'+(cX+15)+'" y="'+(cY+18)+'" fill="#10b981" font-size="8.5" font-weight="bold">DECOMPOSED HARMONIC SPECTRUM |X[k]| & TWIDDLE ANGLES</text>';
+  const numBars=16;
+  for(let k=0; k<numBars; k++){
+   const bx=cX+20+k*22;
+   const mag=Math.abs(Math.sin(k*0.8))*70 + (k===3||k===7?45:5);
+   svg+='<rect x="'+bx+'" y="'+(cY+185-mag)+'" width="16" height="'+mag+'" rx="2" fill="'+(k===3||k===7?'#f97316':'#1e3e52')+'" stroke="#38bdf8" stroke-width="1"/>';
+   svg+='<text x="'+(bx+8)+'" y="'+(cY+198)+'" text-anchor="middle" fill="#7e9bab" font-size="6.5">k'+k+'</text>';
+  }
+  const bX=465,bY=45,bW=220,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">TWIDDLE FACTOR</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+46)+'" fill="'+ink+'" font-size="13" font-family="monospace" font-weight="bold">W_N^k = e^(-j 2π k / N)</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+60)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+60)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+78)+'" fill="#7e9bab" font-size="9">SYMMETRY IDENTITIES</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+100)+'" fill="#dcebf2" font-size="8" font-family="monospace">W_N^(k + N/2) = -W_N^k</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+116)+'" fill="#dcebf2" font-size="8" font-family="monospace">W_N^(2k) = W_(N/2)^k</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+130)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+130)+'" stroke="#1e3340"/>';
+  svg+=text(bX+bW/2,bY+156,'Bit-Reversal Permutation',ink,9);
+  svg+=text(bX+bW/2,bY+176,'log₂(N) Stages · In-Place Arrays',orange,8.5);
+  svg+=text(360,305,'Spectral Analysis: Discrete Fourier Transform · Twiddle Factor Symmetry · Radix-2 Butterfly Decomposition',soft,10);
+  return svg;
+ }
  if(cfg.slug==='b-tree-disk-indexing'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
   svg+=text(cX+cW/2,cY-14,'SECONDARY STORAGE INDEXING PARADIGMS (h = '+p.input+' levels)','#e2f0f8',11);
@@ -2439,6 +2894,267 @@ function draw(t){
  if(currentSimMode==='compare'){$('apparatusDiagram').innerHTML=drawComparativeSim(t,p,v,ink,soft,orange);return;}
  if(currentSimMode==='sandbox'){$('apparatusDiagram').innerHTML=drawDynamicSandbox(t,p,v,ink,soft,orange);return;}
 
+ if(cfg.slug==='relational-query-optimization'){
+  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
+  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+  const n=p.input;
+  const ops=v.raw;
+  svg+='<rect x="35" y="38" width="410" height="235" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+=text(240,24,'Relational Query Engine & Dual-Phase Hash Join Bench');
+  svg+='<text x="50" y="56" fill="#7e9bab" font-size="8.5" font-weight="bold">RELATION CARDINALITY N = '+n+' · TOTAL TUPLE OPERATIONS T = '+ops+'</text>';
+  const bX=50, bY=70, bW=180, bH=185;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="4" fill="#08141c" stroke="#10b981" stroke-width="1.2"/>';
+  svg+='<text x="'+(bX+10)+'" y="'+(bY+16)+'" fill="#10b981" font-size="8.5" font-weight="bold">1. BUILD PHASE (Relation R)</text>';
+  svg+='<text x="'+(bX+10)+'" y="'+(bY+32)+'" fill="#8ba5b5" font-size="7.5">Hash Function: h(R.dept_id) mod M</text>';
+  for(let i=0; i<4; i++){
+   const by=bY+42+i*34;
+   svg+='<rect x="'+(bX+10)+'" y="'+by+'" width="'+(bW-20)+'" height="26" rx="2" fill="#122734" stroke="#1e3e52"/>';
+   svg+='<text x="'+(bX+16)+'" y="'+(by+16)+'" fill="#38bdf8" font-size="7.5" font-family="monospace">B['+i+'] ⟶ Tuple R'+(i+1)+' ('+(n/4).toFixed(0)+' rows)</text>';
+  }
+  const pX=250, pY=70, pW=180, pH=185;
+  svg+='<rect x="'+pX+'" y="'+pY+'" width="'+pW+'" height="'+pH+'" rx="4" fill="#08141c" stroke="#38bdf8" stroke-width="1.2"/>';
+  svg+='<text x="'+(pX+10)+'" y="'+(pY+16)+'" fill="#38bdf8" font-size="8.5" font-weight="bold">2. PROBE PHASE (Relation S)</text>';
+  svg+='<text x="'+(pX+10)+'" y="'+(pY+32)+'" fill="#8ba5b5" font-size="7.5">Scan S.dept_id ⟶ Match Bucket Keys</text>';
+  for(let i=0; i<4; i++){
+   const py=pY+42+i*34;
+   svg+='<rect x="'+(pX+10)+'" y="'+py+'" width="'+(pW-20)+'" height="26" rx="2" fill="#172e25" stroke="#10b981"/>';
+   svg+='<text x="'+(pX+16)+'" y="'+(py+16)+'" fill="#10b981" font-size="7.5" font-family="monospace">Probe S'+(i+1)+' ⟹ Emit ('+(n/4).toFixed(0)+' matches)</text>';
+  }
+  const rX=465,rY=38,rW=220,rH=235;
+  svg+='<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+22)+'" fill="#7e9bab" font-size="9">RELATION CARDINALITY (N)</text>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+n+'</text>';
+  svg+='<text x="'+(rX+110)+'" y="'+(rY+46)+'" fill="#8ba5b5" font-size="11">tuples</text>';
+  svg+='<line x1="'+(rX+15)+'" y1="'+(rY+64)+'" x2="'+(rX+rW-15)+'" y2="'+(rY+64)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+82)+'" fill="#7e9bab" font-size="9">BUILD INSERTIONS</text>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+106)+'" fill="'+ink+'" font-size="18" font-family="monospace" font-weight="bold">'+n+'</text>';
+  svg+='<text x="'+(rX+110)+'" y="'+(rY+104)+'" fill="#8ba5b5" font-size="10">inserts</text>';
+  svg+='<line x1="'+(rX+15)+'" y1="'+(rY+120)+'" x2="'+(rX+rW-15)+'" y2="'+(rY+120)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+138)+'" fill="#7e9bab" font-size="9">TOTAL JOIN OPERATIONS T(N)</text>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+164)+'" fill="#fde047" font-size="20" font-family="monospace" font-weight="bold">'+ops+'</text>';
+  svg+='<text x="'+(rX+100)+'" y="'+(rY+160)+'" fill="#8ba5b5" font-size="9">2N operations</text>';
+  svg+='<line x1="'+(rX+15)+'" y1="'+(rY+178)+'" x2="'+(rX+rW-15)+'" y2="'+(rY+178)+'" stroke="#1e3340"/>';
+  svg+=text(rX+rW/2,rY+200,'T = k_join · N + T_0',ink,10);
+  svg+=text(rX+rW/2,rY+218,'Gradient: k = 2.0000 ops/tuple',orange,9);
+  svg+=text(360,305,'Dual-Phase In-Memory Hash Join: O(|R| + |S|) Complexity · Dynamic Left-Deep Pipelining',soft,10);
+  $('apparatusDiagram').innerHTML=svg;
+  return;
+ }
+
+ if(cfg.slug==='concurrency-synchronization-deadlock'){
+  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
+  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+  const n=p.input;
+  const ops=v.raw;
+  svg+='<rect x="35" y="38" width="410" height="235" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+=text(240,24,'Dining Philosophers Synchronization & Resource Hierarchy');
+  svg+='<text x="50" y="56" fill="#7e9bab" font-size="8.5" font-weight="bold">WORKER THREADS N = '+n+' · TOTAL ATOMIC OPERATIONS S = '+ops+'</text>';
+  const midX=240, midY=160, rad=70;
+  const numP=Math.min(8, n);
+  for(let i=0; i<numP; i++){
+   const ang=(i/numP)*2*Math.PI - Math.PI/2;
+   const px=midX+rad*Math.cos(ang), py=midY+rad*Math.sin(ang);
+   const state=i%3===0?'EATING':i%3===1?'HUNGRY':'THINKING';
+   const col=state==='EATING'?'#10b981':state==='HUNGRY'?'#f59e0b':'#38bdf8';
+   svg+='<circle cx="'+px+'" cy="'+py+'" r="14" fill="#0d1c24" stroke="'+col+'" stroke-width="1.5"/>';
+   svg+='<text x="'+px+'" y="'+(py+3.5)+'" text-anchor="middle" fill="#dcebf2" font-size="8" font-family="monospace">P'+i+'</text>';
+   const fAng=((i+0.5)/numP)*2*Math.PI - Math.PI/2;
+   const fx=midX+(rad*0.55)*Math.cos(fAng), fy=midY+(rad*0.55)*Math.sin(fAng);
+   svg+='<rect x="'+(fx-7)+'" y="'+(fy-7)+'" width="14" height="14" rx="2" fill="#241a0e" stroke="#f97316" stroke-width="1"/>';
+   svg+='<text x="'+fx+'" y="'+(fy+3.5)+'" text-anchor="middle" fill="#fde047" font-size="6.5" font-family="monospace">F'+i+'</text>';
+  }
+  const rX=465,rY=38,rW=220,rH=235;
+  svg+='<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+22)+'" fill="#7e9bab" font-size="9">PHILOSOPHER THREADS (N)</text>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+n+'</text>';
+  svg+='<text x="'+(rX+85)+'" y="'+(rY+46)+'" fill="#8ba5b5" font-size="11">threads</text>';
+  svg+='<line x1="'+(rX+15)+'" y1="'+(rY+64)+'" x2="'+(rX+rW-15)+'" y2="'+(rY+64)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+82)+'" fill="#7e9bab" font-size="9">SYNCHRONIZATION POLICY</text>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+104)+'" fill="'+ink+'" font-size="12" font-weight="bold">Dijkstra Partial Order</text>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+118)+'" fill="#8ba5b5" font-size="8">Acquire min(i, i+1) fork first</text>';
+  svg+='<line x1="'+(rX+15)+'" y1="'+(rY+128)+'" x2="'+(rX+rW-15)+'" y2="'+(rY+128)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+144)+'" fill="#7e9bab" font-size="9">ATOMIC OPERATIONS S(N)</text>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+170)+'" fill="#fde047" font-size="20" font-family="monospace" font-weight="bold">'+ops+'</text>';
+  svg+='<text x="'+(rX+85)+'" y="'+(rY+166)+'" fill="#8ba5b5" font-size="9">4N operations</text>';
+  svg+='<line x1="'+(rX+15)+'" y1="'+(rY+182)+'" x2="'+(rX+rW-15)+'" y2="'+(rY+182)+'" stroke="#1e3340"/>';
+  svg+=text(rX+rW/2,rY+202,'S = k_sync · N + S_0',ink,10);
+  svg+=text(rX+rW/2,rY+220,'Gradient: k = 4.0000 ops/thread',orange,9);
+  svg+=text(360,305,'Deadlock Prevention: Coffman Circular Wait Violation · Dijkstra Partial Order Invariant',soft,10);
+  $('apparatusDiagram').innerHTML=svg;
+  return;
+ }
+
+ if(cfg.slug==='cryptographic-rsa-modular'){
+  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
+  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+  const b=p.input;
+  const ops=v.raw;
+  svg+='<rect x="35" y="38" width="410" height="235" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+=text(240,24,'Public-Key RSA & Square-and-Multiply Exponentiation');
+  svg+='<text x="50" y="56" fill="#7e9bab" font-size="8.5" font-weight="bold">KEY SIZE B = '+b+' BITS · TOTAL MODULAR OPERATIONS M = '+ops+'</text>';
+  const pX=50, pY=70, pW=380, pH=185;
+  svg+='<rect x="'+pX+'" y="'+pY+'" width="'+pW+'" height="'+pH+'" rx="4" fill="#08141c" stroke="#1e3a4a" stroke-width="1"/>';
+  svg+='<text x="'+(pX+10)+'" y="'+(pY+18)+'" fill="#38bdf8" font-size="8.5" font-weight="bold">BINARY SQUARE-AND-MULTIPLY EXECUTION PIPELINE</text>';
+  svg+='<text x="'+(pX+10)+'" y="'+(pY+36)+'" fill="#dcebf2" font-size="8" font-family="monospace">Exponent Register: [1 0 1 1 0 1 0 0 ... ('+b+' bits)]</text>';
+  svg+='<rect x="'+(pX+10)+'" y="'+(pY+48)+'" width="170" height="50" rx="3" fill="#112430" stroke="#10b981"/>';
+  svg+='<text x="'+(pX+18)+'" y="'+(pY+65)+'" fill="#10b981" font-size="8" font-weight="bold">UNCONDITIONAL SQUARING</text>';
+  svg+='<text x="'+(pX+18)+'" y="'+(pY+82)+'" fill="#dcebf2" font-size="7.5" font-family="monospace">acc ⟵ (acc)² mod n ('+b+' ops)</text>';
+  svg+='<rect x="'+(pX+200)+'" y="'+(pY+48)+'" width="170" height="50" rx="3" fill="#241a0e" stroke="#f97316"/>';
+  svg+='<text x="'+(pX+208)+'" y="'+(pY+65)+'" fill="#f97316" font-size="8" font-weight="bold">CONDITIONAL MULTIPLY (bit=1)</text>';
+  svg+='<text x="'+(pX+208)+'" y="'+(pY+82)+'" fill="#dcebf2" font-size="7.5" font-family="monospace">acc ⟵ (acc · M) mod n ('+(0.5*b).toFixed(0)+' ops)</text>';
+  svg+='<text x="'+(pX+10)+'" y="'+(pY+120)+'" fill="#8ba5b5" font-size="8">Decryption: M ≡ C^d mod n ⟷ Euler Totient: e · d ≡ 1 mod φ(n)</text>';
+  svg+='<text x="'+(pX+10)+'" y="'+(pY+136)+'" fill="#8ba5b5" font-size="8">Extended Euclidean algorithm extracts d in O(log(min(e, φ(n))))</text>';
+  const rX=465,rY=38,rW=220,rH=235;
+  svg+='<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+22)+'" fill="#7e9bab" font-size="9">EXPONENT BIT LENGTH (B)</text>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+b+'</text>';
+  svg+='<text x="'+(rX+85)+'" y="'+(rY+46)+'" fill="#8ba5b5" font-size="11">bits</text>';
+  svg+='<line x1="'+(rX+15)+'" y1="'+(rY+64)+'" x2="'+(rX+rW-15)+'" y2="'+(rY+64)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+82)+'" fill="#7e9bab" font-size="9">MODULAR SQUARINGS</text>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+106)+'" fill="'+ink+'" font-size="18" font-family="monospace" font-weight="bold">'+b+'</text>';
+  svg+='<text x="'+(rX+85)+'" y="'+(rY+104)+'" fill="#8ba5b5" font-size="10">squarings</text>';
+  svg+='<line x1="'+(rX+15)+'" y1="'+(rY+120)+'" x2="'+(rX+rW-15)+'" y2="'+(rY+120)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+138)+'" fill="#7e9bab" font-size="9">TOTAL MODULAR OPS M(B)</text>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+164)+'" fill="#fde047" font-size="20" font-family="monospace" font-weight="bold">'+ops+'</text>';
+  svg+='<text x="'+(rX+85)+'" y="'+(rY+160)+'" fill="#8ba5b5" font-size="9">1.5B operations</text>';
+  svg+='<line x1="'+(rX+15)+'" y1="'+(rY+178)+'" x2="'+(rX+rW-15)+'" y2="'+(rY+178)+'" stroke="#1e3340"/>';
+  svg+=text(rX+rW/2,rY+200,'M = k_mod · B + M_0',ink,10);
+  svg+=text(rX+rW/2,rY+218,'Gradient: k = 1.5000 ops/bit',orange,9);
+  svg+=text(360,305,'Algorithmic Complexity: M(B) = 1.5 · B = Θ(B) · In-Place Montgomery Multiplication',soft,10);
+  $('apparatusDiagram').innerHTML=svg;
+  return;
+ }
+
+ if(cfg.slug==='lru-cache-replacement'){
+  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
+  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+  const c=p.input;
+  const hits=v.raw;
+  svg+='<rect x="35" y="38" width="410" height="235" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+=text(240,24,'Virtual Memory Hierarchy & O(1) LRU Doubly-Linked Cache');
+  svg+='<text x="50" y="56" fill="#7e9bab" font-size="8.5" font-weight="bold">FRAME CAPACITY C = '+c+' · TOTAL CACHE HITS H = '+hits+' / 200</text>';
+  const fX=50, fY=70, fW=380, fH=185;
+  svg+='<rect x="'+fX+'" y="'+fY+'" width="'+fW+'" height="'+fH+'" rx="4" fill="#08141c" stroke="#1e3a4a" stroke-width="1"/>';
+  svg+='<text x="'+(fX+10)+'" y="'+(fY+18)+'" fill="#38bdf8" font-size="8.5" font-weight="bold">DOUBLY-LINKED LIST (MRU HEAD ⟵ ... ⟶ LRU TAIL)</text>';
+  const numBoxes=Math.min(6, c);
+  for(let i=0; i<numBoxes; i++){
+   const bx=fX+15+i*60;
+   const isMRU=i===0, isLRU=i===numBoxes-1;
+   svg+='<rect x="'+bx+'" y="'+(fY+35)+'" width="45" height="40" rx="3" fill="'+(isMRU?'#102a36':isLRU?'#2a1616':'#121f28')+'" stroke="'+(isMRU?'#10b981':isLRU?'#ef4444':'#38bdf8')+'" stroke-width="1.2"/>';
+   svg+='<text x="'+(bx+22)+'" y="'+(fY+55)+'" text-anchor="middle" fill="#dcebf2" font-size="8" font-family="monospace">Page '+(i*4+2)+'</text>';
+   svg+='<text x="'+(bx+22)+'" y="'+(fY+67)+'" text-anchor="middle" fill="#7e9bab" font-size="6.5">'+(isMRU?'MRU':isLRU?'LRU':'Frame')+'</text>';
+   if(i<numBoxes-1){
+    svg+='<line x1="'+(bx+45)+'" y1="'+(fY+55)+'" x2="'+(bx+60)+'" y2="'+(fY+55)+'" stroke="#7e9bab" stroke-width="1"/>';
+   }
+  }
+  svg+='<text x="'+(fX+10)+'" y="'+(fY+100)+'" fill="#10b981" font-size="8" font-weight="bold">HASH MAP INDEX: PageNumber ⟶ ListNodePtr (Strict O(1) Lookup)</text>';
+  svg+='<text x="'+(fX+10)+'" y="'+(fY+118)+'" fill="#8ba5b5" font-size="7.5">Mattson Inclusion: S(C) ⊆ S(C+1) ⟹ Monotonic Hit Growth</text>';
+  svg+='<text x="'+(fX+10)+'" y="'+(fY+134)+'" fill="#8ba5b5" font-size="7.5">Belady Optimal: Offline Min Page Faults (Gold Standard)</text>';
+  const rX=465,rY=38,rW=220,rH=235;
+  svg+='<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+22)+'" fill="#7e9bab" font-size="9">FRAME CAPACITY (C)</text>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+c+'</text>';
+  svg+='<text x="'+(rX+85)+'" y="'+(rY+46)+'" fill="#8ba5b5" font-size="11">frames</text>';
+  svg+='<line x1="'+(rX+15)+'" y1="'+(rY+64)+'" x2="'+(rX+rW-15)+'" y2="'+(rY+64)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+82)+'" fill="#7e9bab" font-size="9">CACHE HIT RATIO</text>';
+  const hitRate=((hits/200)*100).toFixed(1);
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+106)+'" fill="'+ink+'" font-size="18" font-family="monospace" font-weight="bold">'+hitRate+'%</text>';
+  svg+='<text x="'+(rX+85)+'" y="'+(rY+104)+'" fill="#8ba5b5" font-size="10">of 200 refs</text>';
+  svg+='<line x1="'+(rX+15)+'" y1="'+(rY+120)+'" x2="'+(rX+rW-15)+'" y2="'+(rY+120)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+138)+'" fill="#7e9bab" font-size="9">TOTAL CACHE HITS H(C)</text>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+164)+'" fill="#fde047" font-size="20" font-family="monospace" font-weight="bold">'+hits+'</text>';
+  svg+='<text x="'+(rX+85)+'" y="'+(rY+160)+'" fill="#8ba5b5" font-size="9">hits</text>';
+  svg+='<line x1="'+(rX+15)+'" y1="'+(rY+178)+'" x2="'+(rX+rW-15)+'" y2="'+(rY+178)+'" stroke="#1e3340"/>';
+  svg+=text(rX+rW/2,rY+200,'H = k_lru · C + H_0',ink,10);
+  svg+=text(rX+rW/2,rY+218,'Gradient: k = 6.0000 hits/frame',orange,9);
+  svg+=text(360,305,'Algorithmic Complexity: Strict O(1) Hash Map + Doubly-Linked List Updates · Zero Page Fault Thrashing',soft,10);
+  $('apparatusDiagram').innerHTML=svg;
+  return;
+ }
+
+ if(cfg.slug==='a-star-pathfinding-heuristics'){
+  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
+  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+  const d=p.input;
+  const nodes=v.raw;
+  svg+='<rect x="35" y="38" width="410" height="235" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+=text(240,24,'A* Heuristic Search & Manhattan Grid State Space');
+  svg+='<text x="50" y="56" fill="#7e9bab" font-size="8.5" font-weight="bold">OPTIMAL PATH DISTANCE D = '+d+' · CLOSED SET EXPANSIONS E = '+nodes+'</text>';
+  const gX=50, gY=70, gW=380, gH=185;
+  svg+='<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" rx="4" fill="#08141c" stroke="#1e3a4a" stroke-width="1"/>';
+  for(let r=0; r<6; r++){
+   for(let c=0; c<12; c++){
+    const cx=gX+15+c*29, cy=gY+25+r*24;
+    const isPath=(r===Math.floor(c/2));
+    const isClosed=isPath||(r===Math.floor(c/2)+1&&c%3===0);
+    svg+='<rect x="'+cx+'" y="'+cy+'" width="24" height="20" rx="2" fill="'+(isPath?'#10b981':isClosed?'#1e3e52':'#0e1b24')+'" stroke="#162c3a"/>';
+   }
+  }
+  svg+='<text x="'+(gX+15)+'" y="'+(gY+18)+'" fill="#10b981" font-size="8.5" font-weight="bold">START (0,0) ⟶ TARGET ('+d+','+d+') SEARCH CORRIDOR</text>';
+  svg+='<text x="'+(gX+15)+'" y="'+(gY+175)+'" fill="#8ba5b5" font-size="7.5">Closed Set: On-path nodes + 2 lateral evaluations per step ⟹ E(D) = 3.0000 · D</text>';
+  const rX=465,rY=38,rW=220,rH=235;
+  svg+='<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+22)+'" fill="#7e9bab" font-size="9">PATH DISTANCE (D)</text>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+d+'</text>';
+  svg+='<text x="'+(rX+85)+'" y="'+(rY+46)+'" fill="#8ba5b5" font-size="11">steps</text>';
+  svg+='<line x1="'+(rX+15)+'" y1="'+(rY+64)+'" x2="'+(rX+rW-15)+'" y2="'+(rY+64)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+82)+'" fill="#7e9bab" font-size="9">HEURISTIC EVALUATION</text>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+104)+'" fill="'+ink+'" font-size="14" font-weight="bold">f(n) = g(n) + h(n)</text>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+118)+'" fill="#8ba5b5" font-size="8">Manhattan L1: |Δx| + |Δy|</text>';
+  svg+='<line x1="'+(rX+15)+'" y1="'+(rY+128)+'" x2="'+(rX+rW-15)+'" y2="'+(rY+128)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+144)+'" fill="#7e9bab" font-size="9">CLOSED EXPANSIONS E(D)</text>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+170)+'" fill="#fde047" font-size="20" font-family="monospace" font-weight="bold">'+nodes+'</text>';
+  svg+='<text x="'+(rX+85)+'" y="'+(rY+166)+'" fill="#8ba5b5" font-size="9">3D nodes</text>';
+  svg+='<line x1="'+(rX+15)+'" y1="'+(rY+182)+'" x2="'+(rX+rW-15)+'" y2="'+(rY+182)+'" stroke="#1e3340"/>';
+  svg+=text(rX+rW/2,rY+202,'E = k_astar · D + E_0',ink,10);
+  svg+=text(rX+rW/2,rY+220,'Gradient: k = 3.0000 nodes/step',orange,9);
+  svg+=text(360,305,'Heuristic Pathfinding: Admissible Manhattan L1 Metric · Monotonic Invariant · Linear Corridor Search',soft,10);
+  $('apparatusDiagram').innerHTML=svg;
+  return;
+ }
+
+ if(cfg.slug==='fast-fourier-transform'){
+  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
+  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+  const n=p.input;
+  const bflies=v.raw;
+  const log2n=Math.round(Math.log2(n));
+  svg+='<rect x="35" y="38" width="410" height="235" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+=text(240,24,'Radix-2 Cooley-Tukey FFT & Butterfly Arithmetic Network');
+  svg+='<text x="50" y="56" fill="#7e9bab" font-size="8.5" font-weight="bold">TRANSFORM N = '+n+' POINTS · log₂(N) = '+log2n+' STAGES · BUTTERFLIES B = '+bflies+'</text>';
+  const fX=50, fY=70, fW=380, fH=185;
+  svg+='<rect x="'+fX+'" y="'+fY+'" width="'+fW+'" height="'+fH+'" rx="4" fill="#08141c" stroke="#1e3a4a" stroke-width="1"/>';
+  for(let s=0; s<3; s++){
+   const sx=fX+25+s*110;
+   svg+='<text x="'+(sx+35)+'" y="'+(fY+16)+'" text-anchor="middle" fill="#38bdf8" font-size="8" font-weight="bold">Stage '+(s+1)+'</text>';
+   for(let b=0; b<3; b++){
+    const by=fY+35+b*46;
+    svg+='<rect x="'+sx+'" y="'+by+'" width="70" height="36" rx="3" fill="#122532" stroke="#10b981"/>';
+    svg+='<text x="'+(sx+35)+'" y="'+(by+15)+'" text-anchor="middle" fill="#fde047" font-size="7.5" font-family="monospace">Butterfly</text>';
+    svg+='<text x="'+(sx+35)+'" y="'+(by+28)+'" text-anchor="middle" fill="#8ba5b5" font-size="6.5">W_'+n+'^'+b+'</text>';
+   }
+  }
+  svg+='<text x="'+(fX+15)+'" y="'+(fY+175)+'" fill="#8ba5b5" font-size="7.5">Bit-Reversal Permutation: x[rev(n)] ⟹ Cooley-Tukey In-Place Decimation-in-Time</text>';
+  const rX=465,rY=38,rW=220,rH=235;
+  svg+='<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+22)+'" fill="#7e9bab" font-size="9">TRANSFORM SIZE (N)</text>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+n+'</text>';
+  svg+='<text x="'+(rX+85)+'" y="'+(rY+46)+'" fill="#8ba5b5" font-size="11">points</text>';
+  svg+='<line x1="'+(rX+15)+'" y1="'+(rY+64)+'" x2="'+(rX+rW-15)+'" y2="'+(rY+64)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+82)+'" fill="#7e9bab" font-size="9">STAGES (log₂ N)</text>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+106)+'" fill="'+ink+'" font-size="18" font-family="monospace" font-weight="bold">'+log2n+'</text>';
+  svg+='<text x="'+(rX+85)+'" y="'+(rY+104)+'" fill="#8ba5b5" font-size="10">stages</text>';
+  svg+='<line x1="'+(rX+15)+'" y1="'+(rY+120)+'" x2="'+(rX+rW-15)+'" y2="'+(rY+120)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+138)+'" fill="#7e9bab" font-size="9">BUTTERFLIES B(N)</text>';
+  svg+='<text x="'+(rX+15)+'" y="'+(rY+164)+'" fill="#fde047" font-size="20" font-family="monospace" font-weight="bold">'+bflies+'</text>';
+  svg+='<text x="'+(rX+85)+'" y="'+(rY+160)+'" fill="#8ba5b5" font-size="9">(N/2)log₂ N</text>';
+  svg+='<line x1="'+(rX+15)+'" y1="'+(rY+178)+'" x2="'+(rX+rW-15)+'" y2="'+(rY+178)+'" stroke="#1e3340"/>';
+  svg+=text(rX+rW/2,rY+200,'B = k_fft · (N log₂ N) + B_0',ink,10);
+  svg+=text(rX+rW/2,rY+218,'Gradient: k = 0.5000 bfly/unit',orange,9);
+  svg+=text(360,305,'Algorithmic Complexity: B(N) = 0.5000 · (N log₂ N) = Θ(N log N) · O(1) Auxiliary Space',soft,10);
+  $('apparatusDiagram').innerHTML=svg;
+  return;
+ }
  if(cfg.slug==='b-tree-disk-indexing'){
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
   const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
