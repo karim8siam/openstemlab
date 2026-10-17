@@ -61,7 +61,8 @@ def experiment_index(experiments):
     'trie-prefix-trees':'trie prefix tree radix tree patricia compressed ternary search tree tst longest prefix matching lpm cidr routing adaptive radix tree art suffix tree',
     'huffman-coding-compression':'huffman coding data compression lossless shannon entropy kraft mcmillan prefix property min heap greedy canonical huffman deflate gzip lz77 arithmetic coding bitstream bit packing',
     'computational-geometry-convex-hull':'computational geometry convex hull graham scan jarvis march gift wrapping quickhull chan output sensitive 2d cross product counter clockwise ccw determinant orientation predicate shewchuk robust',
-    'backtracking-n-queens-sat':'backtracking constraint satisfaction csp n-queens sat solver boolean satisfiability dpll cdcl conflict driven clause learning implication graph 1uip unit propagation boolean constraint propagation bcp pure literal two watched literals 2wl vsids state space search tree bitmask two complement'}
+    'backtracking-n-queens-sat':'backtracking constraint satisfaction csp n-queens sat solver boolean satisfiability dpll cdcl conflict driven clause learning implication graph 1uip unit propagation boolean constraint propagation bcp pure literal two watched literals 2wl vsids state space search tree bitmask two complement',
+    'b-tree-disk-indexing':'b-tree b+ tree external memory disk indexing disk access machine dam block io 4kb page buffer pool lru fanout binary search multi-way balanced tree node split write ahead logging wal aries in-node binary search'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   sub='computer-science' if '/computer-science/' in exp.get('page_path','') else 'physics'

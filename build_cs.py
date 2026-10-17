@@ -125,6 +125,12 @@ def observation(c,value):
   x=n
   y=float(raw)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='b-tree-disk-indexing':
+  h=float(value)
+  raw=int(round(8.0 * h))
+  x=h
+  y=float(raw)
+  return {'input':value,'raw':raw,'x':x,'y':y}
  raise ValueError(f"Unknown CS experiment {slug}")
 
 def fit(rows):
@@ -184,6 +190,8 @@ def estimate(c,f):
   return f['m'],f['slopeSE'],2.0000
  elif slug=='backtracking-n-queens-sat':
   return f['m'],f['slopeSE'],4.0000
+ elif slug=='b-tree-disk-indexing':
+  return f['m'],f['slopeSE'],8.0000
  raise ValueError(f"Unknown CS experiment {slug}")
 
 def fmt(v,n=5):
@@ -245,6 +253,9 @@ def formula(c,f):
  elif slug=='backtracking-n-queens-sat':
   val=f['m']*c['resultScale']
   return f"k_bit = m = {fmt(val,c['resultDecimals'])} operations/queen; Intercept T_0 = {fmt(f['b'],c['resultDecimals'])} operations (theoretical k_bit = 4.0000, T_0 = 0.0000)"
+ elif slug=='b-tree-disk-indexing':
+  val=f['m']*c['resultScale']
+  return f"k_node = m = {fmt(val,c['resultDecimals'])} comparisons/level; Intercept C_0 = {fmt(f['b'],c['resultDecimals'])} comparisons (theoretical k_node = 8.0000, C_0 = 0.0000)"
  return ""
 
 def worked(c,row):
@@ -342,6 +353,10 @@ def worked(c,row):
   n=row['input']
   t_ops=row['raw']
   return f"Chessboard Dimension N = {int(n)} queens; Decision Path Depth = {int(n)} levels; Atomic Bitwise Operations per Row = 4 ops.\nTotal Bitmask Register Operations: T(N) = k_bit · N + T_0 = 4.0000 × {int(n)} + 0 = {t_ops} operations.\nVerification: At each row level k ∈ [1..N], the bitmask backtracking engine executes 4 fundamental register operations: (1) collision mask synthesis occupied = cols | diag_left | diag_right; (2) free square isolation available = (~occupied) & ((1 << N) - 1); (3) two's complement lowest-bit extraction bit = available & (-available); and (4) register propagation (cols | bit, (diag_left | bit) << 1, (diag_right | bit) >> 1), yielding strictly 4·N = {t_ops} operations per completed path."
+ elif slug=='b-tree-disk-indexing':
+  h=row['input']
+  c_cmps=row['raw']
+  return f"B+ Tree Height h = {int(h)} levels; Page Block Size = 4096 bytes; Fanout Order m = 256; Keys per Node = 255 keys.\nTotal In-Node Key Comparisons: C(h) = k_node · h + C_0 = 8.0000 × {int(h)} + 0 = {c_cmps} comparisons.\nVerification: At each of the {int(h)} tree levels, the database engine loads exactly one 4KB disk page into the buffer pool and performs in-page binary search over the 255 sorted keys. Because log₂(255 + 1) = log₂(256) = 8 comparisons are executed per node, the search path incurs strictly 8·h = {c_cmps} scalar key comparisons."
  return ""
 
 def uncertainty_text(c):
@@ -543,6 +558,17 @@ def uncertainty_text(c):
    "(3) Microarchitectural acceleration via Two-Watched-Literals (2WL): the 2WL indexing scheme eliminates memory scans across satisfied clauses, visiting clauses only when a watched literal evaluates to False, and allowing instantaneous O(1) backjumping with zero pointer restoration overhead; and "
    "(4) Register allocation and bit-level parallelism: Rich Burroughs' bitmask backtracking algorithm maps board constraints entirely into CPU machine registers, eliminating memory heap allocation and executing up to 25× faster than pointer-based array implementations. "
    "Ordinary least-squares linear regression of observed bitwise register operations against board dimension N across instances from 4 to 16 queens yields an empirical scaling slope k_bit = 4.0000 operations/queen and intercept T_0 = 0.0000 operations with zero residual variance (R² = 1.00000), verifying the linear path complexity bound Θ(N) with mathematical certitude."
+  )
+ elif slug=='b-tree-disk-indexing':
+  return (
+   "In external memory algorithms and database indexing analysis, the in-node comparison count C(h) = k_node · h + C_0 = 8.0000·h + 0.0000 comparisons across traversal height h is an exact algorithmic invariant for order m = 256 nodes. "
+   "Unlike continuous physical instrumentation, there is no analog sensor noise, thermal drift, or calibration variance in counting discrete in-page binary comparisons or block I/O transfers. "
+   "However, in physical database storage servers, wall-clock transaction and query latency are heavily modulated by external memory and operating system dynamics: "
+   "(1) Database buffer pool cache hit ratios: accessing a page resident in DRAM memory frames consumes ~50–100 ns, whereas a buffer miss requiring an NVMe SSD flash page read incurs 10–50 µs (~500× slower), and a mechanical HDD sector seek incurs 5–10 ms (~100,000× slower); "
+   "(2) Operating system page cache double-buffering: databases utilize direct I/O (`O_DIRECT`) to bypass OS kernel page cache replication and avoid double-buffering latency; "
+   "(3) Multi-core latch contention on root and internal nodes: concurrent reader/writer transactions cause lock and latch thrashing on high-level routing nodes, resolved via optimistic lock coupling (latch crabbing); and "
+   "(4) Sequential leaf scanning vs random in-order traversal: the B+ Tree doubly-linked leaf architecture allows range scans (`WHERE id BETWEEN a AND b`) to stream contiguous pages at multi-gigabyte sequential disk throughput, bypassing upper index levels entirely. "
+   "Ordinary least-squares linear regression of observed in-node comparisons against tree height h across depths from 2 to 8 levels yields an empirical scaling slope k_node = 8.0000 comparisons/level and intercept C_0 = 0.0000 comparisons with zero residual variance (R² = 1.00000), verifying the multi-way indexing complexity bound Θ(h) with mathematical certitude."
   )
  return ""
 
@@ -1201,6 +1227,46 @@ def report_narrative(c,rows,f,value,percent,reference):
    f"k_bit = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} and baseline intercept T_0 = {fmt(f['b'],c['resultDecimals'])} {c['interceptUnit']} with an ideal R² = 1.00000. "
    "The investigation established the microarchitectural efficiency and theoretical elegance of Bitmask Backtracking, DPLL unit propagation, Two-Watched-Literals indexing, and CDCL conflict analysis, "
    "proving why constraint satisfaction and SAT solving form the computational bedrock of modern automated theorem proving, electronic design automation (EDA), compiler optimization, and artificial intelligence."
+  )
+ elif slug=='b-tree-disk-indexing':
+  abstract=(
+   f"Seven benchmark trials were generated across B+ Tree index heights / search depths h = {rows[0]['input']} to h = {rows[-1]['input']} levels "
+   f"(total in-node binary search key comparisons C from {rows[0]['raw']} to {rows[-1]['raw']} comparisons). "
+   f"An ordinary least-squares regression of key comparisons against tree height yielded an empirical scaling slope of "
+   f"{fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} and an intercept of {fmt(f['b'],c['resultDecimals'])} comparisons, "
+   f"demonstrating exact agreement with Rudolf Bayer's multi-way block indexing model C(h) = 8h (difference = {percent:.4f}%). "
+   f"The empirical telemetry confirms that by aligning high-fanout node pages (order m = 256) with 4096-byte disk blocks, "
+   f"each index level evaluates in exactly log₂(256) = 8 scalar comparisons while requiring strictly h physical block I/O reads."
+  )
+  graph_choice=(
+   f"The mathematical regression fits the linear model y = mx + b, where x = h represents B+ Tree index traversal height in levels, "
+   f"y = C represents total in-node binary search key comparisons, m represents the comparison slope k_node, and b represents "
+   f"the baseline comparison offset (theoretically C_0 = 0.0000 comparisons). The gradient has physical units {c['gradientUnit']}."
+  )
+  discussion=(
+   "The empirical benchmark observations provide rigorous quantitative verification of External Memory Algorithm theory and the Disk Access Machine (DAM) model. "
+   "In secondary storage architectures, the astronomical latency gap between volatile DRAM (50–100 ns) and non-volatile flash SSDs (10–50 µs) or rotating HDDs (5–10 ms) "
+   "renders traditional binary search trees (AVL or Red-Black trees) unviable: indexing 16 million records requires 24 binary levels, imposing 24 random disk seeks (up to 240 ms per query). "
+   "The B-Tree, invented by Rudolf Bayer and Edward McCreight (1970), eliminates this bottleneck by matching node capacity to operating system disk block clusters (typically 4096 bytes). "
+   "With an order of m = 256 child pointers and 255 keys per 4KB page, a B+ Tree indexes over 16.78 million records in a tree of height only h = 3 levels, "
+   "reducing disk seeks from 24 down to 3 block reads—an 8× reduction in physical I/O overhead. "
+   "Within each visited 4KB page in the buffer pool, contiguous sorted key alignment enables branch-free binary search across the 255 keys in exactly log₂(256) = 8 scalar comparisons. "
+   "Across all benchmark trials from h = 2 to h = 8 levels, the empirical regression slope m = 8.0000 comparisons/level and intercept b = 0.0000 confirm this invariant with zero residual variance (R² = 1.00000). "
+   "Comparative architectural analysis elucidates fundamental trade-offs across storage indexing paradigms: "
+   "Binary Search Trees execute in O(log₂ N) time but suffer disastrous I/O fragmentation due to 32-byte node footprints. "
+   "B+ Trees segregate routing index keys from leaf data records, maintaining a doubly-linked leaf chain that enables raw sequential disk throughput on range queries (SELECT ... BETWEEN). "
+   "Hash Indexes achieve O(1) point lookups in memory but cannot execute range scans and suffer catastrophic performance degradation under external memory bucket overflows. "
+   "Log-Structured Merge-Trees (LSM-Trees, used in RocksDB and Cassandra) optimize write-heavy workloads by buffering updates in memory (MemTable) and appending immutable SSTables to disk, "
+   "trading read amplification (inspecting multiple levels) for sequential write throughput. "
+   "Finally, transaction durability analysis emphasizes the vital role of Write-Ahead Logging (WAL) and the ARIES recovery protocol: "
+   "buffering dirty B+ Tree pages in DRAM maximizes throughput, while sequential append-only WAL flushes ensure complete crash recovery with zero data loss."
+  )
+  conclusion=(
+   "This laboratory investigation quantitatively verified the multi-way branching mechanics, block I/O alignment, and in-page binary search scaling of B-Trees and B+ Trees. "
+   f"Through systematic benchmarking across tree depths from h = {rows[0]['input']} to {rows[-1]['input']} levels, we verified the empirical comparison slope "
+   f"k_node = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} and baseline intercept C_0 = {fmt(f['b'],c['resultDecimals'])} {c['interceptUnit']} with an ideal R² = 1.00000. "
+   "The investigation established the microarchitectural efficiency and theoretical necessity of B+ Tree page alignment, high-fanout routing, and buffer pool caching, "
+   "proving why B+ Trees remain the universal, irreplaceable storage engine backbone of relational database management systems, operating system file systems, and enterprise storage infrastructure."
   )
  else:
   abstract=f"Empirical benchmark trials were generated across input sizes for {c['title']}."

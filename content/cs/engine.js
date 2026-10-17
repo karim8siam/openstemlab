@@ -140,6 +140,56 @@ function drawComparativeSim(t,p,v,ink,soft,orange){
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
+ if(cfg.slug==='b-tree-disk-indexing'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'SECONDARY STORAGE INDEXING PARADIGMS (h = '+p.input+' levels)','#e2f0f8',11);
+
+  const h=p.input;
+  const c_hash=Math.round(1);
+  const c_btree=Math.round(h);
+  const c_lsm=Math.round(Math.min(50, 2 + h));
+  const c_bst=Math.round(8 * h);
+  const c_scan=Math.round(Math.min(1e8, Math.pow(256, Math.min(h, 3))));
+
+  const strategies=[
+   {name:'Hash Index (In-Memory Table)',col:'#10b981',cost:c_hash,scale:'O(1) lookups, NO ranges',desc:'Constant-time equality search; cannot execute range scans (WHERE BETWEEN)'},
+   {name:'B+ Tree Index (Order m = 256)',col:'#38bdf8',cost:c_btree,scale:'O(log_B N) = '+h+' block I/Os',desc:'4KB block alignment; 256-way fanout; sequential leaf chain for range scans'},
+   {name:'LSM-Tree (SSTable Levels)',col:'#f97316',cost:c_lsm,scale:'O(1) writes, O(L) reads',desc:'Append-only MemTable + multi-level SSTables; Bloom filter optimized reads'},
+   {name:'Binary Search Tree (AVL / RB)',col:'#a855f7',cost:c_bst,scale:'O(log₂ N) = '+(8*h)+' block I/Os',desc:'32-byte nodes waste 99% of 4KB block; 8× higher tree height = 8× disk seeks'},
+   {name:'Full Table Heap Scan',col:'#ef4444',cost:c_scan,scale:'O(N/B) sequential blocks',desc:'Exhaustive sequential scan across all data pages; intractable for point queries'}
+  ];
+
+  strategies.forEach((item,idx)=>{
+   const rowY=cY+16+idx*42;
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+12)+'" fill="#dcebf2" font-size="8.5" font-weight="bold">'+item.name+'</text>';
+   const costStr=item.cost>=1000000?(item.cost/1000000).toFixed(1)+'M':item.cost>=1000?(item.cost/1000).toFixed(1)+'k':item.cost;
+   svg+='<text x="'+(cX+cW-15)+'" y="'+(rowY+12)+'" text-anchor="end" fill="'+item.col+'" font-size="8.5" font-family="monospace" font-weight="bold">'+costStr+' blocks ('+item.scale+')</text>';
+   
+   const barX=cX+15,barY=rowY+16,barMaxW=cW-30;
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barMaxW+'" height="7" rx="2" fill="#16242c"/>';
+   const maxVal=Math.max(100, c_scan);
+   const frac=Math.min(1.0,Math.log10(item.cost+1)/Math.log10(maxVal+1));
+   const fillW=Math.max(4,frac*barMaxW);
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+fillW+'" height="7" rx="2" fill="'+item.col+'"/>';
+  });
+
+  const bX=460,bY=45,bW=220,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">BLOCK I/O REDUCTION VS BST</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="20" font-family="monospace" font-weight="bold">8× Fewer I/Os</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+66)+'" fill="#10b981" font-size="9">'+h+' B+ reads vs '+(8*h)+' BST random seeks</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+76)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+76)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+94)+'" fill="#7e9bab" font-size="9">IN-PAGE BINARY SEARCH</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+116)+'" fill="'+ink+'" font-size="14" font-family="monospace" font-weight="bold">C(h) = 8.0000 · h</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+132)+'" fill="#8ba5b5" font-size="8">log₂(256) = 8 comparisons per 4KB page</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+142)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+142)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+160)+'" fill="#7e9bab" font-size="9">SEQUENTIAL LEAF SCAN</text>';
+  svg+=text(bX+bW/2,bY+184,'Direct Linked List Leaf Traversal','#10b981',9.5);
+  svg+=text(bX+bW/2,bY+206,'Multi-GB/s Sequential SSD Throughput',orange,8.5);
+  svg+=text(360,305,'DAM Model Invariant: Aligning multi-way nodes with physical 4KB disk blocks minimizes slow I/O reads by maximizing fanout m = 256',soft,10);
+  return svg;
+ }
+
  if(cfg.slug==='backtracking-n-queens-sat'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
   svg+=text(cX+cW/2,cY-14,'COMBINATORIAL SEARCH & CONSTRAINT PARADIGMS (N = '+p.input+' queens)','#e2f0f8',11);
@@ -1061,6 +1111,78 @@ function drawDynamicSandbox(t,p,v,ink,soft,orange){
  const cX=45,cY=45,cW=400,cH=230;
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+ if(cfg.slug==='b-tree-disk-indexing'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'4096-BYTE DISK PAGE & NODE SPLITTING SANDBOX (h = '+p.input+')','#e2f0f8',11);
+
+  svg+='<text x="'+(cX+15)+'" y="'+(cY+18)+'" fill="#10b981" font-size="8.5" font-weight="bold">PHYSICAL 4KB PAGE: 64B HEADER + 255 KEYS (2040B) + 256 CHILD PTRS (2048B)</text>';
+
+  const h=p.input;
+  const pgX=cX+15, pgY=cY+28, pgW=180, pgH=185;
+  svg+='<rect x="'+pgX+'" y="'+pgY+'" width="'+pgW+'" height="'+pgH+'" rx="4" fill="#041a1e" stroke="#14b8a6" stroke-width="1.2"/>';
+  svg+='<text x="'+(pgX+10)+'" y="'+(pgY+15)+'" fill="#2dd4bf" font-size="8" font-weight="bold">4096-BYTE DISK PAGE MEMORY MAP</text>';
+
+  const sections=[
+   {lbl:'Page Header (64 Bytes)',size:'Page ID: 0x004F · LSN: 89412 · Level: '+(h-1),h:28,col:'#6366f1'},
+   {lbl:'Sorted Key Array (2040 Bytes)',size:'255 × 8B 64-bit Keys: [14, 28, 42 ... 998]',h:45,col:'#38bdf8'},
+   {lbl:'Child Page Pointers (2048 Bytes)',size:'256 × 8B Block IDs: [0x01A, 0x01B ...]',h:45,col:'#f97316'},
+   {lbl:'Sequential Leaf Pointers & CRC',size:'prev_leaf: 0x004E · next_leaf: 0x0050',h:28,col:'#10b981'}
+  ];
+
+  let curY=pgY+24;
+  sections.forEach((sec,i)=>{
+   svg+='<rect x="'+(pgX+8)+'" y="'+curY+'" width="'+(pgW-16)+'" height="'+sec.h+'" rx="3" fill="#0b1722" stroke="'+sec.col+'" stroke-width="0.9"/>';
+   svg+='<text x="'+(pgX+12)+'" y="'+(curY+12)+'" fill="'+sec.col+'" font-size="7.5" font-weight="bold">'+sec.lbl+'</text>';
+   svg+='<text x="'+(pgX+12)+'" y="'+(curY+23)+'" fill="#94a3b8" font-size="6.5" font-family="monospace">'+sec.size+'</text>';
+   curY+=sec.h+5;
+  });
+
+  const spX=cX+205, spY=cY+28, spW=185, spH=185;
+  svg+='<rect x="'+spX+'" y="'+spY+'" width="'+spW+'" height="'+spH+'" rx="4" fill="#0f172a" stroke="#6366f1" stroke-width="1.2"/>';
+  svg+='<text x="'+(spX+10)+'" y="'+(spY+15)+'" fill="#a5b4fc" font-size="8" font-weight="bold">PROACTIVE NODE SPLIT MECHANICS</text>';
+
+  svg+='<rect x="'+(spX+15)+'" y="'+(spY+28)+'" width="155" height="26" rx="3" fill="#1e1b4b" stroke="#ef4444" stroke-width="1"/>';
+  svg+='<text x="'+(spX+22)+'" y="'+(spY+40)+'" fill="#f87171" font-size="7" font-weight="bold">FULL NODE: 255 Keys (Overflow)</text>';
+  svg+='<text x="'+(spX+22)+'" y="'+(spY+49)+'" fill="#cbd5e1" font-size="6.5">Median Key K₁₂₈ is Promoted ⬆</text>';
+
+  svg+='<line x1="'+(spX+92)+'" y1="'+(spY+55)+'" x2="'+(spX+92)+'" y2="'+(spY+72)+'" stroke="'+orange+'" stroke-width="1.5"/>';
+  svg+='<polygon points="'+(spX+89)+','+(spY+70)+' '+(spX+95)+','+(spY+70)+' '+(spX+92)+','+(spY+75)+'" fill="'+orange+'"/>';
+
+  svg+='<rect x="'+(spX+60)+'" y="'+(spY+80)+'" width="65" height="18" rx="2" fill="#312e81" stroke="'+orange+'" stroke-width="1"/>';
+  svg+='<text x="'+(spX+92)+'" y="'+(spY+92)+'" text-anchor="middle" fill="#fde047" font-size="7" font-weight="bold">Parent: K₁₂₈</text>';
+
+  svg+='<line x1="'+(spX+75)+'" y1="'+(spY+98)+'" x2="'+(spX+45)+'" y2="'+(spY+115)+'" stroke="#38bdf8" stroke-width="1.2"/>';
+  svg+='<line x1="'+(spX+110)+'" y1="'+(spY+98)+'" x2="'+(spX+140)+'" y2="'+(spY+115)+'" stroke="#38bdf8" stroke-width="1.2"/>';
+
+  svg+='<rect x="'+(spX+10)+'" y="'+(spY+115)+'" width="75" height="32" rx="2" fill="#082f49" stroke="#38bdf8" stroke-width="0.9"/>';
+  svg+='<text x="'+(spX+15)+'" y="'+(spY+127)+'" fill="#38bdf8" font-size="7" font-weight="bold">Left: 127 Keys</text>';
+  svg+='<text x="'+(spX+15)+'" y="'+(spY+139)+'" fill="#94a3b8" font-size="6.5">Keys K₁ .. K₁₂₇</text>';
+
+  svg+='<rect x="'+(spX+100)+'" y="'+(spY+115)+'" width="75" height="32" rx="2" fill="#082f49" stroke="#38bdf8" stroke-width="0.9"/>';
+  svg+='<text x="'+(spX+105)+'" y="'+(spY+127)+'" fill="#38bdf8" font-size="7" font-weight="bold">Right: 127 Keys</text>';
+  svg+='<text x="'+(spX+105)+'" y="'+(spY+139)+'" fill="#94a3b8" font-size="6.5">Keys K₁₂₉ .. K₂₅₅</text>';
+
+  svg+='<line x1="'+(spX+85)+'" y1="'+(spY+131)+'" x2="'+(spX+100)+'" y2="'+(spY+131)+'" stroke="#10b981" stroke-width="1.5" stroke-dasharray="2,2"/>';
+  svg+='<text x="'+(spX+92)+'" y="'+(spY+160)+'" text-anchor="middle" fill="#10b981" font-size="7" font-weight="bold">Leaf Linked List ⟷</text>';
+  svg+='<text x="'+(spX+92)+'" y="'+(spY+172)+'" text-anchor="middle" fill="#94a3b8" font-size="6.5">Single-Pass O(log_B N) Balance</text>';
+
+  const bX=460, bY=45, bW=220, bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">IN-PAGE BINARY SEARCH</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="18" font-family="monospace" font-weight="bold">8 Comparisons</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+66)+'" fill="#10b981" font-size="9">log₂(256) per 4KB Disk Block</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+76)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+76)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+94)+'" fill="#7e9bab" font-size="9">PAGE ALIGNMENT EFFICIENCY</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+114)+'" fill="'+ink+'" font-size="12" font-family="monospace" font-weight="bold">4096-Byte Page Frame</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+128)+'" fill="#64748b" font-size="8">Zero OS paging waste · Direct DMA</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+138)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+138)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+156)+'" fill="#7e9bab" font-size="9">WRITE-AHEAD LOGGING (WAL)</text>';
+  svg+=text(bX+bW/2,bY+178,'Append-Only Durability (ARIES)','#10b981',9);
+  svg+=text(bX+bW/2,bY+198,'Asynchronous Dirty Page Flush',orange,8.5);
+  svg+=text(360,305,'Storage Invariant: High-fanout B+ Tree nodes match operating system 4KB block boundaries, ensuring zero wasted disk I/O bandwidth',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='backtracking-n-queens-sat'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
@@ -2316,6 +2438,82 @@ function draw(t){
  const ink='#38bdf8',soft='#7e9bab',orange='#f97316';
  if(currentSimMode==='compare'){$('apparatusDiagram').innerHTML=drawComparativeSim(t,p,v,ink,soft,orange);return;}
  if(currentSimMode==='sandbox'){$('apparatusDiagram').innerHTML=drawDynamicSandbox(t,p,v,ink,soft,orange);return;}
+
+ if(cfg.slug==='b-tree-disk-indexing'){
+  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
+  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+  const h=p.input;
+  const cmps=v.raw;
+  const capacity=Math.pow(256, Math.min(h, 4));
+
+  svg+='<rect x="35" y="38" width="410" height="235" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+=text(240,24,'Multi-Way B+ Tree Hierarchy & Block I/O Traversal');
+
+  svg+='<text x="50" y="56" fill="#7e9bab" font-size="8.5" font-weight="bold">SEARCH DEPTH h = '+h+' · IN-NODE COMPARISONS C(h) = '+cmps+' · SLOPE m = 8.0000</text>';
+
+  const trX=50, trY=68, trW=235, trH=190;
+  svg+='<rect x="'+trX+'" y="'+trY+'" width="'+trW+'" height="'+trH+'" rx="4" fill="#07131b" stroke="#1e3a4a" stroke-width="1"/>';
+  svg+='<text x="'+(trX+8)+'" y="'+(trY+14)+'" fill="#38bdf8" font-size="7.5" font-weight="bold">MULTI-WAY B+ TREE DESCENT (Order m = 256)</text>';
+
+  const levelH=Math.min(38, Math.floor(130 / Math.max(h, 2)));
+  for(let l=0; l<h; l++){
+   const lY=trY + 28 + l * levelH;
+   const isRoot=(l === 0);
+   const isLeaf=(l === h - 1);
+   const strokeCol=isLeaf?orange:isRoot?'#38bdf8':'#10b981';
+   const fillCol=isLeaf?'#1e1b4b':'#082f49';
+
+   svg+='<rect x="'+(trX+12)+'" y="'+lY+'" width="'+(trW-24)+'" height="'+(levelH-8)+'" rx="3" fill="'+fillCol+'" stroke="'+strokeCol+'" stroke-width="1.1"/>';
+   
+   const titleStr=isRoot?'ROOT (Page 0x01 · 255 Keys)':isLeaf?'LEAF LEVEL (Page 0x'+(0x100+l*16).toString(16).toUpperCase()+' · Data Records)':'INTERNAL LEVEL '+l+' (Page 0x'+(0x20+l*4).toString(16).toUpperCase()+' · Routing Keys)';
+   svg+='<text x="'+(trX+18)+'" y="'+(lY+12)+'" fill="'+strokeCol+'" font-size="7" font-weight="bold">'+titleStr+'</text>';
+
+   for(let k=0; k<6; k++){
+    const kx=trX+18+k*24;
+    const ky=lY+16;
+    svg+='<rect x="'+kx+'" y="'+ky+'" width="20" height="9" rx="1.5" fill="#0b1722" stroke="#475569" stroke-width="0.5"/>';
+    svg+='<text x="'+(kx+10)+'" y="'+(ky+7)+'" text-anchor="middle" fill="#94a3b8" font-size="5.5" font-family="monospace">K'+(k+1)+'</text>';
+   }
+   svg+='<text x="'+(trX+168)+'" y="'+(lY+23)+'" fill="#64748b" font-size="6">... [255 keys]</text>';
+
+   if(l < h - 1){
+    svg+='<line x1="'+(trX+115)+'" y1="'+(lY+levelH-8)+'" x2="'+(trX+115)+'" y2="'+(lY+levelH)+'" stroke="'+orange+'" stroke-width="1.5"/>';
+   }
+  }
+
+  const bpX=trX+245, bpY=trY, bpW=140, bpH=190;
+  svg+='<rect x="'+bpX+'" y="'+bpY+'" width="'+bpW+'" height="'+bpH+'" rx="4" fill="#091824" stroke="#1c303d" stroke-width="1"/>';
+  svg+='<text x="'+(bpX+10)+'" y="'+(bpY+14)+'" fill="#38bdf8" font-size="7.5" font-weight="bold">BUFFER POOL (4KB Frames)</text>';
+
+  for(let f=0; f<Math.min(h, 4); f++){
+   const fY=bpY+24+f*28;
+   svg+='<rect x="'+(bpX+8)+'" y="'+fY+'" width="'+(bpW-16)+'" height="22" rx="2" fill="#142834" stroke="#10b981" stroke-width="0.8"/>';
+   svg+='<text x="'+(bpX+12)+'" y="'+(fY+11)+'" fill="#10b981" font-size="6.5" font-weight="bold">Frame ['+f+']: Page 0x'+(f*16+1).toString(16).toUpperCase()+'</text>';
+   svg+='<text x="'+(bpX+12)+'" y="'+(fY+19)+'" fill="#94a3b8" font-size="6" font-family="monospace">Binary Search: 8 comps</text>';
+  }
+
+  svg+='<rect x="'+(bpX+8)+'" y="'+(bpY+140)+'" width="'+(bpW-16)+'" height="42" rx="3" fill="#1e1b2e" stroke="#38bdf8" stroke-width="0.8"/>';
+  svg+='<text x="'+(bpX+12)+'" y="'+(bpY+152)+'" fill="#38bdf8" font-size="7" font-weight="bold">LEAF RANGE LINK:</text>';
+  svg+='<text x="'+(bpX+12)+'" y="'+(bpY+164)+'" fill="#cbd5e1" font-size="6.5" font-family="monospace">prev: 0x0FE ⟷ next: 0x100</text>';
+  svg+='<text x="'+(bpX+12)+'" y="'+(bpY+174)+'" fill="#10b981" font-size="6.5">Raw Sequential SSD Scan</text>';
+
+  const bX=460, bY=45, bW=220, bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">IN-NODE KEY COMPARISONS</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+cmps+' Comps</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+66)+'" fill="#10b981" font-size="9">Exact Law: C(h) = 8.0000 · h</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+76)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+76)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+94)+'" fill="#7e9bab" font-size="9">EXTERNAL MEMORY BLOCK I/O</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+112)+'" fill="'+ink+'" font-size="11" font-family="monospace">Block Reads: Exactly '+h+' pages</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+128)+'" fill="#10b981" font-size="11" font-family="monospace">Transfer: '+(h * 4)+' KB total I/O</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+138)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+138)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+156)+'" fill="#7e9bab" font-size="9">STORAGE CAPACITY AT DEPTH '+h+'</text>';
+  svg+=text(bX+bW/2,bY+178,capacity >= 1e9 ? (capacity/1e9).toFixed(1)+' Billion Keys' : capacity >= 1e6 ? (capacity/1e6).toFixed(1)+' Million Keys' : capacity.toLocaleString()+' Keys','#10b981',9);
+  svg+=text(bX+bW/2,bY+198,'O(log_B N) Optimal Disk Access',orange,8.5);
+  svg+=text(360,305,'B+ Tree Invariant: Each level visits exactly one 4KB disk page; in-page binary search terminates in log₂(256) = 8 comparisons',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='backtracking-n-queens-sat'){
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';

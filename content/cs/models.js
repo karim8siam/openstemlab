@@ -138,6 +138,13 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:raw/200.0,x,y,valid:n>=4&&n<=16};
  }
+ if(slug==='b-tree-disk-indexing'){
+  const h=Number(input);
+  const raw=Math.round(8 * h);
+  const x=h;
+  const y=raw;
+  return {raw,ideal:raw,period:raw/200.0,x,y,valid:h>=2&&h<=8};
+ }
  throw Error('Unknown CS experiment: '+slug);
 }
 
@@ -223,6 +230,10 @@ function reading(slug,input,raw){
   x=Number(input);
   y=raw;
  }
+ if(slug==='b-tree-disk-indexing'){
+  x=Number(input);
+  y=raw;
+ }
  return {input,raw,x,y};
 }
 
@@ -300,6 +311,9 @@ function estimate(slug,f){
  }
  if(slug==='backtracking-n-queens-sat'){
   return {value:f.m,se:f.slopeSE,reference:4.0000};
+ }
+ if(slug==='b-tree-disk-indexing'){
+  return {value:f.m,se:f.slopeSE,reference:8.0000};
  }
  throw Error('Unknown CS experiment: '+slug);
 }
