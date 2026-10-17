@@ -66,6 +66,9 @@ function update(){
  }else if(cfg.slug==='gibbs-free-energy-solubility-van-t-hoff'){
   $('liveState').textContent='Ready to equilibrate saturated borax slurry at '+p.input.toFixed(1)+' °C.';
   message('Equilibrate borax flask, pre-warm filter pipette, draw 5.00 mL aliquot & titrate with 0.50 M HCl.');
+ }else if(cfg.slug==='second-order-saponification-conductivity'){
+  $('liveState').textContent='Ready to record conductivity at elapsed time t = '+p.input.toFixed(1)+' min.';
+  message('Set reaction elapsed time t, immerse 1.00 kHz conductivity cell & record specific conductance κ_t.');
  }else if(cfg.slug==='first-order-kinetics-ester-hydrolysis'){
   $('liveState').textContent='Ready to sample reaction aliquot at elapsed time t = '+p.input.toFixed(1)+' min.';
   message('Set reaction elapsed time t, withdraw 5.00 mL aliquot, quench in ice water & titrate with 0.200 M NaOH.');
@@ -75,6 +78,16 @@ function update(){
  }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
   $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
   message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='second-order-saponification-conductivity'){
+  const t = p.input;
+  const kappa = raw;
+  const c0 = 0.0200;
+  const kappa0 = 4.974;
+  const kappainf = 1.820;
+  const ct = c0 * (kappa - kappainf) / (kappa0 - kappainf);
+  const inv_ct = 1.0 / ct;
+  $('liveState').textContent='Conductivity stabilized: κ_t = '+kappa.toFixed(3)+' mS/cm (c_t = '+(ct*1000).toFixed(2)+' mM).';
+  message('Measurement complete: κ_t = '+kappa.toFixed(3)+' mS/cm (1/c_t = '+inv_ct.toFixed(2)+' L/mol, t = '+t.toFixed(1)+' min). Record in notebook.');
  }else if(cfg.slug==='first-order-kinetics-ester-hydrolysis'){
   const t = p.input;
   const Vt = raw;
@@ -106,7 +119,19 @@ function update(){
   const k_sec = k_prime / 0.0800;
   $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
   message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
- }else if(cfg.slug==='first-order-kinetics-ester-hydrolysis'){
+ }else if(cfg.slug==='second-order-saponification-conductivity'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawSaponificationCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawSaponificationSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawSaponificationBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='first-order-kinetics-ester-hydrolysis'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawEsterCompareView(p,rawVal);
    return;
@@ -8988,5 +9013,283 @@ function drawEsterSandboxView(p, rawVal){
  });
 
  svg += text(360, 312, 'Metrological Invariant: Guggenheim paired-interval regression cancels V_∞ entirely, isolating k\' with zero digestion bias.', '#789c80', 8.5);
+ return svg;
+}
+
+
+// ======================================================================
+// LAB 24: SECOND-ORDER KINETICS: CONDUCTOMETRIC SAPONIFICATION
+// ======================================================================
+
+function drawSaponificationBenchView(p, rawVal){
+ const t = (p && p.input) ? p.input : 10.0;
+ const c_0 = 0.0200;
+ const k_ref = 6.60;
+ const kappa_0 = 4.974;
+ const kappa_inf = 1.820;
+ const delta_max = kappa_0 - kappa_inf;
+ const inv_c_ideal = (1.0 / c_0) + k_ref * t;
+ const c_ideal = 1.0 / inv_c_ideal;
+ const kappa_ideal = kappa_inf + delta_max * (c_ideal / c_0);
+ const kappa = rawVal !== null ? rawVal : kappa_ideal;
+ const ct = c_0 * (kappa - kappa_inf) / delta_max;
+ const inv_ct = 1.0 / ct;
+ const conv = (kappa_0 - kappa) / delta_max;
+ const t_half_init = 1.0 / (k_ref * c_0);
+
+ let svg = header('Dip-Type Platinized Conductivity Cell & 1.00 kHz AC Impedance Console', 'CH₃COOC₂H₅ + OH⁻ ⟶ CH₃COO⁻ + C₂H₅OH | Second-Order Rate Constant k = 6.60 L·mol⁻¹·min⁻¹ (t₁/₂ = 7.58 min)');
+
+ // Background Lab Bench
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // --- LEFT: THERMOSTATIC REACTION VESSEL & CONDUCTIVITY CELL (x: 35, y: 60, w: 250, h: 225) ---
+ const cX = 35, cY = 60, cW = 250, cH = 225;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(cX+8)+'" y="'+(cY+8)+'" width="'+(cW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(cX+cW/2)+'" y="'+(cY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">JACKETED REACTOR & PLATINIZED CELL (25.00 °C)</text>';
+
+ // Outer Water Jacket
+ svg += '<rect x="'+(cX+30)+'" y="'+(cY+40)+'" width="130" height="140" rx="10" fill="#0284c7" fill-opacity="0.15" stroke="#0284c7" stroke-width="2"/>';
+ svg += '<text x="'+(cX+95)+'" y="'+(cY+55)+'" text-anchor="middle" fill="#38bdf8" font-size="7.5" font-weight="bold">Water Jacket (25.00 °C)</text>';
+
+ // Inner Reaction Beaker
+ svg += '<rect x="'+(cX+45)+'" y="'+(cY+65)+'" width="100" height="105" rx="4" fill="#082f49" fill-opacity="0.6" stroke="#cbd5e1" stroke-width="1.5"/>';
+
+ // Liquid solution inside (conductive electrolyte)
+ svg += '<rect x="'+(cX+48)+'" y="'+(cY+90)+'" width="94" height="77" rx="2" fill="#06b6d4" fill-opacity="0.25"/>';
+
+ // Dip-Type Conductivity Probe Stem
+ const probeX = cX + 80, probeY = cY + 30;
+ svg += '<rect x="'+probeX+'" y="'+probeY+'" width="12" height="100" fill="#1e293b" stroke="#94a3b8" stroke-width="1.2"/>';
+ svg += '<rect x="'+(probeX-6)+'" y="'+(probeY+100)+'" width="24" height="28" rx="2" fill="none" stroke="#cbd5e1" stroke-width="1.2"/>'; // glass shroud
+ // Two Platinum-Black Electrodes (inside shroud)
+ svg += '<rect x="'+(probeX-3)+'" y="'+(probeY+106)+'" width="3" height="16" fill="#0f172a" stroke="#475569"/>';
+ svg += '<rect x="'+(probeX+12)+'" y="'+(probeY+106)+'" width="3" height="16" fill="#0f172a" stroke="#475569"/>';
+ svg += '<text x="'+(probeX+5)+'" y="'+(probeY+118)+'" text-anchor="middle" fill="#facc15" font-size="6" font-weight="bold">θ=1.0</text>';
+
+ // Rotating Micro-Stirrer Bar
+ svg += '<rect x="'+(cX+88)+'" y="'+(cY+162)+'" width="14" height="4" rx="2" fill="#ffffff"/>';
+ svg += '<text x="'+(cX+95)+'" y="'+(cY+158)+'" text-anchor="middle" fill="#94a3b8" font-size="6">250 rpm</text>';
+
+ svg += '<text x="'+(cX+cW/2)+'" y="'+(cY+cH-10)+'" text-anchor="middle" fill="#94a3b8" font-size="7">Equimolar [ester]₀ = [NaOH]₀ = 0.0200 M (100 mL)</text>';
+
+ // --- CENTER: DIGITAL IMPEDANCE BRIDGE CONSOLE (x: 295, y: 60, w: 200, h: 225) ---
+ const mX = 295, mY = 60, mW = 200, mH = 225;
+ svg += '<rect x="'+mX+'" y="'+mY+'" width="'+mW+'" height="'+mH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(mX+8)+'" y="'+(mY+8)+'" width="'+(mW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(mX+mW/2)+'" y="'+(mY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">AC IMPEDANCE BRIDGE CONSOLE</text>';
+
+ // Large Digital Conductivity Readout Box
+ svg += '<rect x="'+(mX+12)+'" y="'+(mY+36)+'" width="'+(mW-24)+'" height="52" rx="5" fill="#020b05" stroke="#15803d" stroke-width="1.2"/>';
+ svg += '<text x="'+(mX+20)+'" y="'+(mY+50)+'" fill="#4ade80" font-size="7" font-weight="bold">SPECIFIC CONDUCTIVITY (1.00 kHz AC)</text>';
+ svg += '<text x="'+(mX+mW/2)+'" y="'+(mY+76)+'" text-anchor="middle" fill="#facc15" font-size="20" font-family="monospace" font-weight="bold">'+kappa.toFixed(3)+' mS/cm</text>';
+
+ const metItems = [
+  {label: 'Elapsed Time t', val: t.toFixed(1)+' min', col: '#38bdf8'},
+  {label: 'Baseline κ₀ (t=0)', val: kappa_0.toFixed(3)+' mS/cm', col: '#94a3b8'},
+  {label: 'Infinity κ_∞ (t=∞)', val: kappa_inf.toFixed(3)+' mS/cm', col: '#94a3b8'},
+  {label: 'Reactant [c_t]', val: (ct*1000).toFixed(2)+' mM', col: '#4ade80'},
+  {label: 'Conversion α', val: (conv*100).toFixed(1)+'%', col: '#facc15'},
+  {label: 'Reciprocal 1/c_t', val: inv_ct.toFixed(2)+' L/mol', col: '#f87171'},
+  {label: 'Second-Order k', val: '6.60 L·mol⁻¹·min⁻¹', col: '#4ade80'}
+ ];
+
+ metItems.forEach((it, idx)=>{
+  const iy = mY + 96 + idx * 17;
+  svg += '<rect x="'+(mX+12)+'" y="'+iy+'" width="'+(mW-24)+'" height="15" rx="2.5" fill="#051009" stroke="#162e1e"/>';
+  svg += '<text x="'+(mX+16)+'" y="'+(iy+10)+'" fill="#94a3b8" font-size="6.5">'+it.label+'</text>';
+  svg += '<text x="'+(mX+mW-16)+'" y="'+(iy+10)+'" text-anchor="end" fill="'+it.col+'" font-size="7" font-family="monospace" font-weight="bold">'+it.val+'</text>';
+ });
+
+ // --- RIGHT: SECOND-ORDER LINEAR INTEGRATED PLOT (x: 505, y: 60, w: 180, h: 225) ---
+ const pX = 505, pY = 60, pW = 180, pH = 225;
+ svg += '<rect x="'+pX+'" y="'+pY+'" width="'+pW+'" height="'+pH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(pX+8)+'" y="'+(pY+8)+'" width="'+(pW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(pX+pW/2)+'" y="'+(pY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">SECOND-ORDER FIT: 1/c_t vs t</text>';
+
+ // Mini Cartesian coordinate frame
+ const axX = pX + 25, axY = pY + 42, axW = 135, axH = 130;
+ svg += '<rect x="'+axX+'" y="'+axY+'" width="'+axW+'" height="'+axH+'" fill="#040d07" stroke="#162e1e"/>';
+ svg += '<line x1="'+axX+'" y1="'+(axY+axH)+'" x2="'+(axX+axW)+'" y2="'+(axY+axH)+'" stroke="#334155" stroke-width="1"/>';
+ svg += '<line x1="'+axX+'" y1="'+axY+'" x2="'+axX+'" y2="'+(axY+axH)+'" stroke="#334155" stroke-width="1"/>';
+
+ // Grid lines
+ for(let g=1; g<=3; g++){
+  const gy = axY + g * (axH/4);
+  svg += '<line x1="'+axX+'" y1="'+gy+'" x2="'+(axX+axW)+'" y2="'+gy+'" stroke="#0f2918" stroke-width="0.8" stroke-dasharray="2,2"/>';
+ }
+
+ // Linear regression line: from (0, 50 L/mol) to (30 min, 248 L/mol)
+ svg += '<line x1="'+axX+'" y1="'+(axY+axH-10)+'" x2="'+(axX+axW-10)+'" y2="'+(axY+15)+'" stroke="#4ade80" stroke-width="1.8"/>';
+
+ // Standard observation points
+ const stdPoints = [
+  {t: 3.0, raw: 4.079}, {t: 6.0, raw: 3.580}, {t: 10.0, raw: 3.179},
+  {t: 15.0, raw: 2.878}, {t: 20.0, raw: 2.686}, {t: 30.0, raw: 2.456}
+ ];
+
+ stdPoints.forEach(pt=>{
+  const px = axX + (pt.t / 35.0) * (axW - 10);
+  const cVal = c_0 * (pt.raw - kappa_inf) / delta_max;
+  const invC = 1.0 / cVal;
+  const py = (axY + axH - 10) - ((invC - 50.0) / 210.0) * (axH - 25);
+  const isCur = Math.abs(pt.t - t) < 1.0;
+  svg += '<circle cx="'+px+'" cy="'+py+'" r="'+(isCur?4.5:2.5)+'" fill="'+(isCur?'#facc15':'#38bdf8')+'" stroke="'+(isCur?'#ef4444':'none')+'" stroke-width="1.2"/>';
+ });
+
+ svg += '<text x="'+(axX+axW/2)+'" y="'+(axY+axH+12)+'" text-anchor="middle" fill="#94a3b8" font-size="6.5">Elapsed Time t (min) ⟶</text>';
+ svg += '<text x="'+(axX+8)+'" y="'+(axY+14)+'" fill="#4ade80" font-size="6.5" font-weight="bold">Slope k = 6.60 L/(mol·min)</text>';
+ svg += '<text x="'+(pX+pW/2)+'" y="'+(pY+pH-10)+'" text-anchor="middle" fill="#facc15" font-size="7.5" font-weight="bold">1/c₀ = 50.0 L/mol | R² = 1.000</text>';
+
+ svg += text(360, 312, 'Equimolar saponification: replacing fast OH⁻ by slow CH₃COO⁻ enables real-time conductometric tracking without quench errors.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawSaponificationCompareView(p, rawVal){
+ const t = (p && p.input) ? p.input : 10.0;
+ let svg = header('Comparative Second-Order Regimes: Initial Concentration & Inverse Half-Life Scaling', 'Half-Life Inverse Proportionality: t₁/₂ = 1 / (k · c₀) | Reactant Decay in 0.0200 M vs 0.0100 M Mixtures');
+
+ // Background Lab Bench
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ const regimes = [
+  {name: 'Reactor A: Standard c₀ = 0.0200 M', c0: 0.0200, k: 6.60, t_half: 7.58, col: '#38bdf8', x: 35},
+  {name: 'Reactor B: Dilute c₀ = 0.0100 M', c0: 0.0100, k: 6.60, t_half: 15.15, col: '#facc15', x: 370}
+ ];
+
+ regimes.forEach(reg=>{
+  const bX = reg.x, bY = 60, bW = 315, bH = 225;
+  svg += '<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+  svg += '<rect x="'+(bX+8)+'" y="'+(bY+8)+'" width="'+(bW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+  svg += '<text x="'+(bX+bW/2)+'" y="'+(bY+22)+'" text-anchor="middle" fill="'+reg.col+'" font-size="8.5" font-weight="bold">'+reg.name+'</text>';
+
+  // Hyperbolic Concentration Decay Curve Box
+  const cX = bX + 15, cY = bY + 38, cW = 285, cH = 95;
+  svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="4" fill="#040d07" stroke="#162e1e"/>';
+  svg += '<line x1="'+cX+'" y1="'+(cY+cH-15)+'" x2="'+(cX+cW-10)+'" y2="'+(cY+cH-15)+'" stroke="#334155" stroke-width="1"/>';
+  svg += '<line x1="'+(cX+20)+'" y1="'+cY+'" x2="'+(cX+20)+'" y2="'+(cY+cH-15)+'" stroke="#334155" stroke-width="1"/>';
+
+  // Hyperbolic decay curve: c_t = c0 / (1 + c0*k*t)
+  let pathD = 'M '+(cX+20)+' '+(cY+12);
+  for(let curT=0; curT<=35; curT+=1){
+   const cxPos = cX + 20 + (curT / 35.0) * (cW - 35);
+   const remFrac = 1.0 / (1.0 + reg.c0 * reg.k * curT);
+   const cyPos = (cY + cH - 15) - remFrac * (cH - 27);
+   pathD += ' L '+cxPos+' '+cyPos;
+  }
+  svg += '<path d="'+pathD+'" fill="none" stroke="'+reg.col+'" stroke-width="2"/>';
+
+  // Current time point marker
+  const curFrac = 1.0 / (1.0 + reg.c0 * reg.k * t);
+  const curX = cX + 20 + (t / 35.0) * (cW - 35);
+  const curY = (cY + cH - 15) - curFrac * (cH - 27);
+  svg += '<circle cx="'+curX+'" cy="'+curY+'" r="4" fill="#ef4444" stroke="#ffffff" stroke-width="1.2"/>';
+
+  svg += '<text x="'+(cX+25)+'" y="'+(cY+18)+'" fill="#94a3b8" font-size="6.5">c₀ = '+(reg.c0*1000).toFixed(1)+' mM</text>';
+  svg += '<text x="'+(cX+cW-15)+'" y="'+(cY+cH-20)+'" text-anchor="end" fill="#facc15" font-size="6.8" font-weight="bold">t = '+t.toFixed(0)+' min: '+(curFrac*reg.c0*1000).toFixed(2)+' mM</text>';
+
+  // Metric table
+  const rows = [
+   {l: 'Starting Concentration c₀', v: (reg.c0*1000).toFixed(1)+' mM'},
+   {l: 'Second-Order Rate Constant k', v: '6.60 L·mol⁻¹·min⁻¹'},
+   {l: 'Reaction Half-Life t₁/₂', v: reg.t_half.toFixed(2)+' minutes'},
+   {l: 'Half-Life Scaling Factor', v: (reg.c0 === 0.0200 ? '1.00× (Baseline)' : '2.00× (Halving c₀ doubles t₁/₂)')}
+  ];
+
+  rows.forEach((r, idx)=>{
+   const ry = bY + 142 + idx * 19;
+   svg += '<rect x="'+(bX+15)+'" y="'+ry+'" width="'+(bW-30)+'" height="16" rx="3" fill="#051009" stroke="#162e1e"/>';
+   svg += '<text x="'+(bX+22)+'" y="'+(ry+11)+'" fill="#94a3b8" font-size="6.5">'+r.l+'</text>';
+   svg += '<text x="'+(bX+bW-22)+'" y="'+(ry+11)+'" text-anchor="end" fill="'+reg.col+'" font-size="7" font-family="monospace" font-weight="bold">'+r.v+'</text>';
+  });
+ });
+
+ svg += text(360, 312, 'Second-Order Invariant: Half-life is inversely proportional to initial concentration (t₁/₂ = 1/(k·c₀)), distinguishing it from 1st-order systems.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawSaponificationSandboxView(p, rawVal){
+ const t = (p && p.input) ? p.input : 10.0;
+ const c_0 = 0.0200;
+ const k_ref = 6.60;
+ const inv_c_t = (1.0 / c_0) + k_ref * t;
+ const c_t = 1.0 / inv_c_t;
+ const alpha = (c_0 - c_t) / c_0;
+
+ // Limiting conductivities
+ const lambda_OH = 198.6;
+ const lambda_Na = 50.11;
+ const lambda_Ac = 40.9;
+
+ // Conductance shares (in arbitrary conductivity units proportional to c_i * lambda_i)
+ const share_OH = c_t * lambda_OH;
+ const share_Ac = (c_0 - c_t) * lambda_Ac;
+ const share_Na = c_0 * lambda_Na;
+ const share_tot = share_OH + share_Ac + share_Na;
+
+ let svg = header('Kohlrausch Ionic Mobility & Grotthuss Proton-Hopping Breakdown Sandbox', 'Microscopic Molar Ionic Conductivities vs Macroscopic Electrolytic Conductance Decay');
+
+ // Background Lab Bench
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // --- LEFT: IONIC CONDUCTANCE BUDGET BAR CHART (x: 35, y: 60, w: 320, h: 225) ---
+ const gX = 35, gY = 60, gW = 320, gH = 225;
+ svg += '<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(gX+8)+'" y="'+(gY+8)+'" width="'+(gW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(gX+gW/2)+'" y="'+(gY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">IONIC CONDUCTANCE BUDGET (c_i · λ_i)</text>';
+
+ // Stacked Bar Chart for Conductivity Budget
+ const barX = gX + 25, barY = gY + 45, barW = 270, barH = 32;
+ const w_OH = (share_OH / share_tot) * barW;
+ const w_Ac = (share_Ac / share_tot) * barW;
+ const w_Na = (share_Na / share_tot) * barW;
+
+ svg += '<rect x="'+barX+'" y="'+barY+'" width="'+w_OH+'" height="'+barH+'" rx="3" fill="#ef4444"/>';
+ svg += '<rect x="'+(barX+w_OH)+'" y="'+barY+'" width="'+w_Ac+'" height="'+barH+'" fill="#38bdf8"/>';
+ svg += '<rect x="'+(barX+w_OH+w_Ac)+'" y="'+barY+'" width="'+w_Na+'" height="'+barH+'" rx="3" fill="#94a3b8"/>';
+
+ svg += '<text x="'+(barX+w_OH/2)+'" y="'+(barY+20)+'" text-anchor="middle" fill="#ffffff" font-size="7.5" font-weight="bold">OH⁻ ('+(share_OH/share_tot*100).toFixed(0)+'%)</text>';
+ svg += '<text x="'+(barX+w_OH+w_Ac/2)+'" y="'+(barY+20)+'" text-anchor="middle" fill="#ffffff" font-size="7.5" font-weight="bold">Ac⁻ ('+(share_Ac/share_tot*100).toFixed(0)+'%)</text>';
+ svg += '<text x="'+(barX+w_OH+w_Ac+w_Na/2)+'" y="'+(barY+20)+'" text-anchor="middle" fill="#0f172a" font-size="7.5" font-weight="bold">Na⁺ ('+(share_Na/share_tot*100).toFixed(0)+'%)</text>';
+
+ // Legend & details
+ const ionItems = [
+  {name: 'Hydroxide (OH⁻): λ₀ = 198.6 S·cm²/mol', desc: 'Grotthuss proton-hopping conduction across H-bonded water networks.', col: '#ef4444', y: gY + 95},
+  {name: 'Acetate (CH₃COO⁻): λ₀ = 40.9 S·cm²/mol', desc: 'Hydrodynamic Stokes drag migration; bulky carboxylate head.', col: '#38bdf8', y: gY + 135},
+  {name: 'Sodium (Na⁺): λ₀ = 50.11 S·cm²/mol', desc: 'Inert spectator counter-ion; constant concentration & conductance.', col: '#94a3b8', y: gY + 175}
+ ];
+
+ ionItems.forEach(it=>{
+  svg += '<rect x="'+(gX+15)+'" y="'+it.y+'" width="'+(gW-30)+'" height="34" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg += '<circle cx="'+(gX+26)+'" cy="'+(it.y+17)+'" r="4" fill="'+it.col+'"/>';
+  svg += '<text x="'+(gX+36)+'" y="'+(it.y+14)+'" fill="'+it.col+'" font-size="7" font-weight="bold">'+it.name+'</text>';
+  svg += '<text x="'+(gX+36)+'" y="'+(it.y+25)+'" fill="#94a3b8" font-size="6.5">'+it.desc+'</text>';
+ });
+
+ // --- RIGHT: B_AC2 TETRAHEDRAL TRANSITION STATE ENERGY PROFILE (x: 365, y: 60, w: 320, h: 225) ---
+ const sX = 365, sY = 60, sW = 320, sH = 225;
+ svg += '<rect x="'+sX+'" y="'+sY+'" width="'+sW+'" height="'+sH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(sX+8)+'" y="'+(sY+8)+'" width="'+(sW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(sX+sW/2)+'" y="'+(sY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">B_AC2 REACTION ENERGY PROFILE (E_a = 47.7 kJ/mol)</text>';
+
+ // Reaction coordinate plot box
+ const eX = sX + 25, eY = sY + 45, eW = 270, eH = 120;
+ svg += '<line x1="'+eX+'" y1="'+(eY+eH-15)+'" x2="'+(eX+eW)+'" y2="'+(eY+eH-15)+'" stroke="#334155" stroke-width="1.2"/>';
+ svg += '<line x1="'+eX+'" y1="'+eY+'" x2="'+eX+'" y2="'+(eY+eH-15)+'" stroke="#334155" stroke-width="1.2"/>';
+
+ // Potential energy curve: Reactants (0) -> TS1 (+47.7) -> Tetrahedral (+25) -> Products (-63 kJ/mol)
+ svg += '<path d="M '+(eX+15)+' '+(eY+eH-45)+' Q '+(eX+65)+' '+(eY+eH-45)+' '+(eX+95)+' '+(eY+20)+' Q '+(eX+125)+' '+(eY+eH-45)+' '+(eX+160)+' '+(eY+eH-65)+' Q '+(eX+190)+' '+(eY+eH-65)+' '+(eX+260)+' '+(eY+eH-18)+'" fill="none" stroke="#38bdf8" stroke-width="2.5"/>';
+
+ svg += '<circle cx="'+(eX+95)+'" cy="'+(eY+20)+'" r="4" fill="#ef4444" stroke="#facc15" stroke-width="1.2"/>';
+ svg += '<text x="'+(eX+95)+'" y="'+(eY+14)+'" text-anchor="middle" fill="#ef4444" font-size="7" font-weight="bold">[TS]‡ E_a = 47.7 kJ/mol</text>';
+ svg += '<text x="'+(eX+20)+'" y="'+(eY+eH-52)+'" fill="#86efac" font-size="6.5">Ester + OH⁻</text>';
+ svg += '<text x="'+(eX+160)+'" y="'+(eY+eH-72)+'" fill="#facc15" font-size="6.5">Tetrahedral Int.</text>';
+ svg += '<text x="'+(eX+240)+'" y="'+(eY+eH-25)+'" fill="#4ade80" font-size="6.5">AcO⁻ + EtOH</text>';
+
+ svg += '<rect x="'+(sX+15)+'" y="'+(sY+175)+'" width="'+(sW-30)+'" height="35" rx="4" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(sX+25)+'" y="'+(sY+190)+'" fill="#94a3b8" font-size="7">Thermodynamic Saponification Sink:</text>';
+ svg += '<text x="'+(sX+25)+'" y="'+(sY+203)+'" fill="#facc15" font-size="8" font-family="monospace" font-weight="bold">ΔG° ≈ −63 kJ/mol (Irreversible proton transfer to ethoxide)</text>';
+
+ svg += text(360, 312, 'Metrological Invariant: 1/c_t scales linearly with time t, directly isolating the second-order rate constant k = 6.60 L/(mol·min).', '#789c80', 8.5);
  return svg;
 }

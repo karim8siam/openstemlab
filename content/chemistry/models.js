@@ -160,6 +160,22 @@ function predict(slug,input){
   const y=round(Math.log(ksp_calc), 4);
   return {raw,ideal:raw,period:1.0,x,y,valid:t>=30.0&&t<=55.0};
  }
+ if(slug==='second-order-saponification-conductivity'){
+  const t=Number(input);
+  const c_0=0.0200;
+  const k_ref=6.60;
+  const kappa_0=4.974;
+  const kappa_inf=1.820;
+  const delta_max=kappa_0 - kappa_inf;
+  const inv_c_t=(1.0 / c_0) + k_ref * t;
+  const c_t=1.0 / inv_c_t;
+  const kappa_ideal=kappa_inf + delta_max * (c_t / c_0);
+  const raw=round(kappa_ideal, 3);
+  const c_t_calc=c_0 * (raw - kappa_inf) / delta_max;
+  const x=t;
+  const y=round(1.0 / c_t_calc, 2);
+  return {raw,ideal:raw,period:1.0,x,y,valid:t>=2.0&&t<=35.0};
+ }
  if(slug==='first-order-kinetics-ester-hydrolysis'){
   const t=Number(input);
   const V_0=12.50;
@@ -343,6 +359,17 @@ function reading(slug,input,raw){
   const s_calc=V / 20.0;
   const ksp_calc=4.0 * Math.pow(s_calc, 3);
   y=round(Math.log(ksp_calc), 4);
+ }
+ if(slug==='second-order-saponification-conductivity'){
+  const t=Number(input);
+  const raw_val=Number(raw);
+  const c_0=0.0200;
+  const kappa_0=4.974;
+  const kappa_inf=1.820;
+  const delta_max=kappa_0 - kappa_inf;
+  const c_t_calc=c_0 * (raw_val - kappa_inf) / delta_max;
+  x=t;
+  y=round(1.0 / c_t_calc, 2);
  }
  if(slug==='first-order-kinetics-ester-hydrolysis'){
   const t=Number(input);
@@ -531,6 +558,11 @@ function estimate(slug,f){
   const dH_est= -f.m * 8.31446;
   const se= f.slopeSE * 8.31446;
   return {value:dH_est,se:se,reference:110.0};
+ }
+ if(slug==='second-order-saponification-conductivity'){
+  const slope= f.m;
+  const se= f.slopeSE;
+  return {value:slope,se:se,reference:6.60};
  }
  if(slug==='first-order-kinetics-ester-hydrolysis'){
   const slope= f.m;

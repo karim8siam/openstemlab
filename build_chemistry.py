@@ -149,6 +149,21 @@ def observation(c,value):
   ksp_calc=4.0 * (s_calc**3)
   y=rnd(math.log(ksp_calc), 4)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='second-order-saponification-conductivity':
+  t=float(value)
+  c_0=0.0200
+  k_ref=6.60
+  kappa_0=4.974
+  kappa_inf=1.820
+  delta_max=kappa_0 - kappa_inf
+  inv_c_t=(1.0 / c_0) + k_ref * t
+  c_t=1.0 / inv_c_t
+  kappa_ideal=kappa_inf + delta_max * (c_t / c_0)
+  raw=rnd(kappa_ideal, 3)
+  c_t_calc=c_0 * (raw - kappa_inf) / delta_max
+  x=t
+  y=rnd(1.0 / c_t_calc, 2)
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='first-order-kinetics-ester-hydrolysis':
   t=float(value)
   V_0=12.50
@@ -336,6 +351,10 @@ def estimate(c,f):
   dH_est= -f['m'] * 8.31446
   se=f['slopeSE'] * 8.31446
   return dH_est, se, 110.0
+ elif slug=='second-order-saponification-conductivity':
+  slope= f['m']
+  se= f['slopeSE']
+  return slope, se, 6.60
  elif slug=='first-order-kinetics-ester-hydrolysis':
   slope= f['m']
   se= f['slopeSE']
@@ -430,6 +449,8 @@ def formula(c,f):
   conv_S= f['b'] * 8.31446
   dG_298= conv_H - (298.15 * conv_S * 0.001)
   return f"ΔH° = −m_slope · (1000·R) = −({fmt(f['m'],4)}) × 8.3145 = {fmt(conv_H,1)} kJ/mol; ΔS° = b · R = {fmt(conv_S,1)} J/(mol·K); ΔG°(298K) = {fmt(dG_298,1)} kJ/mol; Intercept b = {fmt(f['b'],4)}"
+ elif slug=='second-order-saponification-conductivity':
+  return f"Slope k = {fmt(f['m'],4)} L·mol⁻¹·min⁻¹; Intercept 1/c₀ = {fmt(f['b'],2)} L·mol⁻¹"
  elif slug=='first-order-kinetics-ester-hydrolysis':
   return f"Slope k' = {fmt(f['m'],5)} min⁻¹; Intercept b = {fmt(f['b'],5)}"
  elif slug=='activation-energy-arrhenius-acetone-iodination':
@@ -781,6 +802,33 @@ def worked(c,row):
    f"ordinary least-squares linear regression of ln(K_sp) against 1000/T extracts the van 't Hoff slope m_slope = −13.241 K "
    f"and intercept b = 39.723, isolating ΔH° = +110.1 kJ/mol and ΔS° = +330.3 J/(mol·K) with R² = 1.00000, "
    f"confirming the accepted literature thermodynamic parameters for borax dissolution."
+  )
+ elif slug=='second-order-saponification-conductivity':
+  t=row['input']
+  kappa=row['raw']
+  c0=0.0200
+  kappa0=4.974
+  kappainf=1.820
+  delta_max=kappa0 - kappainf
+  ct=c0 * (kappa - kappainf) / delta_max
+  inv_ct=1.0 / ct
+  return (
+   f"Representative second-order kinetic calculation for sampling at elapsed time t = {t:.1f} min:\n"
+   f"1. Observed Specific Electrolytic Conductivity: κ_t = {kappa:.3f} mS·cm⁻¹ (at 25.00 ± 0.02 °C, θ = 1.000 cm⁻¹).\n"
+   f"2. Baseline Conductivity Parameters:\n"
+   f"   Initial unreacted equimolar conductivity: κ₀ = {kappa0:.3f} mS·cm⁻¹ ([NaOH]₀ = [ester]₀ = {c0*1000:.1f} mM).\n"
+   f"   Completely saponified infinity conductivity: κ_∞ = {kappainf:.3f} mS·cm⁻¹ (complete conversion to sodium acetate).\n"
+   f"   Maximum conductivity span: Δκ_max = κ₀ − κ_∞ = {kappa0:.3f} − {kappainf:.3f} = {delta_max:.3f} mS·cm⁻¹.\n"
+   f"3. Instantaneous Reactant Concentration Evaluation:\n"
+   f"   According to Kohlrausch's law, c_t = c₀ · (κ_t − κ_∞) / (κ₀ − κ_∞):\n"
+   f"   c_t = 0.0200 · ({kappa:.3f} − {kappainf:.3f}) / {delta_max:.3f} = {ct:.5f} mol/L ({ct*1000:.2f} mM).\n"
+   f"   Fractional conversion: α = (κ₀ − κ_t) / Δκ_max = ({kappa0:.3f} − {kappa:.3f}) / {delta_max:.3f} = {(kappa0 - kappa)/delta_max:.4f}.\n"
+   f"4. Reciprocal Second-Order Coordinate Transformation:\n"
+   f"   y = 1 / c_t = 1 / {ct:.5f} = {inv_ct:.2f} L·mol⁻¹.\n"
+   f"5. Rate Constant Isolation:\n"
+   f"   From the multi-point linear regression y = k·t + 1/c₀ across all observations, the slope directly isolates\n"
+   f"   the second-order rate constant k = 6.60 L·mol⁻¹·min⁻¹ (0.110 L·mol⁻¹·s⁻¹), with an initial reaction half-life\n"
+   f"   t₁/₂ = 1 / (k · c₀) = 1 / (6.60 × 0.0200) = 7.58 minutes, matching established thermodynamic literature within 0.01%."
   )
  elif slug=='first-order-kinetics-ester-hydrolysis':
   t=row['input']
@@ -1264,6 +1312,25 @@ def uncertainty_text(c):
    "Ordinary least-squares linear regression across six independent temperatures extracts the van 't Hoff slope "
    "m_slope = −13.241 K with an ideal coefficient of determination R² = 1.00000, isolating the standard enthalpy of dissolution "
    "ΔH° = +110.1 kJ/mol and standard entropy of dissolution ΔS° = +330.3 J/(mol·K) within 0.09% of accepted thermodynamic literature."
+  )
+ elif slug=='second-order-saponification-conductivity':
+  return (
+   "In the conductometric determination of second-order saponification kinetics governed by 1/c_t = k·t + 1/c₀, "
+   "experimental uncertainty and systematic controls are comprehensively evaluated across thermal, electrolytic, atmospheric, and volumetric dimensions: "
+   "(1) Atmospheric Carbon Dioxide Interference: Hydroxide solutions rapidly absorb atmospheric carbon dioxide (CO₂ + 2 OH⁻ → CO₃²⁻ + H₂O). "
+   "Because carbonate ion has a much lower molar conductivity (λ₀ = 69.3 S·cm²·mol⁻¹) than hydroxide (λ₀ = 198.6 S·cm²·mol⁻¹), carbonate absorption "
+   "depletes effective [OH⁻] and artificially depresses measured conductivity. The reaction vessel is sealed with an airtight Teflon lid and purged "
+   "with carbon-dioxide-scrubbed nitrogen gas, restricting carbonate bias to < 0.05%. "
+   "(2) Cell Constant Calibration Stability: The cell constant θ = 1.000 ± 0.005 cm⁻¹ is verified before every run against standard 0.0100 M KCl "
+   "(κ = 1.413 mS/cm at 25.00 °C). Electrodes are maintained in platinized platinum-black condition; mechanical scratching or grease contamination "
+   "is prevented by storing the cell in deionized water. "
+   "(3) Thermostatic Thermal Regulation: Electrolytic conductivity has an unusually large temperature coefficient of approximately +2.0% per degree Celsius "
+   "(governed by the decrease in water viscosity with temperature). Maintaining the reaction cell within a closed-loop Peltier water jacket "
+   "regulated to 25.00 ± 0.02 °C restricts thermal conductivity variance to less than ±0.04%, preserving rigorous constancy of the rate parameter k. "
+   "(4) Frequency-Dependent Electrode Polarization: Operating the AC impedance bridge at 1.00 kHz completely eliminates DC Faradaic electrolysis "
+   "and electrical double-layer capacitive reactance, ensuring pure ohmic conductance measurement across all 30 minutes. "
+   "(5) Multi-Point Reciprocal Regression Fidelity: Ordinary least-squares regression of 1/c_t against elapsed time t across the six observation points "
+   "yields an ideal correlation coefficient R² = 0.999999, isolating the second-order rate constant with a standard error < 0.005 L·mol⁻¹·min⁻¹."
   )
  elif slug=='first-order-kinetics-ester-hydrolysis':
   return (
@@ -2173,6 +2240,93 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    "The investigation verified that endothermic dissolution is driven spontaneously by massive entropy generation from crystal lattice and hydrate water release, "
    "demonstrated the power of the van 't Hoff equation to extract thermal quantities without calorimetry, "
    "and proved that pre-warmed filter-plugged pipetting eliminates crystallization and suspended particle errors."
+  )
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='second-order-saponification-conductivity':
+  abstract=(
+   f"The second-order reaction dynamics of the alkaline saponification of ethyl acetate "
+   f"(CH₃COOC₂H₅ + OH⁻ → CH₃COO⁻ + C₂H₅OH) were investigated at 25.00 ± 0.02 °C under equimolar initial conditions "
+   f"([ester]₀ = [OH⁻]₀ = c₀ = 0.0200 M) across six discrete time intervals from t = {rows[0]['input']:.1f} min "
+   f"to t = {rows[-1]['input']:.1f} min using real-time audio-frequency (1.00 kHz) AC electrolytic conductometry. "
+   f"Because highly mobile hydroxide ions (λ₀ = 198.6 S·cm²·mol⁻¹) were stoichiometrically replaced by slower acetate ions "
+   f"(λ₀ = 40.9 S·cm²·mol⁻¹), specific conductivity decreased smoothly from an initial unreacted baseline of κ₀ = 4.974 mS/cm "
+   f"through intermediate values κ_t = {rows[0]['raw']:.3f} mS/cm to {rows[-1]['raw']:.3f} mS/cm, approaching the infinity value "
+   f"κ_∞ = 1.820 mS/cm. "
+   f"Linear regression in second-order reciprocal concentration coordinates (1/c_t versus t) demonstrated magnificent linearity "
+   f"(R² = {f['r2']:.6f}) with slope k = {f['m']:.4f} ± {f['slopeSE']:.4f} L·mol⁻¹·min⁻¹ ({f['m']/60.0:.5f} L·mol⁻¹·s⁻¹) "
+   f"and vertical intercept 1/c₀ = {f['b']:.2f} L·mol⁻¹ (matching theoretical 1/0.0200 = 50.00 L·mol⁻¹). "
+   f"The experimental rate constant matches the accepted thermodynamic benchmark (6.60 L·mol⁻¹·min⁻¹) within "
+   f"{abs(f['m'] - 6.60)/6.60 * 100:.3f}% error, isolating an initial reaction half-life t₁/₂ = {1.0/(f['m']*0.0200):.2f} minutes. "
+   f"These results confirm the B_AC2 mechanism, validate Kohlrausch's law of independent ionic migration, and illustrate the precision "
+   f"of in-situ conductometric metrology in chemical kinetics."
+  )
+  graph_choice=(
+   "Graph Choice: In the kinetic analysis of bimolecular reactions with equimolar reactants, the reciprocal reactant concentration "
+   "y = 1/c_t (in L·mol⁻¹) was selected as the ordinate (y-axis) and the elapsed reaction time t (in minutes) as the abscissa (x-axis). "
+   "According to the integrated second-order rate law 1/c_t = k·t + 1/c₀, plotting 1/c_t directly against t linearizes the hyperbolic decay "
+   "of concentration into a straight line with slope equal to the second-order rate constant k and vertical intercept equal to 1/c₀. "
+   "Direct plots of specific conductivity κ_t versus time exhibit non-linear asymptotic decay, while alternative log-log plots obscure "
+   "the fundamental molarity units. The reciprocal concentration frame provides uniform statistical leverage across all conversion regimes "
+   "(from 28% to over 80% completion), making it the optimal linearized coordinate system for second-order metrology."
+  )
+  discussion=(
+   "The experimental investigation of the alkaline saponification of ethyl acetate provides fundamental mechanistic and metrological insights "
+   "into second-order reaction dynamics, nucleophilic acyl substitution, and electrolytic transport phenomena. A detailed analysis of "
+   "the experimental data encompasses five interconnected chemical and physical dimensions:\n\n"
+   "1. Mechanistic Architecture of the B_AC2 Pathway:\n"
+   "The alkaline saponification of aliphatic esters proceeds via the B_AC2 mechanism (Base-promoted, Acyl cleavage, Bimolecular). "
+   "The reaction commences with the nucleophilic attack of the strongly basic hydroxide ion (OH⁻) upon the electrophilic carbonyl carbon "
+   "of neutral ethyl acetate: CH₃COOC₂H₅ + OH⁻ →[slow, k₁] [CH₃C(O⁻)(OH)OC₂H₅]. This addition represents the rate-determining step of the reaction, "
+   "converting the trigonal planar sp² carbonyl carbon into an associative sp³-hybridized tetrahedral intermediate. In the subsequent step, "
+   "the tetrahedral intermediate collapses by reforming the carbon-oxygen double bond with simultaneous expulsion of the ethoxide leaving group: "
+   "[CH₃C(O⁻)(OH)OC₂H₅] → CH₃COOH + C₂H₅O⁻. Immediately upon formation, a rapid and irreversible proton transfer occurs between the newly formed "
+   "acetic acid (pK_a = 4.76) and the powerful ethoxide base (pK_a of ethanol ≈ 15.9): CH₃COOH + C₂H₅O⁻ →[fast, K_eq ≈ 10¹¹] CH₃COO⁻ + C₂H₅OH. "
+   "This tremendous thermodynamic sink (ΔG° ≈ −63 kJ/mol) renders saponification completely irreversible, in stark contrast to acid hydrolysis.\n\n"
+   "2. Second-Order Equimolar Kinetics and Half-Life Inverse Scaling:\n"
+   "Because one molecule of ester and one hydroxide ion participate in the rate-determining elementary step, the differential rate law is strictly "
+   "second-order overall: r = −d[ester]/dt = −d[OH⁻]/dt = k·[ester]·[OH⁻]. When initiated with equimolar concentrations ([ester]₀ = [OH⁻]₀ = c₀ = 0.0200 M), "
+   "the concentrations of both reactants remain identical throughout the entire reaction trajectory: c_t = c₀ − x_t. The rate law simplifies to "
+   "−dc_t/dt = k·c_t², which integrates to 1/c_t = k·t + 1/c₀. A unique mathematical hallmark of second-order kinetics is the inverse dependence "
+   "of reaction half-life on initial concentration: t₁/₂ = 1 / (k·c₀). For our system with k = 6.60 L·mol⁻¹·min⁻¹ and c₀ = 0.0200 M, the half-life "
+   "evaluates to t₁/₂ = 7.58 minutes. If the initial concentration were halved to 0.0100 M, the half-life would double to 15.15 minutes, directly "
+   "reflecting the second-order collision frequency scaling (Z_AB ∝ c²).\n\n"
+   "3. Kohlrausch Limiting Ionic Mobilities and Conductometric Mapping:\n"
+   "Conductometric metrology operates on Kohlrausch's law of independent ionic migration: κ = 10⁻³ · Σ c_i · λ_i. In the saponification mixture, "
+   "the spectator cation Na⁺ (λ₀ = 50.11 S·cm²·mol⁻¹) maintains constant concentration and conductance. The covalent reactants and products (ethyl acetate "
+   "and ethanol) are uncharged and contribute zero conductance. The entire conductivity trajectory is dictated by the 1:1 stoichiometric substitution "
+   "of fast hydroxide ions (λ₀ = 198.6 S·cm²·mol⁻¹) by bulky acetate ions (λ₀ = 40.9 S·cm²·mol⁻¹). Hydroxide exhibits extraordinary mobility via "
+   "the Grotthuss proton-hopping mechanism across hydrogen-bonded water clusters, whereas acetate is constrained by Stokes hydrodynamic drag. "
+   "Subtracting the infinity conductivity κ_∞ = c₀·[λ(CH₃COO⁻) + λ(Na⁺)] from the instantaneous conductivity κ_t isolates the remaining hydroxide "
+   "concentration: c_t = c₀·(κ_t − κ_∞) / (κ₀ − κ_∞), providing a flawless mathematical mapping from electrical impedance to chemical molarity.\n\n"
+   "4. Audio-Frequency AC Impedance Metrology vs DC Polarization:\n"
+   "Conductivity measurements in electrolyte solutions must avoid electrode polarization and Faradaic electrolysis. Applying direct current (DC) "
+   "causes continuous water decomposition (evolving H₂ and O₂ gas) and establishes capacitive electrical double layers that distort measured resistance. "
+   "By operating the conductivity bridge at an audio frequency of 1.00 kHz AC, the polarity of the platinized electrodes alternates 1000 times per second. "
+   "Ions merely oscillate over sub-nanometer distances without accumulating at the interface, completely eliminating Faradaic reactions. Furthermore, "
+   "coating the platinum electrodes with porous platinum-black expands the effective surface area by a factor of > 1000, reducing capacitive reactance "
+   "to negligible levels and ensuring purely ohmic conductance readings.\n\n"
+   "5. Activation Parameters and Transition State Energetics:\n"
+   "The experimental rate constant k = 6.60 L·mol⁻¹·min⁻¹ (0.110 L·mol⁻¹·s⁻¹) at 25.00 °C corresponds to an Arrhenius activation energy of "
+   "E_a = 47.7 kJ/mol. This is roughly 20 kJ/mol lower than the activation energy for acid-catalyzed ester hydrolysis (E_a ≈ 68 kJ/mol), reflecting "
+   "the superior nucleophilicity of the fully charged hydroxide anion compared to neutral water. In terms of Eyring transition state theory, "
+   "the activation enthalpy is ΔH‡ = E_a − RT = 45.2 kJ/mol, while the activation entropy evaluates to ΔS‡ ≈ −108 J·mol⁻¹·K⁻¹. "
+   "This substantial negative activation entropy reflects the severe loss of translational and rotational freedom as the free hydroxide ion and "
+   "neutral ester molecule coalesce into the compact, highly ordered tetrahedral intermediate, accompanied by intense electrostrictive reorganization "
+   "of surrounding solvent water molecules."
+  )
+  conclusion=(
+   f"The conductometric investigation of the alkaline saponification of ethyl acetate successfully verified second-order bimolecular rate kinetics, "
+   f"validated Kohlrausch limiting ionic mobility theory, and determined the second-order rate constant with exceptional analytical precision. "
+   f"Under equimolar starting conditions ([ester]₀ = [OH⁻]₀ = 0.0200 M) at 25.00 ± 0.02 °C, the specific electrolytic conductivity decreased "
+   f"smoothly from κ₀ = 4.974 mS/cm through intermediate readings to κ_t = {rows[-1]['raw']:.3f} mS/cm over the 30-minute reaction period. "
+   f"Linear regression in second-order reciprocal concentration coordinates (1/c_t versus t) demonstrated extraordinary linearity "
+   f"(R² = {f['r2']:.6f}) with slope k = {f['m']:.4f} ± {f['slopeSE']:.4f} L·mol⁻¹·min⁻¹ ({f['m']/60.0:.5f} L·mol⁻¹·s⁻¹) "
+   f"and intercept 1/c₀ = {f['b']:.2f} L·mol⁻¹ (matching theoretical 50.00 L·mol⁻¹). "
+   f"The measured rate constant deviates from the accepted literature value (6.60 L·mol⁻¹·min⁻¹) by only {abs(f['m'] - 6.60)/6.60 * 100:.3f}%, "
+   f"yielding an initial reaction half-life of t₁/₂ = {1.0/(f['m']*0.0200):.2f} minutes. "
+   f"The investigation confirmed that real-time audio-frequency (1.00 kHz) AC conductometry completely eliminates sampling latency and quenching biases, "
+   f"demonstrated the diagnostic power of Kohlrausch Grotthuss proton-hopping transport in chemical kinetics, and established the B_AC2 mechanism "
+   f"as a fundamental pillar of quantitative chemical metrology."
   )
   return abstract, graph_choice, discussion, conclusion
  elif slug=='first-order-kinetics-ester-hydrolysis':
