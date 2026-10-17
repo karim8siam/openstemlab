@@ -143,6 +143,23 @@ function predict(slug,input){
   const y=round(Math.log(raw), 4);
   return {raw,ideal:raw,period:1.0,x,y,valid:t>=30.0&&t<=78.0};
  }
+ if(slug==='gibbs-free-energy-solubility-van-t-hoff'){
+  const t=Number(input);
+  const T=t + 273.15;
+  const R=8.31446;
+  const dH=110000.0;
+  const dS=330.0;
+  const ln_Ksp= -dH / (R * T) + dS / R;
+  const Ksp=Math.exp(ln_Ksp);
+  const s=Math.pow(Ksp / 4.0, 1.0 / 3.0);
+  const v_hcl=20.0 * s;
+  const raw=round(v_hcl, 2);
+  const x=round(1000.0 / T, 4);
+  const s_calc=raw / 20.0;
+  const ksp_calc=4.0 * Math.pow(s_calc, 3);
+  const y=round(Math.log(ksp_calc), 4);
+  return {raw,ideal:raw,period:1.0,x,y,valid:t>=30.0&&t<=55.0};
+ }
  throw Error('Unknown Chemistry experiment predict: '+slug);
 }
 
@@ -212,6 +229,15 @@ function reading(slug,input,raw){
   const T=t + 273.15;
   x=round(1000.0 / T, 4);
   y=round(Math.log(P), 4);
+ }
+ if(slug==='gibbs-free-energy-solubility-van-t-hoff'){
+  const t=Number(input);
+  const V=Number(raw);
+  const T=t + 273.15;
+  x=round(1000.0 / T, 4);
+  const s_calc=V / 20.0;
+  const ksp_calc=4.0 * Math.pow(s_calc, 3);
+  y=round(Math.log(ksp_calc), 4);
  }
  return {input:Number(input),raw:Number(raw),x,y};
 }
@@ -328,6 +354,11 @@ function estimate(slug,f){
   const dH_est= -f.m * 8.31446;
   const se= f.slopeSE * 8.31446;
   return {value:dH_est,se:se,reference:38.56};
+ }
+ if(slug==='gibbs-free-energy-solubility-van-t-hoff'){
+  const dH_est= -f.m * 8.31446;
+  const se= f.slopeSE * 8.31446;
+  return {value:dH_est,se:se,reference:110.0};
  }
  throw Error('Unknown Chemistry experiment estimate: '+slug);
 }

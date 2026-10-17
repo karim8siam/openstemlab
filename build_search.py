@@ -85,7 +85,8 @@ def experiment_index(experiments):
     'hess-law-magnesium-calorimetry':'hess law thermochemistry magnesium oxide enthalpy of formation calorimetry dewar state function thermochemical cycle regnault pfaundler adiabatic extrapolation heat of reaction enthalpy change standard enthalpy',
     'combustion-bomb-calorimetry-benzoic':'bomb calorimetry oxygen bomb benzoic acid heat of combustion internal energy enthalpy of combustion thermochemistry parr calorimeter fuse wire water equivalent nist standard constant volume',
     'heat-solution-crystallization-calorimetry':'heat of solution integral heat differential heat potassium nitrate kno3 endothermic dissolution solution calorimetry dewar lattice energy hydration enthalpy van t hoff solubility refrigeration',
-    'vapor-pressure-liquid-clausius-clapeyron':'clausius clapeyron vapor pressure enthalpy of vaporization ethanol boiling point isoteniscope liquid vapor equilibrium clapeyron equation trouton rule antoine phase transition'}
+    'vapor-pressure-liquid-clausius-clapeyron':'clausius clapeyron vapor pressure enthalpy of vaporization ethanol boiling point isoteniscope liquid vapor equilibrium clapeyron equation trouton rule antoine phase transition',
+    'gibbs-free-energy-solubility-van-t-hoff':'van t hoff solubility gibbs free energy enthalpy entropy borax disodium tetraborate decahydrate titration ksp solubility product equilibrium constant debye huckel bromocresol green'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):

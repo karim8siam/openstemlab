@@ -56,6 +56,9 @@ function update(){
  }else if(cfg.slug==='vapor-pressure-liquid-clausius-clapeyron'){
   $('liveState').textContent='Ready to equilibrate ethanol isoteniscope at '+p.input.toFixed(1)+' °C.';
   message('Set bath temperature t, adjust vacuum ballast manifold until U-tube levels match & log P.');
+ }else if(cfg.slug==='gibbs-free-energy-solubility-van-t-hoff'){
+  $('liveState').textContent='Ready to equilibrate saturated borax slurry at '+p.input.toFixed(1)+' °C.';
+  message('Equilibrate borax flask, pre-warm filter pipette, draw 5.00 mL aliquot & titrate with 0.50 M HCl.');
  }else{
   $('liveState').textContent='Ready to dispense '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+' of liquid.';
   message('Adjust '+cfg.shortInput+' V, then weigh the dispensed aliquot.');
@@ -90,6 +93,7 @@ $('measure').onclick=async()=>{
  if(cfg.slug==='combustion-bomb-calorimetry-benzoic') msgStart='Discharging 23 V through ignition fuse wire, deflagration in 30 atm O2, logging temperature rise ΔT…';
  if(cfg.slug==='heat-solution-crystallization-calorimetry') msgStart='Pouring KNO3 crystals into Dewar, motorized stirring at 200 rpm, endothermic cooling plunge & logging ΔT_drop…';
  if(cfg.slug==='vapor-pressure-liquid-clausius-clapeyron') msgStart='Regulating water bath, throttling air-bleed needle valve, nulling U-tube menisci & reading transducer…';
+ if(cfg.slug==='gibbs-free-energy-solubility-van-t-hoff') msgStart='Filtering 5.00 mL saturated borax aliquot, adding bromocresol green, titrating dropwise to yellow endpoint…';
  message(msgStart);
  await new Promise(resolve=>setTimeout(resolve,400));
  const raw=prediction.raw;
@@ -151,6 +155,12 @@ $('measure').onclick=async()=>{
   const ln_P = Math.log(raw);
   $('liveState').textContent='Equilibrium established: P = '+raw.toFixed(2)+' kPa at '+p.input.toFixed(1)+' °C.';
   message('Vapor pressure recorded: P = '+raw.toFixed(2)+' kPa ('+(raw*7.50062).toFixed(1)+' mmHg, ln P = '+ln_P.toFixed(4)+', 1000/T = '+inv_T.toFixed(4)+' K⁻¹). Record in notebook.');
+ }else if(cfg.slug==='gibbs-free-energy-solubility-van-t-hoff'){
+  const s = raw / 20.0;
+  const Ksp = 4.0 * Math.pow(s, 3);
+  const ln_Ksp = Math.log(Ksp);
+  $('liveState').textContent='Titration endpoint reached: V_HCl = '+raw.toFixed(2)+' mL at '+p.input.toFixed(1)+' °C.';
+  message('Titration complete: V_HCl = '+raw.toFixed(2)+' mL (s = '+s.toFixed(4)+' M, K_sp = '+Ksp.toExponential(3)+', ln K_sp = '+ln_Ksp.toFixed(3)+'). Record in notebook.');
  }else{
   $('liveState').textContent='Analytical balance stabilized: '+raw.toFixed(cfg.rawDecimals)+' g net mass.';
   message('Gravimetric measurement complete: '+raw.toFixed(cfg.rawDecimals)+' '+cfg.rawUnit+' for '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+'. Record in notebook.');
@@ -428,6 +438,18 @@ function draw(t){
    return;
   }
   $('apparatusDiagram').innerHTML=drawVapBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='gibbs-free-energy-solubility-van-t-hoff'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawHoffCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawHoffSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawHoffBenchView(p,rawVal);
   return;
  }
  if(currentSimMode==='compare'){
@@ -4383,5 +4405,281 @@ function drawVapSandboxView(p, rawVal){
  });
 
  svg += text(360, 305, 'Thermodynamic Invariant: Isoteniscope eliminates air contamination, isolating pure vapor pressure.', '#789c80', 8.5);
+ return svg;
+}
+
+
+// --- LAB 16: VAN 'T HOFF THERMODYNAMIC SOLUBILITY ANALYSIS ---
+
+function drawHoffBenchView(p, rawVal){
+ const t = (p && p.input) ? p.input : 40.0;
+ const T_K = t + 273.15;
+ const inv_T = 1000.0 / T_K;
+ const R = 8.31446;
+ const dH = 110000.0;
+ const dS = 330.0;
+ const ln_Ksp_calc = -dH / (R * T_K) + dS / R;
+ const Ksp_calc = Math.exp(ln_Ksp_calc);
+ const s_calc = Math.pow(Ksp_calc / 4.0, 1.0 / 3.0);
+ const v_calc = 20.0 * s_calc;
+ const V_HCl = rawVal !== null ? rawVal : v_calc;
+ const s = V_HCl / 20.0;
+ const Ksp = 4.0 * Math.pow(s, 3);
+ const ln_Ksp = Math.log(Ksp);
+ const dG = (dH - T_K * dS) / 1000.0;
+
+ let svg = '';
+ svg += '<rect x="0" y="0" width="720" height="320" fill="#051009"/>';
+ svg += text(360, 24, 'SATURATED BORAX THERMOSTAT & QUANTITATIVE BURETTE TITRATION', '#4ade80', 13);
+ svg += text(360, 39, 'Na2B4O7·10H2O(s) <=> 2 Na+(aq) + B4O5(OH)4^2-(aq) + 8 H2O(l) | van 't Hoff ΔH° = +110.1 kJ/mol', '#94a3b8', 9);
+
+ // --- LEFT PANEL: THERMOSTATTED BORAX FLASK & BURETTE TITRATION ---
+ const bX = 140, bY = 70;
+
+ // Water Bath Tank for Borax Slurry
+ svg += '<rect x="'+(bX-75)+'" y="'+(bY+40)+'" width="90" height="150" rx="6" fill="#0284c7" fill-opacity="0.15" stroke="#38bdf8" stroke-width="1.5"/>';
+ svg += '<text x="'+(bX-30)+'" y="'+(bY+180)+'" text-anchor="middle" fill="#64748b" font-size="7">Bath ('+t.toFixed(1)+' °C)</text>';
+
+ // Borax Erlenmeyer Flask inside bath
+ svg += '<path d="M '+(bX-40)+' '+(bY+60)+' L '+(bX-40)+' '+(bY+75)+' L '+(bX-58)+' '+(bY+150)+' Q '+(bX-58)+' '+(bY+156)+' '+(bX-50)+' '+(bY+156)+' L '+(bX-10)+' '+(bY+156)+' Q '+(bX-2)+' '+(bY+156)+' '+(bX-2)+' '+(bY+150)+' L '+(bX-20)+' '+(bY+75)+' L '+(bX-20)+' '+(bY+60)+' Z" fill="#0d1f14" stroke="#cbd5e1" stroke-width="1.5"/>';
+ // Liquid fill
+ svg += '<path d="M '+(bX-48)+' '+(bY+115)+' L '+(bX-56)+' '+(bY+148)+' L '+(bX-4)+' '+(bY+148)+' L '+(bX-12)+' '+(bY+115)+' Z" fill="#38bdf8" fill-opacity="0.4"/>';
+ // Undissolved borax crystals settled at bottom
+ svg += '<rect x="'+(bX-52)+'" y="'+(bY+148)+'" width="44" height="6" rx="1.5" fill="#f8fafc" stroke="#94a3b8" stroke-width="0.8"/>';
+ svg += '<text x="'+(bX-30)+'" y="'+(bY+142)+'" text-anchor="middle" fill="#bae6fd" font-size="6">Saturated Slurry</text>';
+
+ // Cotton filter-plugged transfer pipette
+ svg += '<path d="M '+(bX-30)+' '+(bY+20)+' L '+(bX-30)+' '+(bY+125)+' L '+(bX-31)+' '+(bY+135)+' L '+(bX-29)+' '+(bY+135)+' L '+(bX-30)+' '+(bY+125)+'" fill="none" stroke="#cbd5e1" stroke-width="2"/>';
+ svg += '<ellipse cx="'+(bX-30)+'" cy="'+(bY+75)+'" rx="5" ry="12" fill="#cbd5e1" fill-opacity="0.5"/>';
+ svg += '<circle cx="'+(bX-30)+'" cy="'+(bY+135)+'" r="2" fill="#facc15"/>';
+ svg += '<text x="'+(bX-30)+'" y="'+(bY+16)+'" text-anchor="middle" fill="#facc15" font-size="6">Filter Plug Pipette</text>';
+
+ // Titration Assembly on right side of left panel
+ const tX = bX + 45;
+ // Class-A Glass Burette filled with 0.50 M HCl
+ svg += '<rect x="'+(tX-3)+'" y="'+(bY-5)+'" width="6" height="110" fill="#f8fafc" stroke="#94a3b8" stroke-width="1"/>';
+ const bFillH = Math.min(85, V_HCl * 7.5);
+ svg += '<rect x="'+(tX-2)+'" y="'+(bY+10)+'" width="4" height="'+bFillH+'" fill="#38bdf8" fill-opacity="0.6"/>';
+ svg += '<line x1="'+(tX-6)+'" y1="'+(bY+80)+'" x2="'+(tX+6)+'" y2="'+(bY+80)+'" stroke="#ef4444" stroke-width="1.5"/>'; // stopcock
+ svg += '<text x="'+(tX+12)+'" y="'+(bY+20)+'" fill="#94a3b8" font-size="6.5">0.50 M HCl</text>';
+
+ // Titration Flask (Erlenmeyer) below burette
+ const fY = bY + 115;
+ svg += '<path d="M '+(tX-10)+' '+fY+' L '+(tX-10)+' '+(fY+10)+' L '+(tX-24)+' '+(fY+60)+' Q '+(tX-24)+' '+(fY+64)+' '+(tX-18)+' '+(fY+64)+' L '+(tX+18)+' '+(fY+64)+' Q '+(tX+24)+' '+(fY+64)+' '+(tX+24)+' '+(fY+60)+' L '+(tX+10)+' '+(fY+10)+' L '+(tX+10)+' '+fY+' Z" fill="#0d1f14" stroke="#cbd5e1" stroke-width="1.5"/>';
+ // Bromocresol green liquid fill (yellow at endpoint pH 4.0)
+ svg += '<path d="M '+(tX-18)+' '+(fY+32)+' L '+(tX-22)+' '+(fY+58)+' L '+(tX+22)+' '+(fY+58)+' L '+(tX+18)+' '+(fY+32)+' Z" fill="#facc15" fill-opacity="0.8"/>';
+ svg += '<text x="'+tX+'" y="'+(fY+50)+'" text-anchor="middle" fill="#051009" font-size="6.5" font-weight="bold">pH 4.0 Yellow</text>';
+ svg += '<text x="'+tX+'" y="'+(fY+74)+'" text-anchor="middle" fill="#64748b" font-size="7">5.00 mL Aliquot</text>';
+
+
+ // --- RIGHT PANEL: DIGITAL TITRANT DISPLAY & VAN 'T HOFF AUDIT ---
+ const rX = 260, rY = 55, rW = 435, rH = 240;
+ svg += '<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+
+ // Digital Titrant Volume Readout
+ svg += '<rect x="'+(rX+15)+'" y="'+(rY+12)+'" width="200" height="72" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1.2"/>';
+ svg += '<text x="'+(rX+25)+'" y="'+(rY+26)+'" fill="#86efac" font-size="8" font-weight="bold">BURETTE TITRANT VOLUME (0.50 M HCl)</text>';
+ svg += '<text x="'+(rX+25)+'" y="'+(rY+56)+'" fill="#facc15" font-size="22" font-family="monospace" font-weight="bold">'+V_HCl.toFixed(2)+' mL</text>';
+ svg += '<text x="'+(rX+140)+'" y="'+(rY+44)+'" fill="#94a3b8" font-size="7.5">s = '+s.toFixed(4)+' M</text>';
+ svg += '<text x="'+(rX+140)+'" y="'+(rY+56)+'" fill="#38bdf8" font-size="7.5" font-weight="bold">ln K_sp = '+ln_Ksp.toFixed(3)+'</text>';
+ svg += '<text x="'+(rX+140)+'" y="'+(rY+68)+'" fill="#86efac" font-size="7">±0.02 mL Res.</text>';
+
+ // Mini van 't Hoff Linear Profile Profile
+ const cX = rX + 225, cY = rY + 12, cW = 195, cH = 72;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1.2"/>';
+ svg += '<text x="'+(cX+8)+'" y="'+(cY+12)+'" fill="#94a3b8" font-size="7">ln(K_sp) vs 1000/T van 't Hoff Plot</text>';
+ // Axes inside mini box
+ svg += '<line x1="'+(cX+15)+'" y1="'+(cY+60)+'" x2="'+(cX+185)+'" y2="'+(cY+60)+'" stroke="#162e1e" stroke-width="1"/>';
+ svg += '<line x1="'+(cX+15)+'" y1="'+(cY+18)+'" x2="'+(cX+15)+'" y2="'+(cY+60)+'" stroke="#162e1e" stroke-width="1"/>';
+ // Sloping downwards (steeper slope: m = -13.24 K)
+ svg += '<line x1="'+(cX+25)+'" y1="'+(cY+20)+'" x2="'+(cX+175)+'" y2="'+(cY+58)+'" stroke="#4ade80" stroke-width="1.8"/>';
+ // Current data point
+ const ptX = cX + 25 + (3.3 - inv_T) / (3.3 - 3.0) * 150;
+ const ptY = cY + 58 - (ln_Ksp - (-4.0)) / ((-0.5) - (-4.0)) * 38;
+ svg += '<circle cx="'+ptX+'" cy="'+ptY+'" r="3.5" fill="#facc15" stroke="#ef4444" stroke-width="1"/>';
+ svg += '<text x="'+(cX+185)+'" y="'+(cY+24)+'" text-anchor="end" fill="#facc15" font-size="6.8" font-weight="bold">Slope = −13.24 K</text>';
+
+ // State Function Matrix Grid
+ const gY = rY + 92;
+ const metrics = [
+  {label: 'Equilibration Temperature t', val: t.toFixed(1) + ' °C (' + T_K.toFixed(2) + ' K)', col: '#86efac', sub: '1000/T = ' + inv_T.toFixed(4) + ' K⁻¹'},
+  {label: 'Solubility Product K_sp', val: Ksp.toExponential(3) + ' (s = ' + s.toFixed(4) + ' M)', col: '#38bdf8', sub: 'K_sp = 4·s³ = 4·[Na+]²·[B4O5(OH)4^2-]'},
+  {label: 'Standard Enthalpy ΔH°', val: '+110.1 kJ/mol', col: '#facc15', sub: 'ΔH° = −m_slope · (1000·R) (Target: +110.0)'},
+  {label: 'Standard Entropy ΔS°', val: '+330.3 J/(mol·K)', col: '#f87171', sub: 'ΔS° = b · R (1 solid -> 11 aqueous species)'}
+ ];
+
+ metrics.forEach((mi, idx)=>{
+  const mx = rX + 15 + (idx % 2) * 205;
+  const my = gY + Math.floor(idx / 2) * 52;
+  svg += '<rect x="'+mx+'" y="'+my+'" width="195" height="46" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1"/>';
+  svg += '<text x="'+(mx+10)+'" y="'+(my+13)+'" fill="#94a3b8" font-size="7">'+mi.label+'</text>';
+  svg += '<text x="'+(mx+10)+'" y="'+(my+28)+'" fill="'+mi.col+'" font-size="9" font-weight="bold">'+mi.val+'</text>';
+  svg += '<text x="'+(mx+10)+'" y="'+(my+39)+'" fill="#64748b" font-size="6.5">'+mi.sub+'</text>';
+ });
+
+ // Bottom Verification Banner
+ svg += '<rect x="'+(rX+15)+'" y="'+(rY+200)+'" width="405" height="30" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1"/>';
+ svg += '<text x="'+(rX+217)+'" y="'+(rY+218)+'" text-anchor="middle" fill="#4ade80" font-size="8.2" font-family="monospace" font-weight="bold">van 't Hoff Invariant: ln K_sp = −13.241·(1000/T) + 39.723 => ΔH° = +110.1 kJ/mol, ΔS° = +330.3 J/mol·K (R² = 1.000)</text>';
+
+ svg += text(360, 310, 'van 't Hoff analysis extracts enthalpy and entropy purely from equilibrium solubility without calorimetry.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawHoffCompareView(p, rawVal){
+ let svg = '';
+ svg += '<rect x="0" y="0" width="720" height="320" fill="#051009"/>';
+ svg += text(360, 24, 'THERMODYNAMIC ANALYSIS OF ELECTROLYTE DISSOLUTION', '#4ade80', 13);
+ svg += text(360, 39, 'van 't Hoff Linear Ideal Model vs Debye-Hückel Extended Law vs Entropic Compensation', '#94a3b8', 9);
+
+ const cards = [
+  {
+   title: '1. van 't Hoff Linear Model',
+   sub: 'ln K_sp = −(ΔH°/R)·(1/T) + ΔS°/R',
+   color: '#4ade80',
+   border: '#166534',
+   items: [
+    'Thermodynamic Derivation: Integrated Gibbs-Helmholtz equation',
+    'Linear Coordinates: ln K_sp against scaled reciprocal 1000/T',
+    'Slope Physical Meaning: m_slope = −ΔH° / (1000·R) isolates enthalpy',
+    'Intercept Physical Meaning: b = ΔS° / R isolates dissolution entropy',
+    'Borax Results: ΔH° = +110.1 kJ/mol, ΔS° = +330.3 J/(mol·K)',
+    'Regression Quality: Ideal linearity with R² = 1.000 across 30–55 °C'
+   ]
+  },
+  {
+   title: '2. Debye-Hückel Extended Law',
+   sub: 'K_sp,true = γ_±³ · 4 s³',
+   color: '#38bdf8',
+   border: '#0369a1',
+   items: [
+    'Ionic Activity: Real solutions replace concentration with activity a_i',
+    'Ionic Strength: I = 1/2 ∑ c_i z_i² ranges from 0.17 M to 0.51 M',
+    'Mean Activity Coefficient: γ_± decreases from 0.75 to 0.65 as T rises',
+    'Davies Equation: log γ_± = −0.51 · |z+z-| · [√I / (1 + √I) − 0.3 I]',
+    'Correction Effect: Slightly shifts ΔH° by ~1.5% towards higher value',
+    'Regression Absorption: Temperature-induced activity shift is linear'
+   ]
+  },
+  {
+   title: '3. Entropic Compensation',
+   sub: 'ΔG° = ΔH° − T ΔS° = 0 at T_cross',
+   color: '#facc15',
+   border: '#854d0e',
+   items: [
+    'Enthalpic Barrier: ΔH° = +110.1 kJ/mol strongly opposes dissolution',
+    'Entropic Driving Force: ΔS° = +330.3 J/(mol·K) massively favors dissolution',
+    'Microscopic Cause: 1 mol solid decahydrate releases 11 aqueous species',
+    'Crossover Temperature: T_cross = ΔH° / ΔS° = 110.1 / 0.3303 = 333.3 K (60.2 °C)',
+    'Room Temperature (25 °C): ΔG° = +11.6 kJ/mol (K_sp < 1, moderate solubility)',
+    'Elevated Temperature (65 °C): ΔG° < 0 (K_sp > 1, dramatic surge in solubility)'
+   ]
+  }
+ ];
+
+ cards.forEach((c, idx)=>{
+  const x = 20 + idx * 230, y = 50, w = 220, h = 240;
+  svg += '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="6" fill="#0d1f14" stroke="'+c.border+'" stroke-width="1.5"/>';
+  svg += '<rect x="'+(x+8)+'" y="'+(y+8)+'" width="'+(w-16)+'" height="34" rx="4" fill="#051009"/>';
+  svg += '<text x="'+(x+w/2)+'" y="'+(y+22)+'" text-anchor="middle" fill="'+c.color+'" font-size="9" font-weight="bold">'+c.title+'</text>';
+  svg += '<text x="'+(x+w/2)+'" y="'+(y+35)+'" text-anchor="middle" fill="#94a3b8" font-size="7">'+c.sub+'</text>';
+
+  c.items.forEach((item, ii)=>{
+   const iy = y + 54 + ii * 29;
+   svg += '<circle cx="'+(x+14)+'" cy="'+(iy-3)+'" r="2" fill="'+c.color+'"/>';
+   svg += '<foreignObject x="'+(x+22)+'" y="'+(iy-10)+'" width="'+(w-28)+'" height="29"><p xmlns="http://www.w3.org/1999/xhtml" style="font-size:7.2px;color:#cbd5e1;line-height:1.2;margin:0">'+item+'</p></foreignObject>';
+  });
+ });
+
+ svg += text(360, 305, 'Thermodynamic Invariant: Borax dissolution illustrates entropy-driven solubility (ΔS° = +330 J/mol·K).', '#789c80', 8.5);
+ return svg;
+}
+
+function drawHoffSandboxView(p, rawVal){
+ const t = (p && p.input) ? p.input : 40.0;
+ const T_K = t + 273.15;
+ const dH = 110.09; // kJ/mol
+ const dS = 0.33027; // kJ/(mol*K)
+ const dG_cur = dH - T_K * dS;
+
+ let svg = '';
+ svg += '<rect x="0" y="0" width="720" height="320" fill="#051009"/>';
+ svg += text(360, 24, 'GIBBS FREE ENERGY SURFACE & TITRIMETRIC AUDIT', '#4ade80', 13);
+ svg += text(360, 39, 'ΔG°(T) = ΔH° − T ΔS° Crossover and Pipetting Error Elimination', '#94a3b8', 9);
+
+ // --- LEFT PANEL: GIBBS FREE ENERGY VS TEMPERATURE ---
+ const lX = 25, lY = 50, lW = 390, lH = 240;
+ svg += '<rect x="'+lX+'" y="'+lY+'" width="'+lW+'" height="'+lH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+18)+'" text-anchor="middle" fill="#86efac" font-size="9.5" font-weight="bold">STANDARD GIBBS FREE ENERGY ΔG°(T) (kJ/mol)</text>';
+
+ const gX = lX + 45, gY = lY + 35, gW = 325, gH = 155;
+ svg += '<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#051009" stroke="#162e1e" stroke-width="1"/>';
+
+ // Grid lines
+ for(let gy = gY + 30; gy < gY + gH; gy += 30){
+  svg += '<line x1="'+gX+'" y1="'+gy+'" x2="'+(gX+gW)+'" y2="'+gy+'" stroke="#162e1e" stroke-width="0.8" stroke-dasharray="2,2"/>';
+ }
+ for(let gx = gX + 65; gx < gX + gW; gx += 65){
+  svg += '<line x1="'+gx+'" y1="'+gY+'" x2="'+gx+'" y2="'+(gY+gH)+'" stroke="#162e1e" stroke-width="0.8" stroke-dasharray="2,2"/>';
+ }
+
+ // Zero Gibbs Free Energy horizontal line (ΔG° = 0)
+ const zeroY = gY + gH - 50;
+ svg += '<line x1="'+gX+'" y1="'+zeroY+'" x2="'+(gX+gW)+'" y2="'+zeroY+'" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="3,2"/>';
+ svg += '<text x="'+(gX+gW-5)+'" y="'+(zeroY-4)+'" text-anchor="end" fill="#94a3b8" font-size="6.8">ΔG° = 0 (K_sp = 1)</text>';
+
+ // Labels
+ svg += '<text x="'+(gX+gW/2)+'" y="'+(gY+gH+14)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5">Absolute Temperature T (K)</text>';
+ svg += '<text x="'+(gX-8)+'" y="'+(gY+gH/2)+'" text-anchor="middle" transform="rotate(-90 '+(gX-8)+' '+(gY+gH/2)+')" fill="#94a3b8" font-size="7.5">ΔG° (kJ/mol)</text>';
+
+ // Ticks: 290K to 350K
+ svg += '<text x="'+gX+'" y="'+(gY+gH+10)+'" text-anchor="middle" fill="#64748b" font-size="6.5">290 K</text>';
+ svg += '<text x="'+(gX+65)+'" y="'+(gY+gH+10)+'" text-anchor="middle" fill="#64748b" font-size="6.5">305 K</text>';
+ svg += '<text x="'+(gX+130)+'" y="'+(gY+gH+10)+'" text-anchor="middle" fill="#64748b" font-size="6.5">320 K</text>';
+ svg += '<text x="'+(gX+195)+'" y="'+(gY+gH+10)+'" text-anchor="middle" fill="#64748b" font-size="6.5">335 K (T_cross)</text>';
+ svg += '<text x="'+(gX+gW)+'" y="'+(gY+gH+10)+'" text-anchor="middle" fill="#64748b" font-size="6.5">350 K</text>';
+
+ // Linear downward slope of ΔG° = ΔH° - T ΔS°
+ const lineX1 = gX + 15, lineY1 = gY + 15;
+ const lineX2 = gX + gW - 15, lineY2 = gY + gH - 15;
+ svg += '<line x1="'+lineX1+'" y1="'+lineY1+'" x2="'+lineX2+'" y2="'+lineY2+'" stroke="#ef4444" stroke-width="2.5"/>';
+
+ // Spontaneous crossover point at 333.3 K (60.2 °C)
+ const crossX = gX + (333.3 - 290.0) / 60.0 * gW;
+ svg += '<circle cx="'+crossX+'" cy="'+zeroY+'" r="3.5" fill="#facc15"/>';
+ svg += '<text x="'+(crossX+8)+'" y="'+(zeroY-5)+'" fill="#facc15" font-size="7" font-weight="bold">T_cross = 333.3 K (60.2 °C)</text>';
+
+ // Current experimental point
+ const curX = gX + (T_K - 290.0) / 60.0 * gW;
+ const curY = zeroY - (dG_cur / 20.0) * (zeroY - gY);
+ svg += '<circle cx="'+curX+'" cy="'+curY+'" r="4" fill="#4ade80" stroke="#facc15" stroke-width="1.5"/>';
+ svg += '<text x="'+(curX+8)+'" y="'+(curY+4)+'" fill="#4ade80" font-size="7" font-weight="bold">ΔG° = +'+dG_cur.toFixed(1)+' kJ/mol</text>';
+
+ // Bottom invariant badge
+ svg += '<rect x="'+(lX+15)+'" y="'+(lY+198)+'" width="'+(lW-30)+'" height="32" rx="3" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+218)+'" text-anchor="middle" fill="#86efac" font-size="8" font-family="monospace" font-weight="bold">Thermodynamic Crossover: Above 60.2 °C, T·ΔS° > ΔH° => ΔG° < 0 (Spontaneous)</text>';
+
+
+ // --- RIGHT PANEL: SOURCES OF BIAS & SYSTEM AUDIT ---
+ const rX = 425, rY = 50, rW = 275, rH = 240;
+ svg += '<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<text x="'+(rX+rW/2)+'" y="'+(rY+18)+'" text-anchor="middle" fill="#86efac" font-size="9.5" font-weight="bold">SOURCES OF BIAS & SYSTEM AUDIT</text>';
+
+ const lossItems = [
+  {label: 'Cotton Filter Plug', desc: 'Blocks suspended solid borax crystals from entering pipette', val: 'Zero particulate bias', col: '#4ade80'},
+  {label: 'Pre-Warmed Pipette Barrel', desc: 'Prevents thermal shock premature precipitation on glass', val: 'Thermal shock eliminated', col: '#38bdf8'},
+  {label: 'Bromocresol Green Endpoint', desc: 'Sharp color change at pH 4.0 matches boric acid stoichiometry', val: 'Exact 1:2 neutralization', col: '#86efac'},
+  {label: 'Excess Solid Verification', desc: 'Continuous excess solid ensures 100% thermodynamic saturation', val: 'Solid-liquid equilibrium', col: '#facc15'},
+  {label: 'Multi-Point OLS Regression', desc: 'Linearization ln(K_sp) vs 1000/T purges systematic titration drift', val: 'R² = 1.00000 Unbiased', col: '#4ade80'}
+ ];
+
+ lossItems.forEach((li, idx)=>{
+  const ly = rY + 30 + idx * 40;
+  svg += '<rect x="'+(rX+8)+'" y="'+ly+'" width="'+(rW-16)+'" height="34" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg += '<text x="'+(rX+14)+'" y="'+(ly+12)+'" fill="'+li.col+'" font-size="7.5" font-weight="bold">'+li.label+'</text>';
+  svg += '<text x="'+(rX+14)+'" y="'+(ly+25)+'" fill="#94a3b8" font-size="6.8">'+li.desc+'</text>';
+  svg += '<text x="'+(rX+rW-14)+'" y="'+(ly+12)+'" text-anchor="end" fill="'+li.col+'" font-size="7.5" font-family="monospace">'+li.val+'</text>';
+ });
+
+ svg += text(360, 305, 'Thermodynamic Invariant: van 't Hoff analysis provides complete state function derivation.', '#789c80', 8.5);
  return svg;
 }
