@@ -56,6 +56,14 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:1.0,x,y,valid:m_init>=0.20&&m_init<=0.70};
  }
+ if(slug==='empirical-formula-magnesium-oxide'){
+  const m_mg=Number(input);
+  const ratio=15.9994 / 24.305;
+  const raw=round(m_mg * ratio, 4);
+  const x=m_mg;
+  const y=raw;
+  return {raw,ideal:raw,period:1.0,x,y,valid:m_mg>=0.20&&m_mg<=0.70};
+ }
  throw Error('Unknown Chemistry experiment predict: '+slug);
 }
 
@@ -84,6 +92,10 @@ function reading(slug,input,raw){
   y=Number(raw);
  }
  if(slug==='chemical-reactions-copper-cycle'){
+  x=Number(input);
+  y=Number(raw);
+ }
+ if(slug==='empirical-formula-magnesium-oxide'){
   x=Number(input);
   y=Number(raw);
  }
@@ -139,6 +151,12 @@ function estimate(slug,f){
  }
  if(slug==='chemical-reactions-copper-cycle'){
   return {value:f.m,se:f.slopeSE,reference:1.0000};
+ }
+ if(slug==='empirical-formula-magnesium-oxide'){
+  const conv=24.305 / 15.9994;
+  const ratio_est=f.m * conv;
+  const se=f.slopeSE * conv;
+  return {value:ratio_est,se:se,reference:1.0000};
  }
  throw Error('Unknown Chemistry experiment estimate: '+slug);
 }

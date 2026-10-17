@@ -29,6 +29,9 @@ function update(){
  }else if(cfg.slug==='chemical-reactions-copper-cycle'){
   $('liveState').textContent='Ready to cycle '+p.input.toFixed(2)+' g copper wire through 5 reactions.';
   message('Set initial copper mass m_initial, then run cyclic reactions, isolate, wash & dry.');
+ }else if(cfg.slug==='empirical-formula-magnesium-oxide'){
+  $('liveState').textContent='Ready to burn '+p.input.toFixed(2)+' g burnished magnesium ribbon in porcelain crucible.';
+  message('Set initial magnesium mass m_Mg, then oxidize, digest nitride with steam, calcine & weigh.');
  }else{
   $('liveState').textContent='Ready to dispense '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+' of liquid.';
   message('Adjust '+cfg.shortInput+' V, then weigh the dispensed aliquot.');
@@ -54,6 +57,7 @@ $('measure').onclick=async()=>{
  if(cfg.slug==='molar-volume-ideal-gas') msgStart='Inverting eudiometer, diffusing 6 M HCl, evolving H₂ gas, leveling menisci…';
  if(cfg.slug==='volatile-liquid-molar-mass') msgStart='Immersing Dumas bulb at 100 °C, flushing air through pinhole, condensing & weighing…';
  if(cfg.slug==='chemical-reactions-copper-cycle') msgStart='Dissolving in HNO₃, precipitating Cu(OH)₂, dehydrating to CuO, dissolving in H₂SO₄, reducing with Zn, washing & desiccation…';
+ if(cfg.slug==='empirical-formula-magnesium-oxide') msgStart='Igniting magnesium ribbon, throttling aerosol smoke, digesting nitride with hot water, calcining at 850 °C…';
  message(msgStart);
  await new Promise(resolve=>setTimeout(resolve,400));
  const raw=prediction.raw;
@@ -75,6 +79,9 @@ $('measure').onclick=async()=>{
  }else if(cfg.slug==='chemical-reactions-copper-cycle'){
   $('liveState').textContent='Desiccated recovered metallic copper: '+raw.toFixed(4)+' g.';
   message('Copper cycle complete: recovered '+raw.toFixed(4)+' g pure Cu from '+p.input.toFixed(2)+' g wire (100.00% yield). Record in notebook.');
+ }else if(cfg.slug==='empirical-formula-magnesium-oxide'){
+  $('liveState').textContent='Calcined magnesium oxide: incorporated '+raw.toFixed(4)+' g bound oxygen.';
+  message('Crucible thermal oxidation complete: incorporated '+raw.toFixed(4)+' g O into '+p.input.toFixed(2)+' g Mg (formula MgO). Record in notebook.');
  }else{
   $('liveState').textContent='Analytical balance stabilized: '+raw.toFixed(cfg.rawDecimals)+' g net mass.';
   message('Gravimetric measurement complete: '+raw.toFixed(cfg.rawDecimals)+' '+cfg.rawUnit+' for '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+'. Record in notebook.');
@@ -244,6 +251,18 @@ function draw(t){
    return;
   }
   $('apparatusDiagram').innerHTML=drawCopperBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='empirical-formula-magnesium-oxide'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawMgCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawMgSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawMgBenchView(p,rawVal);
   return;
  }
  if(currentSimMode==='compare'){
@@ -1771,5 +1790,273 @@ function drawCopperSandboxView(p,rawVal){
  });
 
  svg+=text(360,305,'Mass Budget: OLS regression slope m_slope = 1.0000 g/g insulates true stoichiometry against transfer offsets.','#789c80',9);
+ return svg;
+}
+
+
+// ======================================================================
+// CHEMISTRY LAB 07: EMPIRICAL FORMULA OF MAGNESIUM OXIDE (MgO)
+// ======================================================================
+function drawMgBenchView(p,rawVal){
+ const m_mg=p.input;
+ const m_ox=rawVal;
+ const m_tot=m_mg+m_ox;
+ const n_mg=m_mg/24.305;
+ const n_ox=m_ox/15.9994;
+ const ratio=n_ox/n_mg;
+
+ let svg='<defs>';
+ svg+='<linearGradient id="flameGrad" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#1e3a8a"/><stop offset="30%" stop-color="#3b82f6"/><stop offset="70%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#fef08a"/></linearGradient>';
+ svg+='<linearGradient id="innerCone" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#0284c7"/><stop offset="100%" stop-color="#a7f3d0"/></linearGradient>';
+ svg+='<linearGradient id="porcelainGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#e2e8f0"/><stop offset="25%" stop-color="#ffffff"/><stop offset="75%" stop-color="#cbd5e1"/><stop offset="100%" stop-color="#94a3b8"/></linearGradient>';
+ svg+='<linearGradient id="incandescentGlow" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffffff"/><stop offset="40%" stop-color="#fef08a"/><stop offset="80%" stop-color="#f97316"/><stop offset="100%" stop-color="#dc2626"/></linearGradient>';
+ svg+='<linearGradient id="burnerMetal" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#334155"/><stop offset="50%" stop-color="#64748b"/><stop offset="100%" stop-color="#1e293b"/></linearGradient>';
+ svg+='</defs><rect width="720" height="320" fill="#08140c"/>';
+
+ svg+=text(360,20,'CRUCIBLE THERMAL OXIDATION & EMPIRICAL FORMULA DETERMINATION: MAGNESIUM OXIDE (MgO)','#86efac',12);
+
+ // Table surface
+ svg+='<rect x="0" y="275" width="720" height="45" fill="#132419" stroke="#1f3b2a" stroke-width="1"/>';
+ svg+='<line x1="0" y1="275" x2="720" y2="275" stroke="#2d523b" stroke-width="2"/>';
+
+ // --- LEFT SYSTEM: Meker Burner & High-Form Porcelain Crucible (x = 30 to 340) ---
+ // Burner base & barrel
+ const bX=175;
+ svg+='<rect x="'+(bX-45)+'" y="260" width="90" height="15" rx="3" fill="url(#burnerMetal)" stroke="#0f172a"/>';
+ svg+='<rect x="'+(bX-12)+'" y="180" width="24" height="80" fill="url(#burnerMetal)" stroke="#0f172a"/>';
+ // Meker burner expanded grid head
+ svg+='<path d="M'+(bX-18)+' 180 L'+(bX-26)+' 162 L'+(bX+26)+' 162 L'+(bX+18)+' 180 Z" fill="url(#burnerMetal)" stroke="#0f172a"/>';
+ // Grid lines on Meker head
+ for(let g=-20;g<=20;g+=8){
+  svg+='<line x1="'+(bX+g)+'" y1="162" x2="'+(bX+g)+'" y2="168" stroke="#94a3b8" stroke-width="1"/>';
+ }
+
+ // Iron Ring & Clay Pipe Triangle
+ svg+='<line x1="'+(bX-75)+'" y1="125" x2="'+(bX+75)+'" y2="125" stroke="#475569" stroke-width="5"/>'; // Iron ring
+ // Ceramic clay pipes of triangle
+ svg+='<line x1="'+(bX-38)+'" y1="125" x2="'+(bX+38)+'" y2="125" stroke="#e2e8f0" stroke-width="7" stroke-linecap="round"/>';
+ svg+='<line x1="'+(bX-38)+'" y1="125" x2="'+bX+'" y2="92" stroke="#e2e8f0" stroke-width="7" stroke-linecap="round"/>';
+ svg+='<line x1="'+(bX+38)+'" y1="125" x2="'+bX+'" y2="92" stroke="#e2e8f0" stroke-width="7" stroke-linecap="round"/>';
+
+ // High-temperature Meker flame
+ svg+='<path d="M'+(bX-24)+' 162 Q'+(bX-12)+' 120 '+bX+' 95 Q'+(bX+12)+' 120 '+(bX+24)+' 162 Z" fill="url(#flameGrad)" fill-opacity=".85"/>';
+ svg+='<path d="M'+(bX-14)+' 162 Q'+(bX-6)+' 136 '+bX+' 118 Q'+(bX+6)+' 136 '+(bX+14)+' 162 Z" fill="url(#innerCone)" fill-opacity=".95"/>';
+
+ // High-Form Porcelain Crucible (seated in clay triangle)
+ const cX=bX,cY=68,cW=52,cH=54;
+ // Glowing bottom when heating
+ svg+='<ellipse cx="'+cX+'" cy="'+(cY+cH)+'" rx="'+(cW/3.2)+'" ry="4" fill="#ef4444" fill-opacity=".9"/>';
+ // Crucible body (tapered)
+ svg+='<path d="M'+(cX-cW/2)+' '+cY+' L'+(cX-cW/3.2)+' '+(cY+cH)+' Q'+cX+' '+(cY+cH+5)+' '+(cX+cW/3.2)+' '+(cY+cH)+' L'+(cX+cW/2)+' '+cY+' Z" fill="url(#porcelainGrad)" stroke="#64748b" stroke-width="1"/>';
+ // Crucible rim lip
+ svg+='<ellipse cx="'+cX+'" cy="'+cY+'" rx="'+(cW/2)+'" ry="5" fill="#f8fafc" stroke="#64748b" stroke-width="1"/>';
+
+ // Incandescent magnesium flare / ash inside crucible
+ svg+='<ellipse cx="'+cX+'" cy="'+(cY+12)+'" rx="'+(cW/2.4)+'" ry="4" fill="url(#incandescentGlow)"/>';
+ if(busy){
+  // Active combustion sparks & light rays
+  svg+='<circle cx="'+cX+'" cy="'+(cY+8)+'" r="12" fill="#ffffff" fill-opacity=".7"/>';
+  svg+='<line x1="'+(cX-18)+'" y1="'+(cY-6)+'" x2="'+(cX+18)+'" y2="'+(cY+22)+'" stroke="#ffffff" stroke-width="1.5"/>';
+  svg+='<line x1="'+(cX+18)+'" y1="'+(cY-6)+'" x2="'+(cX-18)+'" y2="'+(cY+22)+'" stroke="#ffffff" stroke-width="1.5"/>';
+ }
+
+ // Crucible Lid (tilted / cracked open 1.5 mm to admit O2)
+ svg+='<path d="M'+(cX-cW/2-2)+' '+(cY-4)+' L'+(cX+cW/2+4)+' '+(cY-8)+' L'+(cX+cW/2+2)+' '+(cY-12)+' L'+(cX-cW/2-4)+' '+(cY-8)+' Z" fill="url(#porcelainGrad)" stroke="#64748b" stroke-width="1"/>';
+ // Lid handle loop
+ svg+='<rect x="'+(cX-4)+'" y="'+(cY-15)+'" width="8" height="5" rx="2" fill="url(#porcelainGrad)" stroke="#64748b"/>';
+ // Tiny arrow indicating air O2 diffusing into crucible
+ svg+='<path d="M'+(cX+cW/2+18)+' '+(cY-18)+' Q'+(cX+cW/2+10)+' '+(cY-8)+' '+(cX+cW/2-2)+' '+(cY-5)+'" fill="none" stroke="#38bdf8" stroke-width="1.5"/>';
+ svg+='<text x="'+(cX+cW/2+24)+'" y="'+(cY-16)+'" fill="#38bdf8" font-size="7.5" font-weight="bold">O₂ influx</text>';
+
+ svg+='<rect x="'+(bX-95)+'" y="38" width="190" height="20" rx="3" fill="#051009" stroke="#162e1e"/>';
+ svg+='<text x="'+bX+'" y="52" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">Meker Flame Calcination: 850 °C</text>';
+
+
+ // --- RIGHT SYSTEM: Analytical Force Restoration Balance (x = 370 to 690) ---
+ const balX=390,balY=95,balW=300,balH=175;
+ // Granite anti-vibration base
+ svg+='<rect x="'+(balX-10)+'" y="260" width="'+(balW+20)+'" height="15" rx="3" fill="#1e293b" stroke="#0f172a"/>';
+ // Main balance enclosure
+ svg+='<rect x="'+balX+'" y="'+balY+'" width="'+balW+'" height="'+balH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+
+ // Glass Draft Chamber (upper half of balance)
+ const dX=balX+15,dY=balY+12,dW=balW-30,dH=98;
+ svg+='<rect x="'+dX+'" y="'+dY+'" width="'+dW+'" height="'+dH+'" rx="4" fill="#061209" stroke="#334155" stroke-width="1.2"/>';
+ // Stainless steel balance pan
+ svg+='<rect x="'+(dX+dW/2-35)+'" y="'+(dY+dH-8)+'" width="70" height="6" rx="2" fill="#94a3b8" stroke="#475569"/>';
+ svg+='<rect x="'+(dX+dW/2-5)+'" y="'+(dY+dH-2)+'" width="10" height="8" fill="#64748b"/>';
+
+ // Cooled porcelain crucible on balance pan with snow-white MgO product
+ const pX=dX+dW/2,pY=dY+dH-42,pW=36,pH=34;
+ svg+='<path d="M'+(pX-pW/2)+' '+pY+' L'+(pX-pW/3.2)+' '+(pY+pH)+' L'+(pX+pW/3.2)+' '+(pY+pH)+' L'+(pX+pW/2)+' '+pY+' Z" fill="url(#porcelainGrad)" stroke="#475569" stroke-width="1"/>';
+ svg+='<ellipse cx="'+pX+'" cy="'+pY+'" rx="'+(pW/2)+'" ry="3.5" fill="#f8fafc" stroke="#64748b"/>';
+ // White MgO powder cake inside crucible
+ svg+='<ellipse cx="'+pX+'" cy="'+(pY+8)+'" rx="'+(pW/2.5)+'" ry="2.8" fill="#ffffff"/>';
+
+ // Balance LCD Display
+ const lcdX=balX+25,lcdY=balY+120,lcdW=balW-50,lcdH=42;
+ svg+='<rect x="'+lcdX+'" y="'+lcdY+'" width="'+lcdW+'" height="'+lcdH+'" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1.5"/>';
+ svg+='<circle cx="'+(lcdX+16)+'" cy="'+(lcdY+21)+'" r="4" fill="'+(busy?'#eab308':'#48bb78')+'"/>';
+ svg+='<text x="'+(lcdX+26)+'" y="'+(lcdY+17)+'" fill="#789c80" font-size="7.5">STABLE</text>';
+ svg+='<text x="'+(lcdX+26)+'" y="'+(lcdY+28)+'" fill="#789c80" font-size="7.5">NET MASS</text>';
+
+ const dispVal=measurement?m_ox.toFixed(4):(busy?(rawVal*0.75).toFixed(4):'0.0000');
+ svg+='<text x="'+(lcdX+lcdW-16)+'" y="'+(lcdY+28)+'" text-anchor="end" fill="#86efac" font-size="19" font-family="monospace" font-weight="bold">'+dispVal+' g O</text>';
+
+ // Summary Data Card (Bottom Banner)
+ const bannerX=20,bannerY=215,bannerW=340,bannerH=52;
+ svg+='<rect x="'+bannerX+'" y="'+bannerY+'" width="'+bannerW+'" height="'+bannerH+'" rx="5" fill="#0a190e" stroke="#22422c"/>';
+ svg+='<text x="'+(bannerX+12)+'" y="'+(bannerY+16)+'" fill="#f97316" font-size="8.5" font-weight="bold">m(Mg) = '+m_mg.toFixed(4)+' g  [n = '+n_mg.toFixed(5)+' mol]</text>';
+ svg+='<text x="'+(bannerX+12)+'" y="'+(bannerY+31)+'" fill="#38bdf8" font-size="8.5" font-weight="bold">m(O)  = '+m_ox.toFixed(4)+' g  [n = '+n_ox.toFixed(5)+' mol]</text>';
+ svg+='<text x="'+(bannerX+12)+'" y="'+(bannerY+45)+'" fill="#86efac" font-size="8.5" font-family="monospace" font-weight="bold">n(O)/n(Mg) = '+ratio.toFixed(4)+' ⟹ Empirical Formula MgO</text>';
+
+ svg+=text(360,305,'Metrology: 2Mg(s) + O₂(g) ⟶ 2MgO(s); Steam hydrolyzes intermediate Mg₃N₂ ⟶ MgO.','#789c80',8.5);
+ return svg;
+}
+
+function drawMgCompareView(p,rawVal){
+ let svg='<rect x="0" y="0" width="720" height="320" fill="#08140c"/>';
+ svg+=text(360,24,'COMPARATIVE ANALYTICAL STOICHIOMETRY: FORMULA & EQUIVALENT DETERMINATIONS','#86efac',12);
+
+ const cards=[
+  {
+   title:'1. Crucible Thermal Oxidation',
+   sub:'Direct High-Temp Binary Synthesis (Our Lab)',
+   color:'#86efac',
+   border:'#254d33',
+   items:[
+    'Analyte: Electropositive metals (Mg ribbon, Cu, Sn)',
+    'Principle: Direct combustion with atmospheric oxygen',
+    'Reagents: 99.9% Mg ribbon, porcelain crucible, Meker burner',
+    'Digestion: Hot steam destroys intermediate Mg₃N₂ ⟶ NH₃↑',
+    'Temperature: 850 °C (cherry red calcination to constant mass)',
+    'Measurement: Mass gain of bound lattice oxygen (m_oxygen)',
+    'Invariant: Slope directly isolates stoichiometric ratio M(O)/M(Mg)'
+   ]
+  },
+  {
+   title:'2. Solution Metathesis Ppt.',
+   sub:'Aqueous Ionic Double Displacement',
+   color:'#38bdf8',
+   border:'#1e3a5f',
+   items:[
+    'Analyte: Insoluble inorganic salts (BaSO₄, AgCl, PbCrO₄)',
+    'Principle: Metathesis precipitation under low supersaturation',
+    'Reagents: Standard aqueous salt solutions (e.g., BaCl₂ + Na₂SO₄)',
+    'Digestion: 85 °C Ostwald ripening converts colloid to granular',
+    'Temperature: 80 °C to 90 °C water bath; Gooch filtration',
+    'Measurement: Isolated anhydrous precipitate cake mass',
+    'Invariant: Slope isolates formula weight via limiting reactant'
+   ]
+  },
+  {
+   title:'3. Dumas Vapor Density',
+   sub:'Gas-Phase Molecular Weight Metrology',
+   color:'#fde047',
+   border:'#5a4814',
+   items:[
+    'Analyte: Volatile organic liquids (cyclohexane, CCl₄, ethanol)',
+    'Principle: Vapor sweeps air; bulb filled at T_bath and P_atm',
+    'Reagents: Volatile organic analyte, boiling water bath, barometer',
+    'Digestion: Rapid air quenching condenses vapor inside bulb',
+    'Temperature: 100.0 °C (boiling water bath immersion)',
+    'Measurement: Mass of condensed vapor filling flask volume V',
+    'Invariant: Slope isolates ideal gas equation of state molar mass'
+   ]
+  }
+ ];
+
+ cards.forEach((c,idx)=>{
+  const x=25+idx*230,y=46,w=210,h=242;
+  svg+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="6" fill="#0d1f14" stroke="'+c.border+'" stroke-width="1.5"/>';
+  svg+='<rect x="'+(x+8)+'" y="'+(y+8)+'" width="'+(w-16)+'" height="32" rx="4" fill="#051009"/>';
+  svg+='<text x="'+(x+w/2)+'" y="'+(y+22)+'" text-anchor="middle" fill="'+c.color+'" font-size="9.5" font-weight="bold">'+c.title+'</text>';
+  svg+='<text x="'+(x+w/2)+'" y="'+(y+34)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5">'+c.sub+'</text>';
+
+  c.items.forEach((item,ii)=>{
+   const iy=y+54+ii*26;
+   svg+='<circle cx="'+(x+16)+'" cy="'+(iy-3)+'" r="2" fill="'+c.color+'"/>';
+   svg+='<foreignObject x="'+(x+24)+'" y="'+(iy-10)+'" width="'+(w-32)+'" height="26"><p xmlns="http://www.w3.org/1999/xhtml" style="font-size:7.5px;color:#cbd5e1;line-height:1.2;margin:0">'+item+'</p></foreignObject>';
+  });
+ });
+
+ svg+=text(360,305,'Comparison: Thermal oxidation synthesizes binary solid; Precipitation filters ions; Dumas weighs vapor.','#789c80',9);
+ return svg;
+}
+
+function drawMgSandboxView(p,rawVal){
+ const m_mg=p.input;
+ const m_ox=rawVal;
+ let svg='<rect x="0" y="0" width="720" height="320" fill="#08140c"/>';
+ svg+=text(360,22,'STOICHIOMETRIC MECHANISM, NITRIDE HYDROLYSIS & DEFECT AUDIT: MgO','#86efac',12);
+
+ // Left Panel: Rocksalt FCC Lattice & Thermochemical Cycle
+ const lX=25,lY=46,lW=340,lH=230;
+ svg+='<rect x="'+lX+'" y="'+lY+'" width="'+lW+'" height="'+lH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg+='<text x="'+(lX+lW/2)+'" y="'+(lY+18)+'" text-anchor="middle" fill="#86efac" font-size="10" font-weight="bold">ROCKSALT FCC LATTICE (SPACE GROUP Fm3̄m)</text>';
+
+ // 3D perspective wireframe cube of MgO unit cell
+ const ox=lX+80,oy=lY+95,s=70;
+ // Back square
+ svg+='<rect x="'+(ox+25)+'" y="'+(oy-25)+'" width="'+s+'" height="'+s+'" fill="none" stroke="#1e3a29" stroke-width="1.2"/>';
+ // Connecting lines
+ svg+='<line x1="'+ox+'" y1="'+oy+'" x2="'+(ox+25)+'" y2="'+(oy-25)+'" stroke="#1e3a29" stroke-width="1.2"/>';
+ svg+='<line x1="'+(ox+s)+'" y1="'+oy+'" x2="'+(ox+s+25)+'" y2="'+(oy-25)+'" stroke="#1e3a29" stroke-width="1.2"/>';
+ svg+='<line x1="'+ox+'" y1="'+(oy+s)+'" x2="'+(ox+25)+'" y2="'+(oy+s-25)+'" stroke="#1e3a29" stroke-width="1.2"/>';
+ svg+='<line x1="'+(ox+s)+'" y1="'+(oy+s)+'" x2="'+(ox+s+25)+'" y2="'+(oy+s-25)+'" stroke="#1e3a29" stroke-width="1.2"/>';
+ // Front square
+ svg+='<rect x="'+ox+'" y="'+oy+'" width="'+s+'" height="'+s+'" fill="none" stroke="#2d523b" stroke-width="1.5"/>';
+
+ // Corner & edge ions (alternating Mg2+ green, O2- red)
+ const ions=[
+  {x:ox,y:oy,col:'#48bb78',r:6,label:'Mg²⁺'},
+  {x:ox+s/2,y:oy,col:'#ef4444',r:8,label:'O²⁻'},
+  {x:ox+s,y:oy,col:'#48bb78',r:6,label:'Mg²⁺'},
+  {x:ox,y:oy+s/2,col:'#ef4444',r:8,label:'O²⁻'},
+  {x:ox+s/2,y:oy+s/2,col:'#48bb78',r:6,label:'Mg²⁺'},
+  {x:ox+s,y:oy+s/2,col:'#ef4444',r:8,label:'O²⁻'},
+  {x:ox,y:oy+s,col:'#48bb78',r:6,label:'Mg²⁺'},
+  {x:ox+s/2,y:oy+s,col:'#ef4444',r:8,label:'O²⁻'},
+  {x:ox+s,y:oy+s,col:'#48bb78',r:6,label:'Mg²⁺'}
+ ];
+ ions.forEach(i=>{
+  svg+='<circle cx="'+i.x+'" cy="'+i.y+'" r="'+i.r+'" fill="'+i.col+'" stroke="#051009" stroke-width="1"/>';
+ });
+
+ // Lattice thermochemistry legend
+ svg+='<rect x="'+(lX+190)+'" y="'+(lY+38)+'" width="138" height="120" rx="4" fill="#051009" stroke="#162e1e"/>';
+ svg+='<text x="'+(lX+198)+'" y="'+(lY+52)+'" fill="#789c80" font-size="7.5" font-weight="bold">BORN-HABER THERMODYNAMICS</text>';
+ svg+='<text x="'+(lX+198)+'" y="'+(lY+67)+'" fill="#cbd5e1" font-size="7">ΔH_sub(Mg) = +148 kJ/mol</text>';
+ svg+='<text x="'+(lX+198)+'" y="'+(lY+80)+'" fill="#cbd5e1" font-size="7">IE₁ + IE₂  = +2188 kJ/mol</text>';
+ svg+='<text x="'+(lX+198)+'" y="'+(lY+93)+'" fill="#cbd5e1" font-size="7">½ D(O₂)    = +249 kJ/mol</text>';
+ svg+='<text x="'+(lX+198)+'" y="'+(lY+106)+'" fill="#cbd5e1" font-size="7">EA₁ + EA₂  = +603 kJ/mol</text>';
+ svg+='<text x="'+(lX+198)+'" y="'+(lY+120)+'" fill="#38bdf8" font-size="7.5" font-weight="bold">U_lattice  = -3791 kJ/mol</text>';
+ svg+='<text x="'+(lX+198)+'" y="'+(lY+134)+'" fill="#86efac" font-size="8" font-weight="bold">ΔH°_f(MgO) = -601.7 kJ/mol</text>';
+
+ svg+='<text x="'+(lX+lW/2)+'" y="'+(lY+215)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5">Stoichiometric charge neutrality: 1 Mg²⁺ cation per 1 O²⁻ anion (Coordination Number 6:6)</text>';
+
+
+ // Right Panel: Systematic Error & Nitride Audit
+ const rX=380,rY=46,rW=315,rH=230;
+ svg+='<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg+='<text x="'+(rX+rW/2)+'" y="'+(rY+18)+'" text-anchor="middle" fill="#86efac" font-size="10" font-weight="bold">NITRIDE DIGESTION & ERROR SENSITIVITY AUDIT</text>';
+
+ const errItems=[
+  {label:'Unhydrolyzed Mg₃N₂ (-)',desc:'Omitting water leaves N instead of O (M_N=14 vs M_O=16)',val:'-0.274 g O / g Mg error',col:'#f87171'},
+  {label:'Aerosol Smoke Loss (-)',desc:'Escaping white MgO nanoparticles if lid kept open',val:'-2% to -8% mass deficit',col:'#fbbf24'},
+  {label:'Glaze Silica Attack (+)',desc:'Basic MgO reacts with porcelain SiO₂ at >900 °C',val:'Minor tare alteration',col:'#38bdf8'},
+  {label:'Atmospheric Moisture (+)',desc:'Cooled MgO powder chemisorbs H₂O and CO₂ from air',val:'Prevented by desiccator',col:'#a78bfa'},
+  {label:'OLS Slope Insulation (★)',desc:'Constant crucible glaze tare absorbed into intercept m₀',val:'Slope = 0.6582 g/g Unbiased',col:'#48bb78'}
+ ];
+
+ errItems.forEach((ei,idx)=>{
+  const ey=rY+30+idx*39;
+  svg+='<rect x="'+(rX+8)+'" y="'+ey+'" width="'+(rW-16)+'" height="33" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg+='<text x="'+(rX+14)+'" y="'+(ey+12)+'" fill="'+ei.col+'" font-size="7.5" font-weight="bold">'+ei.label+'</text>';
+  svg+='<text x="'+(rX+14)+'" y="'+(ey+25)+'" fill="#94a3b8" font-size="6.8">'+ei.desc+'</text>';
+  svg+='<text x="'+(rX+rW-14)+'" y="'+(ey+12)+'" text-anchor="end" fill="'+ei.col+'" font-size="7.5" font-family="monospace">'+ei.val+'</text>';
+ });
+
+ svg+=text(360,305,'Formula Verification: Ordinary least-squares regression slope m_slope = 0.65823 g O / g Mg isolations ratio n(O)/n(Mg) = 1.0000.','#789c80',9);
  return svg;
 }
