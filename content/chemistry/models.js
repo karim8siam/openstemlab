@@ -3,6 +3,16 @@
 const round=(v,n)=>Math.round((v+Number.EPSILON)*10**n)/10**n;
 
 function predict(slug,input){
+  if(slug==='uv-vis-particle-in-a-box-cyanine-dyes'){
+   const p=Number(input);
+   const table_raw={0.0:327.63, 1.0:453.01, 2.0:579.14, 3.0:705.65, 4.0:832.41, 5.0:959.32};
+   const table_x={0.0:5.1429, 1.0:7.1111, 2.0:9.0909, 3.0:11.0769, 4.0:13.0667, 5.0:15.0588};
+   const key=round(p, 1);
+   const N=2*p + 6;
+   const x_val=table_x.hasOwnProperty(key)?table_x[key]:round((N*N)/(N+1), 4);
+   const raw_val=table_raw.hasOwnProperty(key)?table_raw[key]:round(63.70496 * x_val, 2);
+   return {raw:raw_val,ideal:raw_val,period:1.0,x:x_val,y:raw_val,valid:p>=0.0&&p<=7.0};
+  }
   if(slug==='infrared-spectroscopy-vibrational-force-constants'){
    const m=Number(input);
    const table_raw={1.0:2885.593, 2.0:2884.671, 3.0:2883.135, 4.0:2880.985, 5.0:2878.220, 6.0:2874.841};
@@ -560,6 +570,14 @@ function predict(slug,input){
 
 function reading(slug,input,raw){
  let x=Number(input),y=Number(raw);
+  if(slug==='uv-vis-particle-in-a-box-cyanine-dyes'){
+   const p=Number(input);
+   const N=2*p + 6;
+   const key=round(p, 1);
+   const table_x={0.0:5.1429, 1.0:7.1111, 2.0:9.0909, 3.0:11.0769, 4.0:13.0667, 5.0:15.0588};
+   x=table_x.hasOwnProperty(key)?table_x[key]:round((N*N)/(N+1), 4);
+   y=Number(raw);
+  }
   if(slug==='infrared-spectroscopy-vibrational-force-constants'){
    const m=Number(input);
    const raw_val=Number(raw);
@@ -896,6 +914,16 @@ function fit(rows){
 }
 
 function estimate(slug,f){
+  if(slug==='uv-vis-particle-in-a-box-cyanine-dyes'){
+   const slope=f.m;
+   const h=6.62607015e-34;
+   const me=9.1093837e-31;
+   const c=2.99792458e8;
+   const factor=(8 * me * c) / h;
+   const l_est=Math.sqrt((slope * 1e-9) / factor) * 1e10;
+   const se=(f.slopeSE ? (0.5 * l_est * f.slopeSE / slope) : 0.001);
+   return {value:l_est,se:se,reference:1.390};
+  }
   if(slug==='infrared-spectroscopy-vibrational-force-constants'){
    const nu0=f.b;
    const c_cm_s=2.99792458e10;

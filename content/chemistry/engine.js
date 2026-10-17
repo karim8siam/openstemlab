@@ -87,6 +87,18 @@ function update(){
   $('apparatusDiagram').innerHTML=drawEnzymeKineticsBenchView(p,rawVal);
   return;
  }
+ if(cfg.slug==='uv-vis-particle-in-a-box-cyanine-dyes'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawCyanineCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawCyanineSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawCyanineBenchView(p,rawVal);
+  return;
+ }
  if(cfg.slug==='infrared-spectroscopy-vibrational-force-constants'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawInfraredCompareView(p,rawVal);
@@ -336,7 +348,24 @@ function update(){
   const dA_dt = v0_uM * 0.0185;
   $('liveState').textContent='Photometric trace recorded: v₀ = '+v0_uM.toFixed(2)+' μM/min (dA/dt = '+(dA_dt/1000).toFixed(4)+' AU/min).';
   message('Assay complete: v₀ = '+v0_uM.toFixed(2)+' μM/min (1/v₀ = '+inv_v0.toFixed(2)+' min/mM, 1/[S] = '+inv_s.toFixed(2)+' mM⁻¹). Record in notebook.');
- }else if(cfg.slug==='infrared-spectroscopy-vibrational-force-constants'){
+ }else if(cfg.slug==='uv-vis-particle-in-a-box-cyanine-dyes'){
+  const p_val = Math.round(p.input);
+  const N = 2 * p_val + 6;
+  const x_box = ((N * N) / (N + 1)).toFixed(3);
+  const lam = raw.toFixed(1);
+  $('liveState').textContent='Ready to scan cyanine dye (p = '+p_val+' vinylene units, N = '+N+' π-electrons, box x = '+x_box+'): λ_max = '+lam+' nm.';
+  message('Acquiring UV-Vis absorption spectrum for 1,1\'-diethylcarbocyanine homologue p = '+p_val+'. Record λ_max in notebook.');
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawCyanineCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawCyanineSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawCyanineBenchView(p,rawVal);
+  return;
+}else if(cfg.slug==='infrared-spectroscopy-vibrational-force-constants'){
   const m_idx = Math.round(p.input);
   const m2 = m_idx * m_idx;
   $('liveState').textContent='Ready to measure ro-vibrational pair at running index m = '+m_idx+' (m² = '+m2+').';
@@ -15263,3 +15292,365 @@ function drawInfraredSandboxView(p, rawVal) {
 }
 
 
+
+// ======================================================================
+// LAB 45: PARTICLE-IN-A-BOX QUANTUM MECHANICS OF CYANINE DYES
+// ======================================================================
+
+function drawCyanineBenchView(p, rawVal) {
+ var p_idx = Math.round(p.input) || 0;
+ if (p_idx < 0) p_idx = 0;
+ if (p_idx > 5) p_idx = 5;
+
+ var N = 2 * p_idx + 6;
+ var homo = N / 2;
+ var lumo = homo + 1;
+ var x_param = (N * N) / (N + 1);
+ var lambda_nm = (rawVal !== null && rawVal !== undefined) ? rawVal : (63.705 * x_param);
+ var dE_eV = (1239.84 / lambda_nm).toFixed(3);
+ var L_ang = (N * 1.390).toFixed(2);
+
+ var dyeNames = [
+  "1,1'-diethyl-2,2'-cyanine iodide (p = 0)",
+  "1,1'-diethyl-2,2'-carbocyanine iodide (pinacyanol, p = 1)",
+  "1,1'-diethyl-2,2'-dicarbocyanine iodide (p = 2)",
+  "1,1'-diethyl-2,2'-tricarbocyanine iodide (p = 3)",
+  "1,1'-diethyltetracarbocyanine iodide (p = 4)",
+  "1,1'-diethylpentacarbocyanine iodide (p = 5)"
+ ];
+ var dyeColors = ["#e0e7ff", "#fde047", "#f43f5e", "#06b6d4", "#10b981", "#6366f1"];
+ var dyeSwatches = ["#f8fafc", "#fef08a", "#f472b6", "#38bdf8", "#34d399", "#818cf8"];
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a0f1d');
+
+ // Title header
+ svg += text(360, 18, 'PARTICLE-IN-A-BOX UV-VIS SPECTROPHOTOMETRY: CYANINE DYE HOMOLOGUES', '#38bdf8', 11, 'middle', 'bold');
+ svg += text(360, 32, dyeNames[p_idx] + ' | N = ' + N + ' π-electrons | L = ' + L_ang + ' Å', '#94a3b8', 8.5, 'middle');
+
+ // LEFT PANEL: Optical Spectrophotometer & Cuvette Compartment (x: 15 to 255)
+ svg += rect(15, 42, 245, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(137, 58, 'UV-VIS OPTICAL SPECTROMETER & CELL', '#38bdf8', 9.5, 'middle', 'bold');
+
+ // Light sources & Monochromator
+ svg += rect(28, 72, 55, 34, '#1e293b', '#334155', 1, 4);
+ svg += text(55, 87, 'D₂ / W Lamp', '#facc15', 7.5, 'middle', 'bold');
+ svg += text(55, 98, '190-1100 nm', '#94a3b8', 6.5, 'middle');
+
+ // Optical beam path
+ svg += line(83, 89, 105, 89, '#facc15', 2);
+ svg += rect(105, 75, 28, 28, '#1e293b', '#64748b', 1, 3);
+ svg += text(119, 92, 'Grating', '#94a3b8', 6.5, 'middle');
+
+ // Beam splitter
+ svg += line(133, 89, 150, 89, '#38bdf8', 2);
+ svg += polygon('150,84 156,89 150,94', '#38bdf8');
+
+ // Dual beam cuvette chamber
+ svg += rect(28, 120, 218, 90, '#090d16', '#334155', 1, 5);
+ svg += text(137, 134, 'THERMOSTATTED SAMPLE TURRET (25.0 °C)', '#cbd5e1', 7.5, 'middle', 'bold');
+
+ // Reference cuvette (pure solvent)
+ svg += rect(42, 145, 32, 55, '#1e293b', '#64748b', 1, 3);
+ svg += rect(44, 153, 28, 45, '#38bdf8', 'none', 0, 0); // methanol solvent
+ svg += text(58, 178, 'CH₃OH', '#0284c7', 7, 'middle', 'bold');
+ svg += text(58, 212, 'Reference', '#64748b', 6.5, 'middle');
+
+ // Sample cuvette (cyanine solution)
+ svg += rect(100, 145, 36, 55, '#1e293b', '#64748b', 1, 3);
+ svg += rect(102, 153, 32, 45, dyeColors[p_idx], 'none', 0, 0); // dye color
+ svg += text(118, 175, 'Dye', '#0f172a', 7.5, 'middle', 'bold');
+ svg += text(118, 186, 'p = ' + p_idx, '#0f172a', 6.5, 'middle');
+ svg += text(118, 212, 'Sample Cuvette', '#38bdf8', 6.5, 'middle');
+
+ // Photomultiplier Detectors
+ svg += rect(165, 145, 65, 55, '#1e293b', '#475569', 1, 4);
+ svg += text(197, 162, 'PMT DETECTOR', '#f8fafc', 7, 'middle', 'bold');
+ svg += text(197, 176, 'Log(I₀ / I)', '#38bdf8', 7, 'middle');
+ svg += text(197, 190, 'A = ' + (0.55 + 0.05 * p_idx).toFixed(3) + ' AU', '#4ade80', 7.5, 'middle', 'bold');
+
+ // Digital readout panel at bottom of left card
+ svg += rect(28, 222, 218, 85, '#020617', '#1e293b', 1, 4);
+ svg += text(38, 237, 'SPECTROMETRIC READOUT', '#38bdf8', 7.5, 'start', 'bold');
+ svg += text(38, 252, 'Peak Absorption (λ_max): ' + lambda_nm.toFixed(1) + ' nm', '#4ade80', 7.5, 'start', 'bold');
+ svg += text(38, 267, 'Transition Energy (ΔE): ' + dE_eV + ' eV (' + (dE_eV * 96.485).toFixed(1) + ' kJ/mol)', '#f8fafc', 7, 'start');
+ svg += text(38, 282, 'Delocalization Length (L): ' + L_ang + ' Å (' + N + ' carbons)', '#cbd5e1', 7, 'start');
+ svg += text(38, 297, 'HOMO -> LUMO Level: n = ' + homo + ' -> n = ' + lumo, '#f59e0b', 7, 'start');
+
+ // MIDDLE PANEL: 1D Particle-in-a-Box Quantum Well (x: 270 to 485)
+ svg += rect(270, 42, 215, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(377, 58, '1D QUANTUM WELL: FEMO ORBITALS', '#38bdf8', 9.5, 'middle', 'bold');
+
+ // Infinite potential walls
+ svg += rect(285, 75, 14, 170, '#334155', '#475569', 1, 2);
+ svg += text(292, 165, 'V = ∞', '#94a3b8', 7, 'middle');
+ svg += rect(455, 75, 14, 170, '#334155', '#475569', 1, 2);
+ svg += text(462, 165, 'V = ∞', '#94a3b8', 7, 'middle');
+ svg += line(299, 245, 455, 245, '#64748b', 1.5);
+ svg += text(377, 257, 'Box Length L = ' + L_ang + ' Å (V = 0)', '#94a3b8', 7.5, 'middle');
+
+ // Draw energy levels inside well (up to lumo + 1)
+ var base_y = 235;
+ var e_scale = 135 / ((lumo + 1) * (lumo + 1));
+ for (var n = 1; n <= lumo + 1; n++) {
+  var ey = base_y - n * n * e_scale;
+  if (ey < 82) ey = 82;
+  var isHomo = (n === homo);
+  var isLumo = (n === lumo);
+  var col = isHomo ? '#38bdf8' : (isLumo ? '#f43f5e' : '#64748b');
+  var lw = (isHomo || isLumo) ? 2 : 1;
+
+  svg += line(305, ey, 450, ey, col, lw);
+  svg += text(312, ey - 3, 'n=' + n, col, 6.5, 'start');
+
+  // Electron spins in occupied levels
+  if (n <= homo) {
+   svg += text(372, ey + 4, '↑↓', '#38bdf8', 7.5, 'middle', 'bold');
+  }
+  if (isHomo) {
+   svg += text(445, ey - 3, 'HOMO', '#38bdf8', 6.5, 'end', 'bold');
+  }
+  if (isLumo) {
+   svg += text(445, ey - 3, 'LUMO', '#f43f5e', 6.5, 'end', 'bold');
+  }
+ }
+
+ // Transition arrow from HOMO to LUMO
+ var homo_y = base_y - homo * homo * e_scale;
+ var lumo_y = base_y - lumo * lumo * e_scale;
+ svg += line(410, homo_y, 410, lumo_y + 4, '#fbbf24', 2.5);
+ svg += polygon('406,' + (lumo_y + 6) + ' 410,' + lumo_y + ' 414,' + (lumo_y + 6), '#fbbf24');
+ svg += text(418, (homo_y + lumo_y) / 2 + 3, 'hν', '#fbbf24', 8, 'start', 'bold');
+
+ // Bottom summary of quantum parameters
+ svg += rect(280, 268, 195, 42, '#090d16', '#1e293b', 1, 4);
+ svg += text(288, 283, 'Quantum Parameter: x = N²/(N+1) = ' + x_param.toFixed(4), '#f8fafc', 7, 'start');
+ svg += text(288, 298, 'FEMO Predicted λ: ' + (63.705 * x_param).toFixed(1) + ' nm', '#38bdf8', 7, 'start', 'bold');
+
+ // RIGHT PANEL: UV-Vis Electronic Absorption Spectrum (x: 495 to 705)
+ svg += rect(495, 42, 210, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(600, 58, 'UV-VIS ABSORPTION SPECTRUM', '#38bdf8', 9.5, 'middle', 'bold');
+
+ // Spectrum axes (x: 520 to 685, y: 75 to 245)
+ var plot_x0 = 520, plot_x1 = 685, plot_y0 = 245, plot_y1 = 80;
+ svg += line(plot_x0, plot_y0, plot_x1, plot_y0, '#64748b', 1.5);
+ svg += line(plot_x0, plot_y0, plot_x0, plot_y1, '#64748b', 1.5);
+
+ // X-axis ticks (250 nm to 1050 nm)
+ for (var w = 300; w <= 1000; w += 200) {
+  var wx = plot_x0 + ((w - 250) / 800) * (plot_x1 - plot_x0);
+  svg += line(wx, plot_y0, wx, plot_y0 + 4, '#64748b', 1);
+  svg += text(wx, plot_y0 + 13, '' + w, '#94a3b8', 6.5, 'middle');
+ }
+ svg += text((plot_x0 + plot_x1) / 2, plot_y0 + 26, 'Wavelength λ (nm)', '#cbd5e1', 7.5, 'middle', 'bold');
+
+ // Y-axis label
+ svg += text(plot_x0 - 8, (plot_y0 + plot_y1) / 2, 'Absorbance A (AU)', '#cbd5e1', 7, 'middle', 'normal', 'rotate(-90 ' + (plot_x0 - 8) + ' ' + ((plot_y0 + plot_y1) / 2) + ')');
+
+ // Generate Gaussian absorption curve with 0-1 vibronic shoulder
+ var peak_px = plot_x0 + ((lambda_nm - 250) / 800) * (plot_x1 - plot_x0);
+ var shoulder_nm = lambda_nm - 42; // ~1300 cm^-1 vibronic spacing
+ var shoulder_px = plot_x0 + ((shoulder_nm - 250) / 800) * (plot_x1 - plot_x0);
+
+ var path = 'M ' + plot_x0 + ' ' + plot_y0;
+ for (var cur_x = plot_x0; cur_x <= plot_x1; cur_x += 2) {
+  var dx0 = (cur_x - peak_px) / 10;
+  var g0 = Math.exp(-0.5 * dx0 * dx0);
+  var dx1 = (cur_x - shoulder_px) / 8;
+  var g1 = 0.35 * Math.exp(-0.5 * dx1 * dx1);
+  var total_g = g0 + g1;
+  var cur_y = plot_y0 - total_g * 145;
+  path += ' L ' + cur_x.toFixed(1) + ' ' + cur_y.toFixed(1);
+ }
+ svg += '<path d="' + path + '" fill="none" stroke="' + dyeColors[p_idx] + '" stroke-width="2.2" />';
+
+ // Mark peak
+ if (peak_px >= plot_x0 && peak_px <= plot_x1) {
+  svg += circle(peak_px, plot_y0 - 145, 3.5, '#f43f5e', '#ffffff', 1.5);
+  svg += line(peak_px, plot_y0 - 145, peak_px, plot_y0, '#f43f5e', 1, 'stroke-dasharray="2,2"');
+  svg += text(peak_px, plot_y0 - 152, lambda_nm.toFixed(1) + ' nm', '#f43f5e', 7, 'middle', 'bold');
+ }
+
+ // Color swatch badge
+ svg += rect(515, 275, 175, 35, '#090d16', '#1e293b', 1, 4);
+ svg += rect(522, 282, 20, 20, dyeColors[p_idx], '#ffffff', 1, 3);
+ svg += text(550, 290, 'Observed Solution Color', '#94a3b8', 6.5, 'start');
+ svg += text(550, 301, 'Cyanine p = ' + p_idx + ' (' + dyeColors[p_idx] + ')', '#f8fafc', 7, 'start', 'bold');
+
+ return svg;
+}
+
+function drawCyanineCompareView(p, rawVal) {
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a0f1d');
+
+ svg += text(360, 18, 'HOMOLOGOUS CYANINE SERIES: SPECTRAL OVERLAY & FEMO MODEL', '#38bdf8', 11, 'middle', 'bold');
+ svg += text(360, 32, 'Systematic Bathochromic Shift: ~126 nm Red-Shift per Vinylene Unit (-CH=CH-)', '#94a3b8', 8.5, 'middle');
+
+ // LEFT: Spectral Overlay across all 6 dyes (x: 15 to 400)
+ svg += rect(15, 42, 385, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(207, 58, 'MULTI-SPECTRUM OVERLAY (p = 0 to 5)', '#38bdf8', 9.5, 'middle', 'bold');
+
+ var plot_x0 = 45, plot_x1 = 380, plot_y0 = 265, plot_y1 = 80;
+ svg += line(plot_x0, plot_y0, plot_x1, plot_y0, '#64748b', 1.5);
+ svg += line(plot_x0, plot_y0, plot_x0, plot_y1, '#64748b', 1.5);
+
+ // X-axis ticks (250 to 1050 nm)
+ for (var w = 300; w <= 1000; w += 100) {
+  var wx = plot_x0 + ((w - 250) / 800) * (plot_x1 - plot_x0);
+  svg += line(wx, plot_y0, wx, plot_y0 + 4, '#64748b', 1);
+  svg += text(wx, plot_y0 + 13, '' + w, '#94a3b8', 6.5, 'middle');
+ }
+ svg += text((plot_x0 + plot_x1) / 2, plot_y0 + 26, 'Wavelength λ (nm)', '#cbd5e1', 7.5, 'middle', 'bold');
+
+ var colors = ["#e0e7ff", "#fde047", "#f43f5e", "#06b6d4", "#10b981", "#818cf8"];
+ var lambdas = [327.63, 453.01, 579.14, 705.65, 832.41, 959.32];
+
+ for (var i = 0; i < 6; i++) {
+  var p_nm = lambdas[i];
+  var px = plot_x0 + ((p_nm - 250) / 800) * (plot_x1 - plot_x0);
+  var sh_px = plot_x0 + (((p_nm - 40) - 250) / 800) * (plot_x1 - plot_x0);
+
+  var path = 'M ' + plot_x0 + ' ' + plot_y0;
+  for (var cx = plot_x0; cx <= plot_x1; cx += 2) {
+   var d0 = (cx - px) / 8;
+   var g0 = Math.exp(-0.5 * d0 * d0);
+   var d1 = (cx - sh_px) / 6.5;
+   var g1 = 0.3 * Math.exp(-0.5 * d1 * d1);
+   var cy = plot_y0 - (g0 + g1) * 150;
+   path += ' L ' + cx.toFixed(1) + ' ' + cy.toFixed(1);
+  }
+  svg += '<path d="' + path + '" fill="none" stroke="' + colors[i] + '" stroke-width="2" opacity="0.85" />';
+  svg += circle(px, plot_y0 - 150, 3, colors[i], '#fff', 1);
+  svg += text(px, plot_y0 - 156, 'p=' + i, colors[i], 6.5, 'middle', 'bold');
+ }
+
+ // RIGHT: Summary Data Table & Regression Result (x: 410 to 705)
+ svg += rect(410, 42, 295, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(557, 58, 'HOMOLOGUE PARAMETERS & FEMO FIT', '#38bdf8', 9.5, 'middle', 'bold');
+
+ // Table header
+ svg += rect(420, 72, 275, 20, '#1e293b', 'none', 0, 3);
+ svg += text(432, 85, 'p', '#38bdf8', 7, 'middle', 'bold');
+ svg += text(460, 85, 'N(π)', '#38bdf8', 7, 'middle', 'bold');
+ svg += text(500, 85, 'HOMO-LUMO', '#38bdf8', 7, 'middle', 'bold');
+ svg += text(560, 85, 'x = N²/(N+1)', '#38bdf8', 7, 'middle', 'bold');
+ svg += text(625, 85, 'λ_max (nm)', '#4ade80', 7, 'middle', 'bold');
+ svg += text(672, 85, 'Color', '#facc15', 7, 'middle', 'bold');
+
+ var x_vals = [5.143, 7.111, 9.091, 11.077, 13.067, 15.059];
+ var colorNames = ["UV", "Yellow", "Magenta", "Cyan", "Green", "NIR"];
+
+ for (var row = 0; row < 6; row++) {
+  var ry = 100 + row * 19;
+  var bg = (row % 2 === 0) ? '#090d16' : '#0f172a';
+  svg += rect(420, ry - 10, 275, 18, bg, 'none', 0, 2);
+  svg += text(432, ry + 2, '' + row, '#f8fafc', 7, 'middle');
+  svg += text(460, ry + 2, '' + (2 * row + 6), '#94a3b8', 7, 'middle');
+  svg += text(500, ry + 2, (row + 3) + ' -> ' + (row + 4), '#cbd5e1', 7, 'middle');
+  svg += text(560, ry + 2, x_vals[row].toFixed(3), '#38bdf8', 7, 'middle');
+  svg += text(625, ry + 2, lambdas[row].toFixed(1), '#4ade80', 7, 'middle', 'bold');
+  svg += text(672, ry + 2, colorNames[row], colors[row], 7, 'middle', 'bold');
+ }
+
+ // Bottom Regression Box
+ svg += rect(420, 222, 275, 85, '#020617', '#334155', 1, 4);
+ svg += text(430, 237, 'FEMO LINEAR REGRESSION SUMMARY', '#38bdf8', 7.5, 'start', 'bold');
+ svg += text(430, 252, 'Slope S = (8 m_e c l²)/h = 63.705 nm', '#f8fafc', 7, 'start');
+ svg += text(430, 267, 'Correlation Coefficient: R² = 0.9999999998', '#4ade80', 7, 'start', 'bold');
+ svg += text(430, 282, 'Calculated Bond Length: l = 1.390 Å', '#facc15', 7.5, 'start', 'bold');
+ svg += text(430, 297, 'Crystallographic Reference: 1.390 Å (Diff = 0.0002%)', '#38bdf8', 7, 'start');
+
+ return svg;
+}
+
+function drawCyanineSandboxView(p, rawVal) {
+ var p_idx = Math.round(p.input) || 1;
+ if (p_idx < 0) p_idx = 0;
+ if (p_idx > 5) p_idx = 5;
+
+ var N = 2 * p_idx + 6;
+ var L_val = (N * 1.390).toFixed(2);
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a0f1d');
+
+ svg += text(360, 18, 'QUANTUM WELL SANDBOX: WAVEFUNCTIONS & ELECTRON DENSITIES', '#38bdf8', 11, 'middle', 'bold');
+ svg += text(360, 32, 'Stationary Eigenfunctions ψ_n(x) = √(2/L) · sin(nπx/L) and Probability Densities |ψ_n(x)|²', '#94a3b8', 8.5, 'middle');
+
+ // LEFT: Wavefunctions ψ_n(x) inside 1D well (x: 15 to 350)
+ svg += rect(15, 42, 335, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(182, 58, 'EIGENFUNCTIONS ψ_n(x) [HOMO & LUMO]', '#38bdf8', 9.5, 'middle', 'bold');
+
+ var homo = N / 2;
+ var lumo = homo + 1;
+
+ var w_x0 = 45, w_x1 = 320;
+ svg += line(w_x0, 270, w_x1, 270, '#64748b', 1.5);
+ svg += line(w_x0, 70, w_x0, 270, '#64748b', 2);
+ svg += line(w_x1, 70, w_x1, 270, '#64748b', 2);
+ svg += text(w_x0, 65, 'V=∞', '#94a3b8', 6.5, 'middle');
+ svg += text(w_x1, 65, 'V=∞', '#94a3b8', 6.5, 'middle');
+
+ // Plot HOMO wavefunction
+ var h_y0 = 135;
+ svg += line(w_x0, h_y0, w_x1, h_y0, '#334155', 1, 'stroke-dasharray="2,2"');
+ svg += text(35, h_y0 + 3, 'HOMO', '#38bdf8', 6.5, 'end', 'bold');
+ var h_path = 'M ' + w_x0 + ' ' + h_y0;
+ for (var x = w_x0; x <= w_x1; x += 1.5) {
+  var norm_x = (x - w_x0) / (w_x1 - w_x0);
+  var psi = Math.sin(homo * Math.PI * norm_x);
+  var wy = h_y0 - psi * 30;
+  h_path += ' L ' + x.toFixed(1) + ' ' + wy.toFixed(1);
+ }
+ svg += '<path d="' + h_path + '" fill="none" stroke="#38bdf8" stroke-width="2" />';
+
+ // Plot LUMO wavefunction
+ var l_y0 = 215;
+ svg += line(w_x0, l_y0, w_x1, l_y0, '#334155', 1, 'stroke-dasharray="2,2"');
+ svg += text(35, l_y0 + 3, 'LUMO', '#f43f5e', 6.5, 'end', 'bold');
+ var l_path = 'M ' + w_x0 + ' ' + l_y0;
+ for (var x = w_x0; x <= w_x1; x += 1.5) {
+  var norm_x = (x - w_x0) / (w_x1 - w_x0);
+  var psi = Math.sin(lumo * Math.PI * norm_x);
+  var wy = l_y0 - psi * 30;
+  l_path += ' L ' + x.toFixed(1) + ' ' + wy.toFixed(1);
+ }
+ svg += '<path d="' + l_path + '" fill="none" stroke="#f43f5e" stroke-width="2" />';
+
+ svg += text((w_x0 + w_x1) / 2, 285, 'Conjugated Chain Coordinate x (0 <= x <= L = ' + L_val + ' Å)', '#94a3b8', 7, 'middle');
+
+ // RIGHT: Total π-electron charge density ρ(x) = 2 · Σ |ψ_n(x)|² (x: 365 to 705)
+ svg += rect(365, 42, 340, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(535, 58, 'TOTAL π-ELECTRON DENSITY ρ(x) = 2·Σ |ψ_n(x)|²', '#38bdf8', 9.5, 'middle', 'bold');
+
+ var d_x0 = 395, d_x1 = 680, d_y0 = 250;
+ svg += line(d_x0, d_y0, d_x1, d_y0, '#64748b', 1.5);
+ svg += line(d_x0, 80, d_x0, d_y0, '#64748b', 2);
+ svg += line(d_x1, 80, d_x1, d_y0, '#64748b', 2);
+
+ // Sum probability densities of all occupied orbitals
+ var rho_path = 'M ' + d_x0 + ' ' + d_y0;
+ for (var x = d_x0; x <= d_x1; x += 1.5) {
+  var norm_x = (x - d_x0) / (d_x1 - d_x0);
+  var total_rho = 0;
+  for (var n = 1; n <= homo; n++) {
+   var s = Math.sin(n * Math.PI * norm_x);
+   total_rho += 2 * s * s;
+  }
+  var ry = d_y0 - (total_rho / (homo * 2.2)) * 145;
+  rho_path += ' L ' + x.toFixed(1) + ' ' + ry.toFixed(1);
+ }
+ svg += '<path d="' + rho_path + '" fill="none" stroke="#4ade80" stroke-width="2.2" />';
+
+ svg += text((d_x0 + d_x1) / 2, 268, 'Delocalized π-Cloud Distribution along Polymethine Backbone', '#cbd5e1', 7.5, 'middle');
+
+ // Carbon atoms positions dots
+ for (var c = 0; c < N; c++) {
+  var cx = d_x0 + (c / (N - 1)) * (d_x1 - d_x0);
+  svg += circle(cx, d_y0 + 7, 2.5, '#facc15');
+ }
+ svg += text((d_x0 + d_x1) / 2, 298, '● Carbon/Nitrogen Atomic Centers (Uniform Bond Length l = 1.390 Å)', '#facc15', 7, 'middle');
+
+ return svg;
+}

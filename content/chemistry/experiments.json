@@ -9466,5 +9466,226 @@
     ],
     "intro": "Vibrational-rotational infrared spectroscopy provides an extraordinary experimental window into the quantum mechanical architecture of chemical bonds, allowing direct determination of molecular force constants, equilibrium bond lengths, moments of inertia, and potential energy surface curvatures with sub-picometer precision. When a heteronuclear diatomic molecule absorbs infrared radiation, transitions occur simultaneously between vibrational levels (v) and rotational levels (J). For hydrogen chloride (HCl), the fundamental absorption band centered near 2886 cm\u207b\u00b9 consists of two symmetric manifolds of sharp, regularly spaced peaks: the R-branch (\u0394J = +1) on the high-frequency side and the P-branch (\u0394J = \u22121) on the low-frequency side, separated by a distinct central gap at the forbidden band origin (\u0394J = 0). Each individual line appears as a doublet resolved into H\u00b3\u2075Cl and H\u00b3\u2077Cl isotopologues in accordance with the 3:1 natural isotopic abundance of chlorine. In this investigation, high-resolution FTIR spectroscopy (0.5 cm\u207b\u00b9) of gas-phase HCl in a 10 cm NaCl-window cell is performed. By evaluating the mean transition wavenumbers \u03bd\u0303_mean(m) across six rotational line pairs, ordinary least-squares regression extracts the fundamental vibrational band origin (\u03bd\u0303\u2080 = 2885.90 cm\u207b\u00b9) and vibration-rotation coupling constant (\u03b1_e = 0.3072 cm\u207b\u00b9), isolating the harmonic bond force constant (k = 481.0 N/m) and equilibrium bond distance (r_e = 1.275 \u00c5) with exquisite precision.",
     "modelExtra": "The physical chemistry simulation model evaluates gas-phase H\u00b3\u2075Cl at 25.0 \u00b0C (sample pressure 25.0 Torr, 100.0 mm path length). System parameters: reduced mass \u03bc(H\u00b3\u2075Cl) = 1.626652 \u00d7 10\u207b\u00b2\u2077 kg; fundamental band origin \u03bd\u0303\u2080 = 2885.90 cm\u207b\u00b9; equilibrium rotational constant B_e = 10.5934 cm\u207b\u00b9; vibration-rotation coupling constant \u03b1_e = 0.3072 cm\u207b\u00b9; ground state rotational constant B\u2080 = 10.4398 cm\u207b\u00b9; excited state rotational constant B\u2081 = 10.1326 cm\u207b\u00b9. Across the six rotational pairs m = [1, 2, 3, 4, 5, 6], measured mean transition wavenumbers are \u03bd\u0303_mean = [2885.593, 2884.671, 2883.135, 2880.985, 2878.220, 2874.841] cm\u207b\u00b9. Plotting \u03bd\u0303_mean against m\u00b2 = [1, 4, 9, 16, 25, 36] yields a linear slope of \u2212\u03b1_e = \u22120.30719 cm\u207b\u00b9 (\u03b1_e = 0.3072 cm\u207b\u00b9) and Y-intercept \u03bd\u0303\u2080 = 2885.900 cm\u207b\u00b9 with R\u00b2 = 1.0000000. Applying the harmonic relation k = 4\u03c0\u00b2c\u00b2\u03bd\u0303\u2080\u00b2\u03bc extracts an empirical force constant k = 480.68 N/m (difference = 0.0660% from the 481.0 N/m literature benchmark), confirming quantum mechanical harmonic and anharmonic oscillator models."
+  },
+  {
+    "id": 45,
+    "slug": "uv-vis-particle-in-a-box-cyanine-dyes",
+    "title": "Particle-in-a-Box Quantum Mechanics and Electronic Absorption of Symmetrical Cyanine Dyes",
+    "category": "Spectroscopy, Quantum & Surface Chemistry",
+    "aim": "Determine the effective conjugated carbon-carbon bond length l in symmetrical polymethine cyanine dyes by electronic absorption spectroscopy and particle-in-a-box quantum mechanical modeling.",
+    "difficulty": "Advanced",
+    "time": "3 Hours",
+    "gradientUnit": "nm",
+    "interceptUnit": "nm",
+    "target": "1.390",
+    "targetName": "Average Conjugated Bond Length l",
+    "resultUnit": "\u00c5",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 3,
+    "yDecimals": 1,
+    "initial": 1.0,
+    "samples": [
+      0.0,
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0
+    ],
+    "emptyX": 5.143,
+    "emptyY": 327.6,
+    "measureLabel": "Absorption Peak \u03bb_max",
+    "fitEquation": "\\lambda_{\\max} = \\frac{8 m_e c l^2}{h} \\frac{(2p+6)^2}{2p+7} = S \\cdot x",
+    "settings": [
+      "Dye Homologue: p = 0 to 5 vinylene bridge units",
+      "Spectrophotometer Bandwidth: 1.0 nm (UV-Vis scanning)",
+      "Optical Cuvette Path Length: 10.00 mm Suprasil quartz",
+      "Solvent Matrix: Spectroscopic Grade Absolute Methanol (25.0 \u00b0C)"
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "\ud83d\udd2c",
+        "label": "Spectrometer Bench"
+      },
+      {
+        "id": "compare",
+        "icon": "\ud83d\udcca",
+        "label": "Homologue Series"
+      },
+      {
+        "id": "sandbox",
+        "icon": "\ud83c\udf9b\ufe0f",
+        "label": "Quantum Well Sandbox"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Double-Beam UV-Visible Scanning Spectrophotometer",
+        "purpose": "Dual-beam ratio recording spectrophotometer with deuterium and tungsten-halogen sources, holographic concave diffraction grating (1200 lines/mm), Peltier thermostatted cell holder (25.0 \u00b1 0.1 \u00b0C), 1.0 nm spectral slit width, and photomultiplier tube detection."
+      },
+      {
+        "name": "Matched Suprasil Quartz Spectrophotometer Cuvettes (10.00 mm)",
+        "purpose": "Pair of precision far-UV fused quartz optical cells with 10.00 \u00b1 0.01 mm optical path length and PTFE stoppers, matched to within \u0394A < 0.001 across the 200\u20131100 nm wavelength window."
+      },
+      {
+        "name": "Homologous Series of Symmetrical Cyanine Dye Salts",
+        "purpose": "Analytically pure 1,1'-diethyl-2,2'-cyanine iodide series with vinylene bridge lengths p = 0 (cyanine), p = 1 (carbocyanine / pinacyanol), p = 2 (dicarbocyanine), p = 3 (tricarbocyanine), p = 4 (tetracarbocyanine), and p = 5 (pentacarbocyanine), purity > 99.5%."
+      },
+      {
+        "name": "Spectroscopic Grade Absolute Methanol Solvent",
+        "purpose": "Anhydrous spectrophotometric grade absolute methanol (CH3OH, purity \u2265 99.9%, optical transparency cutoff < 205 nm) stored over activated 3\u00c5 molecular sieves to maintain invariant dielectric constant and prevent dye solvatochromic artifacts."
+      },
+      {
+        "name": "Analytical Microbalance & Class-A Volumetric Flasks",
+        "purpose": "Electronic microbalance (readability \u00b10.01 mg) for precise micro-weighing of dye crystals, paired with 10.00 mL, 25.00 mL amber volumetric flasks and calibrated micropipettes (100\u20131000 \u03bcL) for serial quantitative dilutions."
+      },
+      {
+        "name": "Light-Tight Dark Storage Enclosure & Inert Argon Blanket",
+        "purpose": "Protective light-tight amber desiccation vessel with dry argon purge to shield working dye solutions from ambient actinic light, suppressing cis-trans photoisomerization and photo-oxidative degradation."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Preparation of Homologous Cyanine Dye Stock Solutions",
+        "text": "Accurately weigh approximately 1.5 to 3.0 mg of each crystalline cyanine iodide dye (p = 0, 1, 2, 3, 4, 5) using the analytical microbalance. Dissolve each dye completely in spectroscopic grade absolute methanol in dedicated 25.00 mL amber volumetric flasks to yield stock solutions of approximately 1.0 \u00d7 10\u207b\u2074 M. Perform all manipulations under subdued yellow safelight to eliminate actinic photoisomerization."
+      },
+      {
+        "title": "Spectrophotometer Initialization and 100% Baseline Acquisition",
+        "text": "Power on the double-beam UV-Vis scanning spectrophotometer and allow deuterium and tungsten-halogen lamps to thermally equilibrate for 45 minutes. Fill both reference and sample 10.00 mm quartz cuvettes with pure spectroscopic methanol, clean optical surfaces with optical lens paper, insert into the thermostatted 25.0 \u00b0C turret, and record a baseline zero-absorbance spectrum from 300 nm to 1050 nm at 240 nm/min."
+      },
+      {
+        "title": "Quantitative Serial Dilution to Linear Absorbance Range",
+        "text": "Using a calibrated Eppendorf micropipette, transfer aliquots (100 \u03bcL to 500 \u03bcL) of each stock dye solution into 10.00 mL amber volumetric flasks and dilute to the calibration line with absolute methanol. Mix thoroughly by inversion to prepare working solutions (5.0 \u00d7 10\u207b\u2076 M to 1.5 \u00d7 10\u207b\u2075 M), ensuring peak absorbances remain between 0.3 and 0.8 AU where Beer-Lambert linearity is strictly obeyed."
+      },
+      {
+        "title": "Measurement of Electronic Absorption Spectra Across the Series",
+        "text": "Rinse the sample quartz cuvette three times with the working solution of dye p = 0, fill to 80% volume, verify absence of bubbles, insert into the sample beam holder, and record the electronic absorption spectrum over its primary absorption band (300\u2013450 nm). Repeat sequentially for p = 1 (400\u2013600 nm), p = 2 (500\u2013750 nm), p = 3 (600\u2013850 nm), p = 4 (700\u2013950 nm), and p = 5 (800\u20131050 nm)."
+      },
+      {
+        "title": "Automated Peak Deconvolution & \u03bb_max Identification",
+        "text": "For each recorded spectral scan, execute automated second-derivative peak finding (zero-crossing analysis) to pinpoint the exact wavelength of the principal 0-0 singlet electronic transition absorption maximum (\u03bb_max) to \u00b10.1 nm precision. Record the peak wavelength along with the secondary high-energy vibronic shoulder wavelength (0-1 transition)."
+      },
+      {
+        "title": "Kuhn FEMO Particle-in-a-Box Modeling & Bond Length Extraction",
+        "text": "Calculate the theoretical quantum box parameter x = (2p + 6)\u00b2 / (2p + 7) for each vinylene length p. Tabulate experimental \u03bb_max values against x and execute ordinary least-squares linear regression. Determine the empirical slope S = (8 m_e c l\u00b2)/h, compute the average conjugated carbon-carbon bond length l in Angstroms, and evaluate the correlation coefficient R\u00b2 and percentage deviation from crystallographic literature data."
+      }
+    ],
+    "topics": [
+      {
+        "question": "What fundamental physical assumptions constitute the Kuhn Free-Electron Molecular Orbital (FEMO) particle-in-a-box model for conjugated cyanines?",
+        "answer": "The Kuhn FEMO model treats the delocalized \u03c0-electrons as independent, non-interacting particles of rest mass m_e constrained within a one-dimensional finite potential well of length L corresponding to the conjugated polymethine bridge. The potential energy V(x) is assumed to be constant (V = 0) along the conjugated chain and infinite (V = \u221e) at the boundaries beyond the terminal nitrogen atoms. Electron-electron Coulomb repulsion, electron-nuclear attraction variations along the carbon backbone, and electron spin-orbit coupling are neglected in the first-order approximation, allowing exact solution via the stationary 1D Schr\u00f6dinger equation."
+      },
+      {
+        "question": "Why is the lowest-energy electronic absorption transition assigned to HOMO -> LUMO with quantum numbers n1 = N/2 and n2 = (N/2 + 1)?",
+        "answer": "In accordance with the Pauli exclusion principle, each 1D quantum energy state E_n = (n\u00b2 h\u00b2) / (8 m_e L\u00b2) accommodates a maximum of two electrons with anti-parallel spins (m_s = \u00b11/2). For a cyanine dye with N conjugated \u03c0-electrons in the ground state (S0), the lowest N/2 spatial orbitals are completely filled with electron pairs, making n1 = N/2 the highest occupied molecular orbital (HOMO). The lowest unoccupied state is n2 = (N/2 + 1) (LUMO). Electric dipole selection rules allow the transition \u0394n = \u00b11, making the HOMO-to-LUMO promotion the lowest-energy dipole-allowed singlet-singlet electronic excitation (S0 -> S1), which produces the dominant visible absorption band."
+      },
+      {
+        "question": "Why do symmetrical cyanine dyes exhibit a pronounced bathochromic (red) shift of ~100\u2013130 nm per additional vinylene group (-CH=CH-)?",
+        "answer": "Adding a vinylene group (-CH=CH-) increases the number of conjugated carbons by 2 and the \u03c0-electron count by 2 (N = 2p + 6), while extending the box length L by 2l (where l \u2248 1.39 \u00c5). In the FEMO formulation, transition energy \u0394E scales as (N + 1) / L\u00b2 \u2248 (N + 1) / (N\u00b2 l\u00b2) \u221d 1/N. Consequently, the transition wavelength \u03bb = hc / \u0394E scales linearly with (N\u00b2)/(N + 1) \u2248 N \u00b7 l\u00b2 (8 m_e c / h). Because \u03bb is directly proportional to the conjugated length, each additional vinylene unit increases the absorption wavelength by \u0394\u03bb \u2248 2 \u00b7 (8 m_e c l\u00b2 / h) \u2248 127 nm, shifting the color dramatically across the spectrum into the near-infrared."
+      },
+      {
+        "question": "How does resonance degeneracy eliminate bond-length alternation in symmetrical cyanines compared to linear polyenes?",
+        "answer": "Unlike uncharged polyenes (such as polyacetylene or carotenoids) which exhibit Peierls distortion resulting in alternating single (1.46 \u00c5) and double (1.34 \u00c5) bonds with a persistent HOMO-LUMO gap even at infinite length, symmetrical cyanine dyes possess two completely equivalent degenerate resonance structures: >N+=CH-(CH=CH)_p-N< <-> >N-(CH=CH)_p-CH=N+<. Quantum mechanical resonance hybrid mixing produces equalized bond orders of approximately 1.5 throughout the polymethine bridge, yielding an essentially constant C-C bond length of 1.390 \u00c5 and a purely metallic-like delocalized 1D electron gas free from bond-order dimerization."
+      },
+      {
+        "question": "What is the physical significance of the end-group boundary polarization correction in the extended Kuhn model?",
+        "answer": "In real cyanine dyes, the \u03c0-electrons are not strictly confined within the carbon atoms of the bridge; the terminal heterocyclic nitrogen rings (e.g., quinoline, benzothiazole, or indolenine) possess significant polarizability and partial positive charge. This electronegative termination allows \u03c0-electron wavefunctions to penetrate into the heterocyclic rings, effectively lengthening the potential well beyond the polymethine carbon framework by an end-correction factor \u03b1 \u00b7 l (typically \u03b1 \u2248 1.0 to 1.5 bond lengths per ring). In Kuhn's formulation, L = (2p + 6)l accounts for both the bridge and the partial terminal ring delocalization."
+      },
+      {
+        "question": "Why does the electronic absorption spectrum of cyanine dyes display a prominent high-energy vibronic shoulder?",
+        "answer": "The primary absorption peak corresponds to the 0-0 vibronic transition between the vibrational ground state of S0 and the vibrational ground state of S1. The high-energy shoulder (spaced by approximately 1200\u20131400 cm\u207b\u00b9) arises from the 0-1 vibronic transition, where electronic excitation is coupled with the excitation of one quantum of the totally symmetric in-plane C=C/C-C stretching vibration of the conjugated polymethine backbone in accordance with the Franck-Condon principle."
+      },
+      {
+        "question": "What competitive non-radiative deactivation mechanisms occur in photo-excited cyanine dyes, and how do they depend on bridge length?",
+        "answer": "Upon excitation to the S1 state, cyanines can deactivate via fluorescence emission, intersystem crossing to triplet states, or radiationless internal conversion via photoisomerization. Trans-cis torsional isomerization about the polymethine bridge bonds represents the dominant non-radiative decay channel. As the polymethine bridge length p increases, torsional flexibility increases markedly, lowering the activation barrier for excited-state twisting and drastically reducing the fluorescence quantum yield while broadening the steady-state absorption envelope."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "According to the Kuhn free-electron molecular orbital (FEMO) model, what is the formula for the absorption wavelength \u03bb corresponding to the HOMO-LUMO transition in a 1D box of length L with N electrons?",
+        "options": [
+          "\u03bb = [8 m_e c / h] \u00b7 [L\u00b2 / (N + 1)]",
+          "\u03bb = [h / (8 m_e c)] \u00b7 [(N + 1) / L\u00b2]",
+          "\u03bb = [4 m_e c / h] \u00b7 [L / N\u00b2]",
+          "\u03bb = [8 m_e h c] \u00b7 [N / L\u00b2]"
+        ],
+        "correct": 0,
+        "explanation": "Setting \u0394E = E_(N/2+1) - E_(N/2) = [(N/2+1)\u00b2 - (N/2)\u00b2] h\u00b2 / (8 m_e L\u00b2) = (N + 1) h\u00b2 / (8 m_e L\u00b2) equal to h c / \u03bb yields \u03bb = (8 m_e c / h) \u00b7 [L\u00b2 / (N + 1)]."
+      },
+      {
+        "question": "For 1,1'-diethyl-2,2'-carbocyanine (p = 1, N = 8 conjugated \u03c0-electrons), what are the principal quantum numbers n for the HOMO and LUMO states?",
+        "options": [
+          "HOMO n = 4, LUMO n = 5",
+          "HOMO n = 8, LUMO n = 9",
+          "HOMO n = 2, LUMO n = 3",
+          "HOMO n = 3, LUMO n = 4"
+        ],
+        "correct": 0,
+        "explanation": "With N = 8 electrons and 2 electrons per orbital according to the Pauli principle, the 4 lowest energy levels (n = 1, 2, 3, 4) are completely filled. Thus, HOMO has n = 4 and the lowest unoccupied level (LUMO) has n = 5."
+      },
+      {
+        "question": "Why do symmetrical cyanine dyes maintain an approximately uniform C-C bond length of 1.390 \u00c5 throughout the polymethine chain, whereas polyenes exhibit bond alternation?",
+        "options": [
+          "Resonance degeneracy between the two equivalent resonance structures equalizes bond orders to ~1.5, suppressing Peierls distortion",
+          "Steric hindrance from ethyl substituents forces the carbon chain into a rigid crystal lattice",
+          "The iodide counterion forms covalent crosslinks along the polymethine bridge",
+          "Relativistic contraction of the carbon 2p orbitals prevents single-bond relaxation"
+        ],
+        "correct": 0,
+        "explanation": "The two resonance structures (>N+=CH-(CH=CH)_p-N< and >N-(CH=CH)_p-CH=N+<) are quantum mechanically degenerate, creating an evenly delocalized \u03c0-charge distribution with identical intermediate bond orders of ~1.5 across all C-C bonds."
+      },
+      {
+        "question": "From linear regression of \u03bb_max vs (2p+6)\u00b2/(2p+7), an empirical slope S = 63.70 nm is obtained. Given 8 m_e c / h = 3.2972 \u00d7 10\u00b9\u00b2 m\u207b\u00b9, what is the extracted average conjugated bond length l?",
+        "options": [
+          "1.390 \u00c5 (139.0 pm)",
+          "1.540 \u00c5 (154.0 pm)",
+          "1.200 \u00c5 (120.0 pm)",
+          "1.090 \u00c5 (109.0 pm)"
+        ],
+        "correct": 0,
+        "explanation": "Using S = (8 m_e c / h) \u00b7 l\u00b2: l\u00b2 = S / (8 m_e c / h) = (63.70 \u00d7 10\u207b\u2079 m) / (3.2972 \u00d7 10\u00b9\u00b2 m\u207b\u00b9) = 1.932 \u00d7 10\u207b\u00b2\u2070 m\u00b2, so l = \u221a(1.932 \u00d7 10\u207b\u00b2\u2070) = 1.390 \u00d7 10\u207b\u00b9\u2070 m = 1.390 \u00c5."
+      }
+    ],
+    "precautions": [
+      "Cyanine iodide dye salts and their solutions are light-sensitive and prone to photo-bleaching; store all crystalline dyes and prepared solutions in amber glassware wrapped in foil, and perform dilutions under subdued yellow illumination.",
+      "Spectroscopic grade absolute methanol is toxic, flammable, and volatile; dispense solvent and prepare solutions exclusively inside a certified chemical fume hood, away from ignition sources.",
+      "Handle Suprasil quartz cuvettes exclusively by their frosted or grooved exterior faces; never touch optical window surfaces with bare hands or abrasive materials to prevent permanent transmittance loss.",
+      "Inspect cuvettes carefully to ensure the absolute absence of micro-bubbles adhering to the inner optical faces, as trapped bubbles cause severe light scattering and erratic absorbance spikes.",
+      "Verify that dye sample absorbances fall strictly within the linear photometric range (0.2 < A < 0.9 AU); solutions exceeding A = 1.0 AU suffer from stray light nonlinearity and inner-filter artifacts.",
+      "Dispose of all waste cyanine solutions and methanol washings in dedicated halogenated/organic solvent waste containers; never discharge dyes into municipal laboratory sinks."
+    ],
+    "limitations": [
+      "The 1D particle-in-a-box model assumes a zero-potential flat well, entirely neglecting electron-electron Coulomb repulsion, exchange interactions, and potential energy corrugation along the carbon nuclei.",
+      "End-group heterocyclic rings are approximated by an effective extension of the box length, omitting explicit heterocyclic electronegativity differences, steric tilting, and quinoid character.",
+      "Solvatochromic dielectric shifts (Onsager reaction field effects) caused by solvent polarity and polarizability are not explicitly parameterized within the elementary FEMO formulation."
+    ],
+    "intro": "The quantum mechanical particle-in-a-box model represents one of the foundational paradigms of physical chemistry, demonstrating how spatial boundary confinement quantizes translational motion into discrete, well-defined energy levels. While textbook treatments typically introduce the model using an idealized particle in an infinite 1D potential well, symmetrical polymethine cyanine dyes provide a breathtaking, real-world molecular realization of a one-dimensional electron gas. Cyanine dyes consist of two terminal heterocyclic nitrogen-containing rings linked by an odd-numbered polymethine bridge (-CH=(CH-CH)_p=) containing an alternating network of conjugated \u03c0-bonds. Because the two limiting resonance structures are quantum mechanically degenerate, the \u03c0-electrons delocalize completely across the carbon-nitrogen framework, eliminating bond-length alternation and establishing an essentially constant bond order of ~1.5 and uniform bond length (l \u2248 1.39 \u00c5). In this laboratory investigation, high-resolution UV-Visible scanning spectrophotometry is performed across a homologous series of symmetrical cyanine dyes with vinylene bridge lengths spanning p = 0 to p = 5. By measuring the primary singlet-singlet absorption wavelength \u03bb_max and correlating it against the quantum box parameter x = (2p + 6)\u00b2 / (2p + 7), ordinary least-squares regression extracts the effective conjugated carbon-carbon bond length l = 1.390 \u00c5 with sub-picometer fidelity, validating free-electron molecular orbital theory and illustrating quantum confinement in conjugated nanostructures.",
+    "modelExtra": "The physical chemistry simulation model evaluates a homologous series of symmetrical 1,1'-diethyl-2,2'-cyanine iodide dyes in absolute methanol at 25.0 \u00b0C (optical path length 10.00 mm). Across the six homologues p = [0, 1, 2, 3, 4, 5], the conjugated \u03c0-electron count is N = 2p + 6 = [6, 8, 10, 12, 14, 16], with HOMO quantum numbers n1 = [3, 4, 5, 6, 7, 8] and LUMO quantum numbers n2 = [4, 5, 6, 7, 8, 9]. The theoretical box parameter is x = (2p + 6)\u00b2 / (2p + 7) = [5.1429, 7.1111, 9.0909, 11.0769, 13.0667, 15.0588]. Theoretical absorption wavelengths are \u03bb_max = [327.63, 453.01, 579.14, 705.65, 832.41, 959.32] nm, corresponding to the progression from ultraviolet to visible blue, yellow, red, and near-infrared. Linear regression of \u03bb_max against x yields an empirical slope S = 63.7046 nm and intercept b = 0.0026 nm with Pearson correlation coefficient R\u00b2 = 0.9999999998. Applying the Kuhn FEMO relation l = \u221a[ (S \u00b7 h) / (8 m_e c) ] extracts an effective conjugated bond length l = 1.390 \u00c5 (difference = 0.0002% from the 1.390 \u00c5 crystallographic reference), providing rigorous experimental verification of quantum mechanical electronic structure theory.",
+    "department": "chemistry",
+    "subject_id": 3,
+    "shortTitle": "Particle in a Box & Cyanine Dye Absorption",
+    "page_path": "/chemistry/uv-vis-particle-in-a-box-cyanine-dyes/",
+    "subject": "chemistry",
+    "number": 45,
+    "published": true,
+    "min": 0.0,
+    "max": 5.0,
+    "step": 1.0,
+    "inputLabel": "Vinylene Bridge Group Count p",
+    "shortInput": "p",
+    "inputUnit": "",
+    "inputDecimals": 0,
+    "rawLabel": "Maximum Absorption Wavelength \u03bb_max",
+    "rawUnit": "nm",
+    "rawDecimals": 1,
+    "angle": false,
+    "timed": false,
+    "observationLabel": "UV-Vis electronic absorption spectrophotometry",
+    "xAxis": "Kuhn Box Parameter x = (2p+6)\u00b2/(2p+7)",
+    "yAxis": "Absorption Maximum \u03bb_max (nm)"
   }
 ]

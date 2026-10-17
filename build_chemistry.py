@@ -159,6 +159,16 @@ def observation(c,value):
   v0_mM=raw / 1000.0
   y=rnd(1.0 / v0_mM, 2)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='uv-vis-particle-in-a-box-cyanine-dyes':
+  p_val=float(value)
+  table_raw={0.0:327.63, 1.0:453.01, 2.0:579.14, 3.0:705.65, 4.0:832.41, 5.0:959.32}
+  table_x={0.0:5.1429, 1.0:7.1111, 2.0:9.0909, 3.0:11.0769, 4.0:13.0667, 5.0:15.0588}
+  key=round(p_val, 1)
+  N=2*p_val + 6
+  x=table_x.get(key, rnd((N*N)/(N+1), 4))
+  raw=table_raw.get(key, rnd(63.70496 * x, 2))
+  y=raw
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='infrared-spectroscopy-vibrational-force-constants':
   m_val=float(value)
   table_raw={1.0:2885.593, 2.0:2884.671, 3.0:2883.135, 4.0:2880.985, 5.0:2878.220, 6.0:2874.841}
@@ -629,6 +639,15 @@ def estimate(c,f):
   D_scaled=D_est * 1e6
   se=abs(f.get('slopeSE', 0.05)) / prefactor * 2.0 * math.sqrt(D_est) * 1e6
   return D_scaled, se, 7.60
+ elif slug=='uv-vis-particle-in-a-box-cyanine-dyes':
+  slope=f['m']
+  h=6.62607015e-34
+  me=9.1093837e-31
+  c=2.99792458e8
+  factor=(8 * me * c) / h
+  l_est=math.sqrt((slope * 1e-9) / factor) * 1e10
+  se=(0.5 * l_est * f.get('slopeSE', 0.05) / slope) if 'slopeSE' in f else 0.001
+  return l_est, se, 1.390
  elif slug=='infrared-spectroscopy-vibrational-force-constants':
   nu0=f['b']
   c_cm_s=2.99792458e10
@@ -848,6 +867,15 @@ def formula(c,f):
   D_est=((m * 1e-6) / prefactor)**2
   D_scaled=D_est * 1e6
   return f"Randles-Ševčík Fit: i_pc = {fmt(m,2)}·ν¹/² + {fmt(b,3)} μA; Diffusion Coefficient D = {fmt(D_scaled,2)} × 10⁻⁶ cm²·s⁻¹; Peak Separation ΔE_p = 59.2 mV"
+ elif slug=='uv-vis-particle-in-a-box-cyanine-dyes':
+  m=f['m']
+  b=f['b']
+  h=6.62607015e-34
+  me=9.1093837e-31
+  c=2.99792458e8
+  factor=(8 * me * c) / h
+  l_est=math.sqrt((m * 1e-9) / factor) * 1e10
+  return f"Kuhn FEMO Linear Regression: λ_max = {fmt(m,2)} · [ (2p+6)²/(2p+7) ] + {fmt(b,3)} nm; Conjugated C-C Bond Length l = {fmt(l_est,3)} Å; Pearson R² = {fmt(f['r2'],6)}"
  elif slug=='infrared-spectroscopy-vibrational-force-constants':
   m=f['m']
   b=f['b']
@@ -1427,6 +1455,58 @@ def worked(c,row):
    f"   Scaled diffusion coefficient: D = {fmt(D_scaled, 2)} × 10⁻⁶ cm²·s⁻¹.\n"
    f"   Literature reference benchmark at 25.00 °C: D = 7.60 × 10⁻⁶ cm²·s⁻¹ (percentage difference = {fmt(abs(D_scaled - 7.60)/7.60*100.0, 4)}%).\n"
    f"   Transient Nernst diffusion layer thickness at ν = {fmt(v_val,1)} mV/s: δ ≈ √(π·D·t) = {fmt(math.sqrt(math.pi * D_est * (0.70/(v_val*1e-3)))*1e4, 1)} μm."
+  )
+ elif slug=='uv-vis-particle-in-a-box-cyanine-dyes':
+  p_val=row['input']
+  raw=row['raw']
+  x_val=row['x']
+  y_val=row['y']
+  p_int=int(round(p_val))
+  N=2*p_int + 6
+  homo=N // 2
+  lumo=homo + 1
+  h=6.62607015e-34
+  me=9.1093837e-31
+  c=2.99792458e8
+  factor=(8 * me * c) / h
+  m_slope=63.7046
+  b_int=0.0026
+  l_calc=math.sqrt((m_slope * 1e-9) / factor) * 1e10
+  L_box=N * l_calc
+  lam_nm=raw
+  dE_J=(h * c) / (lam_nm * 1e-9)
+  dE_eV=dE_J / 1.602176634e-19
+  dE_kJ=dE_J * 6.02214076e20
+  dye_names=[
+   "1,1'-diethyl-2,2'-cyanine iodide (p = 0)",
+   "1,1'-diethyl-2,2'-carbocyanine iodide (pinacyanol iodide, p = 1)",
+   "1,1'-diethyl-2,2'-dicarbocyanine iodide (p = 2)",
+   "1,1'-diethyl-2,2'-tricarbocyanine iodide (p = 3)",
+   "1,1'-diethyltetracarbocyanine iodide (p = 4)",
+   "1,1'-diethylpentacarbocyanine iodide (p = 5)"
+  ]
+  dye_name=dye_names[p_int] if 0 <= p_int < len(dye_names) else f"Cyanine homologue (p = {p_int})"
+  pred_lam=m_slope * x_val + b_int
+  diff_lam=lam_nm - pred_lam
+  return (
+   f"Representative Observation — Symmetrical Polymethine Cyanine Dye Homologue {dye_name}:\\n"
+   f"1. Dye Molecular & Quantum Mechanical Architecture:\\n"
+   f"   Vinylene bridge group count: p = {p_int}.\n"
+   f"   Total number of delocalized conjugated π-electrons: N = 2p + 6 = 2({p_int}) + 6 = {N}.\n"
+   f"   Pauli-occupied electron pairs in ground state: {homo} pairs.\n"
+   f"   Highest Occupied Molecular Orbital (HOMO) quantum number: n₁ = N/2 = {homo}.\n"
+   f"   Lowest Unoccupied Molecular Orbital (LUMO) quantum number: n₂ = N/2 + 1 = {lumo}.\n"
+   f"   Dipole-allowed principal singlet electronic transition: S₀(n = {homo}) → S₁(n = {lumo}).\n"
+   f"2. Free-Electron Molecular Orbital (FEMO) Dimensional Parameter:\n"
+   f"   Theoretical quantum scaling factor: x = (2p + 6)² / (2p + 7) = ({N})² / ({N + 1}) = {N*N} / {N+1} = {fmt(x_val, 4)}.\n"
+   f"3. High-Resolution Spectrophotometric Measurement (Methanol, 25.0 °C):\n"
+   f"   Recorded absorption band maximum: λ_max = {fmt(lam_nm, 2)} nm = {fmt(lam_nm*1e-9, 5)} m.\n"
+   f"   Calculated excitation photon energy: ΔE = h·c / λ_max = ({fmt(h, 4)} J·s × {fmt(c, 4)} m/s) / ({fmt(lam_nm*1e-9, 5)} m) = {fmt(dE_J, 5)} J.\n"
+   f"   Scaled transition energy: ΔE = {fmt(dE_eV, 3)} eV = {fmt(dE_kJ, 2)} kJ/mol.\n"
+   f"4. Potential Well Box Geometry & Model Concordance:\n"
+   f"   Effective 1D quantum well box length: L = N · l = {N} × {fmt(l_calc, 3)} Å = {fmt(L_box, 2)} Å = {fmt(L_box*1e-10, 4)} m.\n"
+   f"   Kuhn FEMO regression prediction: λ_pred = S · x + b = {fmt(m_slope, 2)} × {fmt(x_val, 4)} + {fmt(b_int, 4)} = {fmt(pred_lam, 2)} nm.\n"
+   f"   Residual spectral deviation: Δλ = λ_max − λ_pred = {fmt(diff_lam, 3)} nm."
   )
  elif slug=='infrared-spectroscopy-vibrational-force-constants':
   m_val=row['input']
@@ -2504,6 +2584,46 @@ def uncertainty_text(c):
    "propagate as u_r(D) = √[ 4(u(m)/m)² + 4(u(A)/A)² + 4(u(c)/c)² + (u(T)/T)² ] = √[ 4(0.0001)² + 4(0.0033)² + 4(0.0012)² + (0.00007)² ] = 0.70%. "
    "For an empirical diffusion coefficient D = 7.60 × 10⁻⁶ cm²·s⁻¹, the expanded uncertainty at the 95% confidence level (coverage factor k = 2) "
    "is U(D) = ±0.11 × 10⁻⁶ cm²·s⁻¹ (1.4%), confirming exceptional concordance with the authoritative literature benchmark (7.60 ± 0.05 × 10⁻⁶ cm²·s⁻¹)."
+  )
+ elif slug=='uv-vis-particle-in-a-box-cyanine-dyes':
+  return (
+   "In the high-precision determination of average conjugated carbon-carbon bond lengths and quantum confinement parameters "
+   "in symmetrical polymethine cyanine dyes via UV-Visible scanning spectrophotometry, experimental uncertainties and systematic physical "
+   "perturbations are rigorously evaluated across optomechanical, photochemical, solvatochromic, electronic, and boundary domains: "
+   "(1) Spectrophotometric Optical Resolution, Monochromator Slit Function, and Peak Centroid Picking: The double-beam spectrophotometer "
+   "operates with a continuous holographic concave grating (1200 lines/mm) and a calibrated optical bandpass (spectral slit width = 1.00 ± 0.02 nm). "
+   "Wavelength accuracy is verified using holmium oxide glass filters and emission lines from an external low-pressure mercury-argon calibration lamp, "
+   "confirming wavelength reproducibility within ±0.10 nm across the 300 to 1100 nm scanning range (u(λ) = 0.10 nm). Automated second-derivative "
+   "spectroscopy (zero-crossing method) locates the primary 0-0 singlet electronic transition absorption maximum with an algorithmic centroid "
+   "uncertainty of u_centroid = ±0.08 nm, preventing subjective manual peak selection bias. "
+   "(2) Trans-Cis Geometric Photoisomerization Kinetics, Vibronic Shoulder Deconvolution, and Safelight Photostability: Polymethine dyes undergo "
+   "reversible photoisomerization around the conjugated bridge bonds upon actinic light exposure, producing metastable cis-isomers with blue-shifted "
+   "absorption bands (Δλ ≈ −15 to −30 nm) and diminished extinction coefficients. By preparing and storing all solutions in amber volumetric glassware "
+   "under subdued yellow illumination (λ > 550 nm) and acquiring spectra at moderate scan rates (240 nm/min), photoisomerization fractions are suppressed "
+   "to < 0.2% of total dye concentration. In addition, the characteristic 0-1 vibronic shoulder (coupled to the in-plane C=C stretching mode at "
+   "ν_vib ≈ 1300 cm⁻¹) is deconvoluted using non-linear Gaussian peak fitting, ensuring that the isolated 0-0 electronic peak position is unperturbed "
+   "by asymmetric vibronic overlap (residual deconvolution uncertainty u_vib ≤ 0.15 nm). "
+   "(3) Solvent Solvatochromism, Dielectric Reaction Field Screening, and Methanol Purity: Electronic absorption spectra are measured in spectroscopic "
+   "grade absolute methanol (dielectric constant ε_r = 32.70 at 25.0 °C, refractive index n_D = 1.3284, water content < 0.01% w/w). Methanol's moderate "
+   "polarizability provides a stable, reproducible Onsager reaction field. Because symmetrical cyanine dyes undergo minimal change in molecular dipole "
+   "moment during singlet-singlet excitation (Δμ ≈ 0 D due to symmetric charge transfer between equivalent terminal nitrogen atoms), general dielectric "
+   "solvatochromic shifts (McRae-Liptay effect) remain constant across the entire homologous series, cancelling out in the differential slope analysis. "
+   "Temperature is actively thermostatted at 25.00 ± 0.05 °C via an integral Peltier cell block, preventing thermal band broadening and refractive index shifts. "
+   "(4) Boundary Polarization, Terminal Heterocyclic End-Group Delocalization Penetration, and Kuhn End-Correction: In the simplified 1D free-electron "
+   "molecular orbital (FEMO) model, the potential energy well is assumed to terminate abruptly at the boundaries. In real cyanine dyes, the delocalized "
+   "π-electrons penetrate into the terminal heterocyclic rings (e.g., quinoline or indolenine cores) by an effective distance corresponding to α · l, "
+   "where α is the heterocyclic end-group polarizability parameter. In Kuhn's formulated series, the box parameter N = 2p + 6 inherently accounts for "
+   "the addition of 3 carbon-equivalent lengths per terminal ring. Systematic comparison with quantum chemical ab initio DFT/TD-DFT benchmarks "
+   "(CAM-B3LYP/def2-TZVP) confirms that the variation in end-group penetration across the series introduces a systematic truncation uncertainty "
+   "of less than 0.25% in the extracted slope. "
+   "(5) Uncertainty Propagation through the Free-Electron Molecular Orbital Model: In accordance with ISO/IEC Guide 98-3 (GUM), the functional relationship "
+   "relating the empirical regression slope S (nm) to the average conjugated bond length l is l = √[ (S · 10⁻⁹ · h) / (8 · m_e · c) ]. Differentiating "
+   "with respect to slope S yields the sensitivity coefficient ∂l/∂S = (1/2) · (l / S). Relative standard uncertainty therefore propagates as "
+   "u_r(l) = (1/2) · u_r(S). From ordinary least-squares regression across the six homologues p = 0 to 5, the standard error of the slope is "
+   "s_S = 0.0035 nm, yielding a relative slope uncertainty of u_r(S) = 0.0035 / 63.7046 = 0.0055% (55 ppm). Incorporating optomechanical wavelength "
+   "uncertainty (0.10 nm / 600 nm ≈ 0.017%) and baseline stability yields a combined relative standard uncertainty in bond length of u_c(l) = 0.11%. "
+   "For an extracted bond length l = 1.390 Å, the expanded uncertainty at the 95% confidence level (coverage factor k = 2) is U(l) = ±0.003 Å (0.22%), "
+   "confirming extraordinary concordance with the X-ray crystallographic literature benchmark (1.390 ± 0.005 Å)."
   )
  elif slug=='infrared-spectroscopy-vibrational-force-constants':
   return (
@@ -4085,6 +4205,119 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"invariant peak potential separation ΔE_p = 59.2 mV and current ratio |i_pa / i_pc| = 1.000 confirming ideal Nernstian reversibility. The extracted "
    f"diffusion coefficient agrees with authoritative electrochemistry literature benchmarks within {fmt(abs(D_val - 7.60)/7.60*100.0, 4)}% relative deviation, "
    f"demonstrating the high metrological precision of the Randles-Ševčík formulation for diagnostic electrochemistry."
+  )
+  
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='uv-vis-particle-in-a-box-cyanine-dyes':
+  m_val=f['m']
+  b_val=f['b']
+  l_val=value
+  r2_val=f['r2']
+  h=6.62607015e-34
+  me=9.1093837e-31
+  c=2.99792458e8
+  factor=(8 * me * c) / h
+  
+  abstract=(
+   f"The electronic absorption spectra of a homologous series of symmetrical 1,1'-diethyl-2,2'-cyanine iodide dyes with vinylene bridge "
+   f"lengths spanning p = 0, 1, 2, 3, 4, and 5 were investigated at 25.0 °C in spectroscopic grade absolute methanol using a double-beam "
+   f"UV-Visible scanning spectrophotometer with 1.00 nm optical bandpass and matched 10.00 mm Suprasil quartz cuvettes. The homologous series "
+   f"exhibited an extraordinary regular progression of visible colors spanning the entire optical spectrum: p = 0 (1,1'-diethyl-2,2'-cyanine, "
+   f"ultraviolet absorption at λ_max = 327.6 nm), p = 1 (1,1'-diethyl-2,2'-carbocyanine / pinacyanol, blue-absorbing yellow dye at λ_max = 453.0 nm), "
+   f"p = 2 (1,1'-diethyl-2,2'-dicarbocyanine, green-absorbing magenta dye at λ_max = 579.1 nm), p = 3 (1,1'-diethyl-2,2'-tricarbocyanine, "
+   f"red-absorbing cyan-blue dye at λ_max = 705.7 nm), p = 4 (1,1'-diethyltetracarbocyanine, near-infrared absorbing dye at λ_max = 832.4 nm), "
+   f"and p = 5 (1,1'-diethylpentacarbocyanine, deep near-infrared absorbing dye at λ_max = 959.3 nm). Applying the Kuhn Free-Electron Molecular "
+   f"Orbital (FEMO) particle-in-a-box quantum mechanical model, the lowest-energy singlet-singlet electronic transition was formulated as the "
+   f"promotion of a π-electron from the Highest Occupied Molecular Orbital (HOMO, n₁ = N/2) to the Lowest Unoccupied Molecular Orbital (LUMO, "
+   f"n₂ = N/2 + 1) within a 1D potential well of length L = N·l, where N = 2p + 6 is the total number of conjugated π-electrons and l is the "
+   f"mean carbon-carbon bond length. Linear regression of experimental λ_max values against the quantum dimensional parameter x = (2p + 6)² / (2p + 7) "
+   f"yielded an empirical slope S = (8·m_e·c·l²)/h = {fmt(m_val, 4)} nm and intercept b = {fmt(b_val, 4)} nm with a Pearson correlation coefficient "
+   f"R² = {fmt(r2_val, 8)}. From the empirical slope, the average conjugated carbon-carbon bond length was extracted as l = {fmt(l_val, 3)} Å, "
+   f"demonstrating remarkable agreement within {fmt(abs(l_val - 1.390)/1.390*100.0, 4)}% relative deviation from the 1.390 Å X-ray crystallographic "
+   f"reference standard, rigorously confirming quantum confinement and free-electron molecular orbital theory in conjugated organic systems."
+  )
+  
+  graph_choice=(
+   f"To rigorously evaluate the quantum mechanical particle-in-a-box model and extract the fundamental carbon-carbon bond length along "
+   f"the conjugated polymethine bridge, the primary analytical plot graphs the experimental maximum absorption wavelength λ_max (nm) on "
+   f"the dependent Y-axis against the dimensionless free-electron molecular orbital (FEMO) quantum parameter x = (2p + 6)² / (2p + 7) on the "
+   f"independent X-axis. In Kuhn's 1D particle-in-a-box formulation, the energy eigenvalues for a particle of mass m_e in an infinite square well "
+   f"of width L are given by E_n = (n²·h²) / (8·m_e·L²). With N = 2p + 6 electrons paired into the lowest N/2 spatial orbitals according to "
+   f"the Pauli exclusion principle, the transition energy for the lowest-energy dipole-allowed singlet-singlet excitation (HOMO n₁ = N/2 to "
+   f"LUMO n₂ = N/2 + 1) is ΔE = E_(N/2+1) − E_(N/2) = (N + 1)·h² / (8·m_e·L²). Equating this quantum transition energy to the photon energy "
+   f"ΔE = h·c / λ yields the theoretical dispersion relation λ = (8·m_e·c / h) · [ L² / (N + 1) ]. Expressing the box length in terms of the "
+   f"average conjugated bond length l as L = N·l = (2p + 6)·l transforms the relation into the linear expression: "
+   f"λ = [ (8·m_e·c·l²) / h ] · [ (2p + 6)² / (2p + 7) ] = S · x. Plotting λ_max vs x linearizes the entire homologous series over the complete "
+   f"range from p = 0 (x = 5.1429, λ = 327.63 nm) to p = 5 (x = 15.0588, λ = 959.32 nm). The empirical slope S directly isolates the fundamental "
+   f"molecular bond length l through l = √[ (S·10⁻⁹·h) / (8·m_e·c) ], while the Y-intercept b serves as an exquisite diagnostic of heterocyclic "
+   f"end-group boundary polarization and non-zero quantum well end-corrections. The resulting plot demonstrates exceptional linearity "
+   f"(R² = {fmt(r2_val, 8)}) across an 800 nm spectral breadth."
+  )
+  
+  discussion=(
+   f"The quantitative investigation of symmetrical polymethine cyanine dyes provides an extraordinarily elegant experimental manifestation "
+   f"of quantum mechanical boundary confinement in a macroscopic chemical system. In classical quantum mechanics textbooks, the particle-in-a-box "
+   f"model is often introduced as an artificial mathematical abstraction due to the non-physical nature of infinitely steep potential energy walls. "
+   f"However, in conjugated organic chromophores, particularly symmetrical cyanine dyes, the spatial confinement of π-electrons within a one-dimensional "
+   f"potential well is realized with astonishing physical accuracy. Cyanines possess a generic molecular architecture consisting of two terminal "
+   f"nitrogen-containing heterocyclic nuclei linked by an odd-numbered polymethine chain: >N+=CH−(CH=CH)_p−N< <-> >N−(CH=CH)_p−CH=N+<. "
+   f"Unlike uncharged linear polyenes (such as polyacetylene, butadiene, or β-carotene) which exhibit pronounced Peierls distortion and bond-length "
+   f"alternation between formal single (1.46 Å) and double (1.34 Å) bonds, symmetrical cyanines possess two completely degenerate limiting resonance "
+   f"structures. Consequently, the π-electron charge density is distributed completely symmetrically across the polymethine bridge, equalizing all "
+   f"carbon-carbon bond orders to an intermediate value of approximately 1.5 and producing an essentially uniform bond length of l = 1.390 Å, "
+   f"closely matching the aromatic bond length in benzene (1.399 Å). This lack of bond-order alternation eliminates potential energy corrugation "
+   f"along the carbon chain, allowing the π-electrons to glide freely along the nuclear backbone as an essentially non-interacting, one-dimensional "
+   f"quasi-free electron Fermi gas with a constant internal potential (V(x) = 0). "
+   f"Across the homologous series p = 0 to 5, each additional vinylene unit (-CH=CH-) extends the conjugated carbon framework by 2 atoms and introduces "
+   f"2 additional π-electrons into the delocalized manifold (N = 2p + 6). In the ground state (S₀), the Pauli exclusion principle dictates that "
+   f"each spatial eigenfunction ψ_n(x) = √(2/L) · sin(nπx/L) accommodates two electrons with paired spins (m_s = ±1/2). Consequently, the lowest "
+   f"N/2 energy levels are completely filled, establishing the Highest Occupied Molecular Orbital at quantum state n₁ = N/2. The Lowest Unoccupied "
+   f"Molecular Orbital corresponds to n₂ = N/2 + 1. The transition energy ΔE between HOMO and LUMO scales inversely with box length and electron count: "
+   f"ΔE = (N + 1)·h² / (8·m_e·L²) = [ (N + 1) / N² ] · [ h² / (8·m_e·l²) ] ≈ [ 1 / N ] · [ h² / (8·m_e·l²) ]. Because ΔE decreases monotonically "
+   f"with increasing chain length, the electronic absorption wavelength λ = h·c / ΔE increases linearly with the quantum parameter x = N²/(N + 1), "
+   f"giving rise to the spectacular bathochromic (red) shift observed experimentally. Each successive vinylene unit extends the absorption maximum "
+   f"by approximately Δλ ≈ 126 nm, shifting the dominant visible color of the dye across the entire optical spectrum: from ultraviolet transparency "
+   f"(p = 0, λ_max = 327.6 nm, pale/colorless solution), through visible yellow (p = 1, λ_max = 453.0 nm, absorbs blue), brilliant magenta/purple "
+   f"(p = 2, λ_max = 579.1 nm, absorbs green), deep cyan-blue (p = 3, λ_max = 705.7 nm, absorbs red), into the near-infrared invisible spectrum "
+   f"(p = 4, λ_max = 832.4 nm; p = 5, λ_max = 959.3 nm). "
+   f"Linear regression of experimental λ_max values against the Kuhn quantum parameter x yielded an empirical slope of S = {fmt(m_val, 4)} nm "
+   f"with a linear correlation coefficient of R² = {fmt(r2_val, 8)}. Applying the quantum relation S = (8·m_e·c·l²)/h and substituting fundamental "
+   f"physical constants (m_e = 9.1093837 × 10⁻³¹ kg, c = 2.99792458 × 10⁸ m/s, h = 6.62607015 × 10⁻³⁴ J·s, yielding 8·m_e·c/h = 3.29719 × 10¹² m⁻¹), "
+   f"the average conjugated carbon-carbon bond length was extracted as l = √[ (S·10⁻⁹) / (3.29719 × 10¹²) ] × 10¹⁰ = {fmt(l_val, 3)} Å. "
+   f"This experimental result exhibits breathtaking concordance with the accepted X-ray crystallographic benchmark for symmetrical carbocyanines "
+   f"(l_ref = 1.390 Å), with a relative percentage difference of only {fmt(abs(l_val - 1.390)/1.390*100.0, 4)}%. "
+   f"The near-zero value of the empirical intercept (b = {fmt(b_val, 4)} nm) confirms that Kuhn's formulation of the box length L = (2p + 6)·l "
+   f"accurately absorbs the end-group boundary polarization corrections. In a bare polyene, the box length terminates at the terminal carbon atoms; "
+   f"in cyanines, however, the π-electrons delocalize past the polymethine bridge into the terminal heterocyclic rings. The heterocyclic nitrogen "
+   f"atoms each donate one π-electron into the conjugated bridge, while the adjacent aromatic ring carbons contribute additional delocalization "
+   f"volume. Kuhn parameterized this boundary effect by assigning an effective extra box length equivalent to one full bond length (α ≈ 1) per "
+   f"terminal ring, precisely matching the N = 2p + 6 electron and length assignment. "
+   f"In addition to the primary 0-0 electronic absorption peak, each recorded spectrum exhibited a well-defined secondary shoulder on the high-energy "
+   f"(low-wavelength) flank, spaced by approximately 1200–1400 cm⁻¹ (Δλ ≈ 30–45 nm). In accordance with the Franck-Condon principle, electronic "
+   f"excitation occurs on a femtosecond timescale (t_elect ≈ 10⁻¹⁶ s), which is substantially faster than nuclear vibrational motion (t_vib ≈ 10⁻¹³ s). "
+   f"Because the equilibrium geometry of the S₁ excited state possesses slightly longer bonds due to the population of the antibonding LUMO orbital, "
+   f"the nuclear wavepacket overlaps not only with the v' = 0 vibrational ground level of S₁, but also with the v' = 1 level of the totally symmetric "
+   f"in-plane C=C stretching vibration (ν_vib ≈ 1300 cm⁻¹), producing the observed 0-1 vibronic progression shoulder. Second-derivative deconvolution "
+   f"confirmed that the 0-0 peak positions used for FEMO regression were cleanly separated from vibronic distortion. "
+   f"Finally, non-radiative deactivation dynamics must be considered. In solution, cyanine dyes exhibit a competition between radiative fluorescence "
+   f"and radiationless decay via torsional trans-cis photoisomerization around the polymethine bridge bonds. As the bridge length increases from "
+   f"p = 0 to p = 5, the number of torsional degrees of freedom increases, lowering the activation barrier for excited-state twisting and reducing "
+   f"the fluorescence quantum yield from Φ_f ≈ 0.35 (p = 0) to Φ_f < 0.01 (p = 5). However, because steady-state absorption spectrophotometry probes "
+   f"vertical electronic transitions directly from the thermally equilibrated trans-ground state (S₀), torsional dynamics do not perturb the "
+   f"spectrophotometrically measured transition wavelengths λ_max, ensuring that the extracted bond length remains an uncompromised physical invariant."
+  )
+  
+  conclusion=(
+   f"The electronic absorption spectra of the homologous series of symmetrical 1,1'-diethyl-2,2'-cyanine iodide dyes (p = 0 to 5) were "
+   f"systematically recorded and analyzed in spectroscopic grade absolute methanol at 25.0 °C. The experimental absorption maxima demonstrated "
+   f"an unambiguous, monotonic bathochromic shift spanning 631.7 nm across the optical spectrum, from the ultraviolet (λ_max = 327.6 nm for p = 0) "
+   f"through visible yellow, magenta, and cyan, into the near-infrared (λ_max = 959.3 nm for p = 5). Linear regression of λ_max against the Kuhn "
+   f"Free-Electron Molecular Orbital parameter x = (2p + 6)² / (2p + 7) yielded an exceptional linear fit with slope S = {fmt(m_val, 4)} nm and "
+   f"correlation coefficient R² = {fmt(r2_val, 8)}. Applying the 1D quantum mechanical particle-in-a-box model extracted an average conjugated "
+   f"carbon-carbon bond length of l = {fmt(l_val, 3)} Å, displaying extraordinary concordance with the 1.390 Å X-ray crystallographic benchmark "
+   f"within {fmt(abs(l_val - 1.390)/1.390*100.0, 4)}% relative deviation. Expanded uncertainty analysis (U(l) = ±0.003 Å at 95% confidence) rigorously "
+   f"establishes the metrological validity of the free-electron model, providing profound experimental insight into quantum confinement, electronic "
+   f"delocalization, and resonance stabilization in conjugated molecular architectures."
   )
   
   return abstract, graph_choice, discussion, conclusion
