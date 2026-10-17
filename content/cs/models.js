@@ -40,6 +40,13 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:raw/1000.0,x,y,valid:n>=128&&n<=32768};
  }
+ if(slug==='linked-list-architectures'){
+  const n=Number(input);
+  const raw=Math.round(32*n + 64);
+  const x=n;
+  const y=raw;
+  return {raw,ideal:raw,period:raw/500.0,x,y,valid:n>=64&&n<=16384};
+ }
  throw Error('Unknown CS experiment: '+slug);
 }
 
@@ -66,6 +73,10 @@ function reading(slug,input,raw){
   y=raw;
  }
  if(slug==='queue-buffer-management'){
+  x=Number(input);
+  y=raw;
+ }
+ if(slug==='linked-list-architectures'){
   x=Number(input);
   y=raw;
  }
@@ -107,6 +118,9 @@ function estimate(slug,f){
  }
  if(slug==='queue-buffer-management'){
   return {value:f.m,se:f.slopeSE,reference:64.0000};
+ }
+ if(slug==='linked-list-architectures'){
+  return {value:f.m,se:f.slopeSE,reference:32.0000};
  }
  throw Error('Unknown CS experiment: '+slug);
 }

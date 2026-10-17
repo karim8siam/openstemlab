@@ -140,6 +140,55 @@ function drawComparativeSim(t,p,v,ink,soft,orange){
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
+ if(cfg.slug==='linked-list-architectures'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'SEQUENTIAL CONTAINER & CACHE LOCALITY BENCHMARK (n = '+p.input+')','#e2f0f8',11);
+
+  const n=p.input;
+  const m_vector=Math.round(8*n);
+  const m_unrolled=Math.round(12*n);
+  const m_singly=Math.round(16*n + 16);
+  const m_doubly=Math.round(32*n + 64);
+  const m_skip=Math.round(48*n + 64);
+
+  const containers=[
+   {name:'Contiguous Vector (std::vector)',col:'#10b981',mem:m_vector,scale:'8 B/elem',desc:'Dense array, 8 items/L1 cache line, spatial prefetcher'},
+   {name:'Unrolled Linked List (Chunked)',col:'#38bdf8',mem:m_unrolled,scale:'12 B/elem',desc:'Nodes contain 8-item arrays, amortized cache locality'},
+   {name:'Singly Linked List (Forward)',col:'#f97316',mem:m_singly,scale:'16 B/elem',desc:'8B data + 8B next pointer, unidirectional traversal'},
+   {name:'Doubly Linked List (Sentinel)',col:'#ef4444',mem:m_doubly,scale:'32 B/elem',desc:'8B data + 16B ptrs + 8B pad; 300% metadata overhead'},
+   {name:'Skip List (Probabilistic Index)',col:'#a855f7',mem:m_skip,scale:'48 B/elem',desc:'Multi-level forward pointer tower, O(log n) search'}
+  ];
+
+  containers.forEach((item,idx)=>{
+   const rowY=cY+16+idx*42;
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+12)+'" fill="#dcebf2" font-size="8.5" font-weight="bold">'+item.name+'</text>';
+   const memStr=item.mem>=1024?(item.mem/1024).toFixed(1)+' KiB':item.mem+' B';
+   svg+='<text x="'+(cX+cW-15)+'" y="'+(rowY+12)+'" text-anchor="end" fill="'+item.col+'" font-size="8.5" font-family="monospace" font-weight="bold">'+memStr+' ('+item.scale+')</text>';
+   
+   const barX=cX+15,barY=rowY+16,barMaxW=cW-30;
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barMaxW+'" height="7" rx="2" fill="#16242c"/>';
+   const frac=Math.min(1.0,Math.log10(item.mem+1)/Math.log10(m_skip+1));
+   const fillW=Math.max(4,frac*barMaxW);
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+fillW+'" height="7" rx="2" fill="'+item.col+'"/>';
+  });
+
+  const bX=460,bY=45,bW=220,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">POINTER CHASE LATENCY PENALTY</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">~12.5×</text>';
+  svg+='<text x="'+(bX+95)+'" y="'+(bY+46)+'" fill="#dcebf2" font-size="10">List vs Vector</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#7e9bab" font-size="9">L1 CACHE LINE UTILIZATION</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="16" font-family="monospace" font-weight="bold">100% vs 25%</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+124)+'" fill="#8ba5b5" font-size="8">Vector: 8 elems/line · List: 1-2 nodes</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+136)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+136)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+154)+'" fill="#7e9bab" font-size="9">SPATIAL PREFETCHER STATUS</text>';
+  svg+=text(bX+bW/2,bY+180,'Hardware Prefetch: INACTIVE','#ef4444',10.5);
+  svg+=text(bX+bW/2,bY+202,'Heap pointer hopping defeats stride prefetching',orange,8.5);
+  svg+=text(360,305,'Comparative Invariant: Vector delivers 4× memory density and ~12× faster sequential streaming than Linked List',soft,10);
+  return svg;
+ }
+
  if(cfg.slug==='queue-buffer-management'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
   svg+=text(cX+cW/2,cY-14,'QUEUE ARCHITECTURES & THROUGHPUT BENCHMARK (n = '+p.input+')','#e2f0f8',11);
@@ -394,6 +443,75 @@ function drawDynamicSandbox(t,p,v,ink,soft,orange){
  const cX=45,cY=45,cW=400,cH=230;
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+ if(cfg.slug==='linked-list-architectures'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'SENTINEL SPLICING & BRANCHLESS NODE INSERTION (n = '+p.input+')','#e2f0f8',11);
+
+  // Sentinel Head Box
+  const shX=cX+20,shY=cY+40,shW=70,shH=65;
+  svg+='<rect x="'+shX+'" y="'+shY+'" width="'+shW+'" height="'+shH+'" rx="4" fill="#0c4a6e" stroke="#38bdf8" stroke-width="1.5"/>';
+  svg+='<text x="'+(shX+shW/2)+'" y="'+(shY+18)+'" text-anchor="middle" fill="#38bdf8" font-size="8" font-weight="bold">HEAD SENTINEL</text>';
+  svg+='<text x="'+(shX+shW/2)+'" y="'+(shY+34)+'" text-anchor="middle" fill="#94a3b8" font-size="7" font-family="monospace">prev: NULL</text>';
+  svg+='<text x="'+(shX+shW/2)+'" y="'+(shY+50)+'" text-anchor="middle" fill="#6ee7b7" font-size="7" font-family="monospace">next: &gt;&gt;</text>';
+
+  // Inserted / Target Node
+  const ndX=cX+120,ndY=cY+35,ndW=90,ndH=75;
+  svg+='<rect x="'+ndX+'" y="'+ndY+'" width="'+ndW+'" height="'+ndH+'" rx="4" fill="#132733" stroke="'+orange+'" stroke-width="2"/>';
+  svg+='<text x="'+(ndX+ndW/2)+'" y="'+(ndY+18)+'" text-anchor="middle" fill="'+orange+'" font-size="8.5" font-weight="bold">NEW NODE (X)</text>';
+  svg+='<text x="'+(ndX+ndW/2)+'" y="'+(ndY+34)+'" text-anchor="middle" fill="#dcebf2" font-size="7.5" font-family="monospace">val: 0xDEADBEEF</text>';
+  svg+='<text x="'+(ndX+ndW/2)+'" y="'+(ndY+50)+'" text-anchor="middle" fill="#38bdf8" font-size="7" font-family="monospace">prev: &amp;Head</text>';
+  svg+='<text x="'+(ndX+ndW/2)+'" y="'+(ndY+64)+'" text-anchor="middle" fill="#10b981" font-size="7" font-family="monospace">next: &amp;Tail</text>';
+
+  // Target Node / Sentinel Tail Box
+  const stX=cX+240,stY=cY+40,stW=70,stH=65;
+  svg+='<rect x="'+stX+'" y="'+stY+'" width="'+stW+'" height="'+stH+'" rx="4" fill="#431407" stroke="#ef4444" stroke-width="1.5"/>';
+  svg+='<text x="'+(stX+stW/2)+'" y="'+(stY+18)+'" text-anchor="middle" fill="#f87171" font-size="8" font-weight="bold">TAIL SENTINEL</text>';
+  svg+='<text x="'+(stX+stW/2)+'" y="'+(stY+34)+'" text-anchor="middle" fill="#6ee7b7" font-size="7" font-family="monospace">prev: &lt;&lt;</text>';
+  svg+='<text x="'+(stX+stW/2)+'" y="'+(stY+50)+'" text-anchor="middle" fill="#94a3b8" font-size="7" font-family="monospace">next: NULL</text>';
+
+  // Splice Pointer Arrows
+  // Forward arrow Head -> Node
+  svg+='<path d="M '+(shX+shW)+' '+(shY+25)+' L '+(ndX)+' '+(shY+25)+'" fill="none" stroke="#10b981" stroke-width="2"/>';
+  svg+='<polygon points="'+ndX+','+(shY+25)+' '+(ndX-6)+','+(shY+21)+' '+(ndX-6)+','+(shY+29)+'" fill="#10b981"/>';
+
+  // Backward arrow Node -> Head
+  svg+='<path d="M '+(ndX)+' '+(shY+45)+' L '+(shX+shW)+' '+(shY+45)+'" fill="none" stroke="'+orange+'" stroke-width="2"/>';
+  svg+='<polygon points="'+(shX+shW)+','+(shY+45)+' '+(shX+shW+6)+','+(shY+41)+' '+(shX+shW+6)+','+(shY+49)+'" fill="'+orange+'"/>';
+
+  // Forward arrow Node -> Tail
+  svg+='<path d="M '+(ndX+ndW)+' '+(stY+25)+' L '+(stX)+' '+(stY+25)+'" fill="none" stroke="#10b981" stroke-width="2"/>';
+  svg+='<polygon points="'+stX+','+(stY+25)+' '+(stX-6)+','+(stY+21)+' '+(stX-6)+','+(stY+29)+'" fill="#10b981"/>';
+
+  // Backward arrow Tail -> Node
+  svg+='<path d="M '+(stX)+' '+(stY+45)+' L '+(ndX+ndW)+' '+(stY+45)+'" fill="none" stroke="'+orange+'" stroke-width="2"/>';
+  svg+='<polygon points="'+(ndX+ndW)+','+(stY+45)+' '+(ndX+ndW+6)+','+(stY+41)+' '+(ndX+ndW+6)+','+(stY+49)+'" fill="'+orange+'"/>';
+
+  // Branchless Code Box at bottom
+  const cdX=cX+15,cdY=cY+125,cdW=cW-30,cdH=90;
+  svg+='<rect x="'+cdX+'" y="'+cdY+'" width="'+cdW+'" height="'+cdH+'" rx="4" fill="#050b0e" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(cdX+12)+'" y="'+(cdY+18)+'" fill="#38bdf8" font-size="8" font-weight="bold">BRANCHLESS 4-POINTER SPLICE (ZERO CONDITIONAL JUMPS)</text>';
+  svg+='<text x="'+(cdX+12)+'" y="'+(cdY+36)+'" fill="#10b981" font-size="7.5" font-family="monospace">1: newNode-&gt;next = target;          // Store target successor</text>';
+  svg+='<text x="'+(cdX+12)+'" y="'+(cdY+52)+'" fill="#10b981" font-size="7.5" font-family="monospace">2: newNode-&gt;prev = target-&gt;prev;    // Link to target predecessor</text>';
+  svg+='<text x="'+(cdX+12)+'" y="'+(cdY+68)+'" fill="'+orange+'" font-size="7.5" font-family="monospace">3: target-&gt;prev-&gt;next = newNode;    // Splice forward link</text>';
+  svg+='<text x="'+(cdX+12)+'" y="'+(cdY+84)+'" fill="'+orange+'" font-size="7.5" font-family="monospace">4: target-&gt;prev = newNode;          // Splice backward link</text>';
+
+  const bX=465,bY=45,bW=210,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#7e9bab" font-size="9">BRANCH PREDICTION PENALTY</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+54)+'" fill="'+orange+'" font-size="24" font-family="monospace" font-weight="bold">0 stalls</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+70)+'" fill="#8ba5b5" font-size="8">Sentinel eliminates if(head == NULL) checks</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+84)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+84)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+102)+'" fill="#7e9bab" font-size="9">COMPLEXITY PROFILE</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+124)+'" fill="'+ink+'" font-size="16" font-family="monospace" font-weight="bold">O(1) Strict</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+140)+'" fill="#8ba5b5" font-size="8">Exactly 4 pointer writes, 0 shifts</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+154)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+154)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+172)+'" fill="#7e9bab" font-size="9">LINUX INTRUSIVE ARCHITECTURE</text>';
+  svg+=text(bX+bW/2,bY+194,'struct list_head { next, prev }','#38bdf8',9.5);
+  svg+=text(bX+bW/2,bY+212,'container_of() macro retrieves payload',orange,8.5);
+  svg+=text(360,305,'Sentinel Sandbox: Sentinels eliminate branch mispredictions and simplify edge cases into standard splices',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='queue-buffer-management'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
@@ -719,6 +837,91 @@ function draw(t){
  const ink='#38bdf8',soft='#7e9bab',orange='#f97316';
  if(currentSimMode==='compare'){$('apparatusDiagram').innerHTML=drawComparativeSim(t,p,v,ink,soft,orange);return;}
  if(currentSimMode==='sandbox'){$('apparatusDiagram').innerHTML=drawDynamicSandbox(t,p,v,ink,soft,orange);return;}
+
+ if(cfg.slug==='linked-list-architectures'){
+  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
+  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+  const n=p.input;
+  const m_total=v.raw;
+
+  svg+='<rect x="35" y="38" width="410" height="235" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+=text(240,24,'Doubly Linked List Heap Architecture & Sentinel Invariants');
+
+  svg+='<text x="50" y="58" fill="#7e9bab" font-size="8.5" font-weight="bold">DYNAMIC HEAP NODES [32 BYTES EACH] &amp; SENTINELS (n = '+n+')</text>';
+
+  // Nodes visualization: Head, Node 1, Node 2, Tail
+  const nodes=[
+   {name:'HEAD',addr:'0x10A0',val:'[SENTINEL]',isSent:true,col:'#38bdf8'},
+   {name:'NODE 1',addr:'0x23F8',val:'val: 42',isSent:false,col:'#10b981'},
+   {name:'NODE 2',addr:'0x3A10',val:'val: 87',isSent:false,col:'#10b981'},
+   {name:'TAIL',addr:'0x41E0',val:'[SENTINEL]',isSent:true,col:'#ef4444'}
+  ];
+
+  const nW=76,nH=70;
+  const startX=48,nY=72;
+  const spacing=18;
+
+  nodes.forEach((nd,i)=>{
+   const nx=startX+i*(nW+spacing);
+   svg+='<rect x="'+nx+'" y="'+nY+'" width="'+nW+'" height="'+nH+'" rx="4" fill="#081016" stroke="'+nd.col+'" stroke-width="'+(nd.isSent?1.5:2)+'"/>';
+   svg+='<rect x="'+nx+'" y="'+nY+'" width="'+nW+'" height="16" rx="4" fill="'+(nd.isSent?(i===0?'#0c4a6e':'#451a03'):'#064e3b')+'"/>';
+   svg+='<text x="'+(nx+nW/2)+'" y="'+(nY+11)+'" text-anchor="middle" fill="#dcebf2" font-size="7" font-weight="bold">'+nd.name+'</text>';
+   svg+='<text x="'+(nx+nW/2)+'" y="'+(nY+28)+'" text-anchor="middle" fill="#94a3b8" font-size="6.5" font-family="monospace">'+nd.addr+'</text>';
+   svg+='<text x="'+(nx+nW/2)+'" y="'+(nY+42)+'" text-anchor="middle" fill="'+(nd.isSent?'#94a3b8':'#fde047')+'" font-size="7.5" font-family="monospace">'+nd.val+'</text>';
+   svg+='<text x="'+(nx+nW/2)+'" y="'+(nY+56)+'" text-anchor="middle" fill="#38bdf8" font-size="6" font-family="monospace">prev:8B | next:8B</text>';
+   svg+='<text x="'+(nx+nW/2)+'" y="'+(nY+66)+'" text-anchor="middle" fill="#64748b" font-size="5.5">pad: 8B (16B align)</text>';
+
+   if(i<nodes.length-1){
+    const arrowX1=nx+nW,arrowX2=nx+nW+spacing;
+    // Next forward arrow (blue/green, top)
+    svg+='<line x1="'+arrowX1+'" y1="'+(nY+30)+'" x2="'+arrowX2+'" y2="'+(nY+30)+'" stroke="#38bdf8" stroke-width="1.5"/>';
+    svg+='<polygon points="'+arrowX2+','+(nY+30)+' '+(arrowX2-4)+','+(nY+27)+' '+(arrowX2-4)+','+(nY+33)+'" fill="#38bdf8"/>';
+    // Prev backward arrow (orange, bottom)
+    svg+='<line x1="'+arrowX2+'" y1="'+(nY+50)+'" x2="'+arrowX1+'" y2="'+(nY+50)+'" stroke="'+orange+'" stroke-width="1.5"/>';
+    svg+='<polygon points="'+arrowX1+','+(nY+50)+' '+(arrowX1+4)+','+(nY+47)+' '+(arrowX1+4)+','+(nY+53)+'" fill="'+orange+'"/>';
+   }
+  });
+
+  // Pointer legend and node memory breakdown
+  const legX=50,legY=155,legW=375,legH=45;
+  svg+='<rect x="'+legX+'" y="'+legY+'" width="'+legW+'" height="'+legH+'" rx="4" fill="#081016" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(legX+10)+'" y="'+(legY+15)+'" fill="#38bdf8" font-size="8" font-weight="bold">64-BIT NODE MEMORY LAYOUT (32 BYTES TOTAL)</text>';
+  svg+='<rect x="'+(legX+10)+'" y="'+(legY+22)+'" width="80" height="16" rx="2" fill="#064e3b" stroke="#10b981"/>';
+  svg+='<text x="'+(legX+50)+'" y="'+(legY+33)+'" text-anchor="middle" fill="#dcebf2" font-size="6.5" font-family="monospace">Data: 8B</text>';
+  svg+='<rect x="'+(legX+95)+'" y="'+(legY+22)+'" width="80" height="16" rx="2" fill="#0c4a6e" stroke="#38bdf8"/>';
+  svg+='<text x="'+(legX+135)+'" y="'+(legY+33)+'" text-anchor="middle" fill="#dcebf2" font-size="6.5" font-family="monospace">Next*: 8B</text>';
+  svg+='<rect x="'+(legX+180)+'" y="'+(legY+22)+'" width="80" height="16" rx="2" fill="#431407" stroke="'+orange+'"/>';
+  svg+='<text x="'+(legX+220)+'" y="'+(legY+33)+'" text-anchor="middle" fill="#dcebf2" font-size="6.5" font-family="monospace">Prev*: 8B</text>';
+  svg+='<rect x="'+(legX+265)+'" y="'+(legY+22)+'" width="100" height="16" rx="2" fill="#1e293b" stroke="#64748b"/>';
+  svg+='<text x="'+(legX+315)+'" y="'+(legY+33)+'" text-anchor="middle" fill="#94a3b8" font-size="6.5" font-family="monospace">Align Pad: 8B</text>';
+
+  // Telemetry box
+  const regX=50,regY=210,regW=375,regH=55;
+  svg+='<rect x="'+regX+'" y="'+regY+'" width="'+regW+'" height="'+regH+'" rx="4" fill="#081016" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(regX+10)+'" y="'+(regY+16)+'" fill="#38bdf8" font-size="8" font-family="monospace">Heap Model: M(n) = 32 × '+n+' + 64 = '+m_total+' bytes ('+(m_total/1024).toFixed(2)+' KiB)</text>';
+  svg+='<text x="'+(regX+10)+'" y="'+(regY+32)+'" fill="'+orange+'" font-size="8" font-family="monospace">Metadata Overhead: 24 bytes metadata per 8 bytes data ⟹ 300% pointer overhead</text>';
+  svg+='<text x="'+(regX+10)+'" y="'+(regY+48)+'" fill="#8ba5b5" font-size="7">Sentinel Optimization: Eliminates head/tail null checks; splices execute in strict O(1) time</text>';
+
+  const bX=465,bY=38,bW=220,bH=235;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#7e9bab" font-size="9">HEAP FOOTPRINT PER NODE</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+54)+'" fill="'+orange+'" font-size="24" font-family="monospace" font-weight="bold">32 Bytes</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+70)+'" fill="#8ba5b5" font-size="8">8B Data + 16B Pointers + 8B Padding</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+84)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+84)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+102)+'" fill="#7e9bab" font-size="9">SENTINEL BASE OVERHEAD</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+126)+'" fill="'+ink+'" font-size="18" font-family="monospace" font-weight="bold">64 Bytes</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+142)+'" fill="#8ba5b5" font-size="8">Sentinel Head (32B) + Sentinel Tail (32B)</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+156)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+156)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+174)+'" fill="#7e9bab" font-size="9">POINTER SPLICE TIME</text>';
+  svg+=text(bX+bW/2,bY+196,'Strict O(1) Splicing','#10b981',11);
+  svg+=text(bX+bW/2,bY+214,'4 pointer updates, 0 array copies',orange,8.5);
+
+  svg+=text(360,305,'Mathematical Model: M(n) = 32.0000 · n + 64.0000 bytes · R² = 1.000000',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='queue-buffer-management'){
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';

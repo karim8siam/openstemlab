@@ -40,6 +40,12 @@ def observation(c,value):
   raw=int(round(64.0*n + 256.0))
   y=float(raw)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='linked-list-architectures':
+  n=float(value)
+  x=n
+  raw=int(round(32.0*n + 64.0))
+  y=float(raw)
+  return {'input':value,'raw':raw,'x':x,'y':y}
  raise ValueError(f"Unknown CS experiment {slug}")
 
 def fit(rows):
@@ -73,6 +79,8 @@ def estimate(c,f):
   return f['m'],f['slopeSE'],64.0000
  elif slug=='queue-buffer-management':
   return f['m'],f['slopeSE'],64.0000
+ elif slug=='linked-list-architectures':
+  return f['m'],f['slopeSE'],32.0000
  raise ValueError(f"Unknown CS experiment {slug}")
 
 def fmt(v,n=5):
@@ -95,6 +103,9 @@ def formula(c,f):
  elif slug=='queue-buffer-management':
   val=f['m']*c['resultScale']
   return f"L_packet = m = {fmt(val,c['resultDecimals'])} bytes/packet; Intercept V_0 = {fmt(f['b'],c['resultDecimals'])} bytes (theoretical payload L = 64.0000, descriptor header V_0 = 256.0000)"
+ elif slug=='linked-list-architectures':
+  val=f['m']*c['resultScale']
+  return f"S_node = m = {fmt(val,c['resultDecimals'])} bytes/node; Intercept M_0 = {fmt(f['b'],c['resultDecimals'])} bytes (theoretical node size S = 32.0000, sentinels M_0 = 64.0000)"
  return ""
 
 def worked(c,row):
@@ -125,6 +136,11 @@ def worked(c,row):
   pkts=row['x']
   vol_bytes=row['raw']
   return f"Packet Batch Size n = {int(n)} packets; Circular Array Capacity = 12 slots.\nCumulative Buffer Memory Bus Transfer Volume: V(n) = L_packet · n + V_0 = 64 × {int(n)} + 256 = {vol_bytes} bytes ({vol_bytes/1024:.2f} KiB).\nVerification: Each streamed network packet transfers a 64-byte payload (one full CPU cache line) into the ring slot on enqueue and reads 64 bytes on dequeue, executing {int(n)//12} full cyclic pointer wrap-arounds plus an initial 256-byte cache-line padded descriptor control header."
+ elif slug=='linked-list-architectures':
+  n=row['input']
+  nodes=row['x']
+  mem_bytes=row['raw']
+  return f"List Length n = {int(n)} nodes; Active Dynamic Heap Nodes = {int(nodes)} nodes.\nTotal Allocated Heap Memory: M(n) = S_node · n + M_0 = 32 × {int(n)} + 64 = {mem_bytes} bytes ({mem_bytes/1024:.2f} KiB).\nVerification: Each doubly linked list node allocates 32 bytes on the 64-bit heap (8B data payload + 8B next pointer + 8B prev pointer + 8B malloc 16-byte boundary alignment padding), plus 64 bytes for dual dummy sentinels (Sentinel Head = 32B, Sentinel Tail = 32B)."
  return ""
 
 def uncertainty_text(c):
@@ -183,6 +199,17 @@ def uncertainty_text(c):
    "(3) Memory controller bus saturation during sustained burst transfers exceeding DRAM channel bandwidth; and "
    "(4) Operating system scheduler thread preemption and mutex lock-contention latency during buffer full/empty boundary synchronization. "
    "Ordinary least-squares linear regression of observed memory transfer volume against packet batch count n in [256, 16384] packets yields an empirical payload scaling slope L_packet = 64.0000 bytes/packet with zero residual error (R² = 1.00000), verifying the linear queue throughput bound Θ(n) with mathematical precision."
+  )
+ elif slug=='linked-list-architectures':
+  return (
+   "In 64-bit systems architecture analysis, the doubly linked list node footprint S_node = 32 bytes and dual sentinel baseline M_0 = 64 bytes are deterministic structural invariants under standard 16-byte heap allocator alignment. "
+   "Unlike continuous physical instrumentation, there is no analog sensor noise, thermal drift, or calibration variance in measuring discrete dynamic heap memory allocation. "
+   "However, in physical semiconductor processors, operational traversal latency across linked list structures is heavily modulated by microarchitectural memory hierarchy dynamics: "
+   "(1) Pointer chasing cache line misses: because nodes are dynamically allocated at arbitrary, non-contiguous heap addresses, sequential node hops (node = node->next) suffer cold L1/L2 data cache misses (~100–250 CPU cycles per DRAM access) compared to contiguous vectors (~1–4 cycles for L1 cache lines); "
+   "(2) Hardware spatial prefetcher failure: CPUs feature hardware stream prefetchers that detect regular linear access strides (e.g. index i to i+1 in arrays), but fail to anticipate non-deterministic heap pointer dereferences; "
+   "(3) Dynamic memory allocator chunk header overhead: standard dlmalloc and ptmalloc implementations prepend an 8-to-16-byte chunk header (storing size and in-use flags) to every allocated block, increasing real memory bus consumption; and "
+   "(4) Pointer overhead ratio: for an 8-byte payload, a 32-byte doubly linked node imposes a 300% pointer overhead (24 bytes metadata per 8 bytes payload), compared to 0% overhead in dense contiguous arrays. "
+   "Ordinary least-squares linear regression of total allocated heap memory against list length n in [128, 8192] nodes yields an empirical node scaling slope S_node = 32.0000 bytes/node with zero residual error (R² = 1.00000), verifying the linear heap memory footprint bound Θ(n) with mathematical precision."
   )
  return ""
 
@@ -385,6 +412,39 @@ def report_narrative(c,rows,f,value,percent,reference):
    f"L_packet = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with an ideal R² = 1.00000. "
    "The investigation established the microarchitectural superiority of circular ring buffers for asynchronous producer-consumer data flow, proving how "
    "modular indexing, power-of-two bitwise masking, and cache-line padding form the foundational infrastructure of modern operating system kernels and high-throughput networking stacks."
+  )
+ elif slug=='linked-list-architectures':
+  abstract=(
+   f"Seven benchmark trials were generated across dynamic linked list lengths n = {rows[0]['input']} to n = {rows[-1]['input']} nodes "
+   f"(peak dynamic heap memory footprint from {int(rows[0]['raw'])} bytes to {int(rows[-1]['raw'])} bytes, or {rows[-1]['raw']/1024:.2f} KiB). "
+   f"An ordinary least-squares regression of heap memory consumption M against list length n yielded an empirical node allocation size of "
+   f"{fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']}, demonstrating exact agreement with the 64-bit ABI doubly linked node specification "
+   f"(difference = {percent:.4f}%). The empirical telemetry proves that while doubly linked lists achieve optimal O(1) splice and deletion once a node pointer is held, "
+   f"they impose a 300% pointer overhead (24 bytes of pointers and alignment padding per 8 bytes of data) and suffer catastrophic pointer-chasing cache misses during traversal, "
+   f"demonstrating why modern high-performance systems utilize contiguous vectors or unrolled chunked lists (B-trees, unrolled linked lists) for cache-resident data pipelines."
+  )
+  graph_choice=(
+   f"The mathematical regression fits the linear model y = mx + b, where x = n represents the list length in nodes, "
+   f"y = M represents total dynamic heap memory in bytes, m represents the individual node allocation footprint S_node, and b represents "
+   f"the dual sentinel overhead M_0 (theoretically M_0 = 64 bytes). The gradient has physical units {c['gradientUnit']}."
+  )
+  discussion=(
+   "The empirical benchmark observations perfectly align with the heap memory model of doubly linked list architectures. Each dynamically allocated node "
+   "comprises an 8-byte 64-bit data value, an 8-byte forward pointer (next), an 8-byte backward pointer (prev), and 8 bytes of internal padding to maintain "
+   "the mandatory 16-byte alignment required by standard glibc/ptmalloc allocators, totaling exactly 32 bytes per node. The regression slope m = 32.0000 "
+   "confirms that heap memory expands linearly at exactly 32 bytes per node. Furthermore, microarchitectural analysis reveals the profound trade-offs "
+   "between pointer structures and contiguous memory: while doubly linked lists allow O(1) node insertion and deletion without shifting elements, "
+   "random traversal across non-contiguous heap pointers incurs high cache miss penalties because modern superscalar CPUs cannot prefetch non-linear memory strides. "
+   "In contrast, contiguous vectors pack 8 values into a single 64-byte L1 cache line, streaming data at DRAM channel bandwidth (~50 GB/s). "
+   "Finally, the sentinel sandbox demonstrates that integrating permanent dummy head and tail sentinel nodes eliminates boundary condition null checks "
+   "(`head == NULL` and `tail == NULL`), eradicating conditional branch mispredictions during high-frequency list splice operations."
+  )
+  conclusion=(
+   "This laboratory investigation quantitatively verified the memory footprint, pointer architecture, and microarchitectural behavior of Linked List Architectures. "
+   f"Through systematic benchmarking across list sizes from {rows[0]['input']} to {rows[-1]['input']} nodes, we verified the empirical node footprint "
+   f"S_node = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with an ideal R² = 1.00000. "
+   "The investigation established the microarchitectural trade-offs of pointer-based data structures, proving how pointer overhead and cache locality govern "
+   "real-world computational throughput, and demonstrating why unrolled lists and sentinel-bounded doubly linked lists remain essential components of operating system schedulers and memory managers."
   )
  else:
   abstract=f"Empirical benchmark trials were generated across input sizes for {c['title']}."
