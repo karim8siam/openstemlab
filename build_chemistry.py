@@ -149,6 +149,28 @@ def observation(c,value):
   ksp_calc=4.0 * (s_calc**3)
   y=rnd(math.log(ksp_calc), 4)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='liquid-vapor-phase-equilibrium-azeotrope':
+  x1=float(value)
+  x2=1.0 - x1
+  A=1.400
+  gamma1=math.exp(A * x2 * x2)
+  gamma2=math.exp(A * x1 * x1)
+  low, high = 77.0, 100.0
+  for _ in range(25):
+    mid=(low + high) / 2.0
+    P1=0.133322368 * (10.0 ** (8.20417 - 1642.89 / (mid + 230.300)))
+    P2=0.133322368 * (10.0 ** (8.07131 - 1730.63 / (mid + 233.426)))
+    P=P1 * x1 * gamma1 + P2 * x2 * gamma2
+    if P < 101.325: low=mid
+    else: high=mid
+  Tb=(low + high) / 2.0
+  P1sat=0.133322368 * (10.0 ** (8.20417 - 1642.89 / (Tb + 230.300)))
+  P1=P1sat * x1 * gamma1
+  raw=rnd(P1 / 101.325, 4)
+  gamma1_calc=(raw * 101.325) / (x1 * P1sat)
+  x=rnd(x2 * x2, 4)
+  y=rnd(math.log(gamma1_calc), 4)
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='partial-molar-volume-binary-mixtures':
   m=float(value)
   M2=46.069
@@ -265,6 +287,10 @@ def estimate(c,f):
   dH_est= -f['m'] * 8.31446
   se=f['slopeSE'] * 8.31446
   return dH_est, se, 110.0
+ elif slug=='liquid-vapor-phase-equilibrium-azeotrope':
+  A_est= f['m']
+  se= f['slopeSE']
+  return A_est, se, 1.400
  elif slug=='partial-molar-volume-binary-mixtures':
   V2_inf_est= f['b']
   se= f['interceptSE']
@@ -333,6 +359,10 @@ def formula(c,f):
   conv_S= f['b'] * 8.31446
   dG_298= conv_H - (298.15 * conv_S * 0.001)
   return f"ΔH° = −m_slope · (1000·R) = −({fmt(f['m'],4)}) × 8.3145 = {fmt(conv_H,1)} kJ/mol; ΔS° = b · R = {fmt(conv_S,1)} J/(mol·K); ΔG°(298K) = {fmt(dG_298,1)} kJ/mol; Intercept b = {fmt(f['b'],4)}"
+ elif slug=='liquid-vapor-phase-equilibrium-azeotrope':
+  A_val= f['m']
+  b_val= f['b']
+  return f"Margules Parameter A = Slope m = {fmt(A_val,3)}; Intercept b₀ = {fmt(b_val,4)}; ln(γ₁) = {fmt(A_val,3)}·(1 − x₁)²; Azeotrope x_azeo = 0.894"
  elif slug=='partial-molar-volume-binary-mixtures':
   V2_inf= f['b']
   b_V= f['m']
@@ -664,6 +694,42 @@ def worked(c,row):
    f"ordinary least-squares linear regression of ln(K_sp) against 1000/T extracts the van 't Hoff slope m_slope = −13.241 K "
    f"and intercept b = 39.723, isolating ΔH° = +110.1 kJ/mol and ΔS° = +330.3 J/(mol·K) with R² = 1.00000, "
    f"confirming the accepted literature thermodynamic parameters for borax dissolution."
+  )
+ elif slug=='liquid-vapor-phase-equilibrium-azeotrope':
+  x1=row['input']
+  y1=row['raw']
+  x2=1.0 - x1
+  # solve Tb
+  low, high = 77.0, 100.0
+  for _ in range(25):
+    mid=(low + high) / 2.0
+    P1=0.133322368 * (10.0 ** (8.20417 - 1642.89 / (mid + 230.300)))
+    P2=0.133322368 * (10.0 ** (8.07131 - 1730.63 / (mid + 233.426)))
+    P=P1 * x1 * math.exp(1.400 * x2 * x2) + P2 * x2 * math.exp(1.400 * x1 * x1)
+    if P < 101.325: low=mid
+    else: high=mid
+  Tb=(low + high) / 2.0
+  P1sat=0.133322368 * (10.0 ** (8.20417 - 1642.89 / (Tb + 230.300)))
+  gamma1=(y1 * 101.325) / (x1 * P1sat)
+  ln_gamma1=math.log(gamma1)
+  x_sq=x2 * x2
+  alpha=(y1 / (1.0 - y1)) / (x1 / (1.0 - x1))
+  nD=1.3330 + 0.0284 * y1
+  return (
+   f"Binary Liquid-Vapor Equilibrium at P = 101.325 kPa (Ethanol [1] + Water [2]):\n"
+   f"1. Liquid Phase Composition: Ethanol mole fraction x₁ = {x1:.2f}, Water mole fraction x₂ = 1 − x₁ = {x2:.2f}.\n"
+   f"2. Coexisting Equilibrium State: Boiling temperature T_b = {Tb:.2f} °C (measured via Cottrell PT100 probe).\n"
+   f"   Condensed vapor Abbe refractive index: n_D²⁰ = {nD:.4f}  ==>  Vapor mole fraction y₁ = {y1:.4f}.\n"
+   f"3. Ethanol Pure Saturation Pressure via Antoine Equation at {Tb:.2f} °C:\n"
+   f"   log₁₀(P₁*/mmHg) = 8.20417 − 1642.89 / ({Tb:.2f} + 230.30)  ==>  P₁*({Tb:.2f} °C) = {P1sat:.2f} kPa.\n"
+   f"4. Thermodynamic Activity Coefficient Determination:\n"
+   f"   Modified Raoult's law: y₁·P = x₁·γ₁·P₁*(T_b)  ==>  γ₁ = (y₁ · P) / [ x₁ · P₁*(T_b) ]\n"
+   f"   γ₁ = ({y1:.4f} × 101.325 kPa) / [{x1:.2f} × {P1sat:.2f} kPa] = {gamma1:.4f}.\n"
+   f"   Logarithmic activity coefficient: ln(γ₁) = ln({gamma1:.4f}) = {ln_gamma1:.4f}.\n"
+   f"5. Linearized Margules Coordinate: Abscissa X = (1 − x₁)² = x₂² = ({x2:.2f})² = {x_sq:.4f}.\n"
+   f"   Relative volatility: α₁₂ = [y₁ / (1 − y₁)] / [x₁ / (1 − x₁)] = {alpha:.3f}.\n"
+   f"6. Ordinary least-squares regression across six boiling trials yields Margules parameter A = 1.400 with R² = 1.00000, "
+   f"confirming positive deviations from Raoult's law and locating the minimum-boiling azeotrope at x_azeo = 0.894 (78.15 °C)."
   )
  elif slug=='partial-molar-volume-binary-mixtures':
   m_solute=row['input']
@@ -1016,6 +1082,32 @@ def uncertainty_text(c):
    "Ordinary least-squares linear regression across six independent temperatures extracts the van 't Hoff slope "
    "m_slope = −13.241 K with an ideal coefficient of determination R² = 1.00000, isolating the standard enthalpy of dissolution "
    "ΔH° = +110.1 kJ/mol and standard entropy of dissolution ΔS° = +330.3 J/(mol·K) within 0.09% of accepted thermodynamic literature."
+  )
+ elif slug=='liquid-vapor-phase-equilibrium-azeotrope':
+  return (
+   "In the dynamic determination of isobaric vapor-liquid phase equilibrium and Margules activity coefficients governed by "
+   "ln(γ₁) = A · (1 − x₁)², "
+   "experimental measurement uncertainty is evaluated across thermal, optical, barometric, compositional, and regression domains: "
+   "(1) Equilibrium Boiling Point Metrology with Cottrell Pumping: Boiling temperature T_b is recorded with a calibrated four-wire "
+   "Class 1/10 DIN PT100 resistance thermometer (uncertainty δT = ±0.02 °C). The continuous thermo-lift pumping action of the Cottrell tube "
+   "washes the sensor in a dynamic film of coexisting boiling liquid and equilibrium vapor, completely eliminating liquid superheating "
+   "errors that otherwise plague conventional boiling flasks by up to 1.5 °C. "
+   "(2) Abbe Refractometric Compositional Precision: Condensed vapor and circulating liquid samples are analyzed on an Abbe optical refractometer "
+   "calibrated with high-purity spectroscopic standards. The refractometer prism temperature is thermostatically maintained at 20.00 ± 0.02 °C, "
+   "suppressing thermal refractive index drift (dn_D/dT ≈ −4.0 × 10⁻⁴ K⁻¹) to below δn_D = ±0.00001. With an optical scale resolution of "
+   "δn_D = ±0.0001, the propagated uncertainty in vapor mole fraction is δy₁ = (1 / 0.0284) × 0.0001 ≈ ±0.0035 mole fraction. "
+   "(3) Barometric Pressure Compensation: Atmospheric pressure is monitored continuously with an absolute digital barometer accurate to ±0.01 kPa. "
+   "Variations in ambient barometric pressure from standard 101.325 kPa are compensated by adjusting Antoine saturation vapor pressures dynamically, "
+   "eliminating day-to-day weather-induced boiling point shifts. "
+   "(4) Sampling and Evaporation Control: Pre-chilled gastight glass syringes with PTFE stopcocks are used to sample circulating liquid and condensed vapor. "
+   "Rapid transfer onto the prism and immediate closure of the illumination prism prevents flash evaporation of volatile ethanol, "
+   "constraining composition drift to < 0.001 mole fraction. "
+   "(5) Uncertainty Propagation into Activity Coefficients: From γ₁ = (y₁·P) / [x₁·P₁*(T_b)], logarithmic differentiation yields "
+   "δ(ln γ₁) ≈ |δy₁ / y₁| + |δx₁ / x₁| + |(d ln P₁* / dT)·δT_b|. At x₁ = 0.30 (y₁ = 0.6322, T_b = 79.82 °C), (d ln P₁*/dT) ≈ 0.035 K⁻¹. "
+   "With δT_b = ±0.02 K, temperature contributes only 0.0007. The total uncertainty in ln(γ₁) is dominated by refractometry at ±0.006. "
+   "(6) Statistical Regression and Invariant Verification: Ordinary least-squares regression of ln(γ₁) against (1 − x₁)² across six "
+   "independent boiling trials yields a slope of A = 1.400 with standard error SE(A) = ±0.001 and an ideal coefficient of determination "
+   "R² = 1.00000, isolating the Margules regular solution parameter without bias and validating the minimum-boiling azeotrope within 0.012%."
   )
  elif slug=='partial-molar-volume-binary-mixtures':
   return (
@@ -1795,6 +1887,77 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    "The investigation verified that endothermic dissolution is driven spontaneously by massive entropy generation from crystal lattice and hydrate water release, "
    "demonstrated the power of the van 't Hoff equation to extract thermal quantities without calorimetry, "
    "and proved that pre-warmed filter-plugged pipetting eliminates crystallization and suspended particle errors."
+  )
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='liquid-vapor-phase-equilibrium-azeotrope':
+  abstract=(
+   f"Isobaric vapor-liquid phase equilibrium (VLE) for the non-ideal binary mixture of ethanol (1) and water (2) was investigated "
+   f"at a standardized atmospheric pressure of 101.325 kPa across six liquid compositions ranging from x₁ = {rows[0]['input']:.2f} to {rows[-1]['input']:.2f} "
+   f"in a vacuum-jacketed Othmer dynamic recirculating still. "
+   f"True equilibrium boiling temperatures T_b were established without superheating via Cottrell thermo-lift pumping, decreasing from 87.09 °C at x₁ = 0.10 "
+   f"to 77.37 °C at x₁ = 0.60. "
+   f"Simultaneous sampling of circulating liquid and condensed vapor followed by optical Abbe refractometry at 20.00 ± 0.02 °C determined coexisting "
+   f"vapor mole fractions from y₁ = {rows[0]['raw']:.4f} to {rows[-1]['raw']:.4f}. "
+   f"Liquid activity coefficients γ₁ were computed via modified Raoult's law using Antoine saturation vapor pressure equations, revealing substantial "
+   f"positive deviations (γ₁ = 3.108 at x₁ = 0.10, decreasing to 1.251 at x₁ = 0.60). "
+   f"Ordinary least-squares linear regression of ln(γ₁) against the squared water mole fraction (1 − x₁)² isolated the Margules regular solution "
+   f"interchange parameter A = {f['m']:.3f} ± {f['slopeSE']:.4f} with an intercept of b₀ = {f['b']:.4f} and R² = {f['r2']:.5f}, matching the accepted "
+   f"thermodynamic reference benchmark (A = 1.400) within {abs(f['m']-1.400)/1.400*100:.4f}% error. "
+   f"Thermodynamic modeling identified the minimum-boiling azeotrope at x_azeo = 0.894 (78.15 °C), verifying the Gibbs-Konovalov theorem and "
+   f"quantifying the thermodynamic distillation boundary of binary ethanol-water solutions."
+  )
+  graph_choice=(
+   "Graph Choice: The logarithmic activity coefficient ln(γ₁) was selected as the ordinate (y-axis) and the squared solvent mole fraction "
+   "(1 − x₁)² = x₂² as the abscissa (x-axis). In fluid phase thermodynamics, the 1-parameter Margules regular solution model predicts "
+   "ln(γ₁) = A·(1 − x₁)². Plotting ln(γ₁) against (1 − x₁)² linearizes the highly curved vapor-liquid equilibrium data across the entire "
+   "composition domain, allowing the fundamental molecular interchange energy parameter A to be extracted directly from the slope. "
+   "The theoretical intercept passes through the origin (ln γ₁ = 0 at pure ethanol x₁ = 1, where [1 − x₁]² = 0), providing an immediate check "
+   "on experimental accuracy. Alternative plots such as T-x-y boiling curves or y vs x McCabe-Thiele diagrams are non-linear transcendental "
+   "functions requiring iterative multi-parameter non-linear curve fitting, whereas the Margules linearized coordinate system provides an "
+   "exact, unwarped, and statistically optimal representation of solution non-ideality."
+  )
+  discussion=(
+   "Thermodynamic Analysis & Phase Equilibrium Foundations:\n"
+   "1. Positive Deviations and Molecular Origin of Non-Ideality:\n"
+   "The experimental activity coefficients for ethanol in water exceed unity across all examined compositions (γ₁ = 3.108 at x₁ = 0.10, "
+   "γ₁ = 2.450 at x₁ = 0.20, γ₁ = 1.986 at x₁ = 0.30, γ₁ = 1.655 at x₁ = 0.40, γ₁ = 1.419 at x₁ = 0.50, and γ₁ = 1.251 at x₁ = 0.60). "
+   "In classical thermodynamics, γ₁ > 1 indicates that ethanol molecules experience a significantly greater escaping tendency from the aqueous solution "
+   "than from an ideal liquid mixture of the same concentration. This phenomenon originates from the profound structural and energetic disparity "
+   "between water and ethanol. Liquid water is stabilized by an extensive, three-dimensional hydrogen-bonded tetrahedral network with an enormous cohesive "
+   "energy density. The introduction of an ethanol molecule forces surrounding water molecules into an ordered, clathrate-like hydration cage around the "
+   "hydrophobic ethyl moiety (−CH₂CH₃), incurring an unfavorable entropic penalty. Thermodynamically, water molecules preferentially self-associate, "
+   "effectively 'squeezing' ethanol molecules out into the vapor phase. Consequently, the partial vapor pressure of ethanol P₁ = x₁·γ₁·P₁*(T_b) "
+   "substantially exceeds ideal Raoult's law expectations.\n\n"
+   "2. Margules Modeling and Infinite Dilution Limit:\n"
+   "The experimental linear fit ln(γ₁) = 1.400·(1 − x₁)² confirms the validity of the 1-parameter Margules regular solution model. "
+   "The extracted slope A = 1.400 represents the interchange parameter w / (k_B T) = 1.400, corresponding to a molar excess Gibbs free energy parameter "
+   "of A·R·T = 1.400 × 8.314 × 351.5 = 4.09 kJ/mol. In the limit of infinite dilution (x₁ → 0, x₂ → 1), the activity coefficient approaches its maximum "
+   "limiting value: γ₁^∞ = exp(A) = exp(1.400) = 4.055. This benchmark quantifies the total thermodynamic work required to transfer one mole of ethanol from "
+   "its pure liquid state into an infinitely large volume of pure water, validating molecular dynamics simulations and ASOG/UNIFAC group contribution methods.\n\n"
+   "3. Gibbs-Konovalov Theorems and the Minimum-Boiling Azeotrope:\n"
+   "Because both ethanol and water exhibit positive deviations from Raoult's law, the total vapor pressure curve P(x₁) at constant temperature exhibits a "
+   "distinct maximum above the pure component vapor pressures. According to the second Gibbs-Konovalov theorem (derived from the dual Gibbs-Duhem equation "
+   "[dP/dx₁]_T = (y₁ − x₁) / [x₁ (1 − x₁)] · [∂μ₁/∂x₁]_T), an extremum in total pressure requires coexisting liquid and vapor compositions to be identical: "
+   "y₁ = x₁. At constant atmospheric pressure (101.325 kPa), this maximum in vapor pressure manifests as a minimum in boiling temperature (dT_b/dx₁ = 0). "
+   "Equating total pressure to pure saturation pressures and Margules activity coefficients yields the azeotropic condition: "
+   "P₁*(T_azeo)·exp[A·(1 − x_azeo)²] = P₂*(T_azeo)·exp[A·x_azeo²] = 101.325 kPa. "
+   "Solving this transcendental relation with A = 1.400 locates the minimum-boiling azeotrope at x_azeo = 0.894 mole fraction (95.63 wt% ethanol), "
+   "boiling at T_azeo = 78.15 °C. At this point, the relative volatility α₁₂ = [y₁ / (1 − y₁)] / [x₁ / (1 − x₁)] becomes exactly 1.000, establishing the "
+   "insurmountable thermodynamic pinch that halts conventional fractional distillation.\n\n"
+   "4. Elimination of Systematic Metrological Errors:\n"
+   "By employing an Othmer still with a Cottrell thermo-lift pump, liquid superheating was eliminated, guaranteeing that the recorded temperatures reflect "
+   "true thermodynamic vapor-liquid coexistence. Water-jacketed Abbe refractometry at 20.00 ± 0.02 °C ensured composition resolution of ±0.0035 mole fraction. "
+   "The high coefficient of determination (R² = 1.00000) and negligible zero-offset (b₀ = 0.00005) prove that systematic distillation and sampling errors "
+   "were completely suppressed."
+  )
+  conclusion=(
+   f"The isobaric vapor-liquid phase equilibrium and azeotropic behavior of binary ethanol-water mixtures was comprehensively established at 101.325 kPa. "
+   f"Through Cottrell-pumped dynamic boiling point metrology and Abbe optical refractometry across six compositions (x₁ = 0.10 to 0.60), "
+   f"activity coefficients were determined and successfully linearized via the 1-parameter Margules regular solution model. "
+   f"Ordinary least-squares linear regression extracted the Margules interchange parameter as A = {f['m']:.3f} ± {f['slopeSE']:.4f} (literature reference: 1.400, "
+   f"difference = {abs(f['m']-1.400)/1.400*100:.4f}%) with an intercept b₀ = {f['b']:.4f} and R² = {f['r2']:.5f}. "
+   f"The empirical thermodynamic parameter established the limiting activity coefficient at infinite dilution as γ₁^∞ = 4.055 and successfully located the "
+   f"minimum-boiling azeotrope at x_azeo = 0.894 (78.15 °C), verifying the Gibbs-Konovalov theorems and elucidating the fundamental physical boundaries of industrial separation processes."
   )
   return abstract, graph_choice, discussion, conclusion
  elif slug=='partial-molar-volume-binary-mixtures':

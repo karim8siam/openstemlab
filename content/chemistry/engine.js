@@ -59,17 +59,119 @@ function update(){
  }else if(cfg.slug==='gibbs-free-energy-solubility-van-t-hoff'){
   $('liveState').textContent='Ready to equilibrate saturated borax slurry at '+p.input.toFixed(1)+' °C.';
   message('Equilibrate borax flask, pre-warm filter pipette, draw 5.00 mL aliquot & titrate with 0.50 M HCl.');
- }else if(cfg.slug==='partial-molar-volume-binary-mixtures'){
+ }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+  $('liveState').textContent='Ready to reflux Othmer still with x_liquid = '+p.input.toFixed(2)+' ethanol.';
+  message('Energize heating mantle, establish Cottrell thermo-lift pumping, reflux 30 min & sample condensate.');
+ }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+  const x1 = p.input;
+  const x2 = 1.0 - x1;
+  const raw_val = raw;
+  let low = 77.0, high = 100.0;
+  for(let i=0; i<25; i++){
+    const mid=(low + high) / 2.0;
+    const P1=0.133322368 * Math.pow(10, 8.20417 - 1642.89 / (mid + 230.300));
+    const P2=0.133322368 * Math.pow(10, 8.07131 - 1730.63 / (mid + 233.426));
+    const P=P1 * x1 * Math.exp(1.400 * x2 * x2) + P2 * x2 * Math.exp(1.400 * x1 * x1);
+    if(P < 101.325) low=mid;
+    else high=mid;
+  }
+  const Tb=(low + high) / 2.0;
+  const P1sat=0.133322368 * Math.pow(10, 8.20417 - 1642.89 / (Tb + 230.300));
+  const gamma1=(raw_val * 101.325) / (x1 * P1sat);
+  const nD = 1.3330 + 0.0284 * raw_val;
+  $('liveState').textContent='VLE equilibrium reached: T_b = '+Tb.toFixed(2)+' °C, y_vapor = '+raw_val.toFixed(4)+'.';
+  message('Distillation equilibrium established: T_b = '+Tb.toFixed(2)+' °C, n_D²⁰ = '+nD.toFixed(4)+' (y₁ = '+raw_val.toFixed(4)+', γ₁ = '+gamma1.toFixed(3)+'). Record in notebook.');
+ }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawVleCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawVleSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawVleBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='partial-molar-volume-binary-mixtures'){
   $('liveState').textContent='Ready to equilibrate pycnometer with m = '+p.input.toFixed(2)+' mol/kg ethanol.';
   message('Fill 25 mL pycnometer, seat capillary stopper, equilibrate in 25.00 °C bath & weigh on balance.');
- }else if(cfg.slug==='partial-molar-volume-binary-mixtures'){
+ }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+  $('liveState').textContent='Ready to reflux Othmer still with x_liquid = '+p.input.toFixed(2)+' ethanol.';
+  message('Energize heating mantle, establish Cottrell thermo-lift pumping, reflux 30 min & sample condensate.');
+ }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+  const x1 = p.input;
+  const x2 = 1.0 - x1;
+  const raw_val = raw;
+  let low = 77.0, high = 100.0;
+  for(let i=0; i<25; i++){
+    const mid=(low + high) / 2.0;
+    const P1=0.133322368 * Math.pow(10, 8.20417 - 1642.89 / (mid + 230.300));
+    const P2=0.133322368 * Math.pow(10, 8.07131 - 1730.63 / (mid + 233.426));
+    const P=P1 * x1 * Math.exp(1.400 * x2 * x2) + P2 * x2 * Math.exp(1.400 * x1 * x1);
+    if(P < 101.325) low=mid;
+    else high=mid;
+  }
+  const Tb=(low + high) / 2.0;
+  const P1sat=0.133322368 * Math.pow(10, 8.20417 - 1642.89 / (Tb + 230.300));
+  const gamma1=(raw_val * 101.325) / (x1 * P1sat);
+  const nD = 1.3330 + 0.0284 * raw_val;
+  $('liveState').textContent='VLE equilibrium reached: T_b = '+Tb.toFixed(2)+' °C, y_vapor = '+raw_val.toFixed(4)+'.';
+  message('Distillation equilibrium established: T_b = '+Tb.toFixed(2)+' °C, n_D²⁰ = '+nD.toFixed(4)+' (y₁ = '+raw_val.toFixed(4)+', γ₁ = '+gamma1.toFixed(3)+'). Record in notebook.');
+ }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawVleCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawVleSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawVleBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='partial-molar-volume-binary-mixtures'){
   const m = p.input;
   const m_liq = raw - 18.4250;
   const rho = m_liq / 25.0;
   const phi = ((1000.0 + m * 46.069) / rho - 1000.0 / 0.997047) / m;
   $('liveState').textContent='Pycnometer weighed: m_filled = '+raw.toFixed(4)+' g (ρ = '+rho.toFixed(5)+' g/cm³).';
   message('Pycnometric weighing complete: m_filled = '+raw.toFixed(4)+' g (ρ = '+rho.toFixed(5)+' g/cm³, φ_V = '+phi.toFixed(3)+' cm³/mol). Record in notebook.');
- }else if(cfg.slug==='partial-molar-volume-binary-mixtures'){
+ }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+  $('liveState').textContent='Ready to reflux Othmer still with x_liquid = '+p.input.toFixed(2)+' ethanol.';
+  message('Energize heating mantle, establish Cottrell thermo-lift pumping, reflux 30 min & sample condensate.');
+ }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+  const x1 = p.input;
+  const x2 = 1.0 - x1;
+  const raw_val = raw;
+  let low = 77.0, high = 100.0;
+  for(let i=0; i<25; i++){
+    const mid=(low + high) / 2.0;
+    const P1=0.133322368 * Math.pow(10, 8.20417 - 1642.89 / (mid + 230.300));
+    const P2=0.133322368 * Math.pow(10, 8.07131 - 1730.63 / (mid + 233.426));
+    const P=P1 * x1 * Math.exp(1.400 * x2 * x2) + P2 * x2 * Math.exp(1.400 * x1 * x1);
+    if(P < 101.325) low=mid;
+    else high=mid;
+  }
+  const Tb=(low + high) / 2.0;
+  const P1sat=0.133322368 * Math.pow(10, 8.20417 - 1642.89 / (Tb + 230.300));
+  const gamma1=(raw_val * 101.325) / (x1 * P1sat);
+  const nD = 1.3330 + 0.0284 * raw_val;
+  $('liveState').textContent='VLE equilibrium reached: T_b = '+Tb.toFixed(2)+' °C, y_vapor = '+raw_val.toFixed(4)+'.';
+  message('Distillation equilibrium established: T_b = '+Tb.toFixed(2)+' °C, n_D²⁰ = '+nD.toFixed(4)+' (y₁ = '+raw_val.toFixed(4)+', γ₁ = '+gamma1.toFixed(3)+'). Record in notebook.');
+ }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawVleCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawVleSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawVleBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='partial-molar-volume-binary-mixtures'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawPycCompareView(p,rawVal);
    return;
@@ -119,6 +221,7 @@ $('measure').onclick=async()=>{
  if(cfg.slug==='heat-solution-crystallization-calorimetry') msgStart='Pouring KNO3 crystals into Dewar, motorized stirring at 200 rpm, endothermic cooling plunge & logging ΔT_drop…';
  if(cfg.slug==='vapor-pressure-liquid-clausius-clapeyron') msgStart='Regulating water bath, throttling air-bleed needle valve, nulling U-tube menisci & reading transducer…';
  if(cfg.slug==='gibbs-free-energy-solubility-van-t-hoff') msgStart='Filtering 5.00 mL saturated borax aliquot, adding bromocresol green, titrating dropwise to yellow endpoint…';
+ if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope') msgStart='Boiling in Othmer still, Cottrell pump washing PT100 sensor, sampling condensate onto Abbe refractometer…';
  if(cfg.slug==='partial-molar-volume-binary-mixtures') msgStart='Immersing pycnometer in 25.00 °C bath (20 min), blotting capillary rim, weighing on analytical balance…';
  if(cfg.slug==='heat-capacity-ratio-gases-clement-desormes') msgStart='Triggering quick-release valve, rapid adiabatic expansion (0.80 s), isochoric thermal re-warming…';
  message(msgStart);
@@ -188,17 +291,119 @@ $('measure').onclick=async()=>{
   const ln_Ksp = Math.log(Ksp);
   $('liveState').textContent='Titration endpoint reached: V_HCl = '+raw.toFixed(2)+' mL at '+p.input.toFixed(1)+' °C.';
   message('Titration complete: V_HCl = '+raw.toFixed(2)+' mL (s = '+s.toFixed(4)+' M, K_sp = '+Ksp.toExponential(3)+', ln K_sp = '+ln_Ksp.toFixed(3)+'). Record in notebook.');
- }else if(cfg.slug==='partial-molar-volume-binary-mixtures'){
+ }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+  $('liveState').textContent='Ready to reflux Othmer still with x_liquid = '+p.input.toFixed(2)+' ethanol.';
+  message('Energize heating mantle, establish Cottrell thermo-lift pumping, reflux 30 min & sample condensate.');
+ }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+  const x1 = p.input;
+  const x2 = 1.0 - x1;
+  const raw_val = raw;
+  let low = 77.0, high = 100.0;
+  for(let i=0; i<25; i++){
+    const mid=(low + high) / 2.0;
+    const P1=0.133322368 * Math.pow(10, 8.20417 - 1642.89 / (mid + 230.300));
+    const P2=0.133322368 * Math.pow(10, 8.07131 - 1730.63 / (mid + 233.426));
+    const P=P1 * x1 * Math.exp(1.400 * x2 * x2) + P2 * x2 * Math.exp(1.400 * x1 * x1);
+    if(P < 101.325) low=mid;
+    else high=mid;
+  }
+  const Tb=(low + high) / 2.0;
+  const P1sat=0.133322368 * Math.pow(10, 8.20417 - 1642.89 / (Tb + 230.300));
+  const gamma1=(raw_val * 101.325) / (x1 * P1sat);
+  const nD = 1.3330 + 0.0284 * raw_val;
+  $('liveState').textContent='VLE equilibrium reached: T_b = '+Tb.toFixed(2)+' °C, y_vapor = '+raw_val.toFixed(4)+'.';
+  message('Distillation equilibrium established: T_b = '+Tb.toFixed(2)+' °C, n_D²⁰ = '+nD.toFixed(4)+' (y₁ = '+raw_val.toFixed(4)+', γ₁ = '+gamma1.toFixed(3)+'). Record in notebook.');
+ }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawVleCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawVleSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawVleBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='partial-molar-volume-binary-mixtures'){
   $('liveState').textContent='Ready to equilibrate pycnometer with m = '+p.input.toFixed(2)+' mol/kg ethanol.';
   message('Fill 25 mL pycnometer, seat capillary stopper, equilibrate in 25.00 °C bath & weigh on balance.');
- }else if(cfg.slug==='partial-molar-volume-binary-mixtures'){
+ }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+  $('liveState').textContent='Ready to reflux Othmer still with x_liquid = '+p.input.toFixed(2)+' ethanol.';
+  message('Energize heating mantle, establish Cottrell thermo-lift pumping, reflux 30 min & sample condensate.');
+ }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+  const x1 = p.input;
+  const x2 = 1.0 - x1;
+  const raw_val = raw;
+  let low = 77.0, high = 100.0;
+  for(let i=0; i<25; i++){
+    const mid=(low + high) / 2.0;
+    const P1=0.133322368 * Math.pow(10, 8.20417 - 1642.89 / (mid + 230.300));
+    const P2=0.133322368 * Math.pow(10, 8.07131 - 1730.63 / (mid + 233.426));
+    const P=P1 * x1 * Math.exp(1.400 * x2 * x2) + P2 * x2 * Math.exp(1.400 * x1 * x1);
+    if(P < 101.325) low=mid;
+    else high=mid;
+  }
+  const Tb=(low + high) / 2.0;
+  const P1sat=0.133322368 * Math.pow(10, 8.20417 - 1642.89 / (Tb + 230.300));
+  const gamma1=(raw_val * 101.325) / (x1 * P1sat);
+  const nD = 1.3330 + 0.0284 * raw_val;
+  $('liveState').textContent='VLE equilibrium reached: T_b = '+Tb.toFixed(2)+' °C, y_vapor = '+raw_val.toFixed(4)+'.';
+  message('Distillation equilibrium established: T_b = '+Tb.toFixed(2)+' °C, n_D²⁰ = '+nD.toFixed(4)+' (y₁ = '+raw_val.toFixed(4)+', γ₁ = '+gamma1.toFixed(3)+'). Record in notebook.');
+ }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawVleCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawVleSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawVleBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='partial-molar-volume-binary-mixtures'){
   const m = p.input;
   const m_liq = raw - 18.4250;
   const rho = m_liq / 25.0;
   const phi = ((1000.0 + m * 46.069) / rho - 1000.0 / 0.997047) / m;
   $('liveState').textContent='Pycnometer weighed: m_filled = '+raw.toFixed(4)+' g (ρ = '+rho.toFixed(5)+' g/cm³).';
   message('Pycnometric weighing complete: m_filled = '+raw.toFixed(4)+' g (ρ = '+rho.toFixed(5)+' g/cm³, φ_V = '+phi.toFixed(3)+' cm³/mol). Record in notebook.');
- }else if(cfg.slug==='partial-molar-volume-binary-mixtures'){
+ }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+  $('liveState').textContent='Ready to reflux Othmer still with x_liquid = '+p.input.toFixed(2)+' ethanol.';
+  message('Energize heating mantle, establish Cottrell thermo-lift pumping, reflux 30 min & sample condensate.');
+ }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+  const x1 = p.input;
+  const x2 = 1.0 - x1;
+  const raw_val = raw;
+  let low = 77.0, high = 100.0;
+  for(let i=0; i<25; i++){
+    const mid=(low + high) / 2.0;
+    const P1=0.133322368 * Math.pow(10, 8.20417 - 1642.89 / (mid + 230.300));
+    const P2=0.133322368 * Math.pow(10, 8.07131 - 1730.63 / (mid + 233.426));
+    const P=P1 * x1 * Math.exp(1.400 * x2 * x2) + P2 * x2 * Math.exp(1.400 * x1 * x1);
+    if(P < 101.325) low=mid;
+    else high=mid;
+  }
+  const Tb=(low + high) / 2.0;
+  const P1sat=0.133322368 * Math.pow(10, 8.20417 - 1642.89 / (Tb + 230.300));
+  const gamma1=(raw_val * 101.325) / (x1 * P1sat);
+  const nD = 1.3330 + 0.0284 * raw_val;
+  $('liveState').textContent='VLE equilibrium reached: T_b = '+Tb.toFixed(2)+' °C, y_vapor = '+raw_val.toFixed(4)+'.';
+  message('Distillation equilibrium established: T_b = '+Tb.toFixed(2)+' °C, n_D²⁰ = '+nD.toFixed(4)+' (y₁ = '+raw_val.toFixed(4)+', γ₁ = '+gamma1.toFixed(3)+'). Record in notebook.');
+ }else if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawVleCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawVleSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawVleBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='partial-molar-volume-binary-mixtures'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawPycCompareView(p,rawVal);
    return;
@@ -503,6 +708,18 @@ function draw(t){
    return;
   }
   $('apparatusDiagram').innerHTML=drawHoffBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawVleCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawVleSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawVleBenchView(p,rawVal);
   return;
  }
  if(cfg.slug==='partial-molar-volume-binary-mixtures'){
@@ -5299,5 +5516,346 @@ function drawPycSandboxView(p, rawVal){
  });
 
  svg += text(360, 312, 'Thermodynamic Invariant: Limiting partial molar volume V̄₂^∞ = 54.20 cm³/mol with R² = 0.99998.', '#789c80', 8.5);
+ return svg;
+}
+
+
+// ======================================================================
+// LAB 19: LIQUID-VAPOR PHASE EQUILIBRIUM & AZEOTROPIC DISTILLATION
+// ======================================================================
+
+function getVleTb(x1){
+ const x2 = 1.0 - x1;
+ const A = 1.400;
+ const gamma1 = Math.exp(A * x2 * x2);
+ const gamma2 = Math.exp(A * x1 * x1);
+ let low = 77.0, high = 100.0;
+ for(let i=0; i<25; i++){
+  const mid = (low + high) / 2.0;
+  const P1 = 0.133322368 * Math.pow(10, 8.20417 - 1642.89 / (mid + 230.300));
+  const P2 = 0.133322368 * Math.pow(10, 8.07131 - 1730.63 / (mid + 233.426));
+  const P = P1 * x1 * gamma1 + P2 * x2 * gamma2;
+  if(P < 101.325) low = mid;
+  else high = mid;
+ }
+ return (low + high) / 2.0;
+}
+
+function getVleP1sat(T){
+ return 0.133322368 * Math.pow(10, 8.20417 - 1642.89 / (T + 230.300));
+}
+
+function drawVleBenchView(p, rawVal){
+ const x1 = p.input;
+ const x2 = 1.0 - x1;
+ const Tb = getVleTb(x1);
+ const P1sat = getVleP1sat(Tb);
+ const gamma1 = Math.exp(1.400 * x2 * x2);
+ const P1 = P1sat * x1 * gamma1;
+ const y1 = rawVal || (P1 / 101.325);
+ const nD = 1.3330 + 0.0284 * y1;
+ const alpha = (y1 / (1.0 - y1)) / (x1 / (1.0 - x1));
+
+ let svg = header('Othmer Dynamic Recirculating VLE Still & Abbe Refractometer');
+
+ // Background Lab Bench
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // --- LEFT: OTHMER VLE STILL WITH COTTRELL PUMP (x: 35, y: 60, w: 250, h: 225) ---
+ const sX = 35, sY = 60, sW = 250, sH = 225;
+ svg += '<rect x="'+sX+'" y="'+sY+'" width="'+sW+'" height="'+sH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(sX+8)+'" y="'+(sY+8)+'" width="'+(sW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(sX+sW/2)+'" y="'+(sY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">OTHMER RECIRCULATING STILL (101.3 kPa)</text>';
+
+ // Heating mantle at bottom
+ const mX = sX + 35, mY = sY + 140, mW = 80, mH = 55;
+ svg += '<path d="M '+mX+' '+(mY+15)+' Q '+(mX+mW/2)+' '+(mY+mH+10)+' '+(mX+mW)+' '+(mY+15)+' Z" fill="#991b1b" stroke="#ef4444" stroke-width="1.2"/>';
+ svg += '<text x="'+(mX+mW/2)+'" y="'+(mY+mH+4)+'" text-anchor="middle" fill="#fca5a5" font-size="6.5">Heating Mantle (350 W)</text>';
+
+ // Boiling flask (round bottom, vacuum-jacketed)
+ const flX = mX + mW/2, flY = mY + 10, flR = 34;
+ svg += '<circle cx="'+flX+'" cy="'+flY+'" r="'+flR+'" fill="#03150d" stroke="#38bdf8" stroke-width="1.2"/>';
+ svg += '<path d="M '+(flX-flR+4)+' '+(flY+6)+' Q '+flX+' '+(flY+flR+2)+' '+(flX+flR-4)+' '+(flY+6)+' Z" fill="#0284c7" fill-opacity="0.4"/>';
+
+ // Boiling bubbles
+ for(let b=0; b<6; b++){
+  const bx = flX - 18 + b * 7;
+  const by = flY + 20 - (b % 3) * 6;
+  svg += '<circle cx="'+bx+'" cy="'+by+'" r="2" fill="#e0f2fe" fill-opacity="0.7"/>';
+ }
+
+ // Cottrell Thermo-Lift Pump (inverted funnel + central lift tube)
+ svg += '<path d="M '+(flX-14)+' '+(flY+24)+' L '+(flX-3)+' '+(flY)+' L '+(flX-3)+' '+(sY+50)+' L '+(flX+3)+' '+(sY+50)+' L '+(flX+3)+' '+(flY)+' L '+(flX+14)+' '+(flY+24)+' Z" fill="none" stroke="#4ade80" stroke-width="1.2"/>';
+ // Spray hood over thermometer
+ svg += '<path d="M '+(flX-10)+' '+(sY+48)+' Q '+flX+' '+(sY+38)+' '+(flX+10)+' '+(sY+48)+'" fill="none" stroke="#4ade80" stroke-width="1.5"/>';
+ svg += '<circle cx="'+(flX-4)+'" cy="'+(sY+45)+'" r="1.5" fill="#38bdf8"/>';
+ svg += '<circle cx="'+(flX+4)+'" cy="'+(sY+45)+'" r="1.5" fill="#38bdf8"/>';
+
+ // PT100 Temperature Sensor (immersed in spray)
+ svg += '<rect x="'+(flX-2)+'" y="'+(sY+32)+'" width="4" height="28" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>';
+ svg += '<rect x="'+(flX-22)+'" y="'+(sY+28)+'" width="44" height="14" rx="2" fill="#020804" stroke="#22c55e" stroke-width="0.8"/>';
+ svg += '<text x="'+flX+'" y="'+(sY+39)+'" text-anchor="middle" fill="#4ade80" font-size="8.5" font-family="monospace" font-weight="bold">'+Tb.toFixed(2)+'°C</text>';
+
+ // Vapor Tube to Condenser
+ const vX = flX + 2, vY = sY + 65;
+ svg += '<path d="M '+vX+' '+vY+' L '+(sX+160)+' '+vY+' L '+(sX+160)+' '+(sY+115)+'" fill="none" stroke="#38bdf8" stroke-width="2"/>';
+
+ // Water-Cooled Condenser
+ const cdX = sX + 150, cdY = sY + 70, cdW = 20, cdH = 65;
+ svg += '<rect x="'+cdX+'" y="'+cdY+'" width="'+cdW+'" height="'+cdH+'" rx="3" fill="#0369a1" fill-opacity="0.3" stroke="#0284c7" stroke-width="1"/>';
+ svg += '<line x1="'+(cdX+cdW/2)+'" y1="'+cdY+'" x2="'+(cdX+cdW/2)+'" y2="'+(cdY+cdH)+'" stroke="#e0f2fe" stroke-width="1.5"/>';
+ svg += '<text x="'+(cdX+cdW+4)+'" y="'+(cdY+30)+'" fill="#38bdf8" font-size="6.5">Condenser</text>';
+
+ // Condensate Receiver Trap & Return Loop
+ const rcX = sX + 150, rcY = sY + 140, rcW = 22, rcH = 40;
+ svg += '<rect x="'+rcX+'" y="'+rcY+'" width="'+rcW+'" height="'+rcH+'" rx="3" fill="#041208" stroke="#22c55e" stroke-width="1"/>';
+ svg += '<rect x="'+(rcX+2)+'" y="'+(rcY+15)+'" width="'+(rcW-4)+'" height="'+(rcH-17)+'" fill="#22c55e" fill-opacity="0.4"/>';
+ svg += '<text x="'+(rcX+rcW/2)+'" y="'+(rcY+28)+'" text-anchor="middle" fill="#86efac" font-size="6.5" font-weight="bold">y₁</text>';
+ // Return U-tube loop back to boiling flask
+ svg += '<path d="M '+(rcX+rcW/2)+' '+(rcY+rcH)+' L '+(rcX+rcW/2)+' '+(sY+195)+' L '+(flX+15)+' '+(sY+195)+' L '+(flX+15)+' '+(flY+20)+'" fill="none" stroke="#22c55e" stroke-width="1.2" stroke-dasharray="3,2"/>';
+ svg += '<text x="'+(sX+140)+'" y="'+(sY+205)+'" fill="#4ade80" font-size="6">Continuous Recirculation Reflux</text>';
+
+
+ // --- CENTER: ABBE OPTICAL REFRACTOMETER (x: 295, y: 60, w: 220, h: 225) ---
+ const aX = 295, aY = 60, aW = 220, aH = 225;
+ svg += '<rect x="'+aX+'" y="'+aY+'" width="'+aW+'" height="'+aH+'" rx="8" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(aX+8)+'" y="'+(aY+8)+'" width="'+(aW-16)+'" height="20" rx="3" fill="#132e1f" stroke="#1e4d31"/>';
+ svg += '<text x="'+(aX+aW/2)+'" y="'+(aY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">ABBE REFRACTOMETER (20.00 °C)</text>';
+
+ // Refractometer Body & Prism Block
+ const prX = aX + 25, prY = aY + 38;
+ svg += '<rect x="'+prX+'" y="'+prY+'" width="55" height="30" rx="3" fill="#334155" stroke="#cbd5e1" stroke-width="1"/>';
+ svg += '<path d="M '+(prX+5)+' '+(prY+5)+' L '+(prX+45)+' '+(prY+5)+' L '+(prX+25)+' '+(prY+25)+' Z" fill="#94a3b8" stroke="#f8fafc" stroke-width="0.8"/>';
+ svg += '<text x="'+(prX+25)+'" y="'+(prY+15)+'" text-anchor="middle" fill="#0f172a" font-size="6" font-weight="bold">Prism</text>';
+ svg += '<rect x="'+(prX+58)+'" y="'+(prY+8)+'" width="40" height="15" rx="2" fill="#022c22"/>';
+ svg += '<text x="'+(prX+78)+'" y="'+(prY+19)+'" text-anchor="middle" fill="#4ade80" font-size="7" font-weight="bold">20.00 °C</text>';
+
+ // Eyepiece Reticle Field of View (Circular split field)
+ const retX = aX + aW/2 + 25, retY = aY + 115, retR = 40;
+ svg += '<circle cx="'+retX+'" cy="'+retY+'" r="'+retR+'" fill="#030712" stroke="#38bdf8" stroke-width="1.5"/>';
+
+ // Split boundary: top half dark, bottom half illuminated
+ const boundY = retY - 5; // aligned to shadow line
+ svg += '<clipPath id="reticleClip"><circle cx="'+retX+'" cy="'+retY+'" r="'+(retR-1)+'"/></clipPath>';
+ svg += '<g clip-path="url(#reticleClip)">';
+ svg += '<rect x="'+(retX-retR)+'" y="'+(retY-retR)+'" width="'+(2*retR)+'" height="'+(retR-5)+'" fill="#090d16"/>';
+ svg += '<rect x="'+(retX-retR)+'" y="'+boundY+'" width="'+(2*retR)+'" height="'+(retR+5)+'" fill="#facc15" fill-opacity="0.85"/>';
+ // Crosshairs
+ svg += '<line x1="'+(retX-retR)+'" y1="'+retY+'" x2="'+(retX+retR)+'" y2="'+retY+'" stroke="#ef4444" stroke-width="1"/>';
+ svg += '<line x1="'+retX+'" y1="'+(retY-retR)+'" x2="'+retX+'" y2="'+(retY+retR)+'" stroke="#ef4444" stroke-width="1"/>';
+ svg += '</g>';
+ svg += '<text x="'+retX+'" y="'+(retY+retR+12)+'" text-anchor="middle" fill="#facc15" font-size="7" font-weight="bold">Optical Reticle Horizon</text>';
+
+ // Refractometer Scale Readout
+ const scY = aY + 175;
+ svg += '<rect x="'+(aX+15)+'" y="'+scY+'" width="85" height="38" rx="3" fill="#020804" stroke="#163824"/>';
+ svg += '<text x="'+(aX+57)+'" y="'+(scY+13)+'" text-anchor="middle" fill="#94a3b8" font-size="6.8">Refractive Index</text>';
+ svg += '<text x="'+(aX+57)+'" y="'+(scY+30)+'" text-anchor="middle" fill="#38bdf8" font-size="12" font-family="monospace" font-weight="bold">'+nD.toFixed(4)+'</text>';
+
+
+ // --- RIGHT: PHASE EQUILIBRIUM VALUES & INVARIANTS (x: 525, y: 60, w: 165, h: 225) ---
+ const cX = 525, cY = 60, cW = 165, cH = 225;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="8" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(cX+8)+'" y="'+(cY+8)+'" width="'+(cW-16)+'" height="20" rx="3" fill="#132e1f" stroke="#1e4d31"/>';
+ svg += '<text x="'+(cX+cW/2)+'" y="'+(cY+22)+'" text-anchor="middle" fill="#86efac" font-size="8" font-weight="bold">VLE EQUILIBRIUM DATA</text>';
+
+ const statItems = [
+  {label: 'Liquid x_EtOH', val: x1.toFixed(2), col: '#a7f3d0'},
+  {label: 'Boiling Temp T_b', val: Tb.toFixed(2)+' °C', col: '#facc15'},
+  {label: 'Vapor y_EtOH', val: y1.toFixed(4), col: '#38bdf8'},
+  {label: 'P₁*(T_b) Pure Sat', val: P1sat.toFixed(1)+' kPa', col: '#94a3b8'},
+  {label: 'Activity Coeff γ₁', val: gamma1.toFixed(3), col: '#4ade80'},
+  {label: 'ln(γ₁) Margules', val: Math.log(gamma1).toFixed(4), col: '#4ade80'},
+  {label: 'Relative Volatility α', val: alpha.toFixed(3), col: '#38bdf8'}
+ ];
+
+ statItems.forEach((it, idx)=>{
+  const sy = cY + 34 + idx * 22;
+  svg += '<rect x="'+(cX+6)+'" y="'+sy+'" width="'+(cW-12)+'" height="19" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg += '<text x="'+(cX+10)+'" y="'+(sy+13)+'" fill="#94a3b8" font-size="6.8">'+it.label+'</text>';
+  svg += '<text x="'+(cX+cW-10)+'" y="'+(sy+13)+'" text-anchor="end" fill="'+it.col+'" font-size="7.2" font-family="monospace" font-weight="bold">'+it.val+'</text>';
+ });
+
+ svg += '<rect x="'+(cX+6)+'" y="'+(cY+194)+'" width="'+(cW-12)+'" height="22" rx="3" fill="#022c22"/>';
+ svg += '<text x="'+(cX+cW/2)+'" y="'+(cY+204)+'" text-anchor="middle" fill="#86efac" font-size="6.5" font-weight="bold">Azeotrope: x_azeo = 0.894</text>';
+ svg += '<text x="'+(cX+cW/2)+'" y="'+(cY+213)+'" text-anchor="middle" fill="#a7f3d0" font-size="6">Boiling Min: T_azeo = 78.15 °C</text>';
+
+ svg += text(360, 312, 'Othmer dynamic VLE still at 101.325 kPa: Cottrell pump eliminates superheating, Abbe n_D²⁰ yields y₁.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawVleCompareView(p, rawVal){
+ const curX = p.input;
+ const curY = rawVal || (getVleP1sat(getVleTb(curX)) * curX * Math.exp(1.400 * (1-curX)**2) / 101.325);
+ const curTb = getVleTb(curX);
+
+ let svg = header('T-x-y Phase Diagram & Azeotropic Pinch (101.325 kPa)');
+
+ // Background
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // Plot Frame (x: 40, y: 55, w: 410, h: 235)
+ const gX = 45, gY = 60, gW = 390, gH = 185;
+ svg += '<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" rx="4" fill="#0d1f14" stroke="#22422c" stroke-width="1.2"/>';
+
+ // Grid lines & Axis labels
+ for(let i=1; i<5; i++){
+  const gy = gY + (gH * i / 5);
+  svg += '<line x1="'+gX+'" y1="'+gy+'" x2="'+(gX+gW)+'" y2="'+gy+'" stroke="#162e1e" stroke-width="0.8" stroke-dasharray="2,2"/>';
+  const gx = gX + (gW * i / 5);
+  svg += '<line x1="'+gx+'" y1="'+gY+'" x2="'+gx+'" y2="'+(gY+gH)+'" stroke="#162e1e" stroke-width="0.8" stroke-dasharray="2,2"/>';
+ }
+
+ svg += '<text x="'+(gX+gW/2)+'" y="'+(gY+gH+14)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5">Ethanol Mole Fraction (x₁, y₁)</text>';
+ svg += '<text x="'+(gX-8)+'" y="'+(gY+gH/2)+'" text-anchor="middle" transform="rotate(-90 '+(gX-8)+' '+(gY+gH/2)+')" fill="#94a3b8" font-size="7.5">Boiling Temperature T_b (°C)</text>';
+
+ // Temperature calibration: T goes from 100 °C (bottom or top?) -> Top is 102 C (y=gY), Bottom is 76 C (y=gY+gH)
+ // y_coord(T) = gY + (102.0 - T) / (102.0 - 76.0) * gH
+ function tempY(T){
+  return gY + (102.0 - T) / (26.0) * gH;
+ }
+ function moleX(z){
+  return gX + z * gW;
+ }
+
+ // Liquidus curve (bubble point curve Tb(x1))
+ // Water (x=0, T=100.0 C), Azeotrope (x=0.894, T=78.15 C), Pure EtOH (x=1.0, T=78.37 C)
+ let liqPath = 'M '+moleX(0)+' '+tempY(100.0);
+ for(let step=1; step<=40; step++){
+  const z = step / 40.0;
+  const T = getVleTb(z);
+  liqPath += ' L '+moleX(z)+' '+tempY(T);
+ }
+ svg += '<path d="'+liqPath+'" fill="none" stroke="#38bdf8" stroke-width="2.2"/>';
+ svg += '<text x="'+(gX+40)+'" y="'+(tempY(93.0))+'" fill="#38bdf8" font-size="7" font-weight="bold">Liquidus Bubble Curve T(x)</text>';
+
+ // Vaporus curve (dew point curve Tb(y1))
+ let vapPath = 'M '+moleX(0)+' '+tempY(100.0);
+ for(let step=1; step<=40; step++){
+  const z = step / 40.0;
+  const T = getVleTb(z);
+  const P1s = getVleP1sat(T);
+  const yz = P1s * z * Math.exp(1.400 * (1-z)**2) / 101.325;
+  vapPath += ' L '+moleX(yz)+' '+tempY(T);
+ }
+ svg += '<path d="'+vapPath+'" fill="none" stroke="#f87171" stroke-width="2.2"/>';
+ svg += '<text x="'+(gX+170)+'" y="'+(tempY(83.5))+'" fill="#f87171" font-size="7" font-weight="bold">Vaporus Dew Curve T(y)</text>';
+
+ // Minimum Azeotropic Point (x=0.894, T=78.15 C)
+ const azX = moleX(0.894), azY = tempY(78.15);
+ svg += '<circle cx="'+azX+'" cy="'+azY+'" r="5" fill="#facc15" stroke="#ffffff" stroke-width="1.2"/>';
+ svg += '<text x="'+(azX)+'" y="'+(azY-8)+'" text-anchor="middle" fill="#facc15" font-size="7.5" font-weight="bold">Azeotrope (0.894, 78.15 °C)</text>';
+
+ // Current Tie Line at input x1
+ const curLiqX = moleX(curX), curLiqY = tempY(curTb);
+ const curVapX = moleX(curY), curVapY = tempY(curTb);
+ svg += '<line x1="'+curLiqX+'" y1="'+curLiqY+'" x2="'+curVapX+'" y2="'+curVapY+'" stroke="#4ade80" stroke-width="2" stroke-dasharray="3,2"/>';
+ svg += '<circle cx="'+curLiqX+'" cy="'+curLiqY+'" r="4" fill="#38bdf8"/>';
+ svg += '<circle cx="'+curVapX+'" cy="'+curVapY+'" r="4" fill="#f87171"/>';
+ svg += '<text x="'+(curLiqX)+'" y="'+(curLiqY+12)+'" text-anchor="middle" fill="#38bdf8" font-size="6.8">x₁='+curX.toFixed(2)+'</text>';
+ svg += '<text x="'+(curVapX)+'" y="'+(curVapY-8)+'" text-anchor="middle" fill="#f87171" font-size="6.8">y₁='+curY.toFixed(3)+'</text>';
+
+ // Legend & Phase Regions
+ svg += '<text x="'+(gX+85)+'" y="'+(gY+25)+'" fill="#94a3b8" font-size="7">Subcooled Liquid</text>';
+ svg += '<text x="'+(gX+140)+'" y="'+(gY+110)+'" fill="#4ade80" font-size="7.5" font-weight="bold">Two-Phase Liquid + Vapor Coexistence</text>';
+ svg += '<text x="'+(gX+280)+'" y="'+(gY+165)+'" fill="#fca5a5" font-size="7">Superheated Vapor</text>';
+
+
+ // --- RIGHT: AZEOTROPE BREAKER TECHNOLOGIES (x: 450, y: 55, w: 250, h: 235) ---
+ const rX = 450, rY = 55, rW = 250, rH = 235;
+ svg += '<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="8" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(rX+8)+'" y="'+(rY+8)+'" width="'+(rW-16)+'" height="20" rx="3" fill="#132e1f" stroke="#1e4d31"/>';
+ svg += '<text x="'+(rX+rW/2)+'" y="'+(rY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">HOW INDUSTRY BREAKS THE AZEOTROPE</text>';
+
+ const techItems = [
+  {name: '1. Type 3A Molecular Sieves', desc: 'Synthetic zeolite pores (3 Å) adsorb H2O (2.8 Å) & reject EtOH (4.4 Å)', eff: '>99.9% Anhydrous', col: '#4ade80'},
+  {name: '2. Pressure-Swing Distillation', desc: 'Azeotrope vanishes below 11.5 kPa; dual columns cross pinch', eff: 'No Entrainer', col: '#38bdf8'},
+  {name: '3. Cyclohexane Entrainer Distillation', desc: 'Forms ternary azeotrope (64.9 °C) taking water overhead', eff: '99.8% Pure', col: '#facc15'},
+  {name: '4. Extractive Distillation (Glycol)', desc: 'High-boiling ethylene glycol breaks relative volatility pinch', eff: 'Continuous Process', col: '#86efac'},
+  {name: '5. Vapor Pervaporation Membranes', desc: 'Hydrophilic polymeric membrane preferentially diffuses water', eff: 'Energy Efficient', col: '#38bdf8'}
+ ];
+
+ techItems.forEach((t, idx)=>{
+  const ty = rY + 32 + idx * 39;
+  svg += '<rect x="'+(rX+8)+'" y="'+ty+'" width="'+(rW-16)+'" height="33" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg += '<text x="'+(rX+12)+'" y="'+(ty+11)+'" fill="'+t.col+'" font-size="7.2" font-weight="bold">'+t.name+'</text>';
+  svg += '<text x="'+(rX+12)+'" y="'+(ty+23)+'" fill="#94a3b8" font-size="6.5">'+t.desc+'</text>';
+  svg += '<text x="'+(rX+rW-12)+'" y="'+(ty+11)+'" text-anchor="end" fill="'+t.col+'" font-size="7" font-family="monospace">'+t.eff+'</text>';
+ });
+
+ svg += text(360, 312, 'Gibbs-Konovalov Invariant: At the azeotrope x₁ = y₁ = 0.894, dT/dx₁ = 0 and relative volatility α = 1.000.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawVleSandboxView(p, rawVal){
+ let svg = header('Margules Thermodynamic Regular Solution & Excess Gibbs Energy');
+
+ // Background
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // --- LEFT: MARGULES EXCESS GIBBS ENERGY & ACTIVITY PLOT (x: 35, y: 55, w: 370, h: 235) ---
+ const lX = 35, lY = 55, lW = 370, lH = 235;
+ svg += '<rect x="'+lX+'" y="'+lY+'" width="'+lW+'" height="'+lH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+18)+'" text-anchor="middle" fill="#86efac" font-size="9" font-weight="bold">MARGULES EXCESS GIBBS ENERGY g^E & ln(γ_i)</text>';
+
+ const gX = lX + 45, gY = lY + 35, gW = lW - 65, gH = lH - 80;
+ svg += '<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#051009" stroke="#162e1e"/>';
+
+ // Grid
+ for(let i=1; i<5; i++){
+  const gy = gY + (gH * i / 5);
+  svg += '<line x1="'+gX+'" y1="'+gy+'" x2="'+(gX+gW)+'" y2="'+gy+'" stroke="#162e1e" stroke-width="0.8" stroke-dasharray="2,2"/>';
+  const gx = gX + (gW * i / 5);
+  svg += '<line x1="'+gx+'" y1="'+gY+'" x2="'+gx+'" y2="'+(gY+gH)+'" stroke="#162e1e" stroke-width="0.8" stroke-dasharray="2,2"/>';
+ }
+
+ svg += '<text x="'+(gX+gW/2)+'" y="'+(gY+gH+14)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5">Ethanol Mole Fraction x₁</text>';
+ svg += '<text x="'+(gX-8)+'" y="'+(gY+gH/2)+'" text-anchor="middle" transform="rotate(-90 '+(gX-8)+' '+(gY+gH/2)+')" fill="#94a3b8" font-size="7.5">Thermodynamic Function</text>';
+
+ // g^E / RT curve = 1.4 * x1 * (1 - x1), peak at x=0.5 with value 0.35
+ const zeroY = gY + gH - 10;
+ const peakY = zeroY - (0.35 / 1.5) * (gH - 20);
+ const gePath = 'M '+gX+' '+zeroY+' Q '+(gX+gW*0.5)+' '+(peakY-15)+' '+(gX+gW)+' '+zeroY;
+ svg += '<path d="'+gePath+'" fill="none" stroke="#4ade80" stroke-width="2.2"/>';
+ svg += '<text x="'+(gX+gW*0.5)+'" y="'+(peakY-22)+'" text-anchor="middle" fill="#4ade80" font-size="7" font-weight="bold">g^E / RT = 1.400·x₁·x₂</text>';
+
+ // ln(gamma1) curve = 1.4 * (1 - x1)^2: starts at 1.40 (x=0) and drops to 0 (x=1)
+ const ln1_0 = zeroY - (1.40 / 1.5) * (gH - 20);
+ const ln1Path = 'M '+gX+' '+ln1_0+' Q '+(gX+gW*0.4)+' '+(zeroY-25)+' '+(gX+gW)+' '+zeroY;
+ svg += '<path d="'+ln1Path+'" fill="none" stroke="#38bdf8" stroke-width="2"/>';
+ svg += '<text x="'+(gX+10)+'" y="'+(ln1_0-6)+'" fill="#38bdf8" font-size="7" font-weight="bold">ln(γ₁) = A(1−x₁)² (γ₁^∞ = 4.055)</text>';
+
+ // ln(gamma2) curve = 1.4 * x1^2: starts at 0 (x=0) and rises to 1.40 (x=1)
+ const ln2Path = 'M '+gX+' '+zeroY+' Q '+(gX+gW*0.6)+' '+(zeroY-25)+' '+(gX+gW)+' '+ln1_0;
+ svg += '<path d="'+ln2Path+'" fill="none" stroke="#f87171" stroke-width="1.8" stroke-dasharray="3,2"/>';
+ svg += '<text x="'+(gX+gW-10)+'" y="'+(ln1_0-6)+'" text-anchor="end" fill="#f87171" font-size="7">ln(γ₂ Water)</text>';
+
+ // Invariant badge at bottom
+ svg += '<rect x="'+(lX+15)+'" y="'+(lY+195)+'" width="'+(lW-30)+'" height="32" rx="3" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+215)+'" text-anchor="middle" fill="#86efac" font-size="7.8" font-family="monospace" font-weight="bold">Thermodynamic Invariant: Symmetric Margules model A = 1.400 yields R² = 1.00000</text>';
+
+
+ // --- RIGHT: SOURCES OF BIAS & VLE AUDIT ---
+ const rX = 420, rY = 55, rW = 280, rH = 235;
+ svg += '<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<text x="'+(rX+rW/2)+'" y="'+(rY+18)+'" text-anchor="middle" fill="#86efac" font-size="9" font-weight="bold">VLE METROLOGY & SYSTEM AUDIT</text>';
+
+ const auditItems = [
+  {label: 'Cottrell Thermo-Lift Pumping', desc: 'Eliminates 1.5 °C liquid superheating; washes sensor in spray', val: 'δT = ±0.02 °C', col: '#4ade80'},
+  {label: 'Abbe Water-Jacket Prism (20.00 °C)', desc: 'Suppresses thermal refractive drift dn_D/dT (-4.0×10⁻⁴ K⁻¹)', val: 'δn_D = ±0.0001', col: '#38bdf8'},
+  {label: 'Digital Absolute Barometer', desc: 'Real-time 101.325 kPa pressure normalization via Antoine law', val: 'δP < 0.01 kPa', col: '#86efac'},
+  {label: 'Chilled Airtight Septum Syringes', desc: 'Prevents flash evaporation of volatile ethanol during transfer', val: 'δx < 0.001', col: '#facc15'},
+  {label: 'Margules Linear Least-Squares', desc: 'Linearization ln(γ₁) vs (1−x₁)² eliminates tare/parallax bias', val: 'R² = 1.00000', col: '#4ade80'}
+ ];
+
+ auditItems.forEach((it, idx)=>{
+  const ay = rY + 30 + idx * 39;
+  svg += '<rect x="'+(rX+8)+'" y="'+ay+'" width="'+(rW-16)+'" height="33" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg += '<text x="'+(rX+14)+'" y="'+(ay+12)+'" fill="'+it.col+'" font-size="7.5" font-weight="bold">'+it.label+'</text>';
+  svg += '<text x="'+(rX+14)+'" y="'+(ay+24)+'" fill="#94a3b8" font-size="6.8">'+it.desc+'</text>';
+  svg += '<text x="'+(rX+rW-14)+'" y="'+(ay+12)+'" text-anchor="end" fill="'+it.col+'" font-size="7.2" font-family="monospace">'+it.val+'</text>';
+ });
+
+ svg += text(360, 312, 'Phase Invariant: Activity coefficient ln(γ₁) = 1.400·(1−x₁)² isolates A = 1.400 with R² = 1.00000.', '#789c80', 8.5);
  return svg;
 }

@@ -160,6 +160,31 @@ function predict(slug,input){
   const y=round(Math.log(ksp_calc), 4);
   return {raw,ideal:raw,period:1.0,x,y,valid:t>=30.0&&t<=55.0};
  }
+ if(slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+  const x1=Number(input);
+  const x2=1.0 - x1;
+  const A=1.400;
+  const gamma1=Math.exp(A * x2 * x2);
+  const gamma2=Math.exp(A * x1 * x1);
+  let low=77.0, high=100.0;
+  for(let i=0; i<25; i++){
+    const mid=(low + high) / 2.0;
+    const P1=0.133322368 * Math.pow(10, 8.20417 - 1642.89 / (mid + 230.300));
+    const P2=0.133322368 * Math.pow(10, 8.07131 - 1730.63 / (mid + 233.426));
+    const P=P1 * x1 * gamma1 + P2 * x2 * gamma2;
+    if(P < 101.325) low=mid;
+    else high=mid;
+  }
+  const Tb=(low + high) / 2.0;
+  const P1sat=0.133322368 * Math.pow(10, 8.20417 - 1642.89 / (Tb + 230.300));
+  const P1=P1sat * x1 * gamma1;
+  const raw=round(P1 / 101.325, 4);
+  const gamma1_calc=(raw * 101.325) / (x1 * P1sat);
+  const x=round(x2 * x2, 4);
+  const y=round(Math.log(gamma1_calc), 4);
+  return {raw,ideal:raw,period:1.0,x,y,valid:x1>=0.10&&x1<=0.60};
+ }
+
  if(slug==='partial-molar-volume-binary-mixtures'){
   const m=Number(input);
   const M2=46.069;
@@ -262,6 +287,25 @@ function reading(slug,input,raw){
   const s_calc=V / 20.0;
   const ksp_calc=4.0 * Math.pow(s_calc, 3);
   y=round(Math.log(ksp_calc), 4);
+ }
+ if(slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+  const x1=Number(input);
+  const x2=1.0 - x1;
+  const raw_val=Number(raw);
+  let low=77.0, high=100.0;
+  for(let i=0; i<25; i++){
+    const mid=(low + high) / 2.0;
+    const P1=0.133322368 * Math.pow(10, 8.20417 - 1642.89 / (mid + 230.300));
+    const P2=0.133322368 * Math.pow(10, 8.07131 - 1730.63 / (mid + 233.426));
+    const P=P1 * x1 * Math.exp(1.400 * x2 * x2) + P2 * x2 * Math.exp(1.400 * x1 * x1);
+    if(P < 101.325) low=mid;
+    else high=mid;
+  }
+  const Tb=(low + high) / 2.0;
+  const P1sat=0.133322368 * Math.pow(10, 8.20417 - 1642.89 / (Tb + 230.300));
+  const gamma1_calc=(raw_val * 101.325) / (x1 * P1sat);
+  x=round(x2 * x2, 4);
+  y=round(Math.log(gamma1_calc), 4);
  }
  if(slug==='partial-molar-volume-binary-mixtures'){
   const m=Number(input);
@@ -399,6 +443,11 @@ function estimate(slug,f){
   const dH_est= -f.m * 8.31446;
   const se= f.slopeSE * 8.31446;
   return {value:dH_est,se:se,reference:110.0};
+ }
+ if(slug==='liquid-vapor-phase-equilibrium-azeotrope'){
+  const A_est= f.m;
+  const se= f.slopeSE;
+  return {value:A_est,se:se,reference:1.400};
  }
  if(slug==='partial-molar-volume-binary-mixtures'){
   const V2_inf_est= f.b;

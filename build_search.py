@@ -88,7 +88,8 @@ def experiment_index(experiments):
     'vapor-pressure-liquid-clausius-clapeyron':'clausius clapeyron vapor pressure enthalpy of vaporization ethanol boiling point isoteniscope liquid vapor equilibrium clapeyron equation trouton rule antoine phase transition',
     'gibbs-free-energy-solubility-van-t-hoff':'van t hoff solubility gibbs free energy enthalpy entropy borax disodium tetraborate decahydrate titration ksp solubility product equilibrium constant debye huckel bromocresol green',
     'heat-capacity-ratio-gases-clement-desormes':'clement desormes heat capacity ratio adiabatic expansion isentropic index gamma cp cv degrees of freedom equipartition ruchhardt carboy manometer gas dynamics',
-    'partial-molar-volume-binary-mixtures':'partial molar volume apparent molar volume binary mixtures ethanol water pycnometry gay lussac density excess volume gibbs duhem infinite dilution hydrophobic hydration'}
+    'partial-molar-volume-binary-mixtures':'partial molar volume apparent molar volume binary mixtures ethanol water pycnometry gay lussac density excess volume gibbs duhem infinite dilution hydrophobic hydration',
+    'liquid-vapor-phase-equilibrium-azeotrope':'liquid vapor equilibrium phase diagram azeotropic distillation azeotrope ethanol water othmer still cottrell pump abbe refractometer margules activity coefficient relative volatility'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):
