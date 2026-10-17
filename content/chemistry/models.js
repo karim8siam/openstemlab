@@ -160,6 +160,18 @@ function predict(slug,input){
   const y=round(Math.log(ksp_calc), 4);
   return {raw,ideal:raw,period:1.0,x,y,valid:t>=30.0&&t<=55.0};
  }
+ if(slug==='enzyme-kinetics-michaelis-menten-spectrophotometry'){
+  const s_val=Number(input);
+  const KM_ref=0.500;
+  const Vmax_ref=0.0400;
+  const table={0.200:11.43, 0.350:16.47, 0.500:20.00, 0.800:24.62, 1.500:30.00, 3.000:34.29};
+  const sKey=round(s_val, 3);
+  const raw=table.hasOwnProperty(sKey)?table[sKey]:round((Vmax_ref * s_val / (KM_ref + s_val)) * 1000.0, 2);
+  const x=round(1.0 / s_val, 3);
+  const v0_mM=raw / 1000.0;
+  const y=round(1.0 / v0_mM, 2);
+  return {raw,ideal:raw,period:1.0,x,y,valid:s_val>=0.10&&s_val<=4.00};
+ }
  if(slug==='second-order-saponification-conductivity'){
   const t=Number(input);
   const c_0=0.0200;
@@ -360,6 +372,13 @@ function reading(slug,input,raw){
   const ksp_calc=4.0 * Math.pow(s_calc, 3);
   y=round(Math.log(ksp_calc), 4);
  }
+ if(slug==='enzyme-kinetics-michaelis-menten-spectrophotometry'){
+  const s_val=Number(input);
+  const raw_val=Number(raw);
+  x=round(1.0 / s_val, 3);
+  const v0_mM=raw_val / 1000.0;
+  y=round(1.0 / v0_mM, 2);
+ }
  if(slug==='second-order-saponification-conductivity'){
   const t=Number(input);
   const raw_val=Number(raw);
@@ -558,6 +577,11 @@ function estimate(slug,f){
   const dH_est= -f.m * 8.31446;
   const se= f.slopeSE * 8.31446;
   return {value:dH_est,se:se,reference:110.0};
+ }
+ if(slug==='enzyme-kinetics-michaelis-menten-spectrophotometry'){
+  const KM=f.m / f.b;
+  const se=Math.abs(f.slopeSE / f.b);
+  return {value:KM,se:se,reference:0.500};
  }
  if(slug==='second-order-saponification-conductivity'){
   const slope= f.m;

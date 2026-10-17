@@ -149,6 +149,16 @@ def observation(c,value):
   ksp_calc=4.0 * (s_calc**3)
   y=rnd(math.log(ksp_calc), 4)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='enzyme-kinetics-michaelis-menten-spectrophotometry':
+  s_val=float(value)
+  KM_ref=0.500
+  Vmax_ref=0.0400
+  table={0.200:11.43, 0.350:16.47, 0.500:20.00, 0.800:24.62, 1.500:30.00, 3.000:34.29}
+  raw=table.get(round(s_val, 3), round((Vmax_ref * s_val / (KM_ref + s_val)) * 1000.0, 2))
+  x=rnd(1.0 / s_val, 3)
+  v0_mM=raw / 1000.0
+  y=rnd(1.0 / v0_mM, 2)
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='second-order-saponification-conductivity':
   t=float(value)
   c_0=0.0200
@@ -351,6 +361,13 @@ def estimate(c,f):
   dH_est= -f['m'] * 8.31446
   se=f['slopeSE'] * 8.31446
   return dH_est, se, 110.0
+ elif slug=='enzyme-kinetics-michaelis-menten-spectrophotometry':
+  b=f['b']
+  m=f['m']
+  KM=m / b
+  ref=0.500
+  se=abs(f.get('slopeSE', 0.05) / b) if b > 0 else 0.002
+  return KM, se, ref
  elif slug=='second-order-saponification-conductivity':
   slope= f['m']
   se= f['slopeSE']
@@ -449,6 +466,12 @@ def formula(c,f):
   conv_S= f['b'] * 8.31446
   dG_298= conv_H - (298.15 * conv_S * 0.001)
   return f"ΔH° = −m_slope · (1000·R) = −({fmt(f['m'],4)}) × 8.3145 = {fmt(conv_H,1)} kJ/mol; ΔS° = b · R = {fmt(conv_S,1)} J/(mol·K); ΔG°(298K) = {fmt(dG_298,1)} kJ/mol; Intercept b = {fmt(f['b'],4)}"
+ elif slug=='enzyme-kinetics-michaelis-menten-spectrophotometry':
+  b=f['b']
+  m=f['m']
+  Vmax=1.0 / b
+  KM=m / b
+  return f"Slope K_M/V_max = {fmt(m,4)} min; Intercept 1/V_max = {fmt(b,4)} min·mM⁻¹ (V_max = {fmt(Vmax*1000.0,2)} μM/min, K_M = {fmt(KM,4)} mM)"
  elif slug=='second-order-saponification-conductivity':
   return f"Slope k = {fmt(f['m'],4)} L·mol⁻¹·min⁻¹; Intercept 1/c₀ = {fmt(f['b'],2)} L·mol⁻¹"
  elif slug=='first-order-kinetics-ester-hydrolysis':
@@ -802,6 +825,30 @@ def worked(c,row):
    f"ordinary least-squares linear regression of ln(K_sp) against 1000/T extracts the van 't Hoff slope m_slope = −13.241 K "
    f"and intercept b = 39.723, isolating ΔH° = +110.1 kJ/mol and ΔS° = +330.3 J/(mol·K) with R² = 1.00000, "
    f"confirming the accepted literature thermodynamic parameters for borax dissolution."
+  )
+ elif slug=='enzyme-kinetics-michaelis-menten-spectrophotometry':
+  s_val=row['input']
+  raw=row['raw']
+  x=row['x']
+  y=row['y']
+  v0_mM=raw / 1000.0
+  dA_dt=raw * 0.0185
+  return (
+   f"Representative steady-state kinetic calculation for assay at substrate [4-NPP] = {s_val:.3f} mM:\n"
+   f"1. Continuous Spectrophotometric Telemetry (at λ = 405 nm, 25.00 ± 0.05 °C, pathlength l = 1.000 cm):\n"
+   f"   Initial linear absorbance progression rate: dA/dt = {dA_dt:.4f} AU/min over initial 10–60 s window.\n"
+   f"2. Initial Catalytic Velocity via Beer-Lambert Molar Absorptivity:\n"
+   f"   Certified 4-nitrophenolate dianion absorptivity at pH 9.80: ε₄₀₅ = 18,500 L·mol⁻¹·cm⁻¹ = 18.50 mM⁻¹·cm⁻¹.\n"
+   f"   v₀ = (dA/dt) / (ε₄₀₅ · l) = ({dA_dt:.4f} AU/min) / (18.50 mM⁻¹·cm⁻¹ × 1.000 cm) = {v0_mM:.5f} mM/min = {raw:.2f} μM/min.\n"
+   f"3. Active Site Saturation Fraction:\n"
+   f"   v₀ / V_max = {raw:.2f} μM/min / 40.00 μM/min = {raw/40.0*100.0:.1f}% enzyme active site saturation.\n"
+   f"4. Double-Reciprocal Lineweaver-Burk Coordinates:\n"
+   f"   Abscissa: x = 1/[S] = 1 / {s_val:.3f} mM = {x:.3f} mM⁻¹.\n"
+   f"   Ordinate: y = 1/v₀ = 1 / {v0_mM:.5f} mM/min = {y:.2f} min·mM⁻¹.\n"
+   f"5. Lineweaver-Burk Multi-Point Linear Least-Squares Regression:\n"
+   f"   Linearized equation: 1/v₀ = (K_M / V_max) · (1/[S]) + 1/V_max.\n"
+   f"   Slope m = K_M / V_max = 12.50 min; Y-intercept b = 1/V_max = 25.00 min·mM⁻¹.\n"
+   f"   Extracted parameters: V_max = 1/b = 0.0400 mM/min (40.0 μM/min); K_M = m / b = 0.500 mM with R² = 1.00000."
   )
  elif slug=='second-order-saponification-conductivity':
   t=row['input']
@@ -1312,6 +1359,28 @@ def uncertainty_text(c):
    "Ordinary least-squares linear regression across six independent temperatures extracts the van 't Hoff slope "
    "m_slope = −13.241 K with an ideal coefficient of determination R² = 1.00000, isolating the standard enthalpy of dissolution "
    "ΔH° = +110.1 kJ/mol and standard entropy of dissolution ΔS° = +330.3 J/(mol·K) within 0.09% of accepted thermodynamic literature."
+  )
+ elif slug=='enzyme-kinetics-michaelis-menten-spectrophotometry':
+  return (
+   "In the spectrophotometric determination of enzyme kinetic parameters (K_M and V_max) via Lineweaver-Burk linearization, "
+   "metrological uncertainties and systematic errors are evaluated across optical, volumetric, biochemical, and statistical dimensions: "
+   "(1) Photometric Accuracy and Optical Pathlength: The double-beam spectrophotometer has a photometric accuracy specification "
+   "of ±0.002 AU and baseline drift < 0.0002 AU/hr at 405 nm. Matched quartz cuvettes have certified optical pathlengths of 1.000 ± 0.005 cm, "
+   "limiting pathlength uncertainty to u_r(l) = 0.50%. The certified molar absorptivity of 4-nitrophenolate dianion at pH 9.80 is "
+   "ε₄₀₅ = 18,500 ± 150 L·mol⁻¹·cm⁻¹ (u_r(ε) = 0.81%). Combining these yields an expanded relative uncertainty u_r(v₀) ≈ 1.05%. "
+   "(2) Volumetric Micropipette Delivery: Serial substrate dilutions and enzyme stock additions using calibrated research micropipettes "
+   "(ISO 8655 compliant, systematic error ≤ 0.35%, CV ≤ 0.20%) contribute a combined relative standard uncertainty u_r([S]) = 0.42%. "
+   "(3) Thermostatic Peltier Regulation: Alkaline phosphatase displays steep Arrhenius temperature dependence (activation energy E_a ≈ 42 kJ/mol), "
+   "yielding approximately 5.8% change in catalytic velocity per °C. Maintaining the peltier cuvette holder at 25.00 ± 0.05 °C restricts "
+   "thermal rate variance to < 0.29%. "
+   "(4) Substrate Depletion and Product Inhibition Thresholds: Initial rates are captured within 10 to 60 seconds post-mixing, ensuring "
+   "total substrate turnover remains strictly below 4.5% of [S]₀. This eliminates substrate depletion bias (< 0.25%) and prevents competitive "
+   "feedback inhibition by released orthophosphate product (P_i, K_i ≈ 1.5 mM). "
+   "(5) Lineweaver-Burk Heteroscedastic Weighting: The reciprocal transformation y = 1/v₀ inherently distorts Gaussian variance into "
+   "weights proportional to v₀⁴, conferring high leverage to the lowest substrate concentration ([S] = 0.200 mM). Propagation of the "
+   "covariance matrix through the regression parameters gives u(K_M) / K_M = √[ (u(m)/m)² + (u(b)/b)² - 2·cov(m,b)/(m·b) ]. "
+   "The high negative correlation between slope and intercept (r ≈ -0.88) substantially attenuates overall uncertainty, yielding an "
+   "expanded uncertainty U(K_M) = 0.015 mM (coverage factor k = 2, 95% confidence level)."
   )
  elif slug=='second-order-saponification-conductivity':
   return (
@@ -2241,6 +2310,75 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    "demonstrated the power of the van 't Hoff equation to extract thermal quantities without calorimetry, "
    "and proved that pre-warmed filter-plugged pipetting eliminates crystallization and suspended particle errors."
   )
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='enzyme-kinetics-michaelis-menten-spectrophotometry':
+  b_val=f['b']
+  m_val=f['m']
+  Vmax_val=1.0 / b_val
+  Vmax_uM=Vmax_val * 1000.0
+  KM_val=m_val / b_val
+  r2_val=f['r2']
+  
+  abstract=(
+   f"The steady-state enzyme kinetics of calf intestinal alkaline phosphatase (ALP, EC 3.1.3.1) were quantitatively investigated "
+   f"at 25.00 ± 0.05 °C in 0.050 M Tris-HCl buffer (pH 9.80) containing 1.0 mM MgCl₂. Hydrolysis of the chromogenic model substrate "
+   f"4-nitrophenyl phosphate (4-NPP) was monitored across six graded concentrations ([S] = {rows[0]['input']:.3f} to {rows[-1]['input']:.3f} mM) "
+   f"by continuous double-beam spectrophotometry at λ = 405 nm. Initial catalytic velocities were evaluated from the linear absorbance progression "
+   f"rates (dA/dt) utilizing the certified molar absorptivity of the 4-nitrophenolate dianion (ε₄₀₅ = 18,500 L·mol⁻¹·cm⁻¹). "
+   f"Double-reciprocal Lineweaver-Burk regression analysis (1/v₀ vs 1/[S]) yielded an exceptional coefficient of determination (R² = {r2_val:.5f}), "
+   f"isolating a maximum catalytic velocity V_max = {Vmax_val:.4f} mM·min⁻¹ ({Vmax_uM:.2f} μmol·L⁻¹·min⁻¹) and a Michaelis constant "
+   f"K_M = {KM_val:.4f} mM. The experimentally determined Michaelis constant demonstrates a percentage difference of {percent:.3f}% relative "
+   f"to the authoritative reference standard (K_M = {reference:.3f} mM), rigorously validating the Briggs-Haldane steady-state model "
+   f"and confirming the high catalytic efficiency of the alkaline phosphatase dimer."
+  )
+
+  graph_choice=(
+   f"The primary analytical graphic presents the Lineweaver-Burk double-reciprocal coordinate plane: reciprocal initial catalytic "
+   f"velocity y = 1/v₀ (in min·mM⁻¹) plotted as a function of reciprocal substrate concentration x = 1/[S] (in mM⁻¹). Linearization of the "
+   f"hyperbolic Michaelis-Menten rate law produces the straight-line relationship 1/v₀ = (K_M / V_max)(1/[S]) + 1/V_max, where the slope "
+   f"m = {m_val:.4f} min directly equals the ratio K_M / V_max, the vertical y-intercept b = {b_val:.4f} min·mM⁻¹ directly defines 1/V_max, "
+   f"and the extrapolated horizontal x-intercept corresponds to -1/K_M = {-1.0/KM_val:.3f} mM⁻¹. "
+   f"The linear least-squares regression line exhibits near-perfect linearity (R² = {r2_val:.5f}), with all six experimental data points "
+   f"distributed symmetrically about the trendline across an eightfold dynamic range in 1/[S]. Secondary graphical analysis correlates the raw "
+   f"initial absorbance slopes dA/dt (AU/min) against substrate concentration [S], clearly delineating the classic rectangular hyperbolic "
+   f"saturation curve approaching (dA/dt)_max = {Vmax_val * 18.5:.4f} AU/min at asymptotic substrate saturation."
+  )
+
+  discussion=(
+   f"Quantitative analysis of the experimental rate data provides profound mechanistic insights into the macromolecular catalytic action "
+   f"of calf intestinal alkaline phosphatase. At low substrate concentrations relative to the Michaelis constant ([S] ≪ K_M, exemplified by "
+   f"[S] = 0.200 mM where [S]/K_M = 0.40), the majority of enzyme catalytic pockets exist in the uncomplexed free state ([E] ≈ [E]₀). "
+   f"Under this regime, the catalytic velocity scales in strict first-order proportionality to substrate availability: "
+   f"v₀ ≈ (V_max / K_M) [S] = (k_cat / K_M)[E]₀[S]. Here, the reaction rate is governed by the bimolecular encounter frequency between free "
+   f"enzyme and 4-NPP, yielding an initial rate of 11.43 μM/min (28.6% of V_max). Conversely, as substrate concentration is systematically "
+   f"elevated to [S] = 3.000 mM ([S]/K_M = 6.00), the active site becomes heavily saturated with substrate ([ES] ≈ [E]₀), driving the reaction into "
+   f"a zero-order catalytic regime where v₀ = 34.29 μM/min (85.7% of V_max) and the rate becomes virtually independent of further substrate additions, "
+   f"constrained solely by the unimolecular catalytic turnover frequency k_cat.\n\n"
+   f"The extracted Michaelis constant K_M = {KM_val:.4f} mM represents an exact operational index of the enzyme's substrate saturation threshold. "
+   f"Remarkably, at [S] = 0.500 mM, the observed initial velocity is v₀ = 20.00 μM/min, which constitutes precisely 50.0% of the maximum "
+   f"catalytic velocity V_max = {Vmax_uM:.2f} μM/min, providing direct empirical corroboration of the fundamental definition of K_M. Under the "
+   f"Briggs-Haldane steady-state derivation, K_M = (k₋₁ + k_cat) / k₁. For alkaline phosphatase acting on activated phosphoesters like 4-NPP, "
+   f"the rate-limiting step at alkaline pH involves the dephosphorylation of the covalent phospho-enzyme intermediate (E-P) and subsequent product release, "
+   f"rather than initial substrate binding. The small Michaelis constant (0.500 mM) underscores the high affinity of the catalytic pocket, which features "
+   f"a triad of positively charged residues (including Arg166) that electrostatically orient and stabilize the negative phosphate dianion of 4-NPP.\n\n"
+   f"The exceptional agreement between our experimental value ({KM_val:.4f} mM) and the certified literature standard ({reference:.3f} mM, "
+   f"percentage difference = {percent:.3f}%) highlights the rigorous execution of the experimental protocol. By confining initial rate acquisition "
+   f"strictly to the first 10–60 seconds, substrate consumption was maintained below 4.5%, successfully suppressing competitive product inhibition "
+   f"by released orthophosphate (P_i, K_i ≈ 1.5 mM). Furthermore, maintaining the reaction matrix at pH 9.80 in 0.050 M Tris-HCl with 1.0 mM MgCl₂ "
+   f"ensured full deprotonation of the chromophore into the bright yellow 4-nitrophenolate dianion (ε₄₀₅ = 18,500 L·mol⁻¹·cm⁻¹) while fully saturating "
+   f"the allosteric Mg³⁺ activator sites necessary for maximal catalytic turnover."
+  )
+
+  conclusion=(
+   f"The steady-state kinetic parameters for the alkaline phosphatase-catalyzed hydrolysis of 4-nitrophenyl phosphate were definitively determined "
+   f"at 25.00 °C and pH 9.80. Continuous photometric initial rate tracking at λ = 405 nm coupled with Lineweaver-Burk double-reciprocal regression "
+   f"analysis established: (1) a maximum velocity V_max = {Vmax_val:.4f} ± {Vmax_val * (se/KM_val):.4f} mM·min⁻¹ ({Vmax_uM:.2f} μmol·L⁻¹·min⁻¹); "
+   f"(2) a Michaelis constant K_M = {KM_val:.4f} ± {se:.4f} mM, differing by only {percent:.3f}% from the established standard of {reference:.3f} mM; "
+   f"and (3) near-perfect linearity (R² = {r2_val:.5f}). These results rigorously confirm the validity of the Briggs-Haldane steady-state catalytic "
+   f"mechanism, demonstrate the high fidelity of initial-rate spectrophotometric enzymology, and establish an authoritative baseline for analyzing "
+   f"reversible enzyme inhibition mechanisms."
+  )
+  
   return abstract, graph_choice, discussion, conclusion
  elif slug=='second-order-saponification-conductivity':
   abstract=(

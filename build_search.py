@@ -91,6 +91,7 @@ def experiment_index(experiments):
     'partial-molar-volume-binary-mixtures':'partial molar volume apparent molar volume binary mixtures ethanol water pycnometry gay lussac density excess volume gibbs duhem infinite dilution hydrophobic hydration',
     'liquid-vapor-phase-equilibrium-azeotrope':'liquid vapor equilibrium phase diagram azeotropic distillation azeotrope ethanol water othmer still cottrell pump abbe refractometer margules activity coefficient relative volatility',
     'three-component-liquid-liquid-ternary-phase':'three component ternary liquid phase equilibrium liquid extraction binodal curve tie lines plait point water acetic acid chloroform nernst christian distribution dimerization constant',
+    'enzyme-kinetics-michaelis-menten-spectrophotometry': 'enzyme kinetics michaelis menten lineweaver burk alkaline phosphatase 4-nitrophenyl phosphate km vmax substrate inhibition double reciprocal spectrophotometry',
     'second-order-saponification-conductivity': 'second order ester saponification ethyl acetate conductivity kohlrausch ionic mobility half life impedance',
     'first-order-kinetics-ester-hydrolysis': 'first order ester hydrolysis methyl acetate acid catalysis rate constant titrimetry guggenheim half life',
     'activation-energy-arrhenius-acetone-iodination': 'arrhenius activation energy acetone iodination reaction kinetics zero order enolization transition state eyring rate constant temperature dependence',

@@ -66,7 +66,22 @@ function update(){
  }else if(cfg.slug==='gibbs-free-energy-solubility-van-t-hoff'){
   $('liveState').textContent='Ready to equilibrate saturated borax slurry at '+p.input.toFixed(1)+' °C.';
   message('Equilibrate borax flask, pre-warm filter pipette, draw 5.00 mL aliquot & titrate with 0.50 M HCl.');
- }else if(cfg.slug==='second-order-saponification-conductivity'){
+ }else if(cfg.slug==='enzyme-kinetics-michaelis-menten-spectrophotometry'){
+  $('liveState').textContent='Ready to assay 4-NPP substrate hydrolysis at [S] = '+p.input.toFixed(3)+' mM.';
+  message('Set substrate concentration [S], inject alkaline phosphatase stock, record linear ΔA/Δt at 405 nm.');
+ }else if(cfg.slug==='enzyme-kinetics-michaelis-menten-spectrophotometry'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawEnzymeKineticsCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawEnzymeKineticsSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawEnzymeKineticsBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='second-order-saponification-conductivity'){
   $('liveState').textContent='Ready to record conductivity at elapsed time t = '+p.input.toFixed(1)+' min.';
   message('Set reaction elapsed time t, immerse 1.00 kHz conductivity cell & record specific conductance κ_t.');
  }else if(cfg.slug==='first-order-kinetics-ester-hydrolysis'){
@@ -78,6 +93,15 @@ function update(){
  }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
   $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
   message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='enzyme-kinetics-michaelis-menten-spectrophotometry'){
+  const s_mM = p.input;
+  const v0_uM = raw;
+  const v0_mM = v0_uM / 1000.0;
+  const inv_s = 1.0 / s_mM;
+  const inv_v0 = 1.0 / v0_mM;
+  const dA_dt = v0_uM * 0.0185;
+  $('liveState').textContent='Photometric trace recorded: v₀ = '+v0_uM.toFixed(2)+' μM/min (dA/dt = '+(dA_dt/1000).toFixed(4)+' AU/min).';
+  message('Assay complete: v₀ = '+v0_uM.toFixed(2)+' μM/min (1/v₀ = '+inv_v0.toFixed(2)+' min/mM, 1/[S] = '+inv_s.toFixed(2)+' mM⁻¹). Record in notebook.');
  }else if(cfg.slug==='second-order-saponification-conductivity'){
   const t = p.input;
   const kappa = raw;
