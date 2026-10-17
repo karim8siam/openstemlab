@@ -28,6 +28,12 @@ def observation(c,value):
   raw=int(round(n*log2n - n + 1.0))
   y=float(raw)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='stack-adt-recursion':
+  n=float(value)
+  x=n
+  raw=int(round(64.0*n + 128.0))
+  y=float(raw)
+  return {'input':value,'raw':raw,'x':x,'y':y}
  raise ValueError(f"Unknown CS experiment {slug}")
 
 def fit(rows):
@@ -57,6 +63,8 @@ def estimate(c,f):
   return f['m'],f['slopeSE'],0.5000
  elif slug=='divide-conquer-sorting':
   return f['m'],f['slopeSE'],1.0000
+ elif slug=='stack-adt-recursion':
+  return f['m'],f['slopeSE'],64.0000
  raise ValueError(f"Unknown CS experiment {slug}")
 
 def fmt(v,n=5):
@@ -73,6 +81,9 @@ def formula(c,f):
  elif slug=='divide-conquer-sorting':
   val=f['m']*c['resultScale']
   return f"k_merge = m = {fmt(val,c['resultDecimals'])} comparisons/interval; Intercept b = {fmt(f['b'],c['resultDecimals'])} comparisons (theoretical k = 1.0000, b = 1.0000)"
+ elif slug=='stack-adt-recursion':
+  val=f['m']*c['resultScale']
+  return f"F_frame = m = {fmt(val,c['resultDecimals'])} bytes/frame; Intercept M_0 = {fmt(f['b'],c['resultDecimals'])} bytes (theoretical frame F = 64.0000, base M_0 = 128.0000)"
  return ""
 
 def worked(c,row):
@@ -93,6 +104,11 @@ def worked(c,row):
   x_space=row['x']
   c_ops=row['raw']
   return f"Array Size n = {int(n)} keys; Recursion Tree Depth h = log₂({int(n)}) = {int(log2n)} levels.\nRecursive Interval Space: x = n(log₂ n − 1) = {int(n)} × ({int(log2n)} − 1) = {int(x_space)} intervals.\nWorst-Case Key Comparisons: C_merge = n·log₂(n) − n + 1 = {int(n)} × {int(log2n)} − {int(n)} + 1 = {c_ops} comparisons.\nVerification: At depth j in [0 .. {int(log2n)-1}], exactly 2^j subarrays of size {int(n)}/2^j are merged with at most (size − 1) comparisons per subproblem."
+ elif slug=='stack-adt-recursion':
+  n=row['input']
+  depth=row['x']
+  mem_bytes=row['raw']
+  return f"Recursion Depth n = {int(n)} frames; Active Activation Records = {int(depth)} frames.\nPeak Call Stack Memory Consumption: M(n) = F_frame · n + M_0 = 64 × {int(n)} + 128 = {mem_bytes} bytes ({mem_bytes/1024:.2f} KiB).\nVerification: Each physical activation record allocates 64 bytes on the thread stack segment (8B return address + 8B saved RBP + 16B saved registers + 32B local variables), moving RSP downward by exactly {mem_bytes - 128} bytes from the initial 128-byte runtime CRT base frame."
  return ""
 
 def uncertainty_text(c):
@@ -129,6 +145,17 @@ def uncertainty_text(c):
    "(3) Branch predictor mispredictions during the dual-pointer merge loop (`if (A[p1] <= A[p2])`), which flush deep execution pipelines; and "
    "(4) Call stack frame allocation overhead and register spilling during recursive bisections. "
    "Ordinary least-squares linear regression of observed comparisons against recursive interval space x = n(log₂ n − 1) yields an empirical scaling slope k_merge = 1.0000 comparisons/interval with zero residual error (R² = 1.00000), rigorously verifying the divide-and-conquer complexity bound Θ(n log₂ n)."
+  )
+ elif slug=='stack-adt-recursion':
+  return (
+   "In microarchitectural call stack memory analysis, the activation record size F_frame = 64 bytes per frame under the System V AMD64 ABI is an exact deterministic specification. "
+   "Unlike continuous physical instrumentation, there is no analog sensor noise, thermal fluctuation, or calibration drift in measuring discrete byte displacements of the hardware stack pointer RSP. "
+   "However, in physical microprocessor execution, observable call stack latency and operating system memory footprint are modulated by hardware and kernel mechanisms: "
+   "(1) Virtual memory demand paging and Translation Lookaside Buffer (TLB) misses, where physical 4 KiB memory pages are committed only when the stack pointer crosses a page boundary; "
+   "(2) CPU L1 data cache line fills and dirty writeback traffic, as stack pushes write to memory lines while stack pops invalidate or reuse warm cache lines; "
+   "(3) Compiler optimizations such as leaf function frame elision, tail-call elimination (which reuses the current frame instead of allocating a new one), and register variable allocation; and "
+   "(4) Operating system stack canary guard pages, which trigger a kernel page fault (SIGSEGV) if stack depth expands beyond the designated thread memory quota (typically 8 MiB). "
+   "Ordinary least-squares linear regression of peak stack memory allocation against recursion depth n in [128, 8192] frames yields an empirical frame scaling slope F_frame = 64.0000 bytes/frame with zero residual error (R² = 1.00000), verifying the linear call stack memory bound Θ(n) with mathematical precision."
   )
  return ""
 
@@ -267,6 +294,38 @@ def report_narrative(c,rows,f,value,percent,reference):
    f"multiplier k_merge = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with an ideal R² = 1.00000. The investigation established "
    "the fundamental information-theoretic lower bound Ω(n log n) for comparison sorts derived from decision tree leaf entropy (log₂(n!) ≈ n log₂ n − 1.44n) "
    "and demonstrated why hybrid algorithms that switch between divide-and-conquer and insertion sort at cache-friendly thresholds achieve optimal practical performance."
+  )
+ elif slug=='stack-adt-recursion':
+  abstract=(
+   f"Seven benchmark trials were generated across recursive call depths n = {rows[0]['input']} to n = {rows[-1]['input']} frames "
+   f"(peak virtual thread stack allocation from {int(rows[0]['raw'])} bytes to {int(rows[-1]['raw'])} bytes, or {rows[-1]['raw']/1024:.2f} KiB). "
+   f"An ordinary least-squares regression of peak stack memory M against recursion depth n yielded an empirical activation record frame size of "
+   f"{fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']}, demonstrating exact agreement with the standard System V AMD64 ABI specification "
+   f"(difference = {percent:.4f}%). The empirical telemetry proves that unoptimized linear recursion incurs strict O(n) auxiliary memory overhead, "
+   f"consuming memory bus bandwidth and risking fatal Stack Overflow (SIGSEGV) exceptions once depth exceeds the operating system thread stack limit, "
+   f"whereas Tail-Call Optimization (TCO) and explicit heap-allocated stacks eliminate unbounded hardware stack pointer growth."
+  )
+  graph_choice=(
+   f"The mathematical regression fits the linear model y = mx + b, where x = n represents the recursive call stack depth in frames, "
+   f"y = M represents peak memory consumption in bytes, m represents the physical activation record frame size F_frame, and b represents "
+   f"the initial runtime startup CRT stack overhead M_0 (theoretically M_0 = 128 bytes). The gradient has physical units {c['gradientUnit']}."
+  )
+  discussion=(
+   "The empirical benchmark observations perfectly align with the hardware architecture of the thread call stack. Each function invocation "
+   "executes the machine instruction CALL, pushing the 8-byte instruction return address onto the stack, followed by the function prologue "
+   "(`push rbp; mov rbp, rsp; sub rsp, 48`), resulting in a constant 64-byte activation record per invocation level. The regression slope m = 64.0000 "
+   "confirms that stack memory grows linearly at exactly 64 bytes per recursion depth. Furthermore, comparative analysis across execution paradigms "
+   "reveals the crucial distinction between recursion classes: while linear recursion requires O(n) activation records, divide-and-conquer tree recursion "
+   "bounds peak stack depth to O(log n) frames, and tail-recursive functions can be compiled via Tail-Call Optimization into constant-space O(1) iterative "
+   "jumps (`jmp`), completely neutralizing stack overflow vulnerability. Finally, the grammar parser experiment demonstrates the essential role of the "
+   "Stack ADT in compiling and evaluating nested syntax trees, maintaining LIFO state invariants across arbitrary context-free grammars."
+  )
+  conclusion=(
+   "This laboratory investigation quantitatively verified the memory architecture, activation record mechanics, and asymptotic behavior of the Stack Abstract Data Type. "
+   f"Through systematic benchmarking across recursion depths from {rows[0]['input']} to {rows[-1]['input']} frames, we verified the empirical frame size "
+   f"F_frame = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with an ideal coefficient of determination R² = 1.00000. "
+   "The investigation established the microarchitectural necessity of stack memory discipline, proving how unbounded recursion risks thread stack exhaustion "
+   "and validating tail-call optimization and heap-backed data structures as vital engineering defenses in modern software runtimes."
   )
  else:
   abstract=f"Empirical benchmark trials were generated across input sizes for {c['title']}."

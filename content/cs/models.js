@@ -26,6 +26,13 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:raw/100.0,x,y,valid:n>=64&&n<=4096};
  }
+ if(slug==='stack-adt-recursion'){
+  const n=Number(input);
+  const raw=Math.round(64*n + 128);
+  const x=n;
+  const y=raw;
+  return {raw,ideal:raw,period:raw/500.0,x,y,valid:n>=64&&n<=16384};
+ }
  throw Error('Unknown CS experiment: '+slug);
 }
 
@@ -45,6 +52,10 @@ function reading(slug,input,raw){
   const n=Number(input);
   const log2n=Math.log2(n);
   x=n*(log2n - 1);
+  y=raw;
+ }
+ if(slug==='stack-adt-recursion'){
+  x=Number(input);
   y=raw;
  }
  return {input,raw,x,y};
@@ -79,6 +90,9 @@ function estimate(slug,f){
  }
  if(slug==='divide-conquer-sorting'){
   return {value:f.m,se:f.slopeSE,reference:1.0000};
+ }
+ if(slug==='stack-adt-recursion'){
+  return {value:f.m,se:f.slopeSE,reference:64.0000};
  }
  throw Error('Unknown CS experiment: '+slug);
 }

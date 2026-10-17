@@ -140,6 +140,57 @@ function drawComparativeSim(t,p,v,ink,soft,orange){
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
+ if(cfg.slug==='stack-adt-recursion'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'RECURSION & CALL STACK MEMORY COMPARISON (n = '+p.input+')','#e2f0f8',11);
+
+  const n=p.input;
+  const m_linear=64*n + 128;
+  const m_tco=64;
+  const m_tree=Math.round(64*(Math.floor(Math.log2(n))+1));
+  const m_heap=16*n;
+  const m_parse=Math.round(24*Math.min(16, Math.floor(Math.log2(n))+1));
+
+  const algos=[
+   {name:'Linear Recursion (Unoptimized)',col:'#ef4444',mem:m_linear,scale:'O(n) stack',desc:'64 B/frame; risk of Stack Overflow'},
+   {name:'Tail-Call Optimization (TCO)',col:'#10b981',mem:m_tco,scale:'O(1) stack',desc:'Reuses single frame via in-place jmp'},
+   {name:'Divide-and-Conquer Tree',col:'#38bdf8',mem:m_tree,scale:'O(log n) stack',desc:'Height h = ⌊log₂ n⌋ + 1 frames'},
+   {name:'Heap-Allocated Stack Vector',col:'#f97316',mem:m_heap,scale:'O(n) heap',desc:'Dynamic payload in RAM; no stack limit'},
+   {name:'Shunting-Yard Parser Stack',col:'#a855f7',mem:m_parse,scale:'O(depth) stack',desc:'Bounded by syntax nesting depth d'}
+  ];
+
+  algos.forEach((item,idx)=>{
+   const rowY=cY+16+idx*42;
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+12)+'" fill="#dcebf2" font-size="8.5" font-weight="bold">'+item.name+'</text>';
+   const memStr=item.mem>=1024?(item.mem/1024).toFixed(1)+' KiB':item.mem+' B';
+   svg+='<text x="'+(cX+cW-15)+'" y="'+(rowY+12)+'" text-anchor="end" fill="'+item.col+'" font-size="8.5" font-family="monospace" font-weight="bold">'+memStr+' ('+item.scale+')</text>';
+   
+   const barX=cX+15,barY=rowY+16,barMaxW=cW-30;
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barMaxW+'" height="7" rx="2" fill="#16242c"/>';
+   const frac=Math.min(1.0,Math.log10(item.mem+1)/Math.log10(m_linear+1));
+   const fillW=Math.max(4,frac*barMaxW);
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+fillW+'" height="7" rx="2" fill="'+item.col+'"/>';
+  });
+
+  const bX=460,bY=45,bW=220,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">TCO MEMORY REDUCTION RATIO</text>';
+  const redRatio=(m_linear/m_tco).toFixed(0);
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+redRatio+'×</text>';
+  svg+='<text x="'+(bX+95)+'" y="'+(bY+46)+'" fill="#dcebf2" font-size="10">Linear vs TCO</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#7e9bab" font-size="9">8 MiB THREAD QUOTA WATERMARK</text>';
+  const quotaPct=(m_linear/(8*1024*1024)*100).toFixed(2);
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="16" font-family="monospace" font-weight="bold">'+quotaPct+'% used</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+124)+'" fill="#8ba5b5" font-size="8">Overflow boundary at 131,072 frames</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+136)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+136)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+154)+'" fill="#7e9bab" font-size="9">ABI CALLING CONVENTION</text>';
+  svg+=text(bX+bW/2,bY+180,'RSP % 16 == 0 before CALL','#38bdf8',10.5);
+  svg+=text(bX+bW/2,bY+202,'TCO: Replaces CALL/RET with JMP',orange,9.5);
+  svg+=text(360,305,'Comparative Invariant: Linear recursion requires O(n) stack · TCO and Heap vectors preserve O(1) stack',soft,10);
+  return svg;
+ }
+
  if(cfg.slug==='divide-conquer-sorting'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
   svg+=text(cX+cW/2,cY-14,'DIVIDE-AND-CONQUER COMPARATIVE BENCHMARK (n = '+p.input+')','#e2f0f8',11);
@@ -294,6 +345,83 @@ function drawDynamicSandbox(t,p,v,ink,soft,orange){
  const cX=45,cY=45,cW=400,cH=230;
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+ if(cfg.slug==='stack-adt-recursion'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'PARSING PUSHDOWN AUTOMATON & LIFO DELIMITER STACK (n = '+p.input+')','#e2f0f8',11);
+
+  const n=p.input;
+  // Visual Token Stream at top
+  svg+='<text x="'+(cX+15)+'" y="'+(cY+20)+'" fill="#7e9bab" font-size="8.5" font-weight="bold">INPUT TOKEN STREAM (INFIX SYNTAX & DELIMITERS)</text>';
+  const tokens=['{', 'a', '+', '[', 'b', '*', '(', 'c', '-', 'd', ')', ']', '}'];
+  const tW=22,tH=20,tY=cY+26;
+  for(let i=0;i<tokens.length;i++){
+   const tx=cX+15+i*(tW+5);
+   const isDelimiter=Boolean(tokens[i].match(/[{}\[\]()]/));
+   const isMatch=i===10||i===11||i===12;
+   const col=isMatch?'#10b981':isDelimiter?'#38bdf8':'#8ba5b5';
+   const bg=isMatch?'#064e3b':isDelimiter?'#0c4a6e':'#111c24';
+   svg+='<rect x="'+tx+'" y="'+tY+'" width="'+tW+'" height="'+tH+'" rx="2" fill="'+bg+'" stroke="'+col+'" stroke-width="1"/>';
+   svg+='<text x="'+(tx+tW/2)+'" y="'+(tY+14)+'" text-anchor="middle" fill="#dcebf2" font-size="9" font-family="monospace">'+tokens[i]+'</text>';
+  }
+
+  // Visual Vertical Stack container
+  const sX=cX+30,sY=cY+58,sW=140,sH=125;
+  svg+='<rect x="'+sX+'" y="'+sY+'" width="'+sW+'" height="'+sH+'" rx="4" fill="#0b151b" stroke="#334d5c" stroke-width="1.5"/>';
+  svg+='<text x="'+(sX+sW/2)+'" y="'+(sY-5)+'" text-anchor="middle" fill="#7e9bab" font-size="8">LIFO OPERAND/DELIMITER STACK</text>';
+
+  const stackElements=[
+   {val:'{ (scope base)',col:'#38bdf8'},
+   {val:'[ (array idx)',col:'#a855f7'},
+   {val:'( (expr sub)',col:'#f97316'},
+   {val:'TOP OF STACK',col:'#10b981'}
+  ];
+  for(let i=0;i<stackElements.length;i++){
+   const ey=sY+sH-26-i*26;
+   svg+='<rect x="'+(sX+8)+'" y="'+ey+'" width="'+(sW-16)+'" height="22" rx="2" fill="#162a36" stroke="'+stackElements[i].col+'" stroke-width="1.5"/>';
+   svg+='<text x="'+(sX+sW/2)+'" y="'+(ey+15)+'" text-anchor="middle" fill="#dcebf2" font-size="8" font-family="monospace">'+stackElements[i].val+'</text>';
+  }
+  // Stack top pointer arrow
+  const topY=sY+sH-26-(stackElements.length-1)*26+11;
+  svg+='<polygon points="'+(sX+sW+12)+','+topY+' '+(sX+sW+18)+','+(topY-4)+' '+(sX+sW+18)+','+(topY+4)+'" fill="'+orange+'"/>';
+  svg+='<text x="'+(sX+sW+24)+'" y="'+(topY+3)+'" fill="'+orange+'" font-size="8" font-weight="bold">RSP / top</text>';
+
+  // Parsing engine explanation on right of sandbox
+  const pX=cX+200,pY=cY+58,pW=180,pH=125;
+  svg+='<rect x="'+pX+'" y="'+pY+'" width="'+pW+'" height="'+pH+'" rx="4" fill="#0e1a22" stroke="#1e3340"/>';
+  svg+='<text x="'+(pX+10)+'" y="'+(pY+18)+'" fill="#38bdf8" font-size="8" font-weight="bold">PUSHDOWN AUTOMATON LOGIC</text>';
+  svg+='<text x="'+(pX+10)+'" y="'+(pY+36)+'" fill="#8ba5b5" font-size="7.5">Open delimiter: push(S, token)</text>';
+  svg+='<text x="'+(pX+10)+'" y="'+(pY+50)+'" fill="#8ba5b5" font-size="7.5">Close delimiter: token == pop(S) ?</text>';
+  svg+='<text x="'+(pX+10)+'" y="'+(pY+64)+'" fill="#10b981" font-size="7.5" font-weight="bold">Match Verified: ( matched with )</text>';
+  svg+='<text x="'+(pX+10)+'" y="'+(pY+82)+'" fill="#fde047" font-size="7.5">Language: Dyck Language D_k</text>';
+  svg+='<text x="'+(pX+10)+'" y="'+(pY+96)+'" fill="#8ba5b5" font-size="7">Requires unbounded memory stack</text>';
+  svg+='<text x="'+(pX+10)+'" y="'+(pY+112)+'" fill="'+orange+'" font-size="7.5" font-family="monospace">Parser State: VALID (O(n) time)</text>';
+
+  svg+='<rect x="'+(cX+15)+'" y="'+(cY+cH-34)+'" width="'+(cW-30)+'" height="26" rx="4" fill="#0e1a22" stroke="#1e3340"/>';
+  svg+='<text x="'+(cX+25)+'" y="'+(cY+cH-17)+'" fill="#38bdf8" font-size="8" font-family="monospace">Pumping Lemma Theorem: Finite State Automata (O(1)) cannot count arbitrary nested depth ⟹ LIFO Stack Required</text>';
+
+  const bX=470,bY=45,bW=210,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#7e9bab" font-size="9">NESTING DEPTH WATERMARK (d)</text>';
+  const d_water=Math.min(16,Math.round(Math.log2(n))+2);
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+54)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+d_water+'</text>';
+  svg+='<text x="'+(bX+55)+'" y="'+(bY+50)+'" fill="#8ba5b5" font-size="11">nested frames</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+68)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+68)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+88)+'" fill="#7e9bab" font-size="9">LIFO POP ACCESS LATENCY</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+112)+'" fill="'+ink+'" font-size="16" font-family="monospace" font-weight="bold">Θ(1) Constant</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+124)+'" fill="#8ba5b5" font-size="8">L1 CPU Cache Hit Rate > 99.8%</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+138)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+138)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+156)+'" fill="#7e9bab" font-size="9">FORMAL GRAMMAR HIERARCHY</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+180)+'" fill="#fde047" font-size="12" font-family="monospace" font-weight="bold">Context-Free Grammar</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+196)+'" fill="#8ba5b5" font-size="8">Chomsky Type-2 Language Model</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+208)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+208)+'" stroke="#1e3340"/>';
+
+  svg+=text(bX+bW/2,bY+224,'Dyck Language Invariant: S ⟶ (S) | SS | ε',orange,8.5);
+  svg+=text(360,305,'Mathematical Theorem: Context-Free parsing requires a LIFO stack · Shunting-Yard evaluates in O(n) time',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='divide-conquer-sorting'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
@@ -468,6 +596,108 @@ function draw(t){
  const ink='#38bdf8',soft='#7e9bab',orange='#f97316';
  if(currentSimMode==='compare'){$('apparatusDiagram').innerHTML=drawComparativeSim(t,p,v,ink,soft,orange);return;}
  if(currentSimMode==='sandbox'){$('apparatusDiagram').innerHTML=drawDynamicSandbox(t,p,v,ink,soft,orange);return;}
+
+ if(cfg.slug==='stack-adt-recursion'){
+  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
+  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+  const n=p.input;
+  const m_total=v.raw;
+  const delta_rsp=m_total;
+
+  svg+='<rect x="35" y="38" width="410" height="235" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+=text(240,24,'Microarchitectural Thread Call Stack & Activation Records');
+
+  // Memory Stack Segment growing downward
+  const sX=55,sY=55,sW=175,sH=150;
+  svg+='<text x="'+sX+'" y="48" fill="#7e9bab" font-size="8">VIRTUAL ADDRESS SPACE (THREAD STACK)</text>';
+  svg+='<text x="'+(sX+sW)+'" y="48" text-anchor="end" fill="'+orange+'" font-size="7.5">GROWTH 🠗 TOWARD LOW ADDR</text>';
+  svg+='<rect x="'+sX+'" y="'+sY+'" width="'+sW+'" height="'+sH+'" rx="3" fill="#0a1218" stroke="#223a4a" stroke-width="1.5"/>';
+
+  // Base Frame (CRT startup, 128 bytes)
+  svg+='<rect x="'+(sX+4)+'" y="'+(sY+4)+'" width="'+(sW-8)+'" height="20" rx="2" fill="#1e293b" stroke="#475569"/>';
+  svg+='<text x="'+(sX+sW/2)+'" y="'+(sY+18)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5" font-family="monospace">Base Frame M_0 [128 B]</text>';
+
+  // Frame 1
+  svg+='<rect x="'+(sX+4)+'" y="'+(sY+28)+'" width="'+(sW-8)+'" height="20" rx="2" fill="#162a36" stroke="#334d5c"/>';
+  svg+='<text x="'+(sX+sW/2)+'" y="'+(sY+42)+'" text-anchor="middle" fill="#8ba5b5" font-size="7.5" font-family="monospace">Frame 1: rec(n) [64 B]</text>';
+
+  // Frame 2
+  svg+='<rect x="'+(sX+4)+'" y="'+(sY+52)+'" width="'+(sW-8)+'" height="20" rx="2" fill="#162a36" stroke="#334d5c"/>';
+  svg+='<text x="'+(sX+sW/2)+'" y="'+(sY+66)+'" text-anchor="middle" fill="#8ba5b5" font-size="7.5" font-family="monospace">Frame 2: rec(n-1) [64 B]</text>';
+
+  // Ellipsis
+  svg+='<text x="'+(sX+sW/2)+'" y="'+(sY+82)+'" text-anchor="middle" fill="#5a7687" font-size="9">⋮ (depth = '+n+' frames)</text>';
+
+  // Active Frame n (Top of Stack)
+  const activeFrameY=sY+92;
+  svg+='<rect x="'+(sX+4)+'" y="'+activeFrameY+'" width="'+(sW-8)+'" height="26" rx="2" fill="#0c4a6e" stroke="'+orange+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(sX+sW/2)+'" y="'+(activeFrameY+13)+'" text-anchor="middle" fill="#fde047" font-size="7.5" font-family="monospace" font-weight="bold">Active Frame n: rec(1)</text>';
+  svg+='<text x="'+(sX+sW/2)+'" y="'+(activeFrameY+23)+'" text-anchor="middle" fill="'+orange+'" font-size="6.5">64 Bytes (RBP + RIP + Locals)</text>';
+
+  // Guard page at bottom of stack
+  const guardY=sY+124;
+  svg+='<rect x="'+(sX+4)+'" y="'+guardY+'" width="'+(sW-8)+'" height="18" rx="2" fill="#450a0a" stroke="#ef4444" stroke-dasharray="3 3"/>';
+  svg+='<text x="'+(sX+sW/2)+'" y="'+(guardY+12)+'" text-anchor="middle" fill="#fca5a5" font-size="7" font-family="monospace">MMU Guard Page (4 KiB)</text>';
+
+  // RSP Pointer Arrow
+  const rspY=activeFrameY+13;
+  svg+='<line x1="'+(sX-22)+'" y1="'+rspY+'" x2="'+(sX-3)+'" y2="'+rspY+'" stroke="'+orange+'" stroke-width="2"/>';
+  svg+='<polygon points="'+(sX-3)+','+rspY+' '+(sX-8)+','+(rspY-4)+' '+(sX-8)+','+(rspY+4)+'" fill="'+orange+'"/>';
+  svg+='<text x="'+(sX-25)+'" y="'+(rspY+3)+'" text-anchor="end" fill="'+orange+'" font-size="8.5" font-weight="bold">RSP</text>';
+
+  // Detail card of the 64-Byte Activation Record
+  const dX=245,dY=55,dW=185,dH=150;
+  svg+='<rect x="'+dX+'" y="'+dY+'" width="'+dW+'" height="'+dH+'" rx="4" fill="#0b151b" stroke="#38bdf8" stroke-width="1.5"/>';
+  svg+='<text x="'+(dX+dW/2)+'" y="'+(dY-5)+'" text-anchor="middle" fill="#38bdf8" font-size="8" font-weight="bold">SYSTEM V AMD64 FRAME (64 BYTES)</text>';
+
+  const frameParts=[
+   {name:'Return Address (RIP+5)',size:'8 B',col:'#38bdf8',off:'[RSP + 56]'},
+   {name:'Saved Base Pointer (RBP)',size:'8 B',col:'#10b981',off:'[RSP + 48]'},
+   {name:'Callee Registers (RBX,R12)',size:'16 B',col:'#a855f7',off:'[RSP + 32]'},
+   {name:'Local Variables & Spill',size:'32 B',col:orange,off:'[RSP + 0]'}
+  ];
+  let curY=dY+12;
+  frameParts.forEach(fp=>{
+   const partH=24;
+   svg+='<rect x="'+(dX+8)+'" y="'+curY+'" width="'+(dW-16)+'" height="'+partH+'" rx="2" fill="#16242c" stroke="'+fp.col+'" stroke-width="1"/>';
+   svg+='<text x="'+(dX+14)+'" y="'+(curY+12)+'" fill="#dcebf2" font-size="7.5" font-weight="bold">'+fp.name+'</text>';
+   svg+='<text x="'+(dX+dW-14)+'" y="'+(curY+12)+'" text-anchor="end" fill="'+fp.col+'" font-size="7.5" font-family="monospace">'+fp.size+'</text>';
+   svg+='<text x="'+(dX+14)+'" y="'+(curY+21)+'" fill="#5a7687" font-size="6.5" font-family="monospace">'+fp.off+'</text>';
+   curY+=partH+6;
+  });
+
+  const regX=55,regY=215,regW=375,regH=48;
+  svg+='<rect x="'+regX+'" y="'+regY+'" width="'+regW+'" height="'+regH+'" rx="4" fill="#081016" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(regX+10)+'" y="'+(regY+16)+'" fill="#38bdf8" font-size="8" font-family="monospace">CPU Registers: RSP = 0x7FFF_FFFF_E000 − '+delta_rsp+' B · RBP = [Frame Base]</text>';
+  svg+='<text x="'+(regX+10)+'" y="'+(regY+30)+'" fill="'+orange+'" font-size="8" font-family="monospace">Memory Bus: Peak Stack Watermark = '+m_total+' bytes ('+(m_total/1024).toFixed(2)+' KiB)</text>';
+  svg+='<text x="'+(regX+10)+'" y="'+(regY+42)+'" fill="#8ba5b5" font-size="7">ABI Invariant: RSP aligned to 16-byte boundary prior to CALL · Base Frame M_0 = 128 bytes</text>';
+
+  const bX=465,bY=38,bW=220,bH=235;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">RECURSION DEPTH (n)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+n+'</text>';
+  svg+='<text x="'+(bX+95)+'" y="'+(bY+46)+'" fill="#8ba5b5" font-size="11">frames</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+64)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+64)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+82)+'" fill="#7e9bab" font-size="9">PEAK STACK MEMORY M(n)</text>';
+  const memKb=(m_total/1024).toFixed(2);
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+106)+'" fill="'+ink+'" font-size="18" font-family="monospace" font-weight="bold">'+m_total+'</text>';
+  svg+='<text x="'+(bX+120)+'" y="'+(bY+104)+'" fill="#8ba5b5" font-size="10">bytes ('+memKb+' KiB)</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+120)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+120)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+138)+'" fill="#7e9bab" font-size="9">ESTIMATED FRAME SIZE F_frame</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+164)+'" fill="#fde047" font-size="20" font-family="monospace" font-weight="bold">64.0000</text>';
+  svg+='<text x="'+(bX+125)+'" y="'+(bY+160)+'" fill="#8ba5b5" font-size="9">bytes/frame</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+178)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+178)+'" stroke="#1e3340"/>';
+
+  svg+=text(bX+bW/2,bY+200,'M = F_frame · n + M_0',ink,10);
+  svg+=text(bX+bW/2,bY+218,'System V ABI Gradient: 64 B/frame',orange,9);
+
+  svg+=text(360,305,'Microarchitectural Invariant: M(n) = 64·n + 128 bytes = Θ(n) · Thread Limit: 8 MiB',soft,10);
+  $('apparatusDiagram').innerHTML=svg;
+  return;
+ }
 
  if(cfg.slug==='divide-conquer-sorting'){
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
