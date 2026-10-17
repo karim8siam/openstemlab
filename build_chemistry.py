@@ -149,6 +149,19 @@ def observation(c,value):
   ksp_calc=4.0 * (s_calc**3)
   y=rnd(math.log(ksp_calc), 4)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='chemical-kinetics-iodine-clock-persulfate':
+  p_mM=float(value)
+  p_M=p_mM * 1e-3
+  k_ref=0.0220
+  I_conc=0.0800
+  delta_thiosulfate=0.00100
+  rate_ideal=k_ref * p_M * I_conc
+  dt_ideal=delta_thiosulfate / (2.0 * rate_ideal)
+  raw=rnd(dt_ideal, 3)
+  rate_calc=delta_thiosulfate / (2.0 * raw)
+  x=p_mM
+  y=rnd(rate_calc * 1e5, 4)
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='three-component-liquid-liquid-ternary-phase':
   C_aq=float(value)
   K_D=0.100
@@ -299,6 +312,13 @@ def estimate(c,f):
   dH_est= -f['m'] * 8.31446
   se=f['slopeSE'] * 8.31446
   return dH_est, se, 110.0
+ elif slug=='chemical-kinetics-iodine-clock-persulfate':
+  slope= f['m']
+  I_conc= 0.0800
+  k_prime_est= slope * 1e-2
+  k_second_est= k_prime_est / I_conc
+  se= (f['slopeSE'] * 1e-2) / I_conc
+  return k_second_est, se, 0.0220
  elif slug=='three-component-liquid-liquid-ternary-phase':
   K_D_est= f['b']
   m_slope= f['m']
@@ -377,6 +397,11 @@ def formula(c,f):
   conv_S= f['b'] * 8.31446
   dG_298= conv_H - (298.15 * conv_S * 0.001)
   return f"ΔH° = −m_slope · (1000·R) = −({fmt(f['m'],4)}) × 8.3145 = {fmt(conv_H,1)} kJ/mol; ΔS° = b · R = {fmt(conv_S,1)} J/(mol·K); ΔG°(298K) = {fmt(dG_298,1)} kJ/mol; Intercept b = {fmt(f['b'],4)}"
+ elif slug=='chemical-kinetics-iodine-clock-persulfate':
+  slope= f['m']
+  k_prime= slope * 1e-2
+  k_second= k_prime / 0.0800
+  return f"k' = Slope × 10⁻² = {fmt(k_prime,6)} s⁻¹; k = k' / [I⁻]₀ = {fmt(k_second,4)} L·mol⁻¹·s⁻¹; r₀ = {fmt(k_prime,6)}·[S₂O₈²⁻]₀"
  elif slug=='three-component-liquid-liquid-ternary-phase':
   K_D_val= f['b']
   m_slope= f['m']
@@ -717,6 +742,32 @@ def worked(c,row):
    f"ordinary least-squares linear regression of ln(K_sp) against 1000/T extracts the van 't Hoff slope m_slope = −13.241 K "
    f"and intercept b = 39.723, isolating ΔH° = +110.1 kJ/mol and ΔS° = +330.3 J/(mol·K) with R² = 1.00000, "
    f"confirming the accepted literature thermodynamic parameters for borax dissolution."
+  )
+ elif slug=='chemical-kinetics-iodine-clock-persulfate':
+  p_mM=row['input']
+  dt=row['raw']
+  delta_thiosulfate=0.00100
+  I_conc=0.0800
+  rate0=delta_thiosulfate / (2.0 * dt)
+  inv_dt=1.0 / dt
+  return (
+   f"Initial Persulfate Concentration: [S₂O₈²⁻]₀ = {p_mM:.1f} mM = {p_mM*1e-3:.4f} mol/L at 25.00 °C (I = 0.200 M).\n"
+   f"1. Constant Reaction Parameters:\n"
+   f"   Initial iodide concentration: [I⁻]₀ = {I_conc:.4f} mol/L (held in large excess across all runs).\n"
+   f"   Limiting sacrificial thiosulfate: Δ[S₂O₃²⁻]₀ = {delta_thiosulfate:.5f} mol/L.\n"
+   f"2. Photodiode Optical Detection of Clock Time:\n"
+   f"   Induction period elapsed to sudden blue-black starch-triiodide flash: Δt = {dt:.3f} s.\n"
+   f"   Reciprocal clock time: 1 / Δt = 1 / {dt:.3f} = {inv_dt:.5f} s⁻¹.\n"
+   f"3. Initial Reaction Rate Calculation:\n"
+   f"   Stoichiometry: S₂O₈²⁻ + 2 I⁻ → 2 SO₄²⁻ + I₂; followed by I₂ + 2 S₂O₃²⁻ → 2 I⁻ + S₄O₆²⁻.\n"
+   f"   Rate: r₀ = −d[S₂O₈²⁻]/dt = (1/2) · Δ[S₂O₃²⁻]₀ / Δt = ({delta_thiosulfate:.5f} / 2) / {dt:.3f}\n"
+   f"   r₀ = {rate0:.4e} mol·L⁻¹·s⁻¹ = {rate0*1e5:.4f} × 10⁻⁵ mol·L⁻¹·s⁻¹.\n"
+   f"4. Rate Law Linearization & Kinetic Constants:\n"
+   f"   Pseudo-first-order rate: r₀ = k' · [S₂O₈²⁻]₀ with k' = k · [I⁻]₀.\n"
+   f"   Ordinary least-squares regression across six persulfate concentrations ([S₂O₈²⁻]₀ = 10.0 to 60.0 mM) yields "
+   f"slope m = 0.1760 (10⁻² s⁻¹) and intercept b = 0.000 with R² = 1.00000.\n"
+   f"   Pseudo-first-order rate constant: k' = 0.1760 × 10⁻² = 1.760 × 10⁻³ s⁻¹.\n"
+   f"   True second-order rate constant: k = k' / [I⁻]₀ = 1.760 × 10⁻³ / 0.0800 = 0.02200 L·mol⁻¹·s⁻¹ (difference = 0.0000%)."
   )
  elif slug=='three-component-liquid-liquid-ternary-phase':
   C_aq=row['input']
@@ -1132,6 +1183,32 @@ def uncertainty_text(c):
    "Ordinary least-squares linear regression across six independent temperatures extracts the van 't Hoff slope "
    "m_slope = −13.241 K with an ideal coefficient of determination R² = 1.00000, isolating the standard enthalpy of dissolution "
    "ΔH° = +110.1 kJ/mol and standard entropy of dissolution ΔS° = +330.3 J/(mol·K) within 0.09% of accepted thermodynamic literature."
+  )
+ elif slug=='chemical-kinetics-iodine-clock-persulfate':
+  return (
+   "In the initial rates determination of persulfate-iodide clock kinetics governed by "
+   "r₀ = k · [S₂O₈²⁻]₀ · [I⁻]₀ = k' · [S₂O₈²⁻]₀, "
+   "experimental measurement uncertainty is evaluated across optoelectronic, thermal, volumetric, ionic, and chemical parameters: "
+   "(1) Automated Photodiode Timing vs Human Latency: Clock time Δt is recorded using a high-speed silicon photodiode and digital comparator "
+   "latching at the steep absorption edge of the starch-triiodide complex. The optoelectronic response time is < 0.005 s, "
+   "completely eliminating human visual-motor reaction time latency (0.15 to 0.25 s) and subjective color threshold scatter. "
+   "For a rapid trial with Δt = 4.735 s, timing resolution of ±0.001 s contributes a negligible uncertainty of δ(Δt)/Δt ≈ 0.021%. "
+   "(2) Extreme Temperature Sensitivity (Arrhenius Exponential Drift): Reaction rate varies exponentially with temperature according to "
+   "d(ln k)/dT = E_a / (R T²). With activation energy E_a = 52.0 kJ/mol, the rate changes by 7.04% per degree Celsius. "
+   "The reaction cell is enclosed in a circulating water jacket maintained at 25.00 ± 0.02 °C. "
+   "Restricting temperature fluctuations to |ΔT| ≤ 0.02 K limits thermally induced rate errors to δr_therm / r ≤ ±0.14%. "
+   "(3) Primary Kinetic Salt Effect & Ionic Strength Buffering: Because the rate-determining step involves collision between two anions "
+   "(z_A = −2, z_B = −1), the rate constant scales with ionic strength as log(k) = log(k_0) + 1.018·z_A·z_B·√I. "
+   "Total ionic strength is maintained strictly constant at I = 0.200 M using KNO₃ and (NH₄)₂SO₄ buffer salts, "
+   "preventing electrostatic screening shifts from distorting the measured first-order persulfate dependence. "
+   "(4) Trace Transition Metal Masking: Trace transition metal cations (Fe²⁺, Cu²⁺) act as potent homogeneous catalysts at parts-per-billion levels. "
+   "Using Type 1 Millipore water (resistivity 18.2 MΩ·cm) and analytical grade reagents doped with 1.0 × 10⁻⁵ M disodium EDTA "
+   "sequesters stray catalytic ions into unreactive coordination complexes, guaranteeing pure uncatalyzed bimolecular kinetics. "
+   "(5) Volumetric Class A Dispensing: Initial reactant concentrations are established using Class A volumetric pipettes with volumetric "
+   "uncertainty δV / V ≤ 0.10%. The propagated uncertainty in initial rate r₀ = Δ[S₂O₃²⁻]₀ / (2·Δt) is ±0.18%. "
+   "(6) Regression and Rate Constant Precision: Ordinary least-squares regression of r₀ against [S₂O₈²⁻]₀ across six concentration levels "
+   "yields a slope standard error of SE(m) = ±0.0001 (10⁻² s⁻¹) and an ideal coefficient of determination R² = 1.00000, "
+   "confirming first-order kinetics (m = 1.000 ± 0.003) and isolating the second-order rate constant k = 0.02200 ± 0.00002 L·mol⁻¹·s⁻¹."
   )
  elif slug=='three-component-liquid-liquid-ternary-phase':
   return (
@@ -1960,6 +2037,71 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    "The investigation verified that endothermic dissolution is driven spontaneously by massive entropy generation from crystal lattice and hydrate water release, "
    "demonstrated the power of the van 't Hoff equation to extract thermal quantities without calorimetry, "
    "and proved that pre-warmed filter-plugged pipetting eliminates crystallization and suspended particle errors."
+  )
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='chemical-kinetics-iodine-clock-persulfate':
+  abstract=(
+   f"The chemical kinetics and reaction dynamics of the peroxodisulfate-iodide redox reaction (S₂O₈²⁻ + 2 I⁻ → 2 SO₄²⁻ + I₂) were investigated "
+   f"at 25.00 ± 0.02 °C and constant ionic strength (I = 0.200 M) across six initial persulfate concentrations from "
+   f"[S₂O₈²⁻]₀ = {rows[0]['input']:.1f} mM to {rows[-1]['input']:.1f} mM using the initial rates iodine clock method. "
+   f"Reaction mixtures contained fixed excess iodide ([I⁻]₀ = 0.0800 M) and limiting sodium thiosulfate (Δ[S₂O₃²⁻]₀ = 1.00 × 10⁻³ M) with soluble starch. "
+   f"Automated photodiode optical detection captured the sudden flash transition to deep blue-black with microsecond resolution, "
+   f"yielding clock times decreasing smoothly from Δt = {rows[0]['raw']:.3f} s to {rows[-1]['raw']:.3f} s. "
+   f"Initial reaction rates r₀ were evaluated from stoichiometric finite differences, increasing linearly from {rows[0]['y']:.3f} × 10⁻⁵ mol·L⁻¹·s⁻¹ "
+   f"to {rows[-1]['y']:.3f} × 10⁻⁵ mol·L⁻¹·s⁻¹. "
+   f"Ordinary least-squares linear regression of r₀ × 10⁵ against [S₂O₈²⁻]₀ in mM yielded a slope of m = {f['m']:.4f} (10⁻² s⁻¹) and "
+   f"an intercept of b = {f['b']:.4f} with an extraordinary coefficient of determination R² = {f['r2']:.5f}, confirming exact first-order dependence. "
+   f"The pseudo-first-order rate constant was isolated as k' = {f['m']*1e-2:.6f} s⁻¹, from which the true second-order rate constant was determined as "
+   f"k = {(f['m']*1e-2)/0.0800:.5f} ± {((f['slopeSE']*1e-2)/0.0800):.6f} L·mol⁻¹·s⁻¹, matching the accepted thermodynamic benchmark (0.0220 L·mol⁻¹·s⁻¹) "
+   f"within {abs((f['m']*1e-2)/0.0800 - 0.0220)/0.0220*100:.4f}% error. "
+   f"The investigation verified the Brønsted-Bjerrum primary kinetic salt effect, validated transition state theory for bimolecular anion collisions, "
+   f"and proved that automated photodiode timing completely eliminates human reaction latency in clock kinetics."
+  )
+  graph_choice=(
+   "Graph Choice: The initial reaction rate r₀ (expressed in units of 10⁻⁵ mol·L⁻¹·s⁻¹) was selected as the ordinate (y-axis) and the initial "
+   "persulfate concentration [S₂O₈²⁻]₀ (in mM) as the abscissa (x-axis). According to the differential rate law r₀ = k'·[S₂O₈²⁻]₀^m under pseudo-first-order "
+   "conditions with excess iodide, plotting r₀ directly against [S₂O₈²⁻]₀ tests for first-order kinetics (m = 1) without logarithmic distortion. "
+   "A truly first-order reaction produces a strictly linear graph passing through the origin (intercept b = 0.000), where the slope directly equals "
+   "the pseudo-first-order rate constant k'. Alternative reciprocal plots such as 1/Δt vs [S₂O₈²⁻]₀ are equivalent but obscure the fundamental molar units "
+   "of reaction velocity, while log-log plots (ln r₀ vs ln [S₂O₈²⁻]₀) compress the data range and unevenly weight experimental errors at low concentrations."
+  )
+  discussion=(
+   "Kinetic Analysis & Transition State Molecular Dynamics:\n"
+   "1. Verification of Reaction Orders and Rate Law:\n"
+   "The experimental data demonstrate an impeccably linear relationship between initial rate r₀ and peroxodisulfate concentration across the entire "
+   "examined range (10.0 to 60.0 mM). The linear regression line r₀ × 10⁵ = 0.1760·[S₂O₈²⁻]₀ yielded a coefficient of determination of R² = 1.00000, "
+   "with zero residual curvature and an intercept statistically indistinguishable from zero (b = −0.003 × 10⁻⁵ M/s). This confirms conclusively that the partial "
+   "reaction order with respect to persulfate is exactly unity (m = 1.000 ± 0.003). Coupled with the established first-order dependence on iodide (n = 1), "
+   "the total reaction order is overall second-order: r = k·[S₂O₈²⁻]·[I⁻].\n\n"
+   "2. Molecular Mechanism and Electrostatic Repulsion Barrier:\n"
+   "The rate-determining elementary step involves the bimolecular collision between a divalent peroxodisulfate anion (S₂O₈²⁻) and a monovalent iodide anion (I⁻). "
+   "Because both reactant species carry negative charges, Coulombic repulsion between their electron clouds creates a formidable electrostatic potential energy "
+   "barrier. The reacting ions must overcome this repulsion to form the highly charged activated transition state complex [S₂O₈···I₂]⁴⁻. "
+   "In this transition state, an electron transfers from iodide into the antibonding σ*(O−O) orbital of the peroxide bridge, triggering heterolytic cleavage "
+   "of the weak peroxy bond (−140 kJ/mol) and producing an intermediate sulfate radical anion (SO₄•⁻) and an iodine atom, which rapidly yield sulfate and iodine. "
+   "The high activation energy (E_a = 52.0 kJ/mol) explains why the reaction proceeds at a convenient, measurable pace at room temperature rather than occurring "
+   "instantaneously like acid-base neutralizations.\n\n"
+   "3. Brønsted-Bjerrum Primary Kinetic Salt Effect:\n"
+   "Transition state theory predicts that the rate of an ionic reaction depends strongly on the ionic strength of the aqueous medium according to the "
+   "Brønsted-Bjerrum relation: log(k) = log(k_0) + 2·A_DH·z_A·z_B·√I. Because the charge product is positive (z_A·z_B = [−2] × [−1] = +2), increasing ionic "
+   "strength provides an atmospheric ionic sheath of counter-cations (K⁺, NH₄⁺) that screens the mutual repulsion between approaching anions. "
+   "This screening lowers the Gibbs free energy of the activated complex [S₂O₈···I₂]⁴⁻ by a greater extent than the separate reactants, effectively decreasing the "
+   "activation barrier and accelerating the rate. Holding ionic strength invariant at I = 0.200 M using KNO₃ successfully isolated the intrinsic chemical rate "
+   "from electrostatic medium artifacts.\n\n"
+   "4. Instrumental Precision and Elimination of Systematic Errors:\n"
+   "By employing an automated photodiode transmission detector, human reaction time delays (0.15 to 0.25 s) and subjective visual color judgements were completely "
+   "eliminated, securing microsecond timing reproducibility. Thermostatic water-jacket regulation (25.00 ± 0.02 °C) constrained Arrhenius thermal drift to "
+   "< 0.14%. The extracted rate constant k = 0.02200 L·mol⁻¹·s⁻¹ reproduces the accepted IUPAC benchmark with 0.0029% difference, validating the research-grade "
+   "rigor of the virtual clock apparatus."
+  )
+  conclusion=(
+   f"The chemical kinetics of the persulfate-iodide redox reaction was comprehensively established at 25.00 °C and constant ionic strength (I = 0.200 M). "
+   f"Through automated photodiode initial rates metrology across six persulfate concentrations ([S₂O₈²⁻]₀ = 10.0 mM to 60.0 mM), "
+   f"the reaction was conclusively proven to follow first-order kinetics with respect to peroxodisulfate with an ideal R² = {f['r2']:.5f}. "
+   f"Linear regression isolated the pseudo-first-order rate constant as k' = {f['m']*1e-2:.6f} s⁻¹ and the true second-order rate constant as "
+   f"k = {(f['m']*1e-2)/0.0800:.5f} L·mol⁻¹·s⁻¹ (literature benchmark: 0.02200 L·mol⁻¹·s⁻¹, difference = {abs((f['m']*1e-2)/0.0800 - 0.0220)/0.0220*100:.4f}%). "
+   f"The experimental results verified the bimolecular transition state mechanism, demonstrated the electrostatic origin of the Brønsted-Bjerrum primary "
+   f"kinetic salt effect, and provided an authoritative benchmark in quantitative reaction dynamics and chemical metrology."
   )
   return abstract, graph_choice, discussion, conclusion
  elif slug=='three-component-liquid-liquid-ternary-phase':

@@ -59,10 +59,56 @@ function update(){
  }else if(cfg.slug==='gibbs-free-energy-solubility-van-t-hoff'){
   $('liveState').textContent='Ready to equilibrate saturated borax slurry at '+p.input.toFixed(1)+' °C.';
   message('Equilibrate borax flask, pre-warm filter pipette, draw 5.00 mL aliquot & titrate with 0.50 M HCl.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
   message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   const C_aq = p.input;
   const V_titr = raw;
   const C_org = V_titr / 20.0;
@@ -71,7 +117,30 @@ function update(){
   const C_dim = (C_org - K_D * C_aq) / 2.0;
   $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
   message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
    return;
@@ -86,10 +155,56 @@ function update(){
  if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
   $('liveState').textContent='Ready to reflux Othmer still with x_liquid = '+p.input.toFixed(2)+' ethanol.';
   message('Energize heating mantle, establish Cottrell thermo-lift pumping, reflux 30 min & sample condensate.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
   message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   const C_aq = p.input;
   const V_titr = raw;
   const C_org = V_titr / 20.0;
@@ -98,7 +213,30 @@ function update(){
   const C_dim = (C_org - K_D * C_aq) / 2.0;
   $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
   message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
    return;
@@ -129,10 +267,56 @@ function update(){
   const nD = 1.3330 + 0.0284 * raw_val;
   $('liveState').textContent='VLE equilibrium reached: T_b = '+Tb.toFixed(2)+' °C, y_vapor = '+raw_val.toFixed(4)+'.';
   message('Distillation equilibrium established: T_b = '+Tb.toFixed(2)+' °C, n_D²⁰ = '+nD.toFixed(4)+' (y₁ = '+raw_val.toFixed(4)+', γ₁ = '+gamma1.toFixed(3)+'). Record in notebook.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
   message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   const C_aq = p.input;
   const V_titr = raw;
   const C_org = V_titr / 20.0;
@@ -141,7 +325,30 @@ function update(){
   const C_dim = (C_org - K_D * C_aq) / 2.0;
   $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
   message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
    return;
@@ -168,10 +375,56 @@ function update(){
  if(cfg.slug==='partial-molar-volume-binary-mixtures'){
   $('liveState').textContent='Ready to equilibrate pycnometer with m = '+p.input.toFixed(2)+' mol/kg ethanol.';
   message('Fill 25 mL pycnometer, seat capillary stopper, equilibrate in 25.00 °C bath & weigh on balance.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
   message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   const C_aq = p.input;
   const V_titr = raw;
   const C_org = V_titr / 20.0;
@@ -180,7 +433,30 @@ function update(){
   const C_dim = (C_org - K_D * C_aq) / 2.0;
   $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
   message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
    return;
@@ -195,10 +471,56 @@ function update(){
  if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
   $('liveState').textContent='Ready to reflux Othmer still with x_liquid = '+p.input.toFixed(2)+' ethanol.';
   message('Energize heating mantle, establish Cottrell thermo-lift pumping, reflux 30 min & sample condensate.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
   message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   const C_aq = p.input;
   const V_titr = raw;
   const C_org = V_titr / 20.0;
@@ -207,7 +529,30 @@ function update(){
   const C_dim = (C_org - K_D * C_aq) / 2.0;
   $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
   message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
    return;
@@ -238,10 +583,56 @@ function update(){
   const nD = 1.3330 + 0.0284 * raw_val;
   $('liveState').textContent='VLE equilibrium reached: T_b = '+Tb.toFixed(2)+' °C, y_vapor = '+raw_val.toFixed(4)+'.';
   message('Distillation equilibrium established: T_b = '+Tb.toFixed(2)+' °C, n_D²⁰ = '+nD.toFixed(4)+' (y₁ = '+raw_val.toFixed(4)+', γ₁ = '+gamma1.toFixed(3)+'). Record in notebook.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
   message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   const C_aq = p.input;
   const V_titr = raw;
   const C_org = V_titr / 20.0;
@@ -250,7 +641,30 @@ function update(){
   const C_dim = (C_org - K_D * C_aq) / 2.0;
   $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
   message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
    return;
@@ -281,10 +695,56 @@ function update(){
   const phi = ((1000.0 + m * 46.069) / rho - 1000.0 / 0.997047) / m;
   $('liveState').textContent='Pycnometer weighed: m_filled = '+raw.toFixed(4)+' g (ρ = '+rho.toFixed(5)+' g/cm³).';
   message('Pycnometric weighing complete: m_filled = '+raw.toFixed(4)+' g (ρ = '+rho.toFixed(5)+' g/cm³, φ_V = '+phi.toFixed(3)+' cm³/mol). Record in notebook.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
   message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   const C_aq = p.input;
   const V_titr = raw;
   const C_org = V_titr / 20.0;
@@ -293,7 +753,30 @@ function update(){
   const C_dim = (C_org - K_D * C_aq) / 2.0;
   $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
   message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
    return;
@@ -308,10 +791,56 @@ function update(){
  if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
   $('liveState').textContent='Ready to reflux Othmer still with x_liquid = '+p.input.toFixed(2)+' ethanol.';
   message('Energize heating mantle, establish Cottrell thermo-lift pumping, reflux 30 min & sample condensate.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
   message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   const C_aq = p.input;
   const V_titr = raw;
   const C_org = V_titr / 20.0;
@@ -320,7 +849,30 @@ function update(){
   const C_dim = (C_org - K_D * C_aq) / 2.0;
   $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
   message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
    return;
@@ -351,10 +903,56 @@ function update(){
   const nD = 1.3330 + 0.0284 * raw_val;
   $('liveState').textContent='VLE equilibrium reached: T_b = '+Tb.toFixed(2)+' °C, y_vapor = '+raw_val.toFixed(4)+'.';
   message('Distillation equilibrium established: T_b = '+Tb.toFixed(2)+' °C, n_D²⁰ = '+nD.toFixed(4)+' (y₁ = '+raw_val.toFixed(4)+', γ₁ = '+gamma1.toFixed(3)+'). Record in notebook.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
   message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   const C_aq = p.input;
   const V_titr = raw;
   const C_org = V_titr / 20.0;
@@ -363,7 +961,30 @@ function update(){
   const C_dim = (C_org - K_D * C_aq) / 2.0;
   $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
   message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
    return;
@@ -437,6 +1058,7 @@ $('measure').onclick=async()=>{
  if(cfg.slug==='heat-solution-crystallization-calorimetry') msgStart='Pouring KNO3 crystals into Dewar, motorized stirring at 200 rpm, endothermic cooling plunge & logging ΔT_drop…';
  if(cfg.slug==='vapor-pressure-liquid-clausius-clapeyron') msgStart='Regulating water bath, throttling air-bleed needle valve, nulling U-tube menisci & reading transducer…';
  if(cfg.slug==='gibbs-free-energy-solubility-van-t-hoff') msgStart='Filtering 5.00 mL saturated borax aliquot, adding bromocresol green, titrating dropwise to yellow endpoint…';
+ if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate') msgStart='Dispensing persulfate into stirred reaction cell (400 rpm), photodiode tracking optical transmittance, waiting for blue flash…';
  if(cfg.slug==='three-component-liquid-liquid-ternary-phase') msgStart='Equilibrating in separatory funnel (25.00 °C), draining lower chloroform phase, titrating 5.00 mL with 0.250 M NaOH…';
  if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope') msgStart='Boiling in Othmer still, Cottrell pump washing PT100 sensor, sampling condensate onto Abbe refractometer…';
  if(cfg.slug==='partial-molar-volume-binary-mixtures') msgStart='Immersing pycnometer in 25.00 °C bath (20 min), blotting capillary rim, weighing on analytical balance…';
@@ -508,10 +1130,56 @@ $('measure').onclick=async()=>{
   const ln_Ksp = Math.log(Ksp);
   $('liveState').textContent='Titration endpoint reached: V_HCl = '+raw.toFixed(2)+' mL at '+p.input.toFixed(1)+' °C.';
   message('Titration complete: V_HCl = '+raw.toFixed(2)+' mL (s = '+s.toFixed(4)+' M, K_sp = '+Ksp.toExponential(3)+', ln K_sp = '+ln_Ksp.toFixed(3)+'). Record in notebook.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
   message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   const C_aq = p.input;
   const V_titr = raw;
   const C_org = V_titr / 20.0;
@@ -520,7 +1188,30 @@ $('measure').onclick=async()=>{
   const C_dim = (C_org - K_D * C_aq) / 2.0;
   $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
   message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
    return;
@@ -535,10 +1226,56 @@ $('measure').onclick=async()=>{
  if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
   $('liveState').textContent='Ready to reflux Othmer still with x_liquid = '+p.input.toFixed(2)+' ethanol.';
   message('Energize heating mantle, establish Cottrell thermo-lift pumping, reflux 30 min & sample condensate.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
   message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   const C_aq = p.input;
   const V_titr = raw;
   const C_org = V_titr / 20.0;
@@ -547,7 +1284,30 @@ $('measure').onclick=async()=>{
   const C_dim = (C_org - K_D * C_aq) / 2.0;
   $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
   message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
    return;
@@ -578,10 +1338,56 @@ $('measure').onclick=async()=>{
   const nD = 1.3330 + 0.0284 * raw_val;
   $('liveState').textContent='VLE equilibrium reached: T_b = '+Tb.toFixed(2)+' °C, y_vapor = '+raw_val.toFixed(4)+'.';
   message('Distillation equilibrium established: T_b = '+Tb.toFixed(2)+' °C, n_D²⁰ = '+nD.toFixed(4)+' (y₁ = '+raw_val.toFixed(4)+', γ₁ = '+gamma1.toFixed(3)+'). Record in notebook.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
   message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   const C_aq = p.input;
   const V_titr = raw;
   const C_org = V_titr / 20.0;
@@ -590,7 +1396,30 @@ $('measure').onclick=async()=>{
   const C_dim = (C_org - K_D * C_aq) / 2.0;
   $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
   message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
    return;
@@ -617,10 +1446,56 @@ $('measure').onclick=async()=>{
  if(cfg.slug==='partial-molar-volume-binary-mixtures'){
   $('liveState').textContent='Ready to equilibrate pycnometer with m = '+p.input.toFixed(2)+' mol/kg ethanol.';
   message('Fill 25 mL pycnometer, seat capillary stopper, equilibrate in 25.00 °C bath & weigh on balance.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
   message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   const C_aq = p.input;
   const V_titr = raw;
   const C_org = V_titr / 20.0;
@@ -629,7 +1504,30 @@ $('measure').onclick=async()=>{
   const C_dim = (C_org - K_D * C_aq) / 2.0;
   $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
   message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
    return;
@@ -644,10 +1542,56 @@ $('measure').onclick=async()=>{
  if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
   $('liveState').textContent='Ready to reflux Othmer still with x_liquid = '+p.input.toFixed(2)+' ethanol.';
   message('Energize heating mantle, establish Cottrell thermo-lift pumping, reflux 30 min & sample condensate.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
   message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   const C_aq = p.input;
   const V_titr = raw;
   const C_org = V_titr / 20.0;
@@ -656,7 +1600,30 @@ $('measure').onclick=async()=>{
   const C_dim = (C_org - K_D * C_aq) / 2.0;
   $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
   message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
    return;
@@ -687,10 +1654,56 @@ $('measure').onclick=async()=>{
   const nD = 1.3330 + 0.0284 * raw_val;
   $('liveState').textContent='VLE equilibrium reached: T_b = '+Tb.toFixed(2)+' °C, y_vapor = '+raw_val.toFixed(4)+'.';
   message('Distillation equilibrium established: T_b = '+Tb.toFixed(2)+' °C, n_D²⁰ = '+nD.toFixed(4)+' (y₁ = '+raw_val.toFixed(4)+', γ₁ = '+gamma1.toFixed(3)+'). Record in notebook.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
   message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   const C_aq = p.input;
   const V_titr = raw;
   const C_org = V_titr / 20.0;
@@ -699,7 +1712,30 @@ $('measure').onclick=async()=>{
   const C_dim = (C_org - K_D * C_aq) / 2.0;
   $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
   message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
    return;
@@ -730,10 +1766,56 @@ $('measure').onclick=async()=>{
   const phi = ((1000.0 + m * 46.069) / rho - 1000.0 / 0.997047) / m;
   $('liveState').textContent='Pycnometer weighed: m_filled = '+raw.toFixed(4)+' g (ρ = '+rho.toFixed(5)+' g/cm³).';
   message('Pycnometric weighing complete: m_filled = '+raw.toFixed(4)+' g (ρ = '+rho.toFixed(5)+' g/cm³, φ_V = '+phi.toFixed(3)+' cm³/mol). Record in notebook.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
   message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   const C_aq = p.input;
   const V_titr = raw;
   const C_org = V_titr / 20.0;
@@ -742,7 +1824,30 @@ $('measure').onclick=async()=>{
   const C_dim = (C_org - K_D * C_aq) / 2.0;
   $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
   message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
    return;
@@ -757,10 +1862,56 @@ $('measure').onclick=async()=>{
  if(cfg.slug==='liquid-vapor-phase-equilibrium-azeotrope'){
   $('liveState').textContent='Ready to reflux Othmer still with x_liquid = '+p.input.toFixed(2)+' ethanol.';
   message('Energize heating mantle, establish Cottrell thermo-lift pumping, reflux 30 min & sample condensate.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
   message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   const C_aq = p.input;
   const V_titr = raw;
   const C_org = V_titr / 20.0;
@@ -769,7 +1920,30 @@ $('measure').onclick=async()=>{
   const C_dim = (C_org - K_D * C_aq) / 2.0;
   $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
   message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
    return;
@@ -800,10 +1974,56 @@ $('measure').onclick=async()=>{
   const nD = 1.3330 + 0.0284 * raw_val;
   $('liveState').textContent='VLE equilibrium reached: T_b = '+Tb.toFixed(2)+' °C, y_vapor = '+raw_val.toFixed(4)+'.';
   message('Distillation equilibrium established: T_b = '+Tb.toFixed(2)+' °C, n_D²⁰ = '+nD.toFixed(4)+' (y₁ = '+raw_val.toFixed(4)+', γ₁ = '+gamma1.toFixed(3)+'). Record in notebook.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   $('liveState').textContent='Ready to equilibrate separatory funnel with C_aq = '+p.input.toFixed(2)+' M acetic acid.';
   message('Agitate in 25.00 °C bath (20 min), settle 30 min, drain organic phase & titrate 5.00 mL with 0.250 M NaOH.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   const C_aq = p.input;
   const V_titr = raw;
   const C_org = V_titr / 20.0;
@@ -812,7 +2032,30 @@ $('measure').onclick=async()=>{
   const C_dim = (C_org - K_D * C_aq) / 2.0;
   $('liveState').textContent='Titration endpoint reached: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M).';
   message('Partition titration complete: V_NaOH = '+raw.toFixed(2)+' mL (C_org = '+C_org.toFixed(4)+' M, D = '+D.toFixed(3)+', dimer = '+(2*C_dim/C_org*100).toFixed(1)+'%). Record in notebook.');
- }else if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
+  message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM = p.input;
+  const dt = raw;
+  const rate0 = 0.00100 / (2.0 * dt);
+  const k_prime = rate0 / (p_mM * 1e-3);
+  const k_sec = k_prime / 0.0800;
+  $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
+  message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
+ }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawTernaryCompareView(p,rawVal);
    return;
@@ -1141,6 +2384,18 @@ function draw(t){
    return;
   }
   $('apparatusDiagram').innerHTML=drawHoffBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawClockSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawClockBenchView(p,rawVal);
   return;
  }
  if(cfg.slug==='three-component-liquid-liquid-ternary-phase'){
@@ -6606,5 +7861,274 @@ function drawTernarySandboxView(p, rawVal){
  });
 
  svg += text(360, 312, 'Extraction Invariant: Nernst distribution D = 0.100 + 2.000·C_aq isolates K_dim = 100.0 L/mol with R² = 1.00000.', '#789c80', 8.5);
+ return svg;
+}
+
+
+// ======================================================================
+// LAB 21: CHEMICAL KINETICS OF PERSULFATE-IODIDE CLOCK REACTION
+// ======================================================================
+
+function drawClockBenchView(p, rawVal){
+ const p_mM = p.input;
+ const p_M = p_mM * 1e-3;
+ const k_ref = 0.0220;
+ const I_conc = 0.0800;
+ const delta_thiosulfate = 0.00100;
+ const rate_ideal = k_ref * p_M * I_conc;
+ const dt_ideal = delta_thiosulfate / (2.0 * rate_ideal);
+ const dt = rawVal || dt_ideal;
+ const rate0 = delta_thiosulfate / (2.0 * dt);
+ const k_prime = rate0 / p_M;
+ const k_sec = k_prime / I_conc;
+
+ let svg = header('Photodiode Optical Reaction Cell & Automated Iodine Clock Timer');
+
+ // Background Lab Bench
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // --- LEFT: WATER-JACKETED OPTICAL REACTION CELL (x: 35, y: 60, w: 250, h: 225) ---
+ const cX = 35, cY = 60, cW = 250, cH = 225;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(cX+8)+'" y="'+(cY+8)+'" width="'+(cW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(cX+cW/2)+'" y="'+(cY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">WATER-JACKETED OPTICAL CELL (25.00 °C)</text>';
+
+ // Outer Circulating Thermal Jacket (Borosilicate)
+ const jkX = cX + 50, jkY = cY + 38, jkW = 150, jkH = 135;
+ svg += '<rect x="'+jkX+'" y="'+jkY+'" width="'+jkW+'" height="'+jkH+'" rx="6" fill="#031a24" stroke="#0284c7" stroke-width="1.2"/>';
+ svg += '<text x="'+(jkX+jkW/2)+'" y="'+(jkY+12)+'" text-anchor="middle" fill="#38bdf8" font-size="6.5">Thermal Water Jacket (25.00 ± 0.02 °C)</text>';
+
+ // Inner Reaction Cell with liquid
+ const inX = jkX + 30, inY = jkY + 20, inW = 90, inH = 105;
+ svg += '<rect x="'+inX+'" y="'+inY+'" width="'+inW+'" height="'+inH+'" rx="3" fill="#030b06" stroke="#38bdf8" stroke-width="1.2"/>';
+
+ // Flash Color State: If rawVal is measured (post-flash), liquid is deep blue-black; otherwise crystal clear
+ const isFlash = !!rawVal;
+ const liqCol = isFlash ? '#172554' : '#0369a1';
+ const liqOp = isFlash ? '0.92' : '0.25';
+ svg += '<rect x="'+(inX+2)+'" y="'+(inY+15)+'" width="'+(inW-4)+'" height="'+(inH-17)+'" fill="'+liqCol+'" fill-opacity="'+liqOp+'"/>';
+
+ // Vortex & Stirring Bar
+ const sbX = inX + inW/2, sbY = inY + inH - 12;
+ svg += '<rect x="'+(sbX-12)+'" y="'+(sbY-3)+'" width="24" height="6" rx="3" fill="#ffffff" stroke="#94a3b8" stroke-width="0.8"/>';
+ svg += '<path d="M '+(sbX-18)+' '+(sbY-25)+' Q '+sbX+' '+(sbY-5)+' '+(sbX+18)+' '+(sbY-25)+'" fill="none" stroke="#38bdf8" stroke-width="1" stroke-dasharray="2,2"/>';
+ svg += '<text x="'+sbX+'" y="'+(inY+inH+15)+'" text-anchor="middle" fill="#86efac" font-size="6.8">Magnetic Stirrer: 400 RPM</text>';
+
+ // Collimated LED Light Source (Left of cell)
+ const ledX = jkX - 15, ledY = inY + inH/2 - 10;
+ svg += '<rect x="'+ledX+'" y="'+ledY+'" width="12" height="20" rx="2" fill="#facc15" stroke="#eab308"/>';
+ svg += '<polygon points="'+(ledX+12)+','+(ledY+4)+' '+(ledX+22)+','+ledY+' '+(ledX+22)+','+(ledY+20)+' '+(ledX+12)+','+(ledY+16)+'" fill="#fef08a" fill-opacity="0.6"/>';
+ // Optical Beam Path across cell
+ svg += '<line x1="'+(ledX+22)+'" y1="'+(ledY+10)+'" x2="'+(inX+inW+18)+'" y2="'+(ledY+10)+'" stroke="#fef08a" stroke-width="2" stroke-dasharray="3,2"/>';
+
+ // Photodiode Sensor (Right of cell)
+ const pdX = inX + inW + 18, pdY = inY + inH/2 - 12;
+ svg += '<rect x="'+pdX+'" y="'+pdY+'" width="14" height="24" rx="2" fill="#1e293b" stroke="#38bdf8" stroke-width="1"/>';
+ svg += '<circle cx="'+(pdX+7)+'" cy="'+(pdY+12)+'" r="4" fill="#0284c7"/>';
+ svg += '<text x="'+(pdX+7)+'" y="'+(pdY+32)+'" text-anchor="middle" fill="#38bdf8" font-size="6">Photodiode</text>';
+
+ // Color state badge inside cell
+ const badgeText = isFlash ? 'FLASH: BLUE-BLACK STARCH-I₃⁻' : 'INDUCTION: TRANSPARENT';
+ const badgeCol = isFlash ? '#60a5fa' : '#38bdf8';
+ svg += '<rect x="'+(inX+5)+'" y="'+(inY+25)+'" width="'+(inW-10)+'" height="14" rx="2" fill="#020804" stroke="'+badgeCol+'" stroke-width="0.8"/>';
+ svg += '<text x="'+(inX+inW/2)+'" y="'+(inY+35)+'" text-anchor="middle" fill="'+badgeCol+'" font-size="5.8" font-weight="bold">'+badgeText+'</text>';
+
+
+ // --- CENTER: AUTOMATED OPTICAL CHRONOMETER / STOPWATCH (x: 295, y: 60, w: 220, h: 225) ---
+ const bX = 295, bY = 60, bW = 220, bH = 225;
+ svg += '<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="8" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(bX+8)+'" y="'+(bY+8)+'" width="'+(bW-16)+'" height="20" rx="3" fill="#132e1f" stroke="#1e4d31"/>';
+ svg += '<text x="'+(bX+bW/2)+'" y="'+(bY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">MICROSECOND CLOCK TIMER (±0.001 s)</text>';
+
+ // Large Digital Timer LCD Screen
+ const tmX = bX + 20, tmY = bY + 45, tmW = bW - 40, tmH = 70;
+ svg += '<rect x="'+tmX+'" y="'+tmY+'" width="'+tmW+'" height="'+tmH+'" rx="4" fill="#020804" stroke="#163824"/>';
+ svg += '<rect x="'+(tmX+8)+'" y="'+(tmY+8)+'" width="'+(tmW-16)+'" height="54" rx="3" fill="#041408" stroke="#22c55e" stroke-width="0.8"/>';
+
+ const timeStr = dt.toFixed(3) + ' s';
+ svg += '<text x="'+(tmX+tmW/2)+'" y="'+(tmY+42)+'" text-anchor="middle" fill="#4ade80" font-size="24" font-family="monospace" font-weight="bold">'+timeStr+'</text>';
+ svg += '<text x="'+(tmX+16)+'" y="'+(tmY+22)+'" fill="#86efac" font-size="6.8" font-family="monospace">LATCHED</text>';
+ svg += '<text x="'+(tmX+tmW-16)+'" y="'+(tmY+22)+'" text-anchor="end" fill="#22c55e" font-size="6.8" font-family="monospace">OPTICAL</text>';
+
+ // Reaction Rate & Reciprocal Time Card below
+ const rCardY = bY + 130;
+ svg += '<rect x="'+(bX+15)+'" y="'+rCardY+'" width="'+(bW-30)+'" height="75" rx="4" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(bX+25)+'" y="'+(rCardY+16)+'" fill="#94a3b8" font-size="7">Reciprocal Clock Time 1/Δt:</text>';
+ svg += '<text x="'+(bX+bW-25)+'" y="'+(rCardY+16)+'" text-anchor="end" fill="#38bdf8" font-size="7.5" font-family="monospace" font-weight="bold">'+(1.0/dt).toFixed(5)+' s⁻¹</text>';
+
+ svg += '<text x="'+(bX+25)+'" y="'+(rCardY+34)+'" fill="#94a3b8" font-size="7">Limiting Thiosulfate Δ[S₂O₃²⁻]₀:</text>';
+ svg += '<text x="'+(bX+bW-25)+'" y="'+(rCardY+34)+'" text-anchor="end" fill="#a7f3d0" font-size="7.5" font-family="monospace">1.00 × 10⁻³ M</text>';
+
+ svg += '<text x="'+(bX+25)+'" y="'+(rCardY+52)+'" fill="#94a3b8" font-size="7">Initial Reaction Rate r₀:</text>';
+ svg += '<text x="'+(bX+bW-25)+'" y="'+(rCardY+52)+'" text-anchor="end" fill="#facc15" font-size="8" font-family="monospace" font-weight="bold">'+(rate0*1e5).toFixed(4)+' × 10⁻⁵ M/s</text>';
+
+ svg += '<text x="'+(bX+bW/2)+'" y="'+(rCardY+68)+'" text-anchor="middle" fill="#86efac" font-size="6.5">r₀ = Δ[S₂O₃²⁻]₀ / (2·Δt)</text>';
+
+
+ // --- RIGHT: KINETIC PARAMETERS & RATE CONSTANTS (x: 525, y: 60, w: 165, h: 225) ---
+ const kX = 525, kY = 60, kW = 165, kH = 225;
+ svg += '<rect x="'+kX+'" y="'+kY+'" width="'+kW+'" height="'+kH+'" rx="8" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(kX+8)+'" y="'+(kY+8)+'" width="'+(kW-16)+'" height="20" rx="3" fill="#132e1f" stroke="#1e4d31"/>';
+ svg += '<text x="'+(kX+kW/2)+'" y="'+(kY+22)+'" text-anchor="middle" fill="#86efac" font-size="8" font-weight="bold">RATE METROLOGY (25 °C)</text>';
+
+ const statItems = [
+  {label: 'Persulfate [S₂O₈²⁻]₀', val: p_mM.toFixed(1)+' mM', col: '#a7f3d0'},
+  {label: 'Iodide [I⁻]₀ (Excess)', val: '0.0800 M', col: '#38bdf8'},
+  {label: 'Ionic Strength I', val: '0.200 M', col: '#94a3b8'},
+  {label: 'Clock Time Δt', val: dt.toFixed(3)+' s', col: '#facc15'},
+  {label: 'Initial Rate r₀', val: (rate0*1e5).toFixed(3)+' ×10⁻⁵', col: '#4ade80'},
+  {label: 'Pseudo-1st Order k'', val: (k_prime*1e3).toFixed(3)+' ×10⁻³', col: '#38bdf8'},
+  {label: '2nd-Order Rate k', val: k_sec.toFixed(4)+' M⁻¹s⁻¹', col: '#4ade80'},
+  {label: 'Reaction Order m', val: '1.000 (1st)', col: '#facc15'}
+ ];
+
+ statItems.forEach((it, idx)=>{
+  const sy = kY + 34 + idx * 21;
+  svg += '<rect x="'+(kX+6)+'" y="'+sy+'" width="'+(kW-12)+'" height="18" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg += '<text x="'+(kX+10)+'" y="'+(sy+12)+'" fill="#94a3b8" font-size="6.5">'+it.label+'</text>';
+  svg += '<text x="'+(kX+kW-10)+'" y="'+(sy+12)+'" text-anchor="end" fill="'+it.col+'" font-size="7" font-family="monospace" font-weight="bold">'+it.val+'</text>';
+ });
+
+ svg += '<rect x="'+(kX+6)+'" y="'+(kY+203)+'" width="'+(kW-12)+'" height="15" rx="2" fill="#022c22"/>';
+ svg += '<text x="'+(kX+kW/2)+'" y="'+(kY+213)+'" text-anchor="middle" fill="#86efac" font-size="6.5" font-weight="bold">Rate Law: r = (0.0220)·[S₂O₈²⁻]·[I⁻]</text>';
+
+ svg += text(360, 312, 'Persulfate-iodide clock kinetics at 25.00 °C: Photodiode timing eliminates human latency, k = 0.0220 L/(mol·s).', '#789c80', 8.5);
+ return svg;
+}
+
+function drawClockCompareView(p, rawVal){
+ let svg = header('Differential Reaction Orders & Half-Life Diagnostic Comparison');
+
+ // Background
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // 3 Reaction Order Panels: Zero-Order, First-Order, Second-Order
+ const orders = [
+  {title: 'Zero-Order Kinetics (m = 0)', rate: 'r = k₀', int: '[A] = [A]₀ − k₀·t', hl: 't₁/₂ = [A]₀ / (2·k₀)', dep: 'Half-life decreases as reaction proceeds; rate independent of [A]', col: '#38bdf8', curve: 'M 40 80 L 160 160'},
+  {title: 'First-Order Kinetics (m = 1)', rate: 'r = k₁·[A]', int: 'ln([A]/[A]₀) = −k₁·t', hl: 't₁/₂ = ln(2) / k₁', dep: 'Half-life is strictly constant; rate directly proportional to [A]', col: '#4ade80', curve: 'M 40 80 Q 90 140 160 165', active: true},
+  {title: 'Second-Order Kinetics (m = 2)', rate: 'r = k₂·[A]²', int: '1/[A] − 1/[A]₀ = k₂·t', hl: 't₁/₂ = 1 / (k₂·[A]₀)', dep: 'Half-life doubles every successive half-life; rate scales quadratically', col: '#facc15', curve: 'M 40 80 Q 65 145 160 170'}
+ ];
+
+ orders.forEach((o, idx)=>{
+  const ox = 35 + idx * 225;
+  const oy = 60, ow = 215, oh = 225;
+  const strokeCol = o.active ? '#4ade80' : '#22422c';
+  svg += '<rect x="'+ox+'" y="'+oy+'" width="'+ow+'" height="'+oh+'" rx="6" fill="#0d1f14" stroke="'+strokeCol+'" stroke-width="'+(o.active?'2':'1.2')+'"/>';
+  svg += '<rect x="'+(ox+6)+'" y="'+(oy+6)+'" width="'+(ow-12)+'" height="20" rx="3" fill="#132e1f"/>';
+  svg += '<text x="'+(ox+ow/2)+'" y="'+(oy+19)+'" text-anchor="middle" fill="'+o.col+'" font-size="8" font-weight="bold">'+o.title+'</text>';
+
+  // Mini Decay Curve Plot (x: ox+15, y: oy+35, w: 185, h: 75)
+  const px = ox + 20, py = oy + 35, pw = ow - 40, ph = 70;
+  svg += '<rect x="'+px+'" y="'+py+'" width="'+pw+'" height="'+ph+'" fill="#051009" stroke="#162e1e"/>';
+  svg += '<line x1="'+px+'" y1="'+(py+ph)+'" x2="'+(px+pw)+'" y2="'+(py+ph)+'" stroke="#64748b" stroke-width="1"/>';
+  svg += '<line x1="'+px+'" y1="'+py+'" x2="'+px+'" y2="'+(py+ph)+'" stroke="#64748b" stroke-width="1"/>';
+
+  // Curve
+  if(idx === 0){
+   // Linear decay
+   svg += '<line x1="'+(px+5)+'" y1="'+(py+8)+'" x2="'+(px+pw-10)+'" y2="'+(py+ph-5)+'" stroke="'+o.col+'" stroke-width="2"/>';
+  }else if(idx === 1){
+   // Exponential decay
+   svg += '<path d="M '+(px+5)+' '+(py+8)+' Q '+(px+35)+' '+(py+ph-10)+' '+(px+pw-10)+' '+(py+ph-4)+'" fill="none" stroke="'+o.col+'" stroke-width="2.2"/>';
+   svg += '<rect x="'+(px+pw-55)+'" y="'+(py+10)+'" width="48" height="12" rx="2" fill="#022c22"/>';
+   svg += '<text x="'+(px+pw-31)+'" y="'+(py+19)+'" text-anchor="middle" fill="#4ade80" font-size="6" font-weight="bold">THIS LAB (m=1)</text>';
+  }else{
+   // Hyperbolic decay
+   svg += '<path d="M '+(px+5)+' '+(py+8)+' Q '+(px+20)+' '+(py+ph-8)+' '+(px+pw-10)+' '+(py+ph-3)+'" fill="none" stroke="'+o.col+'" stroke-width="2"/>';
+  }
+
+  svg += '<text x="'+(px+pw/2)+'" y="'+(py+ph+11)+'" text-anchor="middle" fill="#94a3b8" font-size="6.5">Time t</text>';
+  svg += '<text x="'+(px-6)+'" y="'+(py+ph/2)+'" text-anchor="middle" transform="rotate(-90 '+(px-6)+' '+(py+ph/2)+')" fill="#94a3b8" font-size="6.5">[A]</text>';
+
+  // Equations and properties
+  const eqY = oy + 120;
+  svg += '<rect x="'+(ox+8)+'" y="'+eqY+'" width="'+(ow-16)+'" height="58" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg += '<text x="'+(ox+14)+'" y="'+(eqY+13)+'" fill="#94a3b8" font-size="6.8">Differential Rate: <tspan fill="'+o.col+'" font-weight="bold">'+o.rate+'</tspan></text>';
+  svg += '<text x="'+(ox+14)+'" y="'+(eqY+27)+'" fill="#94a3b8" font-size="6.8">Integrated Law: <tspan fill="#e2e8f0" font-family="monospace">'+o.int+'</tspan></text>';
+  svg += '<text x="'+(ox+14)+'" y="'+(eqY+41)+'" fill="#94a3b8" font-size="6.8">Half-Life t₁/₂: <tspan fill="'+o.col+'" font-weight="bold">'+o.hl+'</tspan></text>';
+  svg += '<text x="'+(ox+14)+'" y="'+(eqY+52)+'" fill="#a7f3d0" font-size="6">Linear Graph: '+(idx===0?'[A] vs t':(idx===1?'ln[A] vs t':'1/[A] vs t'))+'</text>';
+
+  // Description
+  svg += '<rect x="'+(ox+8)+'" y="'+(oy+183)+'" width="'+(ow-16)+'" height="35" rx="3" fill="#030805"/>';
+  svg += '<text x="'+(ox+12)+'" y="'+(oy+195)+'" fill="#cbd5e1" font-size="6.5">'+o.dep+'</text>';
+ });
+
+ svg += text(360, 312, 'Kinetic Invariant: Persulfate clock reaction is strictly 1st order in [S₂O₈²⁻] (m = 1) with constant half-life.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawClockSandboxView(p, rawVal){
+ let svg = header('Brønsted-Bjerrum Primary Kinetic Salt Effect & Transition State');
+
+ // Background
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // --- LEFT: BRØNSTED-BJERRUM PRIMARY SALT EFFECT PLOT (x: 35, y: 55, w: 370, h: 235) ---
+ const lX = 35, lY = 55, lW = 370, lH = 235;
+ svg += '<rect x="'+lX+'" y="'+lY+'" width="'+lW+'" height="'+lH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+18)+'" text-anchor="middle" fill="#86efac" font-size="9" font-weight="bold">BRØNSTED-BJERRUM LOG(k) vs √I (z_A·z_B = +2)</text>';
+
+ const gX = lX + 45, gY = lY + 35, gW = lW - 65, gH = lH - 80;
+ svg += '<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#051009" stroke="#162e1e"/>';
+
+ // Grid
+ for(let i=1; i<5; i++){
+  const gy = gY + (gH * i / 5);
+  svg += '<line x1="'+gX+'" y1="'+gy+'" x2="'+(gX+gW)+'" y2="'+gy+'" stroke="#162e1e" stroke-width="0.8" stroke-dasharray="2,2"/>';
+  const gx = gX + (gW * i / 5);
+  svg += '<line x1="'+gx+'" y1="'+gY+'" x2="'+gx+'" y2="'+(gY+gH)+'" stroke="#162e1e" stroke-width="0.8" stroke-dasharray="2,2"/>';
+ }
+
+ svg += '<text x="'+(gX+gW/2)+'" y="'+(gY+gH+14)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5">Square Root of Ionic Strength √I (M¹/²)</text>';
+ svg += '<text x="'+(gX-8)+'" y="'+(gY+gH/2)+'" text-anchor="middle" transform="rotate(-90 '+(gX-8)+' '+(gY+gH/2)+')" fill="#94a3b8" font-size="7.5">log₁₀(k / k₀)</text>';
+
+ // Brønsted Line: slope = 2 * A_DH * z_A * z_B = 2 * 0.509 * (+2) = +2.036
+ // √I: 0 to 0.5 -> log(k/k0) rises from 0 to +1.018
+ function saltY(val){
+  return (gY + gH - 10) - (val / 1.2) * (gH - 20);
+ }
+ function saltX(rootI){
+  return gX + 10 + (rootI / 0.5) * (gW - 25);
+ }
+
+ svg += '<line x1="'+saltX(0)+'" y1="'+saltY(0)+'" x2="'+saltX(0.48)+'" y2="'+saltY(2.036 * 0.48)+'" stroke="#4ade80" stroke-width="2.5"/>';
+
+ // Salt points
+ const iRoots = [0.10, 0.20, 0.30, 0.40, 0.45];
+ iRoots.forEach(ri=>{
+  const lk = 2.036 * ri;
+  svg += '<circle cx="'+saltX(ri)+'" cy="'+saltY(lk)+'" r="3.5" fill="#38bdf8" stroke="#ffffff" stroke-width="1"/>';
+ });
+
+ svg += '<text x="'+(saltX(0)+10)+'" y="'+(saltY(0)-6)+'" fill="#38bdf8" font-size="7.5">Infinite Dilution k₀</text>';
+ svg += '<text x="'+saltX(0.25)+'" y="'+(saltY(2.036*0.25)-12)+'" fill="#4ade80" font-size="7.5" font-weight="bold">Slope = +2.036 (z_A·z_B = +2)</text>';
+
+ // Invariant badge at bottom
+ svg += '<rect x="'+(lX+15)+'" y="'+(lY+195)+'" width="'+(lW-30)+'" height="32" rx="3" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+215)+'" text-anchor="middle" fill="#86efac" font-size="7.8" font-family="monospace" font-weight="bold">Kinetic Invariant: Both ions are anions (-2 × -1 = +2), causing positive salt effect</text>';
+
+
+ // --- RIGHT: TRANSITION STATE & CLOCK AUDIT ---
+ const rX = 420, rY = 55, rW = 280, rH = 235;
+ svg += '<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<text x="'+(rX+rW/2)+'" y="'+(rY+18)+'" text-anchor="middle" fill="#86efac" font-size="9" font-weight="bold">KINETIC METROLOGY & SYSTEM AUDIT</text>';
+
+ const auditItems = [
+  {label: 'Water Jacket (25.00 ± 0.02 °C)', desc: 'Suppresses 7.04%/°C Arrhenius thermal rate expansion', val: 'δr_therm < 0.14%', col: '#4ade80'},
+  {label: 'Photodiode Microsecond Timer', desc: 'Eliminates 0.20 s human visual-motor reaction time latency', val: 'δt = ±0.001 s', col: '#38bdf8'},
+  {label: 'Constant Ionic Strength (0.20 M)', desc: 'KNO3 buffering neutralizes primary kinetic salt effect shift', val: 'I = 0.200 ± 0.001 M', col: '#86efac'},
+  {label: 'Trace Metal EDTA Masking', desc: 'Sequesters ppb Fe²⁺/Cu²⁺ to prevent homogeneous catalysis', val: 'No Catalytic Bias', col: '#facc15'},
+  {label: 'Initial Rates Linear OLS', desc: 'r₀ vs [S₂O₈²⁻]₀ eliminates back-reaction & product inhibition', val: 'R² = 1.00000', col: '#4ade80'}
+ ];
+
+ auditItems.forEach((it, idx)=>{
+  const ay = rY + 30 + idx * 39;
+  svg += '<rect x="'+(rX+8)+'" y="'+ay+'" width="'+(rW-16)+'" height="33" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg += '<text x="'+(rX+14)+'" y="'+(ay+12)+'" fill="'+it.col+'" font-size="7.5" font-weight="bold">'+it.label+'</text>';
+  svg += '<text x="'+(rX+14)+'" y="'+(ay+24)+'" fill="#94a3b8" font-size="6.8">'+it.desc+'</text>';
+  svg += '<text x="'+(rX+rW-14)+'" y="'+(ay+12)+'" text-anchor="end" fill="'+it.col+'" font-size="7.2" font-family="monospace">'+it.val+'</text>';
+ });
+
+ svg += text(360, 312, 'Rate Invariant: r₀ = (0.0220)·[S₂O₈²⁻]₀·[I⁻]₀ isolates second-order rate constant with R² = 1.00000.', '#789c80', 8.5);
  return svg;
 }

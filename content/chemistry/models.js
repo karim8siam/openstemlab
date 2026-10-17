@@ -160,6 +160,20 @@ function predict(slug,input){
   const y=round(Math.log(ksp_calc), 4);
   return {raw,ideal:raw,period:1.0,x,y,valid:t>=30.0&&t<=55.0};
  }
+ if(slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM=Number(input);
+  const p_M=p_mM * 1e-3;
+  const k_ref=0.0220;
+  const I_conc=0.0800;
+  const delta_thiosulfate=0.00100;
+  const rate_ideal=k_ref * p_M * I_conc;
+  const dt_ideal=delta_thiosulfate / (2.0 * rate_ideal);
+  const raw=round(dt_ideal, 3);
+  const rate_calc=delta_thiosulfate / (2.0 * raw);
+  const x=p_mM;
+  const y=round(rate_calc * 1e5, 4);
+  return {raw,ideal:raw,period:1.0,x,y,valid:p_mM>=10.0&&p_mM<=60.0};
+ }
  if(slug==='three-component-liquid-liquid-ternary-phase'){
   const C_aq=Number(input);
   const K_D=0.100;
@@ -303,6 +317,14 @@ function reading(slug,input,raw){
   const s_calc=V / 20.0;
   const ksp_calc=4.0 * Math.pow(s_calc, 3);
   y=round(Math.log(ksp_calc), 4);
+ }
+ if(slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const p_mM=Number(input);
+  const raw_val=Number(raw);
+  const delta_thiosulfate=0.00100;
+  const rate_calc=delta_thiosulfate / (2.0 * raw_val);
+  x=p_mM;
+  y=round(rate_calc * 1e5, 4);
  }
  if(slug==='three-component-liquid-liquid-ternary-phase'){
   const C_aq=Number(input);
@@ -467,6 +489,14 @@ function estimate(slug,f){
   const dH_est= -f.m * 8.31446;
   const se= f.slopeSE * 8.31446;
   return {value:dH_est,se:se,reference:110.0};
+ }
+ if(slug==='chemical-kinetics-iodine-clock-persulfate'){
+  const slope= f.m;
+  const I_conc= 0.0800;
+  const k_prime_est= slope * 1e-2;
+  const k_second_est= k_prime_est / I_conc;
+  const se= (f.slopeSE * 1e-2) / I_conc;
+  return {value:k_second_est,se:se,reference:0.0220};
  }
  if(slug==='three-component-liquid-liquid-ternary-phase'){
   const K_D_est= f.b;

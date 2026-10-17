@@ -90,7 +90,8 @@ def experiment_index(experiments):
     'heat-capacity-ratio-gases-clement-desormes':'clement desormes heat capacity ratio adiabatic expansion isentropic index gamma cp cv degrees of freedom equipartition ruchhardt carboy manometer gas dynamics',
     'partial-molar-volume-binary-mixtures':'partial molar volume apparent molar volume binary mixtures ethanol water pycnometry gay lussac density excess volume gibbs duhem infinite dilution hydrophobic hydration',
     'liquid-vapor-phase-equilibrium-azeotrope':'liquid vapor equilibrium phase diagram azeotropic distillation azeotrope ethanol water othmer still cottrell pump abbe refractometer margules activity coefficient relative volatility',
-    'three-component-liquid-liquid-ternary-phase':'three component ternary liquid phase equilibrium liquid extraction binodal curve tie lines plait point water acetic acid chloroform nernst christian distribution dimerization constant'}
+    'three-component-liquid-liquid-ternary-phase':'three component ternary liquid phase equilibrium liquid extraction binodal curve tie lines plait point water acetic acid chloroform nernst christian distribution dimerization constant',
+    'chemical-kinetics-iodine-clock-persulfate':'chemical kinetics iodine clock persulfate iodide reaction order initial rates rate constant thiosulfate starch bronsted bjerrum salt effect transition state photodiode timer'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):
