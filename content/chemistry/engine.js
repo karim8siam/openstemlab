@@ -81,6 +81,18 @@ function update(){
   $('apparatusDiagram').innerHTML=drawEnzymeKineticsBenchView(p,rawVal);
   return;
  }
+ if(cfg.slug==='oscillating-reaction-belousov-zhabotinsky'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawBZCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawBZSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawBZBenchView(p,rawVal);
+  return;
+ }
  if(cfg.slug==='heterogeneous-catalysis-langmuir-hinshelwood'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawLangmuirCompareView(p,rawVal);
@@ -150,6 +162,12 @@ function update(){
   const dA_dt = v0_uM * 0.0185;
   $('liveState').textContent='Photometric trace recorded: v₀ = '+v0_uM.toFixed(2)+' μM/min (dA/dt = '+(dA_dt/1000).toFixed(4)+' AU/min).';
   message('Assay complete: v₀ = '+v0_uM.toFixed(2)+' μM/min (1/v₀ = '+inv_v0.toFixed(2)+' min/mM, 1/[S] = '+inv_s.toFixed(2)+' mM⁻¹). Record in notebook.');
+ }else if(cfg.slug==='oscillating-reaction-belousov-zhabotinsky'){
+  const c_ma = p.input;
+  const nu = raw;
+  const tau = 60.0 / nu;
+  $('liveState').textContent='Limit-cycle oscillation stable: [MA]₀ = '+c_ma.toFixed(3)+' M, ν = '+nu.toFixed(4)+' min⁻¹ (τ = '+tau.toFixed(1)+' s).';
+  message('Potentiometric limit-cycle peak: ν = '+nu.toFixed(4)+' min⁻¹ (period τ = '+tau.toFixed(1)+' s) for [MA]₀ = '+c_ma.toFixed(3)+' M. Record in notebook.');
  }else if(cfg.slug==='heterogeneous-catalysis-langmuir-hinshelwood'){
   const c_a = p.input;
   const r0 = raw;
@@ -10180,5 +10198,170 @@ function drawLangmuirSandboxView(p, rawVal){
  svg += '<text x="'+(aX-12)+'" y="'+(aY+aH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7" transform="rotate(-90 '+(aX-12)+' '+(aY+aH/2)+')">θ_A</text>';
 
  svg += text(360, 312, 'Surface Equilibrium: θ_A = K_A[A]/(1 + K_A[A]). As [A] ⟶ ∞, θ_A ⟶ 1.0 and r ⟶ k_r.', '#789c80', 8.5);
+ return svg;
+}
+
+
+// ======================================================================
+// LAB 30: BELOUSOV-ZHABOTINSKY (NONLINEAR CHEMICAL OSCILLATOR)
+// ======================================================================
+function drawBZBenchView(p, rawVal){
+ const c_ma = p.input;
+ const raw = measurement ? measurement.raw : (busy ? rawVal * 0.75 : (rawVal || 1.5008));
+ const nu = raw;
+ const tau = (60.0 / nu).toFixed(1);
+
+ let svg = header('Belousov-Zhabotinsky Potentiometric Oscillator Bench', 'Real-Time Limit-Cycle Dynamics & Pt Wire / Ag-AgCl Electrode Potential Waveforms');
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // Left: Thermostatted Reaction Cell & Electrodes (x: 35, y: 60, w: 320, h: 225)
+ const cX = 35, cY = 60, cW = 320, cH = 225;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(cX+8)+'" y="'+(cY+8)+'" width="'+(cW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(cX+cW/2)+'" y="'+(cY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">ISOTHERMAL BZ REACTOR (500 RPM, 298.15 K)</text>';
+
+ // Magnetic Stirrer Base
+ svg += '<rect x="'+(cX+60)+'" y="'+(cY+155)+'" width="200" height="30" rx="4" fill="#1e293b" stroke="#334155"/>';
+ svg += '<circle cx="'+(cX+90)+'" cy="'+(cY+170)+'" r="5" fill="#22c55e"/>';
+ svg += '<text x="'+(cX+105)+'" y="'+(cY+173)+'" fill="#94a3b8" font-size="6.5">Stirrer: 500 RPM</text>';
+
+ // Glass Jacketed Beaker
+ const bkX = cX + 85, bkY = cY + 50, bkW = 150, bkH = 105;
+ svg += '<rect x="'+bkX+'" y="'+bkY+'" width="'+bkW+'" height="'+bkH+'" rx="6" fill="#0284c7" fill-opacity="0.1" stroke="#38bdf8" stroke-width="1.5"/>';
+
+ // Solution Color: switches between Ferroin Red ([Fe(phen)3]2+) and Ferriin Sky Blue ([Fe(phen)3]3+)
+ const isOxidized = (measurement !== null);
+ const bzCol = isOxidized ? '#38bdf8' : '#ef4444';
+ const bzOpacity = isOxidized ? 0.75 : 0.65;
+ svg += '<rect x="'+(bkX+4)+'" y="'+(bkY+25)+'" width="'+(bkW-8)+'" height="'+(bkH-29)+'" rx="3" fill="'+bzCol+'" fill-opacity="'+bzOpacity+'"/>';
+
+ // Stir bar
+ svg += '<rect x="'+(bkX+bkW/2-15)+'" y="'+(bkY+bkH-8)+'" width="30" height="5" rx="2.5" fill="#ffffff" stroke="#94a3b8"/>';
+
+ // Electrodes immersed from top
+ // Pt Redox wire (thin silver/grey wire)
+ svg += '<line x1="'+(bkX+45)+'" y1="'+(bkY-20)+'" x2="'+(bkX+45)+'" y2="'+(bkY+75)+'" stroke="#cbd5e1" stroke-width="2"/>';
+ svg += '<circle cx="'+(bkX+45)+'" cy="'+(bkY+75)+'" r="2" fill="#f8fafc"/>';
+ svg += '<text x="'+(bkX+45)+'" y="'+(bkY-24)+'" text-anchor="middle" fill="#cbd5e1" font-size="6">Pt Wire</text>';
+
+ // Ag/AgCl Reference electrode (glass sheath)
+ svg += '<rect x="'+(bkX+bkW-55)+'" y="'+(bkY-20)+'" width="14" height="95" rx="3" fill="#1e293b" stroke="#64748b"/>';
+ svg += '<text x="'+(bkX+bkW-48)+'" y="'+(bkY-24)+'" text-anchor="middle" fill="#94a3b8" font-size="6">Ag/AgCl</text>';
+
+ // Telemetry caption
+ svg += '<rect x="'+(cX+20)+'" y="'+(cY+192)+'" width="280" height="25" rx="3" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(cX+30)+'" y="'+(cY+208)+'" fill="#94a3b8" font-size="7">Substrate [MA]₀: <tspan fill="#facc15" font-weight="bold">'+c_ma.toFixed(3)+' M</tspan> | [BrO₃⁻]₀: <tspan fill="#38bdf8" font-weight="bold">0.080 M</tspan></text>';
+
+ // Right: Potentiometric Oscilloscope Waveform (x: 365, y: 60, w: 320, h: 225)
+ const oX = 365, oY = 60, oW = 320, oH = 225;
+ svg += '<rect x="'+oX+'" y="'+oY+'" width="'+oW+'" height="'+oH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(oX+8)+'" y="'+(oY+8)+'" width="'+(oW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(oX+oW/2)+'" y="'+(oY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">POTENTIOMETRIC LIMIT-CYCLE OSCILLATIONS</text>';
+
+ // Oscilloscope Screen
+ const scX = oX + 25, scY = oY + 38, scW = 270, scH = 110;
+ svg += '<rect x="'+scX+'" y="'+scY+'" width="'+scW+'" height="'+scH+'" rx="6" fill="#051009" stroke="#22c55e" stroke-width="1.2"/>';
+
+ // Grid lines on oscilloscope
+ for(let g = 1; g < 4; g++){
+  svg += '<line x1="'+scX+'" y1="'+(scY + g * (scH/4))+'" x2="'+(scX+scW)+'" y2="'+(scY + g * (scH/4))+'" stroke="#14532d" stroke-width="0.8" stroke-dasharray="2,2"/>';
+  svg += '<line x1="'+(scX + g * (scW/4))+'" y1="'+scY+'" x2="'+(scX + g * (scW/4))+'" y2="'+(scY+scH)+'" stroke="#14532d" stroke-width="0.8" stroke-dasharray="2,2"/>';
+ }
+
+ // Periodic relaxation oscillation waveform: slow rise, sharp spike, rapid drop
+ let waveD = 'M ' + scX + ' ' + (scY + scH - 25);
+ const numCycles = Math.min(6, Math.max(2, Math.round(nu * 1.8)));
+ const cycleW = scW / numCycles;
+ for(let c = 0; c < numCycles; c++){
+  const cStart = scX + c * cycleW;
+  const cPeak = cStart + cycleW * 0.75;
+  const cEnd = cStart + cycleW;
+  waveD += ' L ' + cPeak.toFixed(1) + ' ' + (scY + 18).toFixed(1);
+  waveD += ' L ' + (cPeak + 5).toFixed(1) + ' ' + (scY + scH - 20).toFixed(1);
+  waveD += ' L ' + cEnd.toFixed(1) + ' ' + (scY + scH - 25).toFixed(1);
+ }
+ svg += '<path d="'+waveD+'" fill="none" stroke="#22c55e" stroke-width="2"/>';
+
+ // Readout Bar
+ svg += '<rect x="'+(oX+25)+'" y="'+(oY+155)+'" width="270" height="55" rx="4" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(oX+35)+'" y="'+(oY+175)+'" fill="#94a3b8" font-size="7.5">Oscillation Frequency ν: <tspan fill="#22c55e" font-weight="bold">'+nu.toFixed(4)+' min⁻¹</tspan></text>';
+ svg += '<text x="'+(oX+35)+'" y="'+(oY+195)+'" fill="#94a3b8" font-size="7.5">Measured Period τ: <tspan fill="#38bdf8" font-weight="bold">'+tau+' s</tspan> | Peak EMF: <tspan fill="#facc15" font-weight="bold">+1120 mV</tspan></text>';
+
+ svg += text(360, 312, 'Nonlinear Scaling Invariant: Limit-cycle frequency ν scales linearly with [MA]₀, giving k_osc = 10.000 min⁻¹·M⁻¹.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawBZCompareView(p, rawVal){
+ let svg = header('Limit-Cycle Frequency Concentration Scaling', 'Oscillation Frequency ν vs Initial Malonic Acid Concentration [MA]₀');
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ const cX = 35, cY = 60, cW = 650, cH = 225;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+
+ const pX = cX + 60, pY = cY + 30, pW = 520, pH = 145;
+ svg += '<line x1="'+pX+'" y1="'+(pY+pH)+'" x2="'+(pX+pW)+'" y2="'+(pY+pH)+'" stroke="#334155" stroke-width="1.2"/>';
+ svg += '<line x1="'+pX+'" y1="'+pY+'" x2="'+pX+'" y2="'+(pY+pH)+'" stroke="#334155" stroke-width="1.2"/>';
+
+ // Linear fit line: nu = 10.0 * [MA]0
+ // At [MA]0 = 0.05, nu = 0.50. At [MA]0 = 0.30, nu = 3.00
+ const ptX1 = pX + (0.050 / 0.350) * pW, ptY1 = (pY + pH) - (0.500 / 3.50) * pH;
+ const ptX2 = pX + (0.300 / 0.350) * pW, ptY2 = (pY + pH) - (3.000 / 3.50) * pH;
+
+ svg += '<line x1="'+ptX1+'" y1="'+ptY1+'" x2="'+ptX2+'" y2="'+ptY2+'" stroke="#38bdf8" stroke-width="2.5"/>';
+
+ const pts = [
+  {ma: 0.050, nu: 0.4998}, {ma: 0.100, nu: 1.0000}, {ma: 0.150, nu: 1.5008},
+  {ma: 0.200, nu: 2.0000}, {ma: 0.250, nu: 2.4990}, {ma: 0.300, nu: 3.0000}
+ ];
+
+ pts.forEach(pt => {
+  const px = pX + (pt.ma / 0.350) * pW;
+  const py = (pY + pH) - (pt.nu / 3.50) * pH;
+  svg += '<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="4" fill="#facc15" stroke="#ef4444" stroke-width="1.2"/>';
+ });
+
+ svg += '<text x="'+(pX+pW/2)+'" y="'+(pY+pH+18)+'" text-anchor="middle" fill="#94a3b8" font-size="7">Initial Malonic Acid Concentration [MA]₀ (M)</text>';
+ svg += '<text x="'+(pX-15)+'" y="'+(pY+pH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7" transform="rotate(-90 '+(pX-15)+' '+(pY+pH/2)+')">Oscillation Frequency ν (min⁻¹)</text>';
+
+ svg += text(360, 312, 'Linear Frequency Scaling: Slope k_osc = 10.000 min⁻¹·M⁻¹, Intercept ν₀ ≈ 0.000 min⁻¹ with R² = 1.00000.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawBZSandboxView(p, rawVal){
+ let svg = header('FKN Mechanism & Oregonator Phase Portrait Sandbox', 'Bromous Acid (HBrO₂) vs Bromide (Br⁻) Limit-Cycle Trajectory');
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ const cX = 35, cY = 60, cW = 650, cH = 225;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+
+ const pX = cX + 60, pY = cY + 30, pW = 520, pH = 145;
+ svg += '<line x1="'+pX+'" y1="'+(pY+pH)+'" x2="'+(pX+pW)+'" y2="'+(pY+pH)+'" stroke="#334155" stroke-width="1.2"/>';
+ svg += '<line x1="'+pX+'" y1="'+pY+'" x2="'+pX+'" y2="'+(pY+pH)+'" stroke="#334155" stroke-width="1.2"/>';
+
+ // Closed stable limit cycle in log(Br-) vs log(HBrO2) phase space
+ // Draw cubic-like nullcline
+ svg += '<path d="M '+(pX+30)+' '+(pY+pH-20)+' Q '+(pX+120)+' '+(pY+pH-40)+' '+(pX+200)+' '+(pY+40)+' Q '+(pX+280)+' '+(pY+120)+' '+(pX+480)+' '+(pY+20)+'" fill="none" stroke="#64748b" stroke-width="1.5" stroke-dasharray="3,3"/>';
+ svg += '<text x="'+(pX+480)+'" y="'+(pY+14)+'" text-anchor="end" fill="#64748b" font-size="6.5">HBrO₂ Nullcline (dx/dt = 0)</text>';
+
+ // Limit cycle closed loop
+ const lX = pX + 160, lY = pY + 35, lW = 200, lH = 90;
+ svg += '<ellipse cx="'+(lX+lW/2)+'" cy="'+(lY+lH/2)+'" rx="'+(lW/2)+'" ry="'+(lH/2)+'" fill="none" stroke="#22c55e" stroke-width="2.5"/>';
+
+ // Direction arrows on limit cycle
+ svg += '<polygon points="'+(lX+lW/2+10)+','+lY+' '+(lX+lW/2-10)+','+(lY-5)+' '+(lX+lW/2-10)+','+(lY+5)+'" fill="#22c55e"/>';
+ svg += '<polygon points="'+(lX+lW/2-10)+','+(lY+lH)+' '+(lX+lW/2+10)+','+(lY+lH-5)+' '+(lX+lW/2+10)+','+(lY+lH+5)+'" fill="#22c55e"/>';
+
+ svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+lH/2)+'" text-anchor="middle" fill="#22c55e" font-size="8" font-weight="bold">Stable Limit Cycle</text>';
+
+ svg += '<circle cx="'+(lX+lW-10)+'" cy="'+(lY+20)+'" r="4" fill="#38bdf8"/>';
+ svg += '<text x="'+(lX+lW)+'" y="'+(lY+15)+'" fill="#38bdf8" font-size="7">Autocatalytic Flash ([Ce⁴⁺] max)</text>';
+
+ svg += '<circle cx="'+(lX+10)+'" cy="'+(lY+lH-15)+'" r="4" fill="#ef4444"/>';
+ svg += '<text x="'+(lX-10)+'" y="'+(lY+lH-10)+'" text-anchor="end" fill="#ef4444" font-size="7">Quiescent Phase ([Br⁻] critical)</text>';
+
+ svg += '<text x="'+(pX+pW/2)+'" y="'+(pY+pH+18)+'" text-anchor="middle" fill="#94a3b8" font-size="7">log [Br⁻] (Inhibitor Variable)</text>';
+ svg += '<text x="'+(pX-15)+'" y="'+(pY+pH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7" transform="rotate(-90 '+(pX-15)+' '+(pY+pH/2)+')">log [HBrO₂] (Autocatalytic Variable)</text>';
+
+ svg += text(360, 312, 'Oregonator Attractor: Subcritical/supercritical Hopf bifurcation generates robust, autonomous limit-cycle oscillations.', '#789c80', 8.5);
  return svg;
 }

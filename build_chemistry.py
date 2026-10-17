@@ -159,6 +159,13 @@ def observation(c,value):
   v0_mM=raw / 1000.0
   y=rnd(1.0 / v0_mM, 2)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='oscillating-reaction-belousov-zhabotinsky':
+  c_ma=float(value)
+  table={0.050:0.4998, 0.100:1.0000, 0.150:1.5008, 0.200:2.0000, 0.250:2.4990, 0.300:3.0000}
+  raw=table.get(round(c_ma, 3), round(10.000 * c_ma, 4))
+  x=c_ma
+  y=raw
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='heterogeneous-catalysis-langmuir-hinshelwood':
   c_a=float(value)
   table={10.0:0.7139, 15.0:0.9379, 25.0:1.2500, 40.0:1.5392, 60.0:1.7638, 100.0:1.9997}
@@ -398,6 +405,10 @@ def estimate(c,f):
   ref=0.500
   se=abs(f.get('slopeSE', 0.05) / b) if b > 0 else 0.002
   return KM, se, ref
+ elif slug=='oscillating-reaction-belousov-zhabotinsky':
+  k_osc=f['m']
+  se=f['slopeSE']
+  return k_osc, se, 10.000
  elif slug=='heterogeneous-catalysis-langmuir-hinshelwood':
   intercept=f['b']
   k_r=1.0 / intercept
@@ -521,6 +532,9 @@ def formula(c,f):
   Vmax=1.0 / b
   KM=m / b
   return f"Slope K_M/V_max = {fmt(m,4)} min; Intercept 1/V_max = {fmt(b,4)} min·mM⁻¹ (V_max = {fmt(Vmax*1000.0,2)} μM/min, K_M = {fmt(KM,4)} mM)"
+ elif slug=='oscillating-reaction-belousov-zhabotinsky':
+  k_osc=f['m']
+  return f"Oscillation Scaling Constant k_osc = {fmt(k_osc,4)} min⁻¹·M⁻¹; Intercept ν₀ = {fmt(f['b'],5)} min⁻¹; ν = {fmt(k_osc,4)}·[MA]₀ + {fmt(f['b'],5)}"
  elif slug=='heterogeneous-catalysis-langmuir-hinshelwood':
   k_r=1.0 / f['b']
   K_A=f['b'] / f['m']
@@ -911,6 +925,26 @@ def worked(c,row):
    f"   Linearized equation: 1/v₀ = (K_M / V_max) · (1/[S]) + 1/V_max.\n"
    f"   Slope m = K_M / V_max = 12.50 min; Y-intercept b = 1/V_max = 25.00 min·mM⁻¹.\n"
    f"   Extracted parameters: V_max = 1/b = 0.0400 mM/min (40.0 μM/min); K_M = m / b = 0.500 mM with R² = 1.00000."
+  )
+ elif slug=='oscillating-reaction-belousov-zhabotinsky':
+  c_ma=row['input']
+  raw=row['raw']
+  x=row['x']
+  y=row['y']
+  tau=60.0 / raw
+  return (
+   f"Representative calculation for Belousov-Zhabotinsky oscillator run at initial malonic acid concentration [MA]₀ = {c_ma:.3f} M:\n"
+   f"1. Isothermal BZ Limit-Cycle Reaction System (T = 298.15 K, 500 RPM magnetic stirring):\n"
+   f"   Reagents: [BrO₃⁻]₀ = 0.080 M, [H₂SO₄] = 1.00 M, [Ferroin] = 1.00 mM, V_tot = 60.0 mL.\n"
+   f"   Potentiometric redox trace (Pt wire vs Ag/AgCl) logs sustained relaxation oscillation peaks.\n"
+   f"   Measured period between consecutive oxidation spikes (blue flashes): τ = {tau:.1f} s.\n"
+   f"2. Limit-Cycle Frequency Calculation:\n"
+   f"   Oscillation frequency: ν = 60.0 / τ = 60.0 / {tau:.1f} s = {raw:.4f} min⁻¹.\n"
+   f"3. Coordinate Mapping:\n"
+   f"   Abscissa: x = [MA]₀ = {x:.3f} M; Ordinate: y = ν = {y:.4f} min⁻¹.\n"
+   f"4. Linear Least-Squares Scaling Evaluation:\n"
+   f"   Nonlinear frequency scaling model: ν = k_osc · [MA]₀ + ν_uncat.\n"
+   f"   Multi-point regression yields empirical scaling slope k_osc = 10.000 min⁻¹·M⁻¹ with R² = 1.00000."
   )
  elif slug=='heterogeneous-catalysis-langmuir-hinshelwood':
   c_a=row['input']
@@ -1525,6 +1559,31 @@ def uncertainty_text(c):
    "covariance matrix through the regression parameters gives u(K_M) / K_M = √[ (u(m)/m)² + (u(b)/b)² - 2·cov(m,b)/(m·b) ]. "
    "The high negative correlation between slope and intercept (r ≈ -0.88) substantially attenuates overall uncertainty, yielding an "
    "expanded uncertainty U(K_M) = 0.015 mM (coverage factor k = 2, 95% confidence level)."
+  )
+ elif slug=='oscillating-reaction-belousov-zhabotinsky':
+  return (
+   "In the quantitative physical investigation of non-linear chemical dynamics and limit-cycle oscillations in the "
+   "Belousov-Zhabotinsky reaction, experimental uncertainties and dynamic control parameters are meticulously evaluated: "
+   "(1) Electrochemical Indicator Potential and Fast-Sampling Resolution: Electromotive force (EMF) waveforms are recorded "
+   "using a combination flame-cleaned platinum wire redox indicator electrode paired with a double-junction Ag/AgCl reference "
+   "electrode containing a 1.0 M KNO₃ outer salt bridge to prevent trace chloride poisoning of the bromide-gated oscillator. "
+   "The high-impedance digital electrometer (input impedance > 10¹² Ω) samples at 10 Hz with 0.1 mV resolution, capturing the steep "
+   "autocatalytic oxidation spikes (rise time Δt < 0.5 s) with a temporal logging error of less than ±0.05 s. "
+   "(2) Cycle-to-Cycle Periodicity Stability and Batch Drift: In a closed batch reactor, irreversible consumption of major reactants "
+   "induces slow monotonic drift in period length. By restricting oscillation frequency determination to the quasi-stationary limit-cycle "
+   "window between cycles 3 and 10, cycle-to-cycle period variance is held to < 0.40%, eliminating transient start-up induction effects. "
+   "(3) Thermostatic Bath Regulation and Arrhenius Oscillation Sensitivity: The apparent activation energy of the limit-cycle oscillation "
+   "frequency is E_osc ≈ 65.5 kJ/mol. The temperature coefficient of the oscillation frequency is d ln(ν)/dT = E_osc / (RT²) = "
+   "+0.088 K⁻¹ (+8.8% per kelvin). The circulating thermostatic water jacket maintains T = 298.15 ± 0.05 K, restricting temperature-induced "
+   "frequency variance to within ±0.44%. "
+   "(4) Hydrodynamic Boundary Shear and Spatial Homogeneity: Mechanical agitation at 500 RPM via a PTFE-encapsulated magnetic stir bar "
+   "enforces spatial synchrony across the bulk solution, precluding the emergence of diffusion-driven spatial chemical waves or Turing "
+   "structures. Agitation rates between 400 and 700 RPM demonstrate invariant oscillation frequencies within ±0.30%. "
+   "(5) Solution Stoichiometry and Multi-Point Linear Regression: Stock solutions of malonic acid, potassium bromate, sulfuric acid, "
+   "and ferroin are prepared using analytical-grade reagents and Class A volumetric glassware (tolerance ±0.02 mL), maintaining "
+   "concentration uncertainties u_r([MA]₀) < 0.25%. Ordinary least-squares regression of ν against [MA]₀ yields an empirical frequency "
+   "scaling constant k_osc = 10.000 ± 0.020 min⁻¹·M⁻¹, with an expanded uncertainty U(k_osc) = 0.040 min⁻¹·M⁻¹ (coverage factor k = 2, "
+   "95% confidence level)."
   )
  elif slug=='heterogeneous-catalysis-langmuir-hinshelwood':
   return (
@@ -2615,6 +2674,81 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"reversible enzyme inhibition mechanisms."
   )
   
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='oscillating-reaction-belousov-zhabotinsky':
+  slope_val=f['m']
+  k_osc_val=slope_val
+  r2_val=f['r2']
+  
+  abstract=(
+   f"Nonlinear chemical dynamics and non-equilibrium limit-cycle oscillations were quantitatively investigated in the "
+   f"Belousov-Zhabotinsky (BZ) reaction system (0.080 M KBrO₃, 1.00 M H₂SO₄, and 1.00 mM ferroin indicator) at 298.15 ± 0.05 K (25.00 °C) "
+   f"in an isothermal batch reactor agitated at 500 RPM. Six experimental trials were conducted across an initial malonic acid concentration "
+   f"range from [MA]₀ = {rows[0]['input']:.3f} M to {rows[-1]['input']:.3f} M. Continuous potentiometric telemetry recorded via a platinum redox "
+   f"wire against a double-junction Ag/AgCl reference electrode captured sustained relaxation oscillations, with periods shortening "
+   f"from τ = {60.0/rows[0]['raw']:.1f} s to {60.0/rows[-1]['raw']:.1f} s, corresponding to limit-cycle frequencies increasing monotonically "
+   f"from ν = {rows[0]['raw']:.4f} min⁻¹ to {rows[-1]['raw']:.4f} min⁻¹. Linear regression of oscillation frequency ν against [MA]₀ "
+   f"demonstrated ideal linear scaling (R² = {r2_val:.5f}), confirming that the rate-limiting step during the quiescent induction phase is "
+   f"governed by malonic acid bromination. The extracted frequency scaling constant was k_osc = {k_osc_val:.4f} ± {f['slopeSE']:.4f} min⁻¹·M⁻¹ "
+   f"({k_osc_val/60.0:.5f} s⁻¹·M⁻¹), differing by only {percent:.3f}% from the established benchmark of {reference:.3f} min⁻¹·M⁻¹. "
+   f"The Y-intercept was ν₀ = {f['b']:.5f} min⁻¹, verifying the absence of uninhibited spontaneous background oscillations. These results "
+   f"provide rigorous empirical verification of the Field-Körös-Noyes (FKN) mechanism and Oregonator dynamical models in non-equilibrium thermodynamics."
+  )
+
+  graph_choice=(
+   f"The primary analytical graphic presents the limit-cycle frequency concentration scaling master curve: the observed oscillation "
+   f"frequency y = ν (in min⁻¹) plotted against the initial malonic acid concentration x = [MA]₀ (in M). In accordance with the "
+   f"Oregonator kinetic scaling law, the frequency of limit-cycle excursions increases in direct linear proportion to substrate concentration: "
+   f"ν = k_osc · [MA]₀ + ν₀. The empirical slope m = {k_osc_val:.4f} min⁻¹·M⁻¹ directly quantifies the frequency scaling constant k_osc, "
+   f"while the intercept b = {f['b']:.5f} min⁻¹ passes through zero within experimental uncertainty. All six experimental coordinates "
+   f"conform to the linear regression model with near-perfect fidelity (R² = {r2_val:.5f}). A secondary comparative graphic illustrates "
+   f"the time-resolved potentiometric waveforms E_cell(t) in millivolts across consecutive cycles alongside the chromic absorbance pulses "
+   f"at 510 nm, demonstrating the sharp sawtooth relaxation oscillations, steep autocatalytic oxidation spikes, and exponential recovery phases."
+  )
+
+  discussion=(
+   f"The Belousov-Zhabotinsky reaction is the preeminent experimental exemplar of non-equilibrium dissipative structures and temporal self-organization "
+   f"in physical chemistry. Classical thermodynamic equilibrium dictates that closed reacting systems must continuously minimize Gibbs free energy "
+   f"(dG ≤ 0), precluding temporal cycles. However, as shown by Ilya Prigogine, when non-linear reaction networks operate far from thermodynamic equilibrium "
+   f"under sustained chemical affinities, autocatalysis coupled with delayed negative feedback can destabilize stationary steady states via a supercritical "
+   f"Poincaré-Andronov-Hopf bifurcation, generating an autonomous, stable limit cycle in phase space.\n\n"
+   f"The microscopic chemical mechanics are rigorously explained by the Field-Körös-Noyes (FKN) mechanism and its three-variable reduction, the "
+   f"Oregonator model. The overall stoichiometry represents the oxidative decarboxylation and bromination of malonic acid by acidic bromate:\n"
+   f"  3 BrO₃⁻ + 5 CH₂(COOH)₂ + 3 H⁺ ⟶ 3 CHBr(COOH)₂ + 2 HCOOH + 4 CO₂ + 5 H₂O\n"
+   f"The dynamic engine driving the limit cycle consists of three tightly coupled kinetic processes:\n"
+   f"  Process A (Inhibitor Consumption): In the presence of excess bromide, bromate slowly reduces bromide via bromine intermediates:\n"
+   f"    BrO₃⁻ + 2 Br⁻ + 3 H⁺ ⇄ 3 HOBr\n"
+   f"    HOBr + CH₂(COOH)₂ ⟶ CHBr(COOH)₂ + H₂O\n"
+   f"  Bromide ions act as a powerful chemical inhibitor. As long as [Br⁻] remains above a critical gating threshold [Br⁻]_crit = (k₃/k₂) [BrO₃⁻] ≈ 10⁻⁶ M, "
+   f"  it rapidly scavenges all bromous acid: Br⁻ + HBrO₂ + H⁺ ⟶ 2 HOBr (k₂ ≈ 2 × 10⁶ M⁻¹s⁻¹), holding the system in the reduced red state.\n\n"
+   f"  Process B (Autocatalytic Flash): As malonic acid continues to consume bromide, [Br⁻] drops below [Br⁻]_crit. Instantly, Process B ignites:\n"
+   f"    BrO₃⁻ + HBrO₂ + 2 H⁺ ⟶ 2 HBrO₂ + 2 [Fe(phen)₃]³⁺ + H₂O\n"
+   f"  Bromous acid acts as its own autocatalytic stimulant, multiplying exponentially. The rapid oxidation of red ferroin to sky-blue ferriin "
+   f"  produces a violent positive electromotive force spike (ΔE ≈ +200 mV) on the platinum redox wire.\n\n"
+   f"  Process C (Regeneration and Resetting): The surges of oxidized ferriin and bromomalonic acid undergo complex organic oxidation:\n"
+   f"    4 [Fe(phen)₃]³⁺ + CHBr(COOH)₂ + 2 H₂O ⟶ 4 [Fe(phen)₃]²⁺ + Br⁻ + HCOOH + 2 CO₂ + 5 H⁺\n"
+   f"  This step regenerates bromide ion, which immediately floods the reaction medium above [Br⁻]_crit, abruptly quenching the autocatalytic Process B. "
+   f"  The catalyst returns to its reduced state, and the system resets for the next cycle.\n\n"
+   f"The duration of the inter-spike period τ is determined predominantly by the time required for Process A to deplete bromide back down to [Br⁻]_crit. "
+   f"Because malonic acid accelerates this depletion, higher [MA]₀ concentrations abbreviate the quiescent phase in direct proportion. The experimental "
+   f"data corroborate this scaling law with extraordinary precision. Over a sixfold range in substrate concentration from [MA]₀ = {rows[0]['input']:.3f} M "
+   f"to {rows[-1]['input']:.3f} M, the oscillation period contracts from {60.0/rows[0]['raw']:.1f} s to {60.0/rows[-1]['raw']:.1f} s, causing the "
+   f"limit-cycle frequency to rise from {rows[0]['raw']:.4f} min⁻¹ to {rows[-1]['raw']:.4f} min⁻¹. Linear regression yields an empirical scaling slope "
+   f"k_osc = {k_osc_val:.4f} ± {f['slopeSE']:.4f} min⁻¹·M⁻¹, differing by only {percent:.3f}% from the certified literature benchmark ({reference:.3f} "
+   f"min⁻¹·M⁻¹) with R² = {r2_val:.5f}. These results provide authoritative experimental proof of the FKN Oregonator framework and non-equilibrium "
+   f"temporal self-organization."
+  )
+
+  conclusion=(
+   f"The quantitative study of the Belousov-Zhabotinsky oscillating reaction has firmly established: "
+   f"(1) sustained potentiometric relaxation oscillations characterized by periodic +200 mV redox potential spikes; "
+   f"(2) an exact linear scaling of limit-cycle oscillation frequency with initial malonic acid concentration across the range 0.050 M to 0.300 M; "
+   f"(3) an empirical frequency scaling constant k_osc = {k_osc_val:.4f} ± {f['slopeSE']:.4f} min⁻¹·M⁻¹ ({k_osc_val/60.0:.5f} s⁻¹·M⁻¹), "
+   f"matching the certified literature standard of {reference:.3f} min⁻¹·M⁻¹ within {percent:.3f}%; "
+   f"and (4) complete validation of the FKN bromide-inhibition gating mechanism in dissipative chemical systems. "
+   f"These findings establish an authoritative foundation for the study of nonlinear chemical dynamics, excitable media, and non-equilibrium thermodynamics."
+  )
+
   return abstract, graph_choice, discussion, conclusion
  elif slug=='heterogeneous-catalysis-langmuir-hinshelwood':
   intercept_val=f['b']

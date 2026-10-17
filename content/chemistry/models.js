@@ -172,6 +172,16 @@ function predict(slug,input){
   const y=round(1.0 / v0_mM, 2);
   return {raw,ideal:raw,period:1.0,x,y,valid:s_val>=0.10&&s_val<=4.00};
  }
+ if(slug==='oscillating-reaction-belousov-zhabotinsky'){
+  const c_ma=Number(input);
+  const k_osc=10.000;
+  const table={0.050:0.4998, 0.100:1.0000, 0.150:1.5008, 0.200:2.0000, 0.250:2.4990, 0.300:3.0000};
+  const key=round(c_ma, 3);
+  const raw=table.hasOwnProperty(key)?table[key]:round(k_osc * c_ma, 4);
+  const x=c_ma;
+  const y=raw;
+  return {raw,ideal:raw,period:1.0,x,y,valid:c_ma>=0.020&&c_ma<=0.500};
+ }
  if(slug==='heterogeneous-catalysis-langmuir-hinshelwood'){
   const c_a=Number(input);
   const k_r=2.500;
@@ -423,6 +433,12 @@ function reading(slug,input,raw){
   const v0_mM=raw_val / 1000.0;
   y=round(1.0 / v0_mM, 2);
  }
+ if(slug==='oscillating-reaction-belousov-zhabotinsky'){
+  const c_ma=Number(input);
+  const raw_val=Number(raw);
+  x=c_ma;
+  y=raw_val;
+ }
  if(slug==='heterogeneous-catalysis-langmuir-hinshelwood'){
   const c_a=Number(input);
   const raw_val=Number(raw);
@@ -651,6 +667,11 @@ function estimate(slug,f){
   const KM=f.m / f.b;
   const se=Math.abs(f.slopeSE / f.b);
   return {value:KM,se:se,reference:0.500};
+ }
+ if(slug==='oscillating-reaction-belousov-zhabotinsky'){
+  const k_osc=f.m;
+  const se=f.slopeSE;
+  return {value:k_osc,se:se,reference:10.000};
  }
  if(slug==='heterogeneous-catalysis-langmuir-hinshelwood'){
   const intercept=f.b;

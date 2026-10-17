@@ -6183,5 +6183,221 @@
    "Do not allow reactant solution to sit on spent catalyst after runs; decant and rinse the catalyst immediately to prevent irreversible surface poisoning by decomposition byproducts."
   ],
   "limitations": "The classical Langmuir-Hinshelwood model makes idealized physical assumptions: (1) Energetic site uniformity: Real heterogeneous catalysts possess stepped facets, edges, corners, and defect sites with differing adsorption energies, whereas the Langmuir isotherm assumes an energetically homogeneous surface. (2) Absence of lateral adsorbate-adsorbate interactions: At high surface coverages, dipole-dipole repulsion or steric crowding between neighboring adsorbed molecules causes adsorption enthalpy to decrease with coverage (better described by Temkin or Freundlich isotherms). (3) Internal mass transfer: For large catalyst porous pellets, intraparticle Knudsen diffusion limitations (quantified by the Thiele modulus) can depress observed rates; fine powder slurries (< 50 \u03bcm) are used here to ensure effectiveness factors \u03b7 \u2248 1.0. (4) Product inhibition: If decomposition products adsorb competitively on surface sites, an additional term (1 + K_P [P]) must be incorporated into the rate denominator."
+ },
+ {
+  "slug": "oscillating-reaction-belousov-zhabotinsky",
+  "title": "Nonlinear Chemical Dynamics: Belousov-Zhabotinsky Oscillating Reaction",
+  "shortTitle": "Belousov-Zhabotinsky Dynamics",
+  "subject": "chemistry",
+  "number": 30,
+  "published": true,
+  "min": 0.05,
+  "max": 0.3,
+  "step": 0.025,
+  "initial": 0.15,
+  "inputLabel": "Malonic Acid Concentration [MA]\u2080",
+  "shortInput": "[MA]\u2080",
+  "inputUnit": "M",
+  "inputDecimals": 3,
+  "rawLabel": "Limit-Cycle Oscillation Frequency \u03bd",
+  "rawUnit": "min\u207b\u00b9",
+  "rawDecimals": 4,
+  "angle": false,
+  "timed": false,
+  "observationLabel": "Log limit-cycle oscillation frequency \u03bd for initial malonic acid concentration [MA]\u2080",
+  "xAxis": "Malonic Acid Concentration [MA]\u2080 (M)",
+  "yAxis": "Oscillation Frequency \u03bd (min\u207b\u00b9)",
+  "xScale": 1.0,
+  "yScale": 1.0,
+  "xDecimals": 3,
+  "yDecimals": 4,
+  "target": 10.0,
+  "resultUnit": "min\u207b\u00b9\u00b7M\u207b\u00b9",
+  "resultScale": 1.0,
+  "resultDecimals": 3,
+  "targetName": "k_osc",
+  "measureLabel": "Oscillation Frequency (\u03bd)",
+  "fitEquation": "\u03bd = k_osc \u00b7 [MA]\u2080 + \u03bd_uncat",
+  "gradientUnit": "min\u207b\u00b9\u00b7M\u207b\u00b9",
+  "interceptUnit": "min\u207b\u00b9",
+  "emptyX": [
+   0.0,
+   0.35
+  ],
+  "emptyY": [
+   0.0,
+   3.5
+  ],
+  "samples": [
+   0.05,
+   0.1,
+   0.15,
+   0.2,
+   0.25,
+   0.3
+  ],
+  "settings": [
+   "Thermostatted Jacketed Batch Reactor maintained at T = 298.15 \u00b1 0.05 K (25.00 \u00b0C).",
+   "Standardized Reagent Stock: 0.080 M KBrO\u2083, 1.00 M H\u2082SO\u2084, and 1.00 mM Ferroin Indicator.",
+   "Combination Platinum Redox Wire Indicator Electrode with Double-Junction Ag/AgCl Reference.",
+   "Precision High-Impedance Digital Voltmeter / Fast-Response Electrochemical Logger."
+  ],
+  "simModes": [
+   {
+    "id": "bench",
+    "icon": "\u2697\ufe0f",
+    "label": "Potentiometric Reactor"
+   },
+   {
+    "id": "compare",
+    "icon": "\ud83d\udcca",
+    "label": "Limit-Cycle Frequency Scaling"
+   },
+   {
+    "id": "sandbox",
+    "icon": "\ud83d\udd2c",
+    "label": "Oregonator Phase Portrait"
+   }
+  ],
+  "aim": "To investigate nonlinear chemical dynamics and dissipative limit-cycle oscillations in the Belousov-Zhabotinsky reaction, monitor potentiometric redox potential oscillations, and determine the kinetic frequency scaling constant k_osc with respect to malonic acid concentration at 298.15 K.",
+  "modelExtra": "The Belousov-Zhabotinsky (BZ) reaction represents the archetypal chemical oscillator operating far from thermodynamic equilibrium, generating sustained dissipative limit-cycle temporal oscillations and spatial target patterns in accordance with Ilya Prigogine's non-equilibrium thermodynamic theorems. The reaction mechanism is formalized by the Field-K\u00f6r\u00f6s-Noyes (FKN) framework and mathematically reduced to the three-variable Oregonator differential dynamical system. In the acidic bromate-malonic acid-ferroin system, three coupled reaction processes drive the limit cycle: Process A: Consumption of bromide inhibitor: BrO\u2083\u207b + 2 Br\u207b + 3 H\u207a \u21c4 3 HOBr (slow reduction of bromide by bromate to hypobromous acid, which rapidly brominates malonic acid to bromomalonic acid, BrMA). Process B: Autocatalytic bromous acid oxidation: When [Br\u207b] falls below the critical gating threshold [Br\u207b]_crit = (k\u2083/k\u2082) [BrO\u2083\u207b] \u2248 10\u207b\u2076 M, Process B is unleashed. Bromate oxidizes bromous acid autocatalytically: BrO\u2083\u207b + HBrO\u2082 + 2 H\u207a \u27f6 2 HBrO\u2082 + 2 Ce\u2074\u207a (or 2 [Fe(phen)\u2083]\u00b3\u207a) + H\u2082O. The rapid oxidation of the metal catalyst causes a sharp visual transition from ferroin red ([Fe(phen)\u2083]\u00b2\u207a) to ferroin sky blue ([Fe(phen)\u2083]\u00b3\u207a), generating a steep positive potentiometric emf spike (\u0394E \u2248 +200 mV). Process C: Catalyst reduction and bromide regeneration: The oxidized catalyst reacts with malonic acid and bromomalonic acid: 4 Ce\u2074\u207a + BrCH(COOH)\u2082 + 2 H\u2082O \u27f6 4 Ce\u00b3\u207a + Br\u207b + HCOOH + 2 CO\u2082 + 5 H\u207a. The regenerated bromide rapidly quenches the autocatalytic Process B, returning the system to its initial reduced state and resetting the limit cycle. The duration of the quiescent induction phase is dictated by the rate at which malonic acid consumes bromide. Consequently, the oscillation frequency \u03bd = 1/\u03c4 (min\u207b\u00b9) scales linearly with the initial malonic acid concentration: \u03bd = k_osc \u00b7 [MA]\u2080 + \u03bd\u2080. Linear regression of \u03bd against [MA]\u2080 extracts the empirical frequency scaling rate constant k_osc.",
+  "intro": "Classical equilibrium thermodynamics, governed by the Second Law, dictates that isolated chemical systems evolve monotonically toward maximum entropy and minimal Gibbs free energy, precluding periodic temporal fluctuations. However, in open or slowly relaxing closed systems held far from thermodynamic equilibrium, non-linear kinetic feedback loops\u2014specifically autocatalysis, cross-inhibition, and bistable branching\u2014can drive spontaneous self-organization into temporal limit cycles and spatial dissipative structures, a paradigm recognized by the 1977 Nobel Prize awarded to Ilya Prigogine. The Belousov-Zhabotinsky (BZ) reaction, serendipitously discovered by Boris Belousov in 1951 while modeling citric acid cycle biochemistry and subsequently refined by Anatol Zhabotinsky, serves as the premier experimental vehicle for investigating non-linear dynamics, deterministic chaos, and chemical wave propagation. In this laboratory experiment, students record real-time potentiometric oscillations using an inert platinum redox electrode against an Ag/AgCl reference, observe periodic chromic pulses between reduced red ferroin and oxidized blue ferriin, and quantify the dependence of the limit-cycle oscillation frequency on initial substrate concentration, directly bridging non-linear differential dynamics with experimental physical chemistry.",
+  "apparatus": [
+   {
+    "name": "Thermostatted Double-Walled Reaction Cell with Optical Port",
+    "purpose": "Houses the 60.0 mL oscillating solution maintained at 298.15 \u00b1 0.05 K via an external circulating bath, featuring flat optical windows for simultaneous spectrophotometric and potentiometric logging."
+   },
+   {
+    "name": "Combination Platinum Wire Redox Indicator Electrode",
+    "purpose": "Provides an inert, electrochemically active metallic surface to track the rapid potentiometric oscillations of the Ce\u2074\u207a/Ce\u00b3\u207a or [Fe(phen)\u2083]\u00b3\u207a/\u00b2\u207a redox couple in real time."
+   },
+   {
+    "name": "Double-Junction Silver/Silver Chloride (Ag/AgCl) Reference Electrode",
+    "purpose": "Furnishes a stable reference potential with an outer potassium nitrate (1.0 M KNO\u2083) salt bridge to preclude chloride leakage into the bromide-sensitive reaction medium."
+   },
+   {
+    "name": "High-Impedance Digital Multimeter / High-Speed Data Acquisition System",
+    "purpose": "Logs electromotive force (EMF) signals in millivolts with 0.1 mV resolution and 10 Hz sampling frequency to resolve sharp limit-cycle potential spikes."
+   },
+   {
+    "name": "PTFE-Coated Magnetic Stirrer with Variable Speed Controller (500 RPM)",
+    "purpose": "Ensures vigorous bulk mixing to maintain spatial homogeneity, preventing spontaneous formation of spatial chemical waves or Turing structures in the batch reactor."
+   },
+   {
+    "name": "Calibrated Class A Volumetric Pipettes and Syringe Injectors",
+    "purpose": "Dispenses standardized stock solutions of sulfuric acid, potassium bromate, malonic acid, and ferroin indicator with \u00b10.02 mL precision."
+   }
+  ],
+  "procedure": [
+   {
+    "title": "Thermostatic Bath Setup and Reference Electrode Stabilization",
+    "text": "Connect the jacketed reaction cell to the constant-temperature circulator regulated at 298.15 K (25.00 \u00b0C). Mount the combination platinum redox electrode and double-junction Ag/AgCl reference electrode securely in the reactor head, immersing both tips to a depth of 25 mm."
+   },
+   {
+    "title": "Stock Solution Delivery and Magnetic Agitation",
+    "text": "Pipette into the reactor 20.00 mL of 2.00 M H\u2082SO\u2084, 10.00 mL of 0.240 M KBrO\u2083, and designated volumes of Milli-Q water to achieve a final total volume of 60.00 mL. Engage the magnetic stirrer at 500 RPM and allow 5 minutes for thermal equilibrium."
+   },
+   {
+    "title": "Ferroin Indicator Introduction and Pre-Oscillatory Baseline",
+    "text": "Add exactly 3.00 mL of standardized 0.020 M ferroin indicator ([Fe(phen)\u2083]SO\u2084) to the mixture. The solution turns bright orange-red. Connect the electrodes to the high-impedance data logger and initiate baseline voltage recording (E_baseline \u2248 750 mV)."
+   },
+   {
+    "title": "Malonic Acid Injection and Limit-Cycle Initiation",
+    "text": "Rapidly inject the calculated volume of standardized 1.000 M malonic acid stock solution to achieve the target concentration (e.g., [MA]\u2080 = 0.050 M to 0.300 M) and start the chronometer. Following a brief induction period (1 to 2 minutes), sustained periodic oscillations begin."
+   },
+   {
+    "title": "Potentiometric and Chromic Oscillation Logging",
+    "text": "Log the oscillating potential E_cell(t) for at least 8 to 12 complete oscillation cycles. Record the period \u03c4 between consecutive oxidation peaks (blue flashes) and calculate the mean limit-cycle oscillation frequency \u03bd = 1/\u03c4 (min\u207b\u00b9)."
+   },
+   {
+    "title": "Serial Concentration Runs and Kinetic Master Plotting",
+    "text": "Thoroughly rinse the cell with deionized water and repeat the experiment across six malonic acid concentrations: [MA]\u2080 = 0.050, 0.100, 0.150, 0.200, 0.250, and 0.300 M. Plot oscillation frequency \u03bd versus [MA]\u2080, perform linear regression, and extract the frequency scaling constant k_osc."
+   }
+  ],
+  "topics": [
+   {
+    "question": "What is the primary thermodynamic condition required for sustained chemical oscillations?",
+    "answer": "Sustained chemical oscillations require the system to operate far from thermodynamic equilibrium in the nonlinear regime of irreversible thermodynamics. There must be autocatalytic feedback loops (such as bromous acid autocatalytic generation) coupled with delayed negative feedback inhibition (such as bromide ion replenishment)."
+   },
+   {
+    "question": "What causes the dramatic color change between red and blue in the BZ reaction?",
+    "answer": "The color change is produced by the redox transition of the ferroin indicator: tris(1,10-phenanthroline)iron(II) is deep red ([Fe(phen)\u2083]\u00b2\u207a, ferroin), while its oxidized one-electron product tris(1,10-phenanthroline)iron(III) is pale sky blue ([Fe(phen)\u2083]\u00b3\u207a, ferriin). During the autocatalytic spike, ferriin surges, flashing blue; subsequent reduction by malonic acid returns the red color."
+   },
+   {
+    "question": "Why does bromide ion act as a 'kinetic switch' or 'inhibitor gate' in the FKN mechanism?",
+    "answer": "Bromide reacts with bromous acid (HBrO\u2082) extremely rapidly: Br\u207b + HBrO\u2082 + H\u207a \u27f6 2 HOBr (rate constant k\u2082 \u2248 2 \u00d7 10\u2076 M\u207b\u00b9s\u207b\u00b9). As long as [Br\u207b] exceeds the critical threshold [Br\u207b]_crit \u2248 10\u207b\u2076 M, it scavenges all HBrO\u2082, suppressing the autocatalytic Process B. Only when [Br\u207b] falls below [Br\u207b]_crit does autocatalytic oxidation erupt."
+   },
+   {
+    "question": "Why does the oscillation frequency scale with malonic acid concentration?",
+    "answer": "Malonic acid accelerates the bromination and consumption of bromide ion during the quiescent phase. Higher [MA]\u2080 accelerates the rate at which [Br\u207b] is driven down to the critical threshold, shortening the inter-spike induction period \u03c4 and increasing the oscillation frequency \u03bd = 1/\u03c4."
+   },
+   {
+    "question": "What role does vigorous magnetic stirring play in the batch BZ oscillator?",
+    "answer": "Vigorous stirring (500 RPM) maintains macroscopic spatial homogeneity, forcing the entire reactor volume to oscillate synchronously in the purely temporal domain. If stirring is stopped, local diffusion-reaction coupling generates striking spatial phenomena such as expanding concentric target rings and rotating spiral chemical waves."
+   },
+   {
+    "question": "Why do the oscillations eventually cease in a closed batch reactor?",
+    "answer": "In a closed batch reactor, the major chemical driving substrates (malonic acid and potassium bromate) are irreversibly consumed over time, and thermodynamic free energy decreases toward equilibrium. When reactant concentrations drop below the critical bifurcation threshold (Hopf bifurcation), the limit cycle collapses to a stationary equilibrium steady state."
+   },
+   {
+    "question": "What is the Oregonator model and why was it developed?",
+    "answer": "The Oregonator is a simplified mathematical model of the BZ reaction formulated by Field and Noyes at the University of Oregon. It condenses the complex 80-elementary-step FKN mechanism into five coupled non-linear differential steps involving three key dynamical variables: X = [HBrO\u2082], Y = [Br\u207b], and Z = [Ce\u2074\u207a], capturing all qualitative features of limit cycles, bifurcations, and excitability."
+   }
+  ],
+  "quiz": [
+   {
+    "question": "In the BZ reaction, which chemical species undergoes autocatalytic generation during the rapid oxidation flash?",
+    "options": [
+     "Bromide ion (Br\u207b)",
+     "Bromous acid (HBrO\u2082)",
+     "Malonic acid (CH\u2082(COOH)\u2082)",
+     "Carbon dioxide (CO\u2082)"
+    ],
+    "correct": 1,
+    "explanation": "Bromous acid (HBrO\u2082) is the autocatalytic intermediate: BrO\u2083\u207b + HBrO\u2082 + 2 H\u207a \u27f6 2 HBrO\u2082 + 2 Ce\u2074\u207a + H\u2082O, doubling the quantity of HBrO\u2082 in each catalytic cycle."
+   },
+   {
+    "question": "If the oscillation period is \u03c4 = 30.0 seconds, what is the corresponding limit-cycle frequency \u03bd in min\u207b\u00b9?",
+    "options": [
+     "0.500 min\u207b\u00b9",
+     "1.000 min\u207b\u00b9",
+     "2.000 min\u207b\u00b9",
+     "3.000 min\u207b\u00b9"
+    ],
+    "correct": 2,
+    "explanation": "Frequency is the reciprocal of the period in minutes: \u03bd = 60 s/min / 30.0 s = 2.000 min\u207b\u00b9."
+   },
+   {
+    "question": "What mathematical bifurcation gives rise to the onset of limit-cycle oscillations in non-linear dynamical systems?",
+    "options": [
+     "Pitchfork bifurcation",
+     "Saddle-node bifurcation",
+     "Hopf bifurcation",
+     "Transcritical bifurcation"
+    ],
+    "correct": 2,
+    "explanation": "A supercritical Poincar\u00e9-Andronov-Hopf bifurcation occurs when a stationary fixed point loses stability as a pair of complex conjugate eigenvalues crosses the imaginary axis, birthing a stable limit cycle."
+   },
+   {
+    "question": "Which indicator is commonly used to produce vivid red-to-blue chromic pulses in the BZ reaction?",
+    "options": [
+     "Phenolphthalein",
+     "Ferroin (tris(1,10-phenanthroline)iron(II) sulfate)",
+     "Methyl orange",
+     "Bromothymol blue"
+    ],
+    "correct": 1,
+    "explanation": "Ferroin ([Fe(phen)\u2083]\u00b2\u207a) is red in its reduced Fe(II) state and flips to sky-blue ferriin ([Fe(phen)\u2083]\u00b3\u207a) when oxidized during the autocatalytic pulse."
+   }
+  ],
+  "precautions": [
+   "Potassium bromate (KBrO\u2083) is a potent chemical oxidizer and suspect human carcinogen; handle in a certified fume hood with nitrile gloves and safety goggles.",
+   "Concentrated sulfuric acid (18 M) releases extreme heat upon aqueous dilution; always add acid slowly to water in an ice bath, never water to acid.",
+   "Ensure the platinum redox wire electrode is flame-cleaned and rinsed in 3 M HNO\u2083 prior to use to strip adsorbed organic fouling films.",
+   "Maintain stirring at 500 RPM; insufficient agitation causes premature cessation of uniform bulk oscillations and local phase segregation.",
+   "Shield the reaction cell from direct solar radiation or intense fluorescent light to avoid spurious photochemical free-radical perturbation of bromite intermediates.",
+   "Dispose of spent BZ reaction mixtures containing brominated organics and heavy metals in designated hazardous chemical waste carboys."
+  ],
+  "limitations": "The batch BZ oscillator exhibits intrinsic physical constraints: (1) Transient batch lifetime: Because reactants are consumed and products accumulate, the system undergoes gradual drift, with oscillation periods slowly lengthening over 30 to 60 minutes before dying out; frequency analysis must be performed within the quasi-stationary window (cycles 3 to 10). (2) Carbon dioxide outgassing: Bubbles of evolved CO\u2082(g) can adhere to the platinum electrode surface, creating transient potential spikes that require high stirring shear to dislodge. (3) Temperature sensitivity: The activation energy of oscillation is E_a \u2248 65.5 kJ/mol, causing oscillation frequency to double for every 10 \u00b0C rise, requiring tight thermostatic control within \u00b10.05 K. (4) CSTR differences: In a Continuous Stirred-Tank Reactor (CSTR), fresh reactants are continuously pumped in, enabling indefinite sustained limit cycles, period doubling, and chaotic regimes not accessible in closed batch vessels."
  }
 ]
