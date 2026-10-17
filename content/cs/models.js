@@ -138,6 +138,13 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:raw/200.0,x,y,valid:n>=4&&n<=16};
  }
+ if(slug==='lru-cache-replacement'){
+  const c=Number(input);
+  const raw=Math.round(6 * c);
+  const x=c;
+  const y=raw;
+  return {raw,ideal:raw,period:raw/200.0,x,y,valid:c>=4&&c<=28};
+ }
  if(slug==='a-star-pathfinding-heuristics'){
   const d=Number(input);
   const raw=Math.round(3 * d);
@@ -251,6 +258,10 @@ function reading(slug,input,raw){
   x=n * log2n;
   y=raw;
  }
+ if(slug==='lru-cache-replacement'){
+  x=Number(input);
+  y=raw;
+ }
  if(slug==='a-star-pathfinding-heuristics'){
   x=Number(input);
   y=raw;
@@ -339,6 +350,9 @@ function estimate(slug,f){
  }
  if(slug==='fast-fourier-transform'){
   return {value:f.m,se:f.slopeSE,reference:0.5000};
+ }
+ if(slug==='lru-cache-replacement'){
+  return {value:f.m,se:f.slopeSE,reference:6.0000};
  }
  if(slug==='a-star-pathfinding-heuristics'){
   return {value:f.m,se:f.slopeSE,reference:3.0000};
