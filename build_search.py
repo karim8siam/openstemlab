@@ -113,6 +113,7 @@ def experiment_index(experiments):
     'uv-vis-particle-in-a-box-cyanine-dyes': 'particle in a box quantum mechanics cyanine dyes electronic absorption uv-vis carbocyanine homolumo kuhn femo conjugated polyene bond length',
     'magnetic-susceptibility-gouy-balance-complexes': 'magnetic susceptibility gouy balance transition metal complexes mohrs salt paramagnetism diamagnetism pascals constants unpaired d electrons bohr magneton curie weiss',
     'dipole-moment-dielectric-constant-debye': 'electric dipole moment dielectric constant debye equation chlorobenzene cyclohexane heterodyne beat refractometer molar polarization orientation polarization',
+    'adsorption-isotherm-activated-charcoal-freundlich': 'adsorption isotherm activated charcoal acetic acid freundlich langmuir specific adsorption capacity surface area microporous titration physisorption',
     'cyclic-voltammetry-ferricyanide-diffusion': 'cyclic voltammetry randles sevcik equation ferricyanide ferrocyanide diffusion coefficient peak current scan rate glassy carbon electrode reversible duck curve cottrell',
     'electrochemical-cell-thermodynamics-nernst': 'electrochemical cell thermodynamics daniell cell nernst equation temperature coefficient of emf gibbs free energy enthalpy entropy of reaction salt bridge liquid junction electrometer',
     'transference-numbers-hittorf-moving-boundary': 'transference numbers transport numbers moving boundary hittorf method kohlrausch regulating condition proton hopping grotthuss cadmium anode autogenic boundary',

@@ -87,6 +87,18 @@ function update(){
   $('apparatusDiagram').innerHTML=drawEnzymeKineticsBenchView(p,rawVal);
   return;
  }
+ if(cfg.slug==='adsorption-isotherm-activated-charcoal-freundlich'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawCharcoalCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawCharcoalSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawCharcoalBenchView(p,rawVal);
+  return;
+ }
  if(cfg.slug==='dipole-moment-dielectric-constant-debye'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawDipoleCompareView(p,rawVal);
@@ -372,7 +384,24 @@ function update(){
   const dA_dt = v0_uM * 0.0185;
   $('liveState').textContent='Photometric trace recorded: v₀ = '+v0_uM.toFixed(2)+' μM/min (dA/dt = '+(dA_dt/1000).toFixed(4)+' AU/min).';
   message('Assay complete: v₀ = '+v0_uM.toFixed(2)+' μM/min (1/v₀ = '+inv_v0.toFixed(2)+' min/mM, 1/[S] = '+inv_s.toFixed(2)+' mM⁻¹). Record in notebook.');
- }else if(cfg.slug==='dipole-moment-dielectric-constant-debye'){
+ }else if(cfg.slug==='adsorption-isotherm-activated-charcoal-freundlich'){
+  const ceq = p.input;
+  const q_val = raw.toFixed(3);
+  const log_c = Math.log10(ceq).toFixed(3);
+  const log_q = Math.log10(raw).toFixed(3);
+  $('liveState').textContent='Titration endpoint: C_eq = '+ceq.toFixed(3)+' M, Specific adsorption q = '+q_val+' mmol/g (log q = '+log_q+').';
+  message('Filtrate titrated to phenolphthalein pink endpoint. Equilibrium concentration evaluated. Record q in notebook.');
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawCharcoalCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawCharcoalSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawCharcoalBenchView(p,rawVal);
+  return;
+}else if(cfg.slug==='dipole-moment-dielectric-constant-debye'){
   const x2 = p.input;
   const p12 = raw.toFixed(3);
   const eps = (2.015 + 2.25 * x2).toFixed(4);
@@ -16291,6 +16320,257 @@ function drawDipoleSandboxView(p, rawVal) {
  svg += text(535, 270, 'Langevin-Debye Classical Alignment Function:', '#38bdf8', 7, 'middle');
  svg += text(535, 284, '<cos θ> = L(x) ≈ (μ E) / (3 k_B T)', '#facc15', 7.5, 'middle', 'bold');
  svg += text(535, 297, 'Thermal energy k_B T opposes dipole field alignment', '#94a3b8', 6.5, 'middle');
+
+ return svg;
+}
+
+// ======================================================================
+// LAB 48: ADSORPTION ISOTHERM ON ACTIVATED CHARCOAL (FREUNDLICH)
+// ======================================================================
+
+function drawCharcoalBenchView(p, rawVal) {
+ var ceq = Number(p.input) || 0.120;
+ var q_val = (rawVal !== null && rawVal !== undefined) ? rawVal : (2.500 * Math.pow(ceq, 0.450));
+ var log_c = Math.log10(ceq);
+ var log_q = Math.log10(q_val);
+ var v_titrant = (ceq * 100.0).toFixed(2); // for 10.00 mL aliquot with 0.1000 M NaOH: V = ceq * 10.0 / 0.100 = 100.0 * ceq
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a0f1d');
+
+ // Title header
+ svg += text(360, 18, 'ADSORPTION OF ACETIC ACID ON ACTIVATED CHARCOAL: TITRATION BENCH', '#38bdf8', 11, 'middle', 'bold');
+ svg += text(360, 32, 'Equilibrium Filtrate Titration (0.1000 M NaOH) | C_eq = ' + ceq.toFixed(3) + ' M | Specific Adsorption q = ' + q_val.toFixed(3) + ' mmol/g', '#94a3b8', 8.5, 'middle');
+
+ // LEFT PANEL: Shaker Flask, Filtration Funnel, & Burette (x: 15 to 345)
+ svg += rect(15, 42, 330, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(180, 58, 'EQUILIBRATION, FILTRATION & TITRATION', '#38bdf8', 9.5, 'middle', 'bold');
+
+ // 1. Shaker flask with charcoal slurry (x: 35 to 115)
+ svg += rect(30, 72, 85, 95, '#020617', '#334155', 1, 4);
+ svg += text(72, 85, 'SHAKER (25 °C)', '#38bdf8', 6.5, 'middle', 'bold');
+ svg += polygon('50,110 95,110 102,152 42,152', '#1e293b', '#64748b', 1); // flask body
+ svg += rect(65, 95, 14, 15, '#1e293b', '#64748b', 1); // neck
+ svg += polygon('45,130 99,130 101,150 43,150', '#0f172a'); // charcoal slurry
+ svg += text(72, 142, 'Charcoal 2.0 g', '#94a3b8', 5.5, 'middle');
+ svg += text(72, 160, '150 rpm / 90 min', '#facc15', 5.5, 'middle');
+
+ // 2. Filtration Assembly (x: 125 to 205)
+ svg += rect(125, 72, 85, 95, '#020617', '#334155', 1, 4);
+ svg += text(167, 85, 'FILTRATION', '#38bdf8', 6.5, 'middle', 'bold');
+ svg += polygon('142,98 192,98 170,125 165,125', '#1e293b', '#64748b', 1); // funnel
+ svg += polygon('145,100 189,100 168,123 166,123', '#f8fafc', 'none', 0); // Whatman paper
+ svg += line(167, 125, 167, 138, '#94a3b8', 2); // stem
+ svg += polygon('152,138 182,138 188,158 146,158', '#1e293b', '#64748b', 1); // receiver flask
+ svg += text(167, 153, 'Clear Filtrate', '#38bdf8', 5.5, 'middle');
+
+ // 3. Titration Burette & Flask (x: 215 to 335)
+ svg += rect(215, 72, 115, 125, '#020617', '#334155', 1, 4);
+ svg += text(272, 85, 'BURETTE (0.1 M NaOH)', '#38bdf8', 6.5, 'middle', 'bold');
+ svg += rect(268, 93, 8, 48, '#1e293b', '#94a3b8', 1); // burette tube
+ svg += rect(269, 105, 6, 36, '#38bdf8', 'none', 0); // liquid column
+ svg += line(264, 141, 280, 141, '#f59e0b', 2); // stopcock valve
+ svg += line(272, 141, 272, 148, '#94a3b8', 1.5); // tip
+ svg += polygon('255,152 289,152 296,182 248,182', '#1e293b', '#64748b', 1); // titration flask
+ svg += polygon('250,165 294,165 295,180 249,180', '#fda4af'); // pink indicator solution
+ svg += text(272, 175, 'Endpoint Pink', '#be185d', 6, 'middle', 'bold');
+
+ // Bottom telemetry card in left panel
+ svg += rect(30, 205, 300, 100, '#090d16', '#1e293b', 1, 4);
+ svg += text(40, 220, 'TITRIMETRIC EQUILIBRIUM OBSERVABLES', '#38bdf8', 7.5, 'start', 'bold');
+ svg += text(40, 236, 'Titrant Volume (0.1000 M NaOH): V = ' + v_titrant + ' mL', '#4ade80', 7.5, 'start', 'bold');
+ svg += text(40, 251, 'Equilibrium Concentration: C_eq = ' + ceq.toFixed(3) + ' M (mol/L)', '#f8fafc', 7, 'start');
+ svg += text(40, 266, 'Specific Adsorption Capacity: q = x/m = ' + q_val.toFixed(3) + ' mmol/g', '#facc15', 7.5, 'start', 'bold');
+ svg += text(40, 281, 'Logarithmic Coordinates: log₁₀(C_eq) = ' + log_c.toFixed(3) + ', log₁₀(q) = ' + log_q.toFixed(3), '#cbd5e1', 7, 'start');
+ svg += text(40, 296, 'Adsorbed Acid Moles: x = ' + (q_val * 2.0).toFixed(2) + ' mmol in 100.0 mL', '#94a3b8', 6.5, 'start');
+
+ // RIGHT PANEL: Linearized Freundlich Isotherm log(q) vs log(C_eq) (x: 360 to 705)
+ svg += rect(360, 42, 345, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(532, 58, 'FREUNDLICH LINEAR ISOTHERM REGRESSION', '#38bdf8', 9.5, 'middle', 'bold');
+
+ // Plot axes (x: 405 to 680, y: 80 to 225)
+ var plot_x0 = 405, plot_x1 = 680, plot_y0 = 225, plot_y1 = 80;
+ svg += line(plot_x0, plot_y0, plot_x1, plot_y0, '#64748b', 1.5);
+ svg += line(plot_x0, plot_y0, plot_x0, plot_y1, '#64748b', 1.5);
+
+ // X-axis ticks (log C: -1.8 to 0.0)
+ for (var cur_lc = -1.6; cur_lc <= 0.0; cur_lc += 0.4) {
+  var px = plot_x0 + ((cur_lc - (-1.8)) / 1.8) * (plot_x1 - plot_x0);
+  svg += line(px, plot_y0, px, plot_y0 + 4, '#64748b', 1);
+  svg += text(px, plot_y0 + 13, cur_lc.toFixed(1), '#94a3b8', 6.5, 'middle');
+ }
+ svg += text((plot_x0 + plot_x1) / 2, plot_y0 + 26, 'Log Equilibrium Concentration log₁₀(C_eq)', '#cbd5e1', 7.5, 'middle', 'bold');
+
+ // Y-axis ticks (log q: -0.4 to +0.4)
+ for (var cur_lq = -0.4; cur_lq <= 0.4; cur_lq += 0.2) {
+  var py = plot_y0 - ((cur_lq - (-0.4)) / 0.8) * (plot_y0 - plot_y1);
+  svg += line(plot_x0 - 4, py, plot_x0, py, '#64748b', 1);
+  svg += text(plot_x0 - 7, py + 3, cur_lq.toFixed(1), '#94a3b8', 6.5, 'end');
+ }
+ svg += text(plot_x0 - 18, (plot_y0 + plot_y1) / 2, 'log₁₀(x/m)', '#cbd5e1', 7.5, 'middle', 'normal', 'rotate(-90 ' + (plot_x0 - 18) + ' ' + ((plot_y0 + plot_y1) / 2) + ')');
+
+ // Regression line: log q = 0.398 + 0.450 * log C
+ var r_y0 = plot_y0 - (((0.398 + 0.450 * (-1.8)) - (-0.4)) / 0.8) * (plot_y0 - plot_y1);
+ var r_y1 = plot_y0 - (((0.398 + 0.450 * 0.0) - (-0.4)) / 0.8) * (plot_y0 - plot_y1);
+ svg += line(plot_x0, r_y0, plot_x1, r_y1, '#38bdf8', 2);
+
+ // Standard sample points
+ var samples_data = [
+  {c: 0.030, q: 0.516}, {c: 0.060, q: 0.705}, {c: 0.120, q: 0.963},
+  {c: 0.220, q: 1.265}, {c: 0.350, q: 1.559}, {c: 0.550, q: 1.910}
+ ];
+ for (var i = 0; i < samples_data.length; i++) {
+  var l_c = Math.log10(samples_data[i].c);
+  var l_q = Math.log10(samples_data[i].q);
+  var sx = plot_x0 + ((l_c - (-1.8)) / 1.8) * (plot_x1 - plot_x0);
+  var sy = plot_y0 - ((l_q - (-0.4)) / 0.8) * (plot_y0 - plot_y1);
+  svg += circle(sx, sy, 3, '#4ade80', '#ffffff', 1);
+ }
+
+ // Active point
+ var cur_px = plot_x0 + ((log_c - (-1.8)) / 1.8) * (plot_x1 - plot_x0);
+ var cur_py = plot_y0 - ((log_q - (-0.4)) / 0.8) * (plot_y0 - plot_y1);
+ if (cur_px >= plot_x0 && cur_px <= plot_x1 && cur_py <= plot_y0 && cur_py >= plot_y1) {
+  svg += circle(cur_px, cur_py, 5, '#f43f5e', '#ffffff', 1.5);
+ }
+
+ // Bottom Regression Summary Box
+ svg += rect(375, 255, 315, 52, '#090d16', '#1e293b', 1, 4);
+ svg += text(385, 269, 'FREUNDLICH ISOTHERM PARAMETERS', '#38bdf8', 7.5, 'start', 'bold');
+ svg += text(385, 283, 'Heterogeneity Exponent: 1/n = 0.450  (n = 2.222, Favorable)', '#4ade80', 7.5, 'start', 'bold');
+ svg += text(385, 297, 'Capacity Constant: K_F = 2.500 mmol/g · (L/mol)^0.45  (R² = 1.000)', '#facc15', 7, 'start');
+
+ return svg;
+}
+
+function drawCharcoalCompareView(p, rawVal) {
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a0f1d');
+
+ svg += text(360, 18, 'ISOTHERM MODEL COMPARISON: FREUNDLICH vs LANGMUIR', '#38bdf8', 11, 'middle', 'bold');
+ svg += text(360, 32, 'Heterogeneous Multilayer Energy Distribution vs Homogeneous Monolayer Saturation', '#94a3b8', 8.5, 'middle');
+
+ // LEFT: Freundlich Model (x: 20 to 355)
+ svg += rect(20, 42, 335, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(187, 58, 'FREUNDLICH ISOTHERM: log(q) vs log(C_eq)', '#38bdf8', 9.5, 'middle', 'bold');
+
+ var f_x0 = 55, f_x1 = 330, f_y0 = 230, f_y1 = 85;
+ svg += line(f_x0, f_y0, f_x1, f_y0, '#64748b', 1.5);
+ svg += line(f_x0, f_y0, f_x0, f_y1, '#64748b', 1.5);
+
+ // Linear regression line for Freundlich (R^2 = 0.99999)
+ svg += line(f_x0, 215, f_x1, 100, '#4ade80', 2.2);
+
+ var pts_f = [
+  {x: 0.15, y: 0.15}, {x: 0.30, y: 0.28}, {x: 0.48, y: 0.45},
+  {x: 0.65, y: 0.60}, {x: 0.80, y: 0.74}, {x: 0.95, y: 0.88}
+ ];
+ for (var i = 0; i < pts_f.length; i++) {
+  var fx = f_x0 + pts_f[i].x * (f_x1 - f_x0);
+  var fy = f_y0 - pts_f[i].y * (f_y0 - f_y1);
+  svg += circle(fx, fy, 3, '#4ade80', '#fff', 1);
+ }
+ svg += text(187, 245, 'log₁₀(C_eq)', '#cbd5e1', 7.5, 'middle');
+ svg += text(35, (f_y0 + f_y1) / 2, 'log₁₀(q)', '#cbd5e1', 7.5, 'middle', 'normal', 'rotate(-90 35 ' + ((f_y0 + f_y1) / 2) + ')');
+
+ svg += rect(35, 258, 305, 48, '#020617', '#1e293b', 1, 3);
+ svg += text(45, 272, 'Freundlich Correlation: R² = 0.99999 (Superior Fit)', '#4ade80', 7, 'start', 'bold');
+ svg += text(45, 285, '1/n = 0.450: Exponential site-energy distribution', '#f8fafc', 6.5, 'start');
+ svg += text(45, 297, 'Correctly models micropore multilayer potential', '#94a3b8', 6.5, 'start');
+
+ // RIGHT: Langmuir Model (x: 365 to 705)
+ svg += rect(365, 42, 340, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(535, 58, 'LANGMUIR ISOTHERM: C_eq / q vs C_eq', '#38bdf8', 9.5, 'middle', 'bold');
+
+ var l_x0 = 405, l_x1 = 680, l_y0 = 230, l_y1 = 85;
+ svg += line(l_x0, l_y0, l_x1, l_y0, '#64748b', 1.5);
+ svg += line(l_x0, l_y0, l_x0, l_y1, '#64748b', 1.5);
+
+ // Curving / lower R^2 line for Langmuir on heterogeneous carbon
+ svg += line(l_x0, 210, l_x1, 115, '#f43f5e', 2, 'stroke-dasharray="3,2"');
+
+ var pts_l = [
+  {x: 0.10, y: 0.18}, {x: 0.25, y: 0.24}, {x: 0.45, y: 0.35},
+  {x: 0.65, y: 0.52}, {x: 0.80, y: 0.68}, {x: 0.95, y: 0.79}
+ ];
+ for (var j = 0; j < pts_l.length; j++) {
+  var lx = l_x0 + pts_l[j].x * (l_x1 - l_x0);
+  var ly = l_y0 - pts_l[j].y * (l_y0 - l_y1);
+  svg += circle(lx, ly, 3, '#f43f5e', '#fff', 1);
+ }
+ svg += text(535, 245, 'Equilibrium Concentration C_eq (M)', '#cbd5e1', 7.5, 'middle');
+ svg += text(385, (l_y0 + l_y1) / 2, 'C_eq / q', '#cbd5e1', 7.5, 'middle', 'normal', 'rotate(-90 385 ' + ((l_y0 + l_y1) / 2) + ')');
+
+ svg += rect(380, 258, 310, 48, '#020617', '#1e293b', 1, 3);
+ svg += text(390, 272, 'Langmuir Correlation: R² ≈ 0.965 (Systematic Curvature)', '#f43f5e', 7, 'start', 'bold');
+ svg += text(390, 285, 'Fails because site binding energies are NOT uniform', '#f8fafc', 6.5, 'start');
+ svg += text(390, 297, 'Underestimates micropore enhanced adsorption potential', '#94a3b8', 6.5, 'start');
+
+ return svg;
+}
+
+function drawCharcoalSandboxView(p, rawVal) {
+ var ceq = Number(p.input) || 0.120;
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a0f1d');
+
+ svg += text(360, 18, 'PORE ARCHITECTURE SANDBOX: MULTISCALE ADSORPTION IN ACTIVATED CARBON', '#38bdf8', 11, 'middle', 'bold');
+ svg += text(360, 32, 'Hierarchical Diffusion Conduit: Macropores (>50 nm) -> Mesopores (2-50 nm) -> Micropores (<2 nm)', '#94a3b8', 8.5, 'middle');
+
+ // LEFT: Porous Carbon Grain Cross-Section (x: 15 to 350)
+ svg += rect(15, 42, 335, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(182, 58, 'HIERARCHICAL PORE NETWORK (<100 mesh)', '#38bdf8', 9.5, 'middle', 'bold');
+
+ // Large carbon grain outline
+ svg += rect(35, 75, 295, 185, '#1e293b', '#475569', 1, 6);
+
+ // Macropore conduit channels
+ svg += path('M 35,160 Q 90,150 140,165 T 230,155 T 330,165', 'none', '#090d16', 22);
+ svg += text(90, 163, 'Macropore Conduit (>50 nm)', '#94a3b8', 6.5, 'start');
+
+ // Branching mesopores
+ svg += path('M 140,165 Q 160,110 180,95', 'none', '#090d16', 10);
+ svg += path('M 210,158 Q 230,210 260,225', 'none', '#090d16', 10);
+ svg += text(185, 105, 'Mesopores (2-50 nm)', '#38bdf8', 6, 'start');
+
+ // Micropores (tiny slits with overlapping potential)
+ for (var m = 0; m < 8; m++) {
+  var mx = 50 + m * 32, my = 100 + (m % 3) * 35;
+  svg += rect(mx, my, 18, 5, '#020617', '#4ade80', 0.8, 1);
+ }
+ svg += text(182, 285, 'Micropores (<2 nm): Overlapping Graphene Wall Potentials', '#4ade80', 7, 'middle', 'bold');
+
+ // RIGHT: Acetic Acid Molecular Adsorption on Graphene Sheet (x: 365 to 705)
+ svg += rect(365, 42, 340, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(535, 58, 'MOLECULAR ADSORPTION ON GRAPHENE WALLS', '#38bdf8', 9.5, 'middle', 'bold');
+
+ // Graphene carbon hexagonal lattice sheet
+ var gx0 = 400, gy0 = 120;
+ svg += line(390, 170, 680, 170, '#64748b', 3); // upper graphene wall
+ svg += line(390, 240, 680, 240, '#64748b', 3); // lower graphene wall
+ svg += text(535, 255, 'Slit Pore Width d ≈ 1.2 nm (Dual Graphene Basal Planes)', '#94a3b8', 6.5, 'middle');
+
+ // Acetic acid molecules inside slit pore
+ var acids = [
+  {x: 430, y: 195, rot: 15}, {x: 485, y: 185, rot: -20},
+  {x: 540, y: 205, rot: 30}, {x: 595, y: 190, rot: -10}, {x: 650, y: 200, rot: 25}
+ ];
+ for (var a = 0; a < acids.length; a++) {
+  var ax = acids[a].x, ay = acids[a].y;
+  svg += circle(ax, ay, 6, '#38bdf8'); // CH3
+  svg += circle(ax + 8, ay - 6, 5, '#f43f5e'); // C=O
+  svg += circle(ax + 10, ay + 6, 5, '#fda4af'); // OH
+  // van der Waals attraction lines to pore walls
+  svg += line(ax, ay - 6, ax, 172, '#4ade80', 1, 'stroke-dasharray="2,2"');
+  svg += line(ax, ay + 6, ax, 238, '#4ade80', 1, 'stroke-dasharray="2,2"');
+ }
+
+ svg += text(535, 100, 'Exothermic Physisorption (ΔH_ads ≈ −25 kJ/mol)', '#facc15', 7.5, 'middle', 'bold');
+ svg += text(535, 114, 'van der Waals London dispersion & Hydrogen bonding', '#cbd5e1', 6.5, 'middle');
+
+ svg += rect(390, 275, 290, 30, '#090d16', '#1e293b', 1, 3);
+ svg += text(535, 293, 'High surface area: BET Area > 950 m²/g | q_max ≈ 2.5 mmol/g', '#4ade80', 7, 'middle', 'bold');
 
  return svg;
 }

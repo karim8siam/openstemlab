@@ -3,6 +3,17 @@
 const round=(v,n)=>Math.round((v+Number.EPSILON)*10**n)/10**n;
 
 function predict(slug,input){
+  if(slug==='adsorption-isotherm-activated-charcoal-freundlich'){
+   const ceq=Number(input);
+   const table_raw={0.030:0.516, 0.060:0.705, 0.120:0.963, 0.220:1.265, 0.350:1.559, 0.550:1.910};
+   const table_x={0.030:-1.5229, 0.060:-1.2218, 0.120:-0.9208, 0.220:-0.6576, 0.350:-0.4559, 0.550:-0.2596};
+   const table_y={0.030:-0.2874, 0.060:-0.1519, 0.120:-0.0164, 0.220:0.1020, 0.350:0.1928, 0.550:0.2811};
+   const key=round(ceq, 3);
+   const raw_val=table_raw.hasOwnProperty(key)?table_raw[key]:round(2.500 * Math.pow(ceq, 0.450), 3);
+   const x_val=table_x.hasOwnProperty(key)?table_x[key]:round(Math.log10(ceq), 4);
+   const y_val=table_y.hasOwnProperty(key)?table_y[key]:round(Math.log10(raw_val), 4);
+   return {raw:raw_val,ideal:raw_val,period:1.0,x:x_val,y:y_val,valid:ceq>=0.010&&ceq<=0.850};
+  }
   if(slug==='dipole-moment-dielectric-constant-debye'){
    const x2=Number(input);
    const table_raw={0.010:28.065, 0.020:28.640, 0.035:29.503, 0.050:30.366, 0.070:31.516, 0.090:32.667};
@@ -584,6 +595,15 @@ function predict(slug,input){
 
 function reading(slug,input,raw){
  let x=Number(input),y=Number(raw);
+  if(slug==='adsorption-isotherm-activated-charcoal-freundlich'){
+   const ceq=Number(input);
+   const raw_val=Number(raw);
+   const key=round(ceq, 3);
+   const table_x={0.030:-1.5229, 0.060:-1.2218, 0.120:-0.9208, 0.220:-0.6576, 0.350:-0.4559, 0.550:-0.2596};
+   const table_y={0.030:-0.2874, 0.060:-0.1519, 0.120:-0.0164, 0.220:0.1020, 0.350:0.1928, 0.550:0.2811};
+   x=table_x.hasOwnProperty(key)?table_x[key]:round(Math.log10(ceq), 4);
+   y=table_y.hasOwnProperty(key)?table_y[key]:round(Math.log10(raw_val), 4);
+  }
   if(slug==='dipole-moment-dielectric-constant-debye'){
    x=Number(input);
    y=Number(raw);
@@ -936,6 +956,11 @@ function fit(rows){
 }
 
 function estimate(slug,f){
+  if(slug==='adsorption-isotherm-activated-charcoal-freundlich'){
+   const inv_n=f.m;
+   const se=f.slopeSE || 0.001;
+   return {value:inv_n,se:se,reference:0.450};
+  }
   if(slug==='dipole-moment-dielectric-constant-debye'){
    const slope=f.m;
    const P1=27.490;
