@@ -3426,5 +3426,227 @@
       "In high-throughput decoders, guard against malformed or truncated bitstreams to avoid infinite loops when traversing corrupted internal tree pointers."
     ],
     "limitations": "The simulated execution environment models idealized scalar CPU bitstream packing where each symbol emits its exact theoretical Huffman codeword length L_bar = 2.5000 bits. In physical microprocessor hardware, observable compression latency and memory bus throughput are modulated by CPU L1/L2 cache locality of translation tables, branch mispredictions during bitstream bit-testing loops, bit-accumulator flush boundaries (32-bit vs 64-bit words), and vectorization capabilities of hardware SIMD units."
+  },
+  {
+    "slug": "computational-geometry-convex-hull",
+    "title": "Empirical Analysis of Planar Convex Hull Algorithms: Graham Scan, Jarvis March (Gift Wrapping), Quickhull, Chan's Output-Sensitive Algorithm, and 2D Cross-Product Orientation Invariants",
+    "shortTitle": "Convex Hull Algorithms",
+    "subject": "computer-science",
+    "number": 17,
+    "published": true,
+    "min": 50,
+    "max": 5000,
+    "step": 50,
+    "initial": 1000,
+    "inputLabel": "Planar point set size n (points)",
+    "shortInput": "point count",
+    "inputUnit": "points",
+    "inputDecimals": 0,
+    "rawLabel": "Orientation cross-product evaluations T(n)",
+    "rawUnit": "tests",
+    "rawDecimals": 0,
+    "angle": false,
+    "timed": false,
+    "observationLabel": "Cross-product orientation test count",
+    "xAxis": "Planar point set size n (points)",
+    "yAxis": "Orientation tests T(n) = 2.0000 · n + 0.0000 (tests)",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "target": "k_ccw",
+    "targetName": "Scan Orientation Test Slope k_ccw",
+    "targetSymbol": "k_{\\text{ccw}}",
+    "targetValue": "2.0000",
+    "resultUnit": "tests/point",
+    "resultScale": 1.0,
+    "resultDecimals": 4,
+    "interceptSymbol": "T_0",
+    "interceptValue": "0.0000",
+    "interceptUnit": "tests",
+    "measureLabel": "Execute Convex Hull Benchmark",
+    "page_path": "/computer-science/computational-geometry-convex-hull/",
+    "emptyX": [
+      0,
+      5500
+    ],
+    "emptyY": [
+      0,
+      11000
+    ],
+    "samples": [
+      50,
+      100,
+      200,
+      500,
+      1000,
+      2000,
+      5000
+    ],
+    "aim": "To investigate the geometric mechanics and asymptotic complexity of planar Convex Hull algorithms, evaluate Graham's Scan against Jarvis March (Gift Wrapping), Quickhull, and Chan's optimal output-sensitive algorithm, verify the algebraic 2D cross-product orientation predicate (CCW), and empirically demonstrate the linear scan complexity law T(n) = k_ccw · n + T_0 = 2.0000 · n + 0.0000 orientation tests across point set sizes n ∈ [50, 5000] points.",
+    "intro": "The Convex Hull of a finite set of planar points P in ℝ²—defined formally as the smallest convex polygon CH(P) containing every point in P—is one of the most foundational and extensively studied problems in Computational Geometry. Conceived intuitively as the boundary formed by snapping an elastic rubber band around pins hammered into a board, convex hulls provide the geometric scaffolding for collision detection in physics engines, computer vision object bounding, geographical information systems (GIS), pattern recognition, and facility location optimization. In 1972, Ronald Graham published the first sub-quadratic algorithm: Graham's Scan. By sorting all n points radially by polar angle around an extreme pivot point in O(n log n) time and iteratively maintaining a stack of candidate hull vertices, Graham's scan resolves non-convex reflex vertices using the 2D Cross-Product Orientation Predicate: Δ(p₁, p₂, p₃) = (x₂ - x₁)(y₃ - y₁) - (y₂ - y₁)(x₃ - x₁). If Δ > 0, the triplet forms a strict Counter-Clockwise (CCW) left turn; if Δ ≤ 0, it makes a clockwise right turn or collinear edge, necessitating that the intermediate vertex be popped from the stack. Because each point is pushed onto the stack exactly once and popped at most once during the perimeter scan, the total number of orientation evaluations during the scanning phase is bounded by strictly 2n tests! Symmetrically, R. A. Jarvis (1973) introduced the Jarvis March (Gift Wrapping algorithm), which finds the hull in O(n · h) time—an output-sensitive complexity that heavily outperforms Graham Scan when the number of hull vertices h is small (e.g., h << log n). In 1996, Timothy Chan unified these paradigms into an optimal O(n log h) output-sensitive algorithm by partitioning points into sub-hulls and wrapping them iteratively. Furthermore, robust geometric algorithms must confront IEEE 754 floating-point rounding errors, where near-collinear points cause sign-flips in determinant calculations that violate topological invariants and crash software pipelines. In this laboratory investigation, students benchmark orientation tests across point sets n ∈ [50, 5000], verify the exact linear scanning law T(n) = 2.0000 · n + 0.0000 tests via ordinary least-squares regression, contrast Graham Scan with Jarvis March and Quickhull, and analyze robust adaptive geometric predicates.",
+    "fitEquation": "T(n) = k_ccw · n + T_0 = 2.0000 · n + 0.0000 tests",
+    "gradientUnit": "tests/point",
+    "modelExtra": "In the Graham Scan convex hull benchmark across planar point sets n in [50, 5000] uniformly distributed inside a unit circular bounding disc, the initial polar angle sorting phase executes in O(n log n) time. During the subsequent perimeter scan phase, the algorithm walks the sorted point sequence, pushing each vertex onto the candidate hull stack and popping reflex vertices that produce clockwise (right) turns. Because each of the n vertices is pushed onto the stack exactly once and can be popped at most once across the entire traversal, amortized analysis proves that the total number of 2D cross-product orientation evaluations is strictly bounded by T(n) = 2.0000 · n + 0.0000 tests with exact theoretical intercept T_0 = 0.0000 tests. Ordinary least-squares regression across all benchmark trials yields an ideal coefficient of determination R² = 1.000000 with zero residual variance.",
+    "settings": [
+      "Planar coordinate space normalized to 2D continuous floating-point bounding box [-1000.0, +1000.0]².",
+      "Point set generated via 2D uniform pseudo-random disc distribution with zero duplicate coordinates.",
+      "Polar angle sorting engine utilizing radial coordinate comparator with minimum-y pivot vertex P_0.",
+      "2D orientation predicate engine implementing exact 2×2 determinant cross-product: Δ = (x₂ - x₁)(y₃ - y₁) - (y₂ - y₁)(x₃ - x₁).",
+      "Candidate hull stack maintaining dynamic vertex sequence with LIFO push and pop operations."
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "🔬",
+        "label": "Workbench (Graham Scan & Stack Telemetry)",
+        "desc": "Execute real-time Graham Scan sweeps, observe polar angle sorting, track LIFO stack pushes and pop backtracking, and verify linear orientation test scaling."
+      },
+      {
+        "id": "compare",
+        "icon": "⚖️",
+        "label": "Algorithm Comparison (Graham vs Jarvis vs Quickhull vs Chan)",
+        "desc": "Compare operation counts, output sensitivity, and runtime asymptotics across Graham Scan O(n log n), Jarvis March O(n·h), Quickhull, and Chan's O(n log h)."
+      },
+      {
+        "id": "sandbox",
+        "icon": "🧪",
+        "label": "Interactive Orientation & Robustness Sandbox",
+        "desc": "Inspect 2D cross-product orientation tests (CCW left turn vs CW right turn vs Collinear), simulate floating-point precision breakdown, and explore Shewchuk's adaptive predicates."
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "2D Spatial Point Cloud Generator",
+        "purpose": "Synthesizes planar point sets of designated magnitude n ∈ [50, 5000] under controlled geometric distributions (uniform disc, Gaussian cluster, and extreme perimeter rings)."
+      },
+      {
+        "name": "Pivot Finder & Polar Angle Radial Sorter",
+        "purpose": "Identifies the unique bottom-most extreme pivot point P_0 (lowest y-coordinate, breaking ties with lowest x) and sorts remaining points in ascending polar angle order."
+      },
+      {
+        "name": "2D Cross-Product Orientation Comparator",
+        "purpose": "Evaluates the sign of the 2D cross product Δ(p₁, p₂, p₃) to determine whether a three-point sequence makes a Counter-Clockwise (left) turn, Clockwise (right) turn, or Collinear line."
+      },
+      {
+        "name": "LIFO Candidate Convex Hull Stack",
+        "purpose": "Maintains the convex polygonal chain during perimeter traversal, pushing new candidate vertices and popping interior reflex vertices upon detecting right-turn violations."
+      },
+      {
+        "name": "Output-Sensitive Jarvis March Tracer",
+        "purpose": "Simulates gift-wrapping ray casts from current hull vertex, evaluating all n candidate points per iteration to contrast O(n·h) output sensitivity with Graham's scan."
+      },
+      {
+        "name": "Floating-Point Precision & Robustness Monitor",
+        "purpose": "Monitors IEEE 754 rounding errors during determinant calculations, detecting collinear ambiguity and verifying Jonathan Shewchuk's adaptive precision predicates."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Synthesize Planar Point Cloud & Locate Extreme Pivot",
+        "text": "Initialize the virtual geometric workbench and synthesize n = 50 planar points within the 2D bounding disc. Locate the unique extreme pivot point P_0 having minimum y-coordinate (breaking ties by minimum x-coordinate)."
+      },
+      {
+        "title": "Execute Radial Polar Angle Sorting",
+        "text": "Translate all points relative to pivot P_0 and sort the remaining n - 1 points in ascending order of polar angle θ = atan2(y - y_0, x - x_0) using introsort in O(n log n) comparisons."
+      },
+      {
+        "title": "Initialize Candidate Hull Stack",
+        "text": "Push the pivot point P_0 and the first two sorted points P_1 and P_2 onto the LIFO candidate convex hull stack, establishing the initial directed base edges."
+      },
+      {
+        "title": "Execute Graham Scan Perimeter Walk",
+        "text": "Iterate through remaining points P_i from index 3 to n - 1. While the stack contains at least two vertices and the sequence (next-to-top, top, P_i) makes a non-left turn (cross product Δ ≤ 0), pop the top vertex from the stack. Push P_i onto the stack."
+      },
+      {
+        "title": "Record Orientation Evaluations & Close Polygon",
+        "text": "Upon reaching the final sorted point, perform a final orientation check against pivot P_0 to close the convex hull polygon. Read the cumulative 2D cross-product evaluation register T(n)."
+      },
+      {
+        "title": "Perform Asymptotic Regression Across Point Scales",
+        "text": "Repeat the experimental benchmarking across point counts n ∈ [100, 200, 500, 1000, 2000, 5000]. Perform ordinary least-squares linear regression of T(n) against n to compute slope k_ccw, intercept T_0, and coefficient of determination R²."
+      }
+    ],
+    "topics": [
+      {
+        "question": "What is the planar Convex Hull problem, what are its mathematical definitions, and why is it fundamental to computational geometry?",
+        "answer": "The Convex Hull is the quintessential foundational problem of Computational Geometry, serving as the geometric equivalent of sorting in discrete algorithms.\n\n1. Formal Mathematical Definitions:\nGiven a finite set of n points P = {p₁, p₂, ..., p_n} in Euclidean space ℝ²:\n- Convex Combination: Any point x = ∑_{i=1}^n α_i p_i where α_i ≥ 0 and ∑ α_i = 1.\n- Convex Set: A set S ⊂ ℝ² is convex if for all pairs of points a, b ∈ S, the line segment connecting them is completely contained in S: [a, b] ⊆ S.\n- Convex Hull CH(P): The convex hull of P is defined equivalently as:\n  (a) The intersection of all convex sets containing P;\n  (b) The set of all convex combinations of points in P;\n  (c) The unique minimal-perimeter convex polygon enclosing all points in P.\n\n2. Real-World Applications:\nConvex hulls form the geometric core of modern spatial computing:\n- Physics Engines & Video Games: Bounding volume hierarchies (BVH) utilize convex hulls for high-speed broad-phase collision detection (GJK algorithm);\n- Computer Vision & Robotics: Minimum bounding boxes and convex deficiency trees represent segmented object silhouettes and obstacle boundaries for autonomous navigation;\n- Geographic Information Systems (GIS): Computing territorial catchment basins, animal home ranges, and convex boundary enclosures;\n- Statistics & Machine Learning: Support Vector Machines (SVM) identify maximum-margin hyperplanes that separate the convex hulls of distinct data classes."
+      },
+      {
+        "question": "What is the 2D Cross-Product Orientation Predicate, how is it derived from determinants, and why does it avoid trigonometric function overhead?",
+        "answer": "In computational geometry, determining whether a sequence of three points makes a left turn, a right turn, or continues straight is the central primitive operation.\n\n1. Determinant Derivation:\nConsider three planar points p₁ = (x₁, y₁), p₂ = (x₂, y₂), and p₃ = (x₃, y₃). The directed vectors are v₁₂ = p₂ - p₁ = (x₂ - x₁, y₂ - y₁) and v₁₃ = p₃ - p₁ = (x₃ - x₁, y₃ - y₁). The signed area of the parallelogram spanned by v₁₂ and v₁₃ is given by the 2D cross product:\nΔ(p₁, p₂, p₃) = v₁₂ × v₁₃ = det [ (x₂ - x₁) (x₃ - x₁) ; (y₂ - y₁) (y₃ - y₁) ]\nExpanding the determinant yields the exact orientation formula:\nΔ(p₁, p₂, p₃) = (x₂ - x₁)(y₃ - y₁) - (y₂ - y₁)(x₃ - x₁).\n\n2. Orientation Classification:\n- If Δ > 0: The vector v₁₃ lies to the left of v₁₂. The sequence (p₁, p₂, p₃) forms a strict Counter-Clockwise (CCW) Left Turn.\n- If Δ < 0: The vector v₁₃ lies to the right of v₁₂. The sequence (p₁, p₂, p₃) forms a Clockwise (CW) Right Turn.\n- If Δ = 0: The vectors v₁₂ and v₁₃ are collinear (the three points lie on a single straight line).\n\n3. Elimination of Transcendental Arithmetic:\nNaive geometry implementations often compute polar angles using transcendental functions: θ = atan2(y₂ - y₁, x₂ - x₁). Floating-point trigonometric functions consume 50 to 100 CPU cycles and suffer from roundoff error. The cross-product predicate uses only 2 multiplications and 4 subtractions (executing in ~2 CPU cycles on modern ALUs), completely eliminating trigonometric calls and providing exact integer arithmetic guarantees."
+      },
+      {
+        "question": "What is the algorithmic structure of Graham's Scan (1972), and why does amortized analysis guarantee strictly O(n) operations during the scanning phase?",
+        "answer": "In 1972, Ronald Graham published 'An Efficient Algorithm for Determining the Convex Hull of a Finite Planar Set', inventing the first sub-quadratic convex hull algorithm.\n\n1. Graham Scan Phases:\n- Phase 1 (Pivot Selection): Find the point P_0 with the minimum y-coordinate (breaking ties by minimum x-coordinate). P_0 is guaranteed to be an extreme vertex on the convex hull.\n- Phase 2 (Angular Sorting): Sort all remaining n - 1 points radially around P_0 in ascending polar angle order. This sorting takes O(n log n) time using comparison-based introsort.\n- Phase 3 (The Perimeter Scan): Maintain a LIFO stack of candidate hull vertices, initialized with P_0, P_1, and P_2. For each subsequent point P_i (from 3 to n - 1):\n  While the stack has ≥ 2 vertices AND the orientation of (second-from-top, top, P_i) is NOT counter-clockwise (Δ ≤ 0):\n    Pop the top vertex from the stack (it is a reflex interior vertex);\n  Push P_i onto the stack.\n\n2. Amortized Analysis of the Scanning Phase:\nAt first glance, the nested while-loop might appear to run in O(n²) time. However, aggregate amortized analysis reveals that:\n- Each point P_i is pushed onto the stack exactly once across the outer loop (total n pushes);\n- A point can only be popped from the stack if it was previously pushed;\n- Once a point is popped, it is permanently discarded and can never be popped again!\nTherefore, across all n iterations, the total number of stack pops cannot exceed n - 1. Because each iteration of the inner while-loop executes exactly one stack pop and one orientation evaluation, the total number of orientation tests during the perimeter scan is strictly bounded by:\nT(n) = Pushes + Pops ≤ n + n = 2n tests.\nThus, after the O(n log n) sorting phase, the scanning phase executes in strictly O(n) linear time!"
+      },
+      {
+        "question": "How does Jarvis March (Gift Wrapping) operate, what is output sensitivity O(n · h), and under what geometric conditions does it outperform Graham Scan?",
+        "answer": "In 1973, R. A. Jarvis formulated the Gift Wrapping algorithm (Jarvis March), introducing the powerful concept of Output-Sensitive Complexity to computational geometry.\n\n1. Algorithm Mechanics:\nJarvis March simulates wrapping a taut string around the point set:\n- Start at the guaranteed hull vertex P_0 (minimum y-coordinate);\n- To find the next hull vertex, cast a ray and rotate it counter-clockwise until it strikes the next point. In terms of orientation tests: iterate through all n points in P, maintaining the point with the most counter-clockwise orientation relative to the current hull vertex;\n- Append the winning point to the hull and repeat the search from this new vertex;\n- Terminate when the search returns to the starting vertex P_0.\n\n2. Output Sensitivity & Asymptotics:\nLet h denote the number of vertices on the final convex hull (where 3 ≤ h ≤ n):\n- Each hull vertex requires inspecting all n points via cross-product tests;\n- To discover all h hull vertices, Jarvis March executes exactly h rounds, performing O(n · h) total operations.\n\n3. Comparative Crossover Analysis:\n- When h << log n (e.g., in a circle with points concentrated inside, where h = 4 or 5 vertices), Jarvis March runs in O(n) time, running significantly faster than Graham Scan's O(n log n) sorting bottleneck;\n- However, when h ≈ n (e.g., points situated along an ellipse or circular perimeter where all points belong to the hull), Jarvis March degrades catastrophically to O(n²), making Graham Scan dramatically superior."
+      },
+      {
+        "question": "What is Quickhull, how does it adapt Quicksort to 2D geometry, and what causes worst-case quadratic degradation?",
+        "answer": "Quickhull—formulated independently by W. Eddy (1977) and A. Bykat (1978)—is a divide-and-conquer algorithm directly analogous to C. A. R. Hoare's Quicksort.\n\n1. Divide-and-Conquer Mechanics:\n- Step 1 (Extreme Baseline): Find the points with minimum and maximum x-coordinates: P_min and P_max. The directed line segment L = [P_min, P_max] divides the remaining points into two subsets: S_upper (points to the left of L, Δ > 0) and S_lower (points to the right of L, Δ < 0);\n- Step 2 (Apex Discovery): For S_upper, find the point P_apex that is furthest from line L (maximizing triangle area Δ(P_min, P_max, P_apex));\n- Step 3 (Interior Elimination): Points falling inside the triangle formed by (P_min, P_max, P_apex) cannot possibly belong to the convex hull and are immediately discarded;\n- Step 4 (Recursive Bisection): The segments [P_min, P_apex] and [P_apex, P_max] define two new outward-facing half-planes. Recursively apply Quickhull to the points lying outside these segments.\n\n2. Complexity & Pathological Degradation:\n- Average-Case Complexity: On uniformly distributed point sets, each apex discards a large fraction of interior points, leading to a recurrence T(n) = 2T(n/2) + O(n), which solves by the Master Theorem to O(n log n) expected time;\n- Worst-Case Quadratic Degradation: If points are arranged along a concave circular curve such that each step partitions the remaining points into 1 and n - 1 (analogous to sorted inputs in Quicksort), Quickhull degrades to O(n²) time."
+      },
+      {
+        "question": "What is Timothy Chan's 1996 Convex Hull algorithm, and how does it achieve the optimal output-sensitive bound O(n log h)?",
+        "answer": "In 1996, Timothy M. Chan achieved a monumental breakthrough in theoretical computer science by publishing 'Optimal Output-Sensitive Convex Hull Algorithms in Two and Three Dimensions', unifying Graham Scan and Jarvis March into an optimal O(n log h) algorithm.\n\n1. The Information-Theoretic Lower Bound:\nMichael Shamos (1978) proved that sorting n real numbers can be reduced to computing the convex hull of n points (mapping numbers x_i ⟶ (x_i, x_i²)). Consequently, any comparison-based convex hull algorithm requires at least Ω(n log n) worst-case time. When parameterized by the output hull size h, the true information-theoretic lower bound is Ω(n log h).\n\n2. Chan's Two-Level Hybrid Architecture:\nChan combined the strengths of Graham Scan and Jarvis March:\n- Partitioning: Divide the n points into r = ⌈n/m⌉ groups of size m (where m is an initial guess for h);\n- Mini-Hulls: For each group, compute its convex hull in O(m log m) time using Graham's scan. The total time for all r groups is r · O(m log m) = (n/m) · O(m log m) = O(n log m);\n- Wrapped Merging: Run Jarvis March on the r mini-hulls! At each step of Jarvis March, instead of inspecting all n points individually, use binary search on each mini-hull to find its tangent point in O(log m) time. Evaluating tangents across all r mini-hulls takes r · O(log m) = (n/m) log m time per hull vertex;\n- For m steps, the wrapping takes m · (n/m log m) = O(n log m) time!\n\n3. Doubling Search Guess for m:\nBecause h is unknown a priori, Chan squares the guess m at each iteration: m = 2^{2^t} for t = 1, 2, 3... The algorithm terminates as soon as m ≥ h, and the geometric series ∑ O(n log(2^{2^t})) converges strictly to O(n log h)!"
+      },
+      {
+        "question": "What are geometric robustness failures in floating-point arithmetic, and how do adaptive precision predicates (Shewchuk) guarantee topological consistency?",
+        "answer": "Geometric algorithms implemented using standard IEEE 754 double-precision floating-point arithmetic are notorious for fatal robustness failures in production systems.\n\n1. Floating-Point Roundoff & Topological Inconsistency:\nThe 2D orientation determinant Δ = (x₂ - x₁)(y₃ - y₁) - (y₂ - y₁)(x₃ - x₁) involves products of differences. When three points are nearly collinear, roundoff errors in the least significant bits can cause the calculated value of Δ to have the wrong sign:\n- An actual left turn can be evaluated as a right turn;\n- This causes Graham Scan or Quickhull to produce self-intersecting polygons, invert winding orders, discard true hull vertices, or enter infinite loops!\n\n2. Jonathan Shewchuk's Adaptive Precision Arithmetic:\nIn 1997, Jonathan Shewchuk solved this industry-wide crisis by designing 'Adaptive Precision Floating-Point Arithmetic and Fast Robust Geometric Predicates':\n- Fast Hardware Filter: First, compute Δ using standard IEEE 754 64-bit hardware floating-point operations. Calculate an error bound ε based on the maximum coordinates of the inputs;\n- Bound Testing: If |Δ| > ε, the floating-point result is guaranteed to have the correct sign, executing in just a few clock cycles;\n- Adaptive Expansion: If |Δ| ≤ ε, the computation is in the precision danger zone! The algorithm switches dynamically to multiple-precision arithmetic using expansions (arrays of non-overlapping floating-point words) to compute the exact determinant sign with zero rounding error.\nModern spatial libraries (CGAL, GEOS, JTS) mandate adaptive precision predicates to guarantee complete mathematical robustness."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What does a positive 2D cross-product determinant Δ(p₁, p₂, p₃) > 0 signify regarding the orientation of the three points?",
+        "options": [
+          "The triplet makes a clockwise right turn",
+          "The triplet forms a strict counter-clockwise (CCW) left turn",
+          "The three points are perfectly collinear",
+          "The distance between p₁ and p₃ is negative"
+        ],
+        "correct": 1,
+        "explanation": "A positive 2D cross-product determinant Δ = (x₂ - x₁)(y₃ - y₁) - (y₂ - y₁)(x₃ - x₁) > 0 corresponds to a positive signed area, proving that the vector (p₂ ⟶ p₃) turns left (counter-clockwise) relative to (p₁ ⟶ p₂)."
+      },
+      {
+        "question": "Why is the scanning phase of Graham's Scan guaranteed to run in strictly O(n) linear time despite its nested while-loop?",
+        "options": [
+          "Because the points are pre-filtered using a binary search tree",
+          "Because each point is pushed onto the stack exactly once and can be popped at most once across the entire sweep",
+          "Because the while-loop is restricted to execute at most 5 times",
+          "Because trigonometric functions are cached in CPU registers"
+        ],
+        "correct": 1,
+        "explanation": "By amortized analysis, each of the n points is pushed onto the stack exactly once. A vertex can only be popped if it was previously pushed, bounding the total number of stack pops to at most n - 1. Thus, total stack operations and orientation tests are strictly O(n)."
+      },
+      {
+        "question": "What is the computational complexity of the Jarvis March (Gift Wrapping) algorithm, where h represents the number of vertices on the convex hull?",
+        "options": [
+          "O(n log n)",
+          "O(n · h)",
+          "O(h² log n)",
+          "O(n³)"
+        ],
+        "correct": 1,
+        "explanation": "Jarvis March is an output-sensitive algorithm: each hull vertex is discovered by inspecting all n candidate points, executing in O(n · h) time. When h is small (h << log n), it heavily outperforms O(n log n) sorting."
+      },
+      {
+        "question": "How do adaptive precision geometric predicates (such as Jonathan Shewchuk's algorithm) prevent floating-point crashes in computational geometry?",
+        "options": [
+          "By truncating all coordinates to 8-bit integers",
+          "By using fast hardware floating-point filters first, switching to exact multiple-precision expansions only when the determinant is within the precision uncertainty bound ε",
+          "By ignoring nearly collinear points completely",
+          "By executing algorithms on quantum processors"
+        ],
+        "correct": 1,
+        "explanation": "Shewchuk's adaptive predicates compute determinants using fast floating-point arithmetic. If the result exceeds the calculated roundoff error bound ε, the sign is trusted; otherwise, exact multi-word expansions resolve the true sign with zero error."
+      }
+    ],
+    "precautions": [
+      "Always resolve collinear points sharing identical polar angles during sorting by retaining only the point furthest from the pivot P_0 to prevent zero-length collinear edge artifacts.",
+      "When selecting the pivot point P_0, break ties in minimum y-coordinate strictly by minimum x-coordinate to guarantee a unique, deterministic extreme vertex.",
+      "Implement robust orientation predicates using exact integer arithmetic or Shewchuk's adaptive precision floating-point filters to prevent sign-flips on nearly collinear triplets.",
+      "Verify that the point count n ≥ 3 before invoking convex hull algorithms; handle collinear or degenerate point clouds (n < 3) via explicit topological guards."
+    ],
+    "limitations": "The simulated execution environment models idealized geometric computation where 2D cross-product orientation evaluations execute deterministically with exact arithmetic (T(n) = 2n). In physical semiconductor microprocessors, wall-clock convex hull execution latency is modulated by sorting subsystem memory bandwidth (O(n log n) cache line evictions), branch predictor stalls during orientation sign-checking (`if (Δ <= 0)`), CPU SIMD vectorization capabilities for parallel coordinate transformations, and adaptive precision fallback overhead on near-collinear inputs."
   }
 ]

@@ -124,6 +124,13 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:raw/20000.0,x,y,valid:n>=500&&n<=50000};
  }
+ if(slug==='computational-geometry-convex-hull'){
+  const n=Number(input);
+  const raw=Math.round(2 * n);
+  const x=n;
+  const y=raw;
+  return {raw,ideal:raw,period:raw/2000.0,x,y,valid:n>=50&&n<=5000};
+ }
  throw Error('Unknown CS experiment: '+slug);
 }
 
@@ -201,6 +208,10 @@ function reading(slug,input,raw){
   x=Number(input);
   y=raw;
  }
+ if(slug==='computational-geometry-convex-hull'){
+  x=Number(input);
+  y=raw;
+ }
  return {input,raw,x,y};
 }
 
@@ -272,6 +283,9 @@ function estimate(slug,f){
  }
  if(slug==='huffman-coding-compression'){
   return {value:f.m,se:f.slopeSE,reference:2.5000};
+ }
+ if(slug==='computational-geometry-convex-hull'){
+  return {value:f.m,se:f.slopeSE,reference:2.0000};
  }
  throw Error('Unknown CS experiment: '+slug);
 }

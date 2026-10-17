@@ -140,6 +140,57 @@ function drawComparativeSim(t,p,v,ink,soft,orange){
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
+ if(cfg.slug==='computational-geometry-convex-hull'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'PLANAR CONVEX HULL ALGORITHMIC PARADIGMS (n = '+p.input+' points)','#e2f0f8',11);
+
+  const n=p.input;
+  const h_est=Math.max(4, Math.round(Math.min(n, 2.5 * Math.log2(n))));
+  const c_chan=Math.round(n * Math.log2(h_est + 2) + n);
+  const c_graham=Math.round(n * Math.log2(n) + 2 * n);
+  const c_quickhull=Math.round(1.4 * n * Math.log2(n));
+  const c_jarvis=Math.round(n * h_est);
+  const c_brute=Math.round(0.5 * n * n * n);
+
+  const strategies=[
+   {name:"Chan's Output-Sensitive Hull",col:'#10b981',cost:c_chan,scale:'O(n log h) optimal',desc:'Hybrid sub-hulls + wrapping; optimal output-sensitive bound'},
+   {name:"Graham's Scan (Polar Stack)",col:'#38bdf8',cost:c_graham,scale:'O(n log n) + O(n) scan',desc:'Pivot sort + amortized linear stack scan; 2n orientation tests'},
+   {name:'Quickhull (Divide & Conquer)',col:'#f97316',cost:c_quickhull,scale:'O(n log n) avg, O(n²) worst',desc:'Recursive extreme-point bisection; discards interior points early'},
+   {name:'Jarvis March (Gift Wrapping)',col:'#a855f7',cost:c_jarvis,scale:'O(n · h) output-bound',desc:'Finds successive hull vertices via radial scan; best when h << log n'},
+   {name:'Brute-Force All-Pairs Hull',col:'#ef4444',cost:c_brute,scale:'O(n³) combinatorial',desc:'Tests every pair against all remaining points; computationally intractable'}
+  ];
+
+  strategies.forEach((item,idx)=>{
+   const rowY=cY+16+idx*42;
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+12)+'" fill="#dcebf2" font-size="8.5" font-weight="bold">'+item.name+'</text>';
+   const costStr=item.cost>=1000000?(item.cost/1000000).toFixed(1)+'M':item.cost>=1000?(item.cost/1000).toFixed(1)+'k':item.cost;
+   svg+='<text x="'+(cX+cW-15)+'" y="'+(rowY+12)+'" text-anchor="end" fill="'+item.col+'" font-size="8.5" font-family="monospace" font-weight="bold">'+costStr+' ops ('+item.scale+')</text>';
+   
+   const barX=cX+15,barY=rowY+16,barMaxW=cW-30;
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barMaxW+'" height="7" rx="2" fill="#16242c"/>';
+   const maxVal=Math.max(1000, c_brute);
+   const frac=Math.min(1.0,Math.log10(item.cost+1)/Math.log10(maxVal+1));
+   const fillW=Math.max(4,frac*barMaxW);
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+fillW+'" height="7" rx="2" fill="'+item.col+'"/>';
+  });
+
+  const bX=460,bY=45,bW=220,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">OUTPUT SENSITIVITY INVARIANT</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="20" font-family="monospace" font-weight="bold">O(n log h)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+66)+'" fill="#10b981" font-size="9">Timothy Chan (1996) Optimal Bound</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+76)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+76)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+94)+'" fill="#7e9bab" font-size="9">GRAHAM AMORTIZED SCAN</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+116)+'" fill="'+ink+'" font-size="14" font-family="monospace" font-weight="bold">T(n) = 2.0000 · n</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+132)+'" fill="#8ba5b5" font-size="8">Push 1× + Pop ≤ 1× = Exactly 2n tests</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+142)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+142)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+160)+'" fill="#7e9bab" font-size="9">CROSSOVER CRITERION</text>';
+  svg+=text(bX+bW/2,bY+184,'h < log n : Jarvis March Favored','#10b981',9.5);
+  svg+=text(bX+bW/2,bY+206,'h ≥ log n : Graham Scan Favored',orange,8.5);
+  svg+=text(360,305,'Information-Theoretic Bound: Sorting reduction establishes Ω(n log n) general lower bound; Ω(n log h) output-sensitive lower bound',soft,10);
+  return svg;
+ }
+
  if(cfg.slug==='huffman-coding-compression'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
   svg+=text(cX+cW/2,cY-14,'LOSSLESS DATA COMPRESSION PARADIGMS (n = '+p.input+' symbols)','#e2f0f8',11);
@@ -960,6 +1011,75 @@ function drawDynamicSandbox(t,p,v,ink,soft,orange){
  const cX=45,cY=45,cW=400,cH=230;
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+ if(cfg.slug==='computational-geometry-convex-hull'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'2D CROSS-PRODUCT ORIENTATION PREDICATE & SHEWCHUK EXPANSIONS (n = '+p.input+')','#e2f0f8',11);
+
+  svg+='<text x="'+(cX+15)+'" y="'+(cY+18)+'" fill="#10b981" font-size="8.5" font-weight="bold">ORIENTATION DETERMINANT: Δ(p₁, p₂, p₃) = (x₂ - x₁)(y₃ - y₁) - (y₂ - y₁)(x₃ - x₁)</text>';
+
+  const detBoxX=cX+15, detBoxY=cY+28, detBoxW=210, detBoxH=185;
+  svg+='<rect x="'+detBoxX+'" y="'+detBoxY+'" width="'+detBoxW+'" height="'+detBoxH+'" rx="4" fill="#041a1e" stroke="#14b8a6" stroke-width="1.2"/>';
+  svg+='<text x="'+(detBoxX+10)+'" y="'+(detBoxY+15)+'" fill="#2dd4bf" font-size="8" font-weight="bold">PLANAR TRIPLET ORIENTATION GEOMETRY</text>';
+
+  const p1={x:detBoxX+40, y:detBoxY+145};
+  const p2={x:detBoxX+130, y:detBoxY+115};
+  const p3={x:detBoxX+95, y:detBoxY+45};
+  const p4={x:p3.x + (p2.x - p1.x), y:p3.y + (p2.y - p1.y)};
+
+  svg+='<polygon points="'+p1.x+','+p1.y+' '+p2.x+','+p2.y+' '+p4.x+','+p4.y+' '+p3.x+','+p3.y+'" fill="#38bdf8" fill-opacity="0.12" stroke="#38bdf8" stroke-dasharray="3,3" stroke-width="1"/>';
+  svg+='<text x="'+(p1.x+70)+'" y="'+(p1.y-35)+'" text-anchor="middle" fill="#38bdf8" font-size="8" font-style="italic">Area = |Δ| / 2</text>';
+
+  svg+='<line x1="'+p1.x+'" y1="'+p1.y+'" x2="'+p2.x+'" y2="'+p2.y+'" stroke="#10b981" stroke-width="2"/>';
+  svg+='<line x1="'+p1.x+'" y1="'+p1.y+'" x2="'+p3.x+'" y2="'+p3.y+'" stroke="#f97316" stroke-width="2"/>';
+  svg+='<line x1="'+p2.x+'" y1="'+p2.y+'" x2="'+p3.x+'" y2="'+p3.y+'" stroke="#a855f7" stroke-width="1.5" stroke-dasharray="4,2"/>';
+
+  const pts=[
+   {name:'P₁ (prev)',x:p1.x,y:p1.y,col:'#10b981',lx:-8,ly:12},
+   {name:'P₂ (top)',x:p2.x,y:p2.y,col:'#38bdf8',lx:10,ly:5},
+   {name:'P₃ (curr)',x:p3.x,y:p3.y,col:'#f97316',lx:-5,ly:-8}
+  ];
+  pts.forEach(pt=>{
+   svg+='<circle cx="'+pt.x+'" cy="'+pt.y+'" r="4.5" fill="#0b1722" stroke="'+pt.col+'" stroke-width="2"/>';
+   svg+='<text x="'+(pt.x+pt.lx)+'" y="'+(pt.y+pt.ly)+'" fill="'+pt.col+'" font-size="7.5" font-weight="bold">'+pt.name+'</text>';
+  });
+
+  svg+='<path d="M '+(p2.x-15)+' '+(p2.y-5)+' A 15 15 0 0 1 '+(p2.x-10)+' '+(p2.y-18)+'" fill="none" stroke="#22c55e" stroke-width="1.5"/>';
+  svg+='<text x="'+(p2.x-26)+'" y="'+(p2.y-16)+'" fill="#22c55e" font-size="7" font-weight="bold">CCW +</text>';
+
+  const stBoxX=cX+235, stBoxY=cY+28, stBoxW=155, stBoxH=185;
+  svg+='<rect x="'+stBoxX+'" y="'+stBoxY+'" width="'+stBoxW+'" height="'+stBoxH+'" rx="4" fill="#0f172a" stroke="#6366f1" stroke-width="1.2"/>';
+  svg+='<text x="'+(stBoxX+10)+'" y="'+(stBoxY+15)+'" fill="#a5b4fc" font-size="8" font-weight="bold">PREDICATE CLASSIFICATION</text>';
+
+  const rules=[
+   {state:'Δ > 0 : Counter-Clockwise',act:'Left Turn ⟶ PUSH P₃',col:'#10b981',desc:'Convex boundary maintained'},
+   {state:'Δ < 0 : Clockwise',act:'Right Turn ⟶ POP P₂',col:'#ef4444',desc:'Reflex vertex eliminated'},
+   {state:'Δ = 0 : Collinear',act:'Degenerate ⟶ POP Closest',col:'#f59e0b',desc:'Keep strictly extreme point'}
+  ];
+  rules.forEach((r,i)=>{
+   const rY=stBoxY+30+i*46;
+   svg+='<rect x="'+(stBoxX+6)+'" y="'+rY+'" width="'+(stBoxW-12)+'" height="38" rx="3" fill="#1e293b" stroke="'+r.col+'" stroke-width="0.8"/>';
+   svg+='<text x="'+(stBoxX+12)+'" y="'+(rY+12)+'" fill="'+r.col+'" font-size="7.5" font-weight="bold">'+r.state+'</text>';
+   svg+='<text x="'+(stBoxX+12)+'" y="'+(rY+23)+'" fill="#f1f5f9" font-size="7" font-family="monospace">'+r.act+'</text>';
+   svg+='<text x="'+(stBoxX+12)+'" y="'+(rY+33)+'" fill="#94a3b8" font-size="6.5">'+r.desc+'</text>';
+  });
+
+  const bX=460, bY=45, bW=220, bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">SHEWCHUK ADAPTIVE PRECISION</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="18" font-family="monospace" font-weight="bold">Zero Sign-Flips</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+66)+'" fill="#10b981" font-size="9">Exact Multi-Precision Arithmetic</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+76)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+76)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+94)+'" fill="#7e9bab" font-size="9">IEEE 754 FILTER BOUND</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+114)+'" fill="'+ink+'" font-size="12" font-family="monospace" font-weight="bold">ε = 2^{-53} ≈ 1.11 × 10^{-16}</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+128)+'" fill="#64748b" font-size="8">Fallback to expansion if |Δ| ≤ bound</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+138)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+138)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+156)+'" fill="#7e9bab" font-size="9">TOPOLOGICAL CONSISTENCY</text>';
+  svg+=text(bX+bW/2,bY+178,'No Self-Intersecting Polygons','#10b981',9);
+  svg+=text(bX+bW/2,bY+198,'Guaranteed Convex Enclosure',orange,8.5);
+  svg+=text(360,305,'Robustness Invariant: Floating-point cancellation near collinearities is resolved by exact non-overlapping expansions',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='huffman-coding-compression'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
@@ -2073,6 +2193,103 @@ function draw(t){
  const ink='#38bdf8',soft='#7e9bab',orange='#f97316';
  if(currentSimMode==='compare'){$('apparatusDiagram').innerHTML=drawComparativeSim(t,p,v,ink,soft,orange);return;}
  if(currentSimMode==='sandbox'){$('apparatusDiagram').innerHTML=drawDynamicSandbox(t,p,v,ink,soft,orange);return;}
+
+ if(cfg.slug==='computational-geometry-convex-hull'){
+  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
+  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+  const n=p.input;
+  const tests=v.raw;
+  const sortCost=Math.round(n * Math.log2(n));
+
+  svg+='<rect x="35" y="38" width="410" height="235" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+=text(240,24,"Graham's Scan Planar Perimeter Traversal & Hull Stack");
+
+  svg+='<text x="50" y="56" fill="#7e9bab" font-size="8.5" font-weight="bold">POINT SET n = '+n+' · ORIENTATION EVALUATIONS T(n) = '+tests+' · SLOPE m = 2.0000</text>';
+
+  const cvsX=50, cvsY=68, cvsW=245, cvsH=190;
+  svg+='<rect x="'+cvsX+'" y="'+cvsY+'" width="'+cvsW+'" height="'+cvsH+'" rx="4" fill="#07131b" stroke="#1e3a4a" stroke-width="1"/>';
+
+  const pivot={x:cvsX+70, y:cvsY+160};
+  const hullPts=[
+   pivot,
+   {x:cvsX+170, y:cvsY+150},
+   {x:cvsX+220, y:cvsY+105},
+   {x:cvsX+190, y:cvsY+40},
+   {x:cvsX+110, y:cvsY+30},
+   {x:cvsX+45, y:cvsY+75}
+  ];
+
+  let hullPath='M '+hullPts[0].x+' '+hullPts[0].y;
+  for(let i=1; i<hullPts.length; i++){
+   hullPath+=' L '+hullPts[i].x+' '+hullPts[i].y;
+  }
+  hullPath+=' Z';
+  svg+='<path d="'+hullPath+'" fill="#10b981" fill-opacity="0.15" stroke="#10b981" stroke-width="2"/>';
+
+  hullPts.slice(1).forEach(pt=>{
+   svg+='<line x1="'+pivot.x+'" y1="'+pivot.y+'" x2="'+pt.x+'" y2="'+pt.y+'" stroke="#38bdf8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>';
+  });
+
+  const interiorPts=[
+   {x:cvsX+95, y:cvsY+110},
+   {x:cvsX+135, y:cvsY+130},
+   {x:cvsX+150, y:cvsY+85},
+   {x:cvsX+115, y:cvsY+65},
+   {x:cvsX+80, y:cvsY+85},
+   {x:cvsX+165, y:cvsY+65},
+   {x:cvsX+125, y:cvsY+100}
+  ];
+  interiorPts.forEach(pt=>{
+   svg+='<circle cx="'+pt.x+'" cy="'+pt.y+'" r="2.5" fill="#64748b" opacity="0.7"/>';
+  });
+
+  hullPts.forEach((pt,i)=>{
+   const isPivot = (i===0);
+   const col = isPivot ? orange : '#10b981';
+   svg+='<circle cx="'+pt.x+'" cy="'+pt.y+'" r="'+(isPivot?4.5:3.5)+'" fill="#0b1722" stroke="'+col+'" stroke-width="1.8"/>';
+   svg+='<text x="'+(pt.x+(isPivot?-15:6))+'" y="'+(pt.y+(isPivot?12:-4))+'" fill="'+col+'" font-size="7" font-weight="bold">'+(isPivot?'P₀ (pivot)':'P'+i)+'</text>';
+  });
+
+  const stkX=cvsX+255, stkY=cvsY, stkW=130, stkH=190;
+  svg+='<rect x="'+stkX+'" y="'+stkY+'" width="'+stkW+'" height="'+stkH+'" rx="4" fill="#091824" stroke="#1c303d" stroke-width="1"/>';
+  svg+='<text x="'+(stkX+10)+'" y="'+(stkY+14)+'" fill="#38bdf8" font-size="7.5" font-weight="bold">HULL VERTEX STACK</text>';
+
+  const stackItems=[
+   {idx:'[4]',val:'P₄ (curr top)',col:'#10b981'},
+   {idx:'[3]',val:'P₃ (verified)',col:'#10b981'},
+   {idx:'[2]',val:'P₂ (verified)',col:'#10b981'},
+   {idx:'[1]',val:'P₁ (verified)',col:'#10b981'},
+   {idx:'[0]',val:'P₀ (pivot)',col:orange}
+  ];
+  stackItems.forEach((stk,idx)=>{
+   const itemY=stkY+26+idx*22;
+   svg+='<rect x="'+(stkX+8)+'" y="'+itemY+'" width="'+(stkW-16)+'" height="18" rx="2" fill="#142834" stroke="'+stk.col+'" stroke-width="0.8"/>';
+   svg+='<text x="'+(stkX+12)+'" y="'+(itemY+12)+'" fill="#64748b" font-size="7" font-family="monospace">'+stk.idx+'</text>';
+   svg+='<text x="'+(stkX+34)+'" y="'+(itemY+12)+'" fill="'+stk.col+'" font-size="7.5" font-weight="bold">'+stk.val+'</text>';
+  });
+
+  svg+='<rect x="'+(stkX+8)+'" y="'+(stkY+140)+'" width="'+(stkW-16)+'" height="42" rx="3" fill="#1e1b2e" stroke="#ef4444" stroke-width="0.8"/>';
+  svg+='<text x="'+(stkX+12)+'" y="'+(stkY+152)+'" fill="#f87171" font-size="7" font-weight="bold">POPPED (Reflex):</text>';
+  svg+='<text x="'+(stkX+12)+'" y="'+(stkY+164)+'" fill="#cbd5e1" font-size="6.5" font-family="monospace">P_ref₁: Δ = -14.2 &lt; 0</text>';
+  svg+='<text x="'+(stkX+12)+'" y="'+(stkY+174)+'" fill="#cbd5e1" font-size="6.5" font-family="monospace">P_ref₂: Δ = -3.8 &lt; 0</text>';
+
+  const bX=460, bY=45, bW=220, bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">TOTAL ORIENTATION EVALUATIONS</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+tests.toLocaleString()+' Tests</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+66)+'" fill="#10b981" font-size="9">Amortized Scan: T(n) = 2.0000 · n</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+76)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+76)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+94)+'" fill="#7e9bab" font-size="9">PHASE COMPLEXITY DECOMPOSITION</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+112)+'" fill="'+ink+'" font-size="11" font-family="monospace">1. Sort: O(n log n) ≈ '+sortCost.toLocaleString()+' ops</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+128)+'" fill="'+ink+'" font-size="11" font-family="monospace">2. Scan: O(n) amortized = '+tests+' tests</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+138)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+138)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+156)+'" fill="#7e9bab" font-size="9">PERIMETER STACK INVARIANT</text>';
+  svg+=text(bX+bW/2,bY+178,'Push 1× + Pop ≤ 1× per vertex','#10b981',9);
+  svg+=text(bX+bW/2,bY+198,'Guaranteed Convex Hull Enclosure',orange,8.5);
+  svg+=text(360,305,"Graham's Scan Invariant: Each point is pushed onto stack once and popped at most once; scanning phase executes in strictly <= 2n orientation tests",soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='huffman-coding-compression'){
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
