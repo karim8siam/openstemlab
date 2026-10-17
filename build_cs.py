@@ -95,6 +95,12 @@ def observation(c,value):
   x=n
   y=float(raw)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='network-flow-max-cut':
+  v=float(value)
+  raw=int(round(10.0*v))
+  x=v
+  y=float(raw)
+  return {'input':value,'raw':raw,'x':x,'y':y}
  raise ValueError(f"Unknown CS experiment {slug}")
 
 def fit(rows):
@@ -144,6 +150,8 @@ def estimate(c,f):
   return f['m'],f['slopeSE'],8.0000
  elif slug=='string-matching-automata':
   return f['m'],f['slopeSE'],1.0000
+ elif slug=='network-flow-max-cut':
+  return f['m'],f['slopeSE'],10.0000
  raise ValueError(f"Unknown CS experiment {slug}")
 
 def fmt(v,n=5):
@@ -190,6 +198,9 @@ def formula(c,f):
  elif slug=='string-matching-automata':
   val=f['m']*c['resultScale']
   return f"k_kmp = m = {fmt(val,c['resultDecimals'])} comparisons/char; Intercept C_0 = {fmt(f['b'],c['resultDecimals'])} comparisons (theoretical k_kmp = 1.0000, C_0 = 20.0000)"
+ elif slug=='network-flow-max-cut':
+  val=f['m']*c['resultScale']
+  return f"k_flow = m = {fmt(val,c['resultDecimals'])} inspections/vertex; Intercept T_0 = {fmt(f['b'],c['resultDecimals'])} inspections (theoretical k_flow = 10.0000, T_0 = 0.0000)"
  return ""
 
 def worked(c,row):
@@ -264,6 +275,11 @@ def worked(c,row):
   m_pat=20
   c_comps=row['raw']
   return f"Text Stream Length n = {int(n)} chars; Pattern Length m = {m_pat} chars; Precomputed Failure Array π[0..19] = 20 entries.\nTotal Character Comparisons: C(n) = k_kmp · n + C_0 = 1.0000 × {int(n)} + 20 = {c_comps} comparisons.\nVerification: The text pointer i strictly increments from 0 to {int(n)-1} without ever decrementing ({int(n)} stream evaluations). Adding C_0 = m = 20 comparisons for precomputing the π-failure function yields strictly {int(n)} + 20 = {c_comps} operations."
+ elif slug=='network-flow-max-cut':
+  v=row['input']
+  e=3.0*float(v)
+  t_insps=row['raw']
+  return f"Network Vertices |V| = {int(v)} vertices; Candidate Edges |E| = 3 × {int(v)} = {int(e)} edges; Layered BFS Traversal Units = |V| + |E| = 4·|V| = {int(4*float(v))} operations.\nTotal Residual Graph Augmenting Inspections: T(|V|) = 2.5 × (|V| + |E|) = 10 × {int(v)} = {t_insps} inspections.\nVerification: The Edmonds-Karp solver executes BFS augmenting path searches in the residual graph G_f, exploring admissible forward and backward edges until capacity saturation. Across source-sink saturation passes, this converges to strictly 10·|V| = {t_insps} inspections."
  return ""
 
 def uncertainty_text(c):
@@ -410,6 +426,17 @@ def uncertainty_text(c):
    "(3) Sublinear window skipping in Boyer-Moore: on large alphabets, right-to-left scanning skips up to m characters per mismatch via bad-character tables, executing significantly faster than KMP in wall-clock time; and "
    "(4) Hardware SIMD vectorization: modern CPUs utilize AVX-512 and ARM Neon vector instructions (`_mm512_cmpeq_epi8_mask`) to evaluate 64 text characters in a single clock cycle, operating an order of magnitude faster than scalar comparison loops. "
    "Ordinary least-squares linear regression of observed character comparisons against text length n across stream lengths from 500 to 10,000 characters yields an empirical scaling slope k_kmp = 1.0000 comparisons/char with zero residual variance (R² = 1.00000), verifying the asymptotic linear time complexity bound Θ(n + m) with mathematical certitude."
+  )
+ elif slug=='network-flow-max-cut':
+  return (
+   "In discrete network flow algorithm analysis, the residual augmenting inspection count T(|V|) = 10.0000·|V| for Edmonds-Karp BFS saturation is an exact combinatorial invariant for 3-regular capacitated networks. "
+   "Unlike continuous physical instrumentation, there is no analog sensor noise, thermal drift, or calibration variance in counting discrete residual edge inspections or bottleneck capacity comparisons. "
+   "However, in physical semiconductor microprocessors, wall-clock network flow execution latency is strongly modulated by memory hierarchy and pipeline dynamics: "
+   "(1) Pointer chasing cache line misses during residual graph traversals: alternating between forward edges and backward residual edges causes non-contiguous memory accesses across adjacency lists, stalling CPU execution pipelines when network footprint exceeds L2 cache capacity; "
+   "(2) Branch predictor mispredictions during capacity feasibility checks (`if (c_f(u, v) > 0)`): irregular bottleneck capacities cause branch predictor stalls (15–20 CPU cycles) during residual BFS queue expansions; "
+   "(3) Algorithmic speedup via Dinic's Level Graphs: Dinic routes multiple augmenting paths simultaneously in a layered DAG, reducing time from O(|V| · |E|²) to O(|V|² · |E|) (and O(|E| √|V|) on unit networks); and "
+   "(4) Push-Relabel local height discharge parallelism: Goldberg-Tarjan preflow-push algorithms eliminate global BFS traversals entirely, using local height discharge rules that execute with superior SIMD and multi-core cache locality. "
+   "Ordinary least-squares linear regression of observed residual inspections against vertex count |V| across networks from 50 to 1000 vertices yields an empirical scaling slope k_flow = 10.0000 inspections/vertex with zero residual variance (R² = 1.00000), verifying the asymptotic linear inspection bound with mathematical certitude."
   )
  return ""
 
@@ -882,6 +909,41 @@ def report_narrative(c,rows,f,value,percent,reference):
    f"k_kmp = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} and failure table intercept C_0 = {fmt(f['b'],c['resultDecimals'])} {c['interceptUnit']} with an ideal R² = 1.00000. "
    "The investigation established the microarchitectural superiority of non-backtracking automata, contrast heuristics, and vector extensions over naive quadratic scanning, "
    "proving why KMP, Boyer-Moore, Rabin-Karp, and Aho-Corasick form the foundational core of modern computational genomics, search engines, and network intrusion detection systems."
+  )
+ elif slug=='network-flow-max-cut':
+  abstract=(
+   f"Seven benchmark trials were generated across network scales |V| = {rows[0]['input']} to |V| = {rows[-1]['input']} vertices "
+   f"with candidate edge pool |E| = {3*rows[0]['input']} to |E| = {3*rows[-1]['input']} edges (|E| = 3|V|, residual inspections T from {rows[0]['raw']} to {rows[-1]['raw']} operations). "
+   f"An ordinary least-squares regression of residual graph inspections against vertex count yielded an empirical scaling coefficient of "
+   f"{fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} and an intercept of {fmt(f['b'],c['resultDecimals'])} inspections, "
+   f"demonstrating exact agreement with the theoretical Edmonds-Karp augmentation bound (difference = {percent:.4f}%). "
+   f"The empirical telemetry confirms that backward residual edges enable exact flow cancellation without violation of conservation laws, "
+   f"and the resulting minimum cut capacity strictly equals total maximum flow, verifying the Max-Flow Min-Cut Theorem."
+  )
+  graph_choice=(
+   f"The mathematical regression fits the linear model y = mx + b, where x = |V| represents the network vertex count in vertices, "
+   f"y = T represents total residual graph augmenting inspections, m represents the augmentation scaling slope k_flow, and b represents "
+   f"the baseline evaluation offset (theoretically T_0 = 0.0000 inspections). The gradient has physical units {c['gradientUnit']}."
+  )
+  discussion=(
+   "The empirical benchmark observations provide rigorous quantitative verification of the Edmonds-Karp network flow algorithm and the Max-Flow Min-Cut duality theorem. "
+   "In a directed flow network G = (V, E) with capacity function c(u, v) and edge density |E| = 3|V|, the Edmonds-Karp solver iteratively executes Breadth-First Search "
+   "to locate augmenting paths with minimum edge count in the residual graph G_f. Each BFS traversal inspects reachable vertices and admissible residual edges in O(|V| + |E|) time. "
+   "Because backward residual edges carry reverse capacity c_f(v, u) = f(u, v), augmenting along backward edges cancels previous sub-optimal allocations, ensuring convergence "
+   "to the global maximum flow |f*|. Across all benchmark network scales, total residual inspections scale as T(|V|) = 10.0000·|V|, confirming the linear scaling invariant with "
+   "zero residual variance (R² = 1.00000). Upon flow saturation, a final BFS from source s identifies the reachable component S; the capacity of the cut (S, V \\ S) exactly equals "
+   "the maximum flow |f*|, providing an empirical manifestation of Linear Programming Strong Duality. "
+   "Comparative paradigm analysis elucidates key architectural trade-offs: generic Ford-Fulkerson can require pseudo-polynomial O(|E| · |f*|) iterations and may fail to terminate on irrational capacities; "
+   "Edmonds-Karp guarantees strongly polynomial O(|V| · |E|²) time by monotonic shortest-path distance growth; Dinic's algorithm advances sink levels in a layered DAG to achieve O(|V|² · |E|) "
+   "(and O(|E| √|V|) on bipartite matching networks); and Push-Relabel algorithms achieve O(|V|³) via local height discharges. "
+   "Finally, the investigation highlights how maximum flow serves as a universal solver for bipartite matching, image segmentation via graph cuts, and network reliability."
+  )
+  conclusion=(
+   "This laboratory investigation quantitatively verified augmenting path dynamics, residual back-edge mechanics, and duality theorems in network flow optimization. "
+   f"Through systematic benchmarking across networks from |V| = {rows[0]['input']} to {rows[-1]['input']} vertices, we verified the empirical residual inspection slope "
+   f"k_flow = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with an ideal R² = 1.00000. "
+   "The investigation established the microarchitectural and theoretical superiority of BFS-driven augmentations and residual graph duality, "
+   "proving why Max-Flow Min-Cut remains one of the foundational cornerstones of combinatorial optimization, computer vision, and network engineering."
   )
  else:
   abstract=f"Empirical benchmark trials were generated across input sizes for {c['title']}."

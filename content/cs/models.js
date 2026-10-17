@@ -103,6 +103,13 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:raw/1000.0,x,y,valid:n>=200&&n<=20000};
  }
+ if(slug==='network-flow-max-cut'){
+  const v=Number(input);
+  const raw=Math.round(10*v);
+  const x=v;
+  const y=raw;
+  return {raw,ideal:raw,period:raw/1000.0,x,y,valid:v>=50&&v<=1000};
+ }
  throw Error('Unknown CS experiment: '+slug);
 }
 
@@ -168,6 +175,10 @@ function reading(slug,input,raw){
   x=Number(input);
   y=raw;
  }
+ if(slug==='network-flow-max-cut'){
+  x=Number(input);
+  y=raw;
+ }
  return {input,raw,x,y};
 }
 
@@ -230,6 +241,9 @@ function estimate(slug,f){
  }
  if(slug==='string-matching-automata'){
   return {value:f.m,se:f.slopeSE,reference:1.0000};
+ }
+ if(slug==='network-flow-max-cut'){
+  return {value:f.m,se:f.slopeSE,reference:10.0000};
  }
  throw Error('Unknown CS experiment: '+slug);
 }

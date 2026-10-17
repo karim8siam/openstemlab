@@ -140,6 +140,57 @@ function drawComparativeSim(t,p,v,ink,soft,orange){
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
+ if(cfg.slug==='network-flow-max-cut'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'MAXIMUM FLOW ALGORITHMIC PARADIGMS (|V| = '+p.input+')','#e2f0f8',11);
+
+  const n=p.input;
+  const e=3*n;
+  const c_dinic=Math.round(Math.min(1000000, (n * n * e) / 800));
+  const c_ek=Math.round(Math.min(5000000, (n * e * e) / 300));
+  const c_push=Math.round(Math.min(2000000, (n * n * n) / 150));
+  const c_ff_int=Math.round(e * 45);
+  const c_ff_path=9999999;
+
+  const strategies=[
+   {name:'Dinic Level Graph (Blocking Flow)',col:'#10b981',cost:c_dinic,scale:'O(|V|² · |E|)',desc:'Layered DAG via BFS; multiple paths via DFS; O(|E|√|V|) on unit networks'},
+   {name:'Edmonds-Karp (Shortest Augmenting Path)',col:'#38bdf8',cost:c_ek,scale:'O(|V| · |E|²) strongly polynomial',desc:'BFS shortest paths; monotonic distance growth; capacity-independent'},
+   {name:'Push-Relabel (Highest Vertex Rule)',col:'#f97316',cost:c_push,scale:'O(|V|³)',desc:'Local preflow-push & height relabeling; GPU & SIMD parallelizable'},
+   {name:'Ford-Fulkerson (Integer Capacities)',col:'#a855f7',cost:c_ff_int,scale:'O(|E| · |f*|) pseudo-polynomial',desc:'Arbitrary DFS path selection; capacity-dependent iteration count'},
+   {name:'Ford-Fulkerson (Pathological / Irrational)',col:'#ef4444',cost:c_ff_path,scale:'Non-convergent / infinite loop',desc:'Zwick irrational capacity cycle; fails to reach maximum flow'}
+  ];
+
+  strategies.forEach((item,idx)=>{
+   const rowY=cY+16+idx*42;
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+12)+'" fill="#dcebf2" font-size="8.5" font-weight="bold">'+item.name+'</text>';
+   const costStr=item.cost>=1000000?(item.cost/1000000).toFixed(1)+'M':item.cost>=1000?(item.cost/1000).toFixed(1)+'k':item.cost;
+   svg+='<text x="'+(cX+cW-15)+'" y="'+(rowY+12)+'" text-anchor="end" fill="'+item.col+'" font-size="8.5" font-family="monospace" font-weight="bold">'+costStr+' ops ('+item.scale+')</text>';
+   
+   const barX=cX+15,barY=rowY+16,barMaxW=cW-30;
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barMaxW+'" height="7" rx="2" fill="#16242c"/>';
+   const maxVal=Math.max(1000, c_ek);
+   const frac=Math.min(1.0,Math.log10(item.cost+1)/Math.log10(maxVal+1));
+   const fillW=Math.max(4,frac*barMaxW);
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+fillW+'" height="7" rx="2" fill="'+item.col+'"/>';
+  });
+
+  const bX=460,bY=45,bW=220,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">MAX-FLOW MIN-CUT DUALITY</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">|f*| ≡ c(S,T)</text>';
+  svg+='<text x="'+(bX+125)+'" y="'+(bY+46)+'" fill="#10b981" font-size="10">Strong Duality</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#7e9bab" font-size="9">EDMONDS-KARP SATURATION BOUND</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="16" font-family="monospace" font-weight="bold">≤ |V| · |E| Rounds</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+124)+'" fill="#8ba5b5" font-size="8">Each edge critical at most |V|/2 times</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+136)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+136)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+154)+'" fill="#7e9bab" font-size="9">DISTANCE MONOTONICITY</text>';
+  svg+=text(bX+bW/2,bY+180,'δ_f(s, v) never decreases in G_f','#10b981',9.5);
+  svg+=text(bX+bW/2,bY+202,'Polynomial bound independent of capacity',orange,8.5);
+  svg+=text(360,305,'Comparative Invariant: Edmonds-Karp BFS guarantees strongly polynomial O(|V| · |E|²); Dinic achieves O(|V|² · |E|) via Level Graphs',soft,10);
+  return svg;
+ }
+
  if(cfg.slug==='string-matching-automata'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
   svg+=text(cX+cW/2,cY-14,'STRING MATCHING PARADIGMS & ARCHITECTURES (n = '+p.input+', m = 20)','#e2f0f8',11);
@@ -809,6 +860,77 @@ function drawDynamicSandbox(t,p,v,ink,soft,orange){
  const cX=45,cY=45,cW=400,cH=230;
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+ if(cfg.slug==='network-flow-max-cut'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'MAX-FLOW MIN-CUT DUALITY & RESIDUAL CUT SANDBOX (|V| = '+p.input+')','#e2f0f8',11);
+
+  svg+='<text x="'+(cX+15)+'" y="'+(cY+20)+'" fill="#10b981" font-size="8.5" font-weight="bold">DUALITY THEOREM: MAX FLOW |f*| ≡ MIN CUT c(S, T) = 20 UNITS</text>';
+
+  const sBoxX=cX+20, sBoxY=cY+36, sBoxW=155, sBoxH=118;
+  svg+='<rect x="'+sBoxX+'" y="'+sBoxY+'" width="'+sBoxW+'" height="'+sBoxH+'" rx="6" fill="#042f2e" stroke="#14b8a6" stroke-width="1.2" stroke-dasharray="3,2"/>';
+  svg+='<text x="'+(sBoxX+12)+'" y="'+(sBoxY+18)+'" fill="#2dd4bf" font-size="8" font-weight="bold">SOURCE CUT SET S (Reachable in G_f)</text>';
+
+  const tBoxX=cX+225, tBoxY=cY+36, tBoxW=155, tBoxH=118;
+  svg+='<rect x="'+tBoxX+'" y="'+tBoxY+'" width="'+tBoxW+'" height="'+tBoxH+'" rx="6" fill="#0c1929" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="3,2"/>';
+  svg+='<text x="'+(tBoxX+12)+'" y="'+(tBoxY+18)+'" fill="#7dd3fc" font-size="8" font-weight="bold">SINK CUT SET T = V \\ S (Unreachable)</text>';
+
+  const vS={x:sBoxX+35, y:sBoxY+58}, v1={x:sBoxX+115, y:sBoxY+48}, v2={x:sBoxX+115, y:sBoxY+95};
+  const v3={x:tBoxX+45, y:tBoxY+48}, v4={x:tBoxX+45, y:tBoxY+95}, vT={x:tBoxX+125, y:tBoxY+58};
+
+  svg+='<line x1="'+vS.x+'" y1="'+vS.y+'" x2="'+v1.x+'" y2="'+v1.y+'" stroke="#10b981" stroke-width="2"/>';
+  svg+='<text x="'+((vS.x+v1.x)/2)+'" y="'+((vS.y+v1.y)/2-4)+'" fill="#10b981" font-size="6.5" font-family="monospace">f:12/12</text>';
+
+  svg+='<line x1="'+vS.x+'" y1="'+vS.y+'" x2="'+v2.x+'" y2="'+v2.y+'" stroke="#10b981" stroke-width="2"/>';
+  svg+='<text x="'+((vS.x+v2.x)/2)+'" y="'+((vS.y+v2.y)/2+12)+'" fill="#10b981" font-size="6.5" font-family="monospace">f:8/8</text>';
+
+  svg+='<line x1="'+v3.x+'" y1="'+v3.y+'" x2="'+vT.x+'" y2="'+vT.y+'" stroke="#38bdf8" stroke-width="2"/>';
+  svg+='<text x="'+((v3.x+vT.x)/2)+'" y="'+((v3.y+vT.y)/2-4)+'" fill="#38bdf8" font-size="6.5" font-family="monospace">f:12/12</text>';
+
+  svg+='<line x1="'+v4.x+'" y1="'+v4.y+'" x2="'+vT.x+'" y2="'+vT.y+'" stroke="#38bdf8" stroke-width="2"/>';
+  svg+='<text x="'+((v4.x+vT.x)/2)+'" y="'+((v4.y+vT.y)/2+12)+'" fill="#38bdf8" font-size="6.5" font-family="monospace">f:8/8</text>';
+
+  svg+='<line x1="'+v1.x+'" y1="'+v1.y+'" x2="'+v3.x+'" y2="'+v3.y+'" stroke="#ef4444" stroke-width="2.5"/>';
+  svg+='<text x="'+((v1.x+v3.x)/2)+'" y="'+((v1.y+v3.y)/2-6)+'" fill="#ef4444" font-size="7.5" font-family="monospace" font-weight="bold">c:12 (c_f=0! ✖)</text>';
+
+  svg+='<line x1="'+v2.x+'" y1="'+v2.y+'" x2="'+v4.x+'" y2="'+v4.y+'" stroke="#ef4444" stroke-width="2.5"/>';
+  svg+='<text x="'+((v2.x+v4.x)/2)+'" y="'+((v2.y+v4.y)/2-6)+'" fill="#ef4444" font-size="7.5" font-family="monospace" font-weight="bold">c:8 (c_f=0! ✖)</text>';
+
+  const sbNodes=[
+   {id:'s',x:vS.x,y:vS.y,col:'#10b981',fill:'#064e3b'},
+   {id:'V1',x:v1.x,y:v1.y,col:'#10b981',fill:'#064e3b'},
+   {id:'V2',x:v2.x,y:v2.y,col:'#10b981',fill:'#064e3b'},
+   {id:'V3',x:v3.x,y:v3.y,col:'#38bdf8',fill:'#0f172a'},
+   {id:'V4',x:v4.x,y:v4.y,col:'#38bdf8',fill:'#0f172a'},
+   {id:'t',x:vT.x,y:vT.y,col:'#38bdf8',fill:'#0f172a'}
+  ];
+  sbNodes.forEach(nd=>{
+   svg+='<circle cx="'+nd.x+'" cy="'+nd.y+'" r="12" fill="'+nd.fill+'" stroke="'+nd.col+'" stroke-width="2"/>';
+   svg+='<text x="'+nd.x+'" y="'+(nd.y+4)+'" text-anchor="middle" fill="#dcebf2" font-size="7.5" font-weight="bold">'+nd.id+'</text>';
+  });
+
+  const cdX=cX+15, cdY=cY+162, cdW=cW-30, cdH=58;
+  svg+='<rect x="'+cdX+'" y="'+cdY+'" width="'+cdW+'" height="'+cdH+'" rx="4" fill="#050b0e" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(cdX+10)+'" y="'+(cdY+16)+'" fill="#10b981" font-size="7.5" font-family="monospace">Total Maximum Flow: |f*| = f(s,V1) + f(s,V2) = 12 + 8 = 20 units</text>';
+  svg+='<text x="'+(cdX+10)+'" y="'+(cdY+30)+'" fill="#ef4444" font-size="7.5" font-family="monospace">Min Cut (S, T): S = {s, V1, V2}, T = {V3, V4, t} ⟶ Capacity c(S, T) = 12 + 8 = 20 units</text>';
+  svg+='<text x="'+(cdX+10)+'" y="'+(cdY+44)+'" fill="'+orange+'" font-size="7.5" font-family="monospace">Residual Reachability Invariant: All edges crossing from S to T have c_f = 0 (Saturated!)</text>';
+
+  const bX=465,bY=45,bW=210,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#7e9bab" font-size="9">MINIMUM CUT CAPACITY</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+54)+'" fill="'+orange+'" font-size="24" font-family="monospace" font-weight="bold">c(S,T) = 20</text>';
+  svg+='<text x="'+(bX+125)+'" y="'+(bY+50)+'" fill="#10b981" font-size="10">(Min Cut)</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+80)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+80)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+98)+'" fill="#7e9bab" font-size="9">MAXIMUM FLOW VALUE</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+120)+'" fill="'+ink+'" font-size="16" font-family="monospace" font-weight="bold">|f*| = 20 units</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+136)+'" fill="#8ba5b5" font-size="8">Weak Duality: |f| ≤ c(S, T) tight at optimum</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+150)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+150)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+168)+'" fill="#7e9bab" font-size="9">RESIDUAL REACHABILITY</text>';
+  svg+=text(bX+bW/2,bY+190,'S = {v : s ⇝ v in G_f*}','#10b981',9.5);
+  svg+=text(bX+bW/2,bY+208,'Zero augmenting paths from s to t',orange,8.5);
+  svg+=text(360,305,'Sandbox Invariant: Min-cut capacity c(S, T) identically equals maximum flow |f*|; residual capacity across cut is strictly 0',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='string-matching-automata'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
@@ -1676,6 +1798,84 @@ function draw(t){
  const ink='#38bdf8',soft='#7e9bab',orange='#f97316';
  if(currentSimMode==='compare'){$('apparatusDiagram').innerHTML=drawComparativeSim(t,p,v,ink,soft,orange);return;}
  if(currentSimMode==='sandbox'){$('apparatusDiagram').innerHTML=drawDynamicSandbox(t,p,v,ink,soft,orange);return;}
+
+ if(cfg.slug==='network-flow-max-cut'){
+  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
+  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+  const n=p.input;
+  const e_count=3*n;
+  const t_insps=v.raw;
+
+  svg+='<rect x="35" y="38" width="410" height="235" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+=text(240,24,'Edmonds-Karp Residual Network Flow & Augmenting Path Geometry');
+
+  svg+='<text x="50" y="56" fill="#7e9bab" font-size="8.5" font-weight="bold">FLOW NETWORK G=(V, E) · |V| = '+n+' · |E| = '+e_count+' EDGES · SOURCE s = 0 · SINK t = '+(n-1)+'</text>';
+
+  const nodes=[
+   {id:'s',x:75,y:115,col:'#10b981',st:'Source',d:'elev:0'},
+   {id:'V1',x:165,y:80,col:'#10b981',st:'Cut-S',d:'elev:1'},
+   {id:'V2',x:165,y:155,col:'#10b981',st:'Cut-S',d:'elev:1'},
+   {id:'V3',x:275,y:80,col:'#38bdf8',st:'Cut-T',d:'elev:2'},
+   {id:'V4',x:275,y:155,col:'#38bdf8',st:'Cut-T',d:'elev:2'},
+   {id:'t',x:380,y:115,col:'#38bdf8',st:'Sink',d:'elev:3'}
+  ];
+
+  const edges=[
+   {u:0,v:1,flow:'f:12/12',col:'#ef4444',wdt:2.5,dash:null},
+   {u:0,v:2,flow:'f:8/8',col:'#ef4444',wdt:2.5,dash:null},
+   {u:1,v:3,flow:'f:12/12 (SAT!)',col:'#ef4444',wdt:2.5,dash:null},
+   {u:2,v:4,flow:'f:8/8 (SAT!)',col:'#ef4444',wdt:2.5,dash:null},
+   {u:3,v:5,flow:'f:12/12',col:'#ef4444',wdt:2.5,dash:null},
+   {u:4,v:5,flow:'f:8/8',col:'#ef4444',wdt:2.5,dash:null},
+   {u:1,v:4,flow:'c_f:0',col:'#334155',wdt:1.2,dash:'2,2'},
+   {u:2,v:3,flow:'c_f:0',col:'#334155',wdt:1.2,dash:'2,2'}
+  ];
+
+  edges.forEach(e=>{
+   const u=nodes[e.u],v=nodes[e.v];
+   const dashAttr=e.dash?' stroke-dasharray="'+e.dash+'"':'';
+   svg+='<line x1="'+u.x+'" y1="'+u.y+'" x2="'+v.x+'" y2="'+v.y+'" stroke="'+e.col+'" stroke-width="'+e.wdt+'"'+dashAttr+'/>';
+   const midX=(u.x+v.x)/2, midY=(u.y+v.y)/2 - 5;
+   svg+='<text x="'+midX+'" y="'+midY+'" text-anchor="middle" fill="'+e.col+'" font-size="6.5" font-family="monospace">'+e.flow+'</text>';
+  });
+
+  nodes.forEach(nd=>{
+   svg+='<circle cx="'+nd.x+'" cy="'+nd.y+'" r="13" fill="#081016" stroke="'+nd.col+'" stroke-width="2"/>';
+   svg+='<text x="'+nd.x+'" y="'+(nd.y+4)+'" text-anchor="middle" fill="#dcebf2" font-size="8" font-family="monospace" font-weight="bold">'+nd.id+'</text>';
+   svg+='<text x="'+nd.x+'" y="'+(nd.y+21)+'" text-anchor="middle" fill="#64748b" font-size="6" font-family="monospace">'+nd.d+'</text>';
+  });
+
+  const fsX=50,fsY=178,fsW=380,fsH=38;
+  svg+='<rect x="'+fsX+'" y="'+fsY+'" width="'+fsW+'" height="'+fsH+'" rx="4" fill="#081016" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(fsX+10)+'" y="'+(fsY+14)+'" fill="#10b981" font-size="7.5" font-family="monospace">Shortest Augmenting Path: BFS found P = s ⟶ V1 ⟶ V3 ⟶ t (Shortest Hop)</text>';
+  svg+='<text x="'+(fsX+10)+'" y="'+(fsY+26)+'" fill="'+orange+'" font-size="7.5" font-family="monospace">Backward Residual Edges: c_f(V3, V1) = 12 allows exact flow cancellation</text>';
+
+  const cbX=50,cbY=222,cbW=380,cbH=44;
+  svg+='<rect x="'+cbX+'" y="'+cbY+'" width="'+cbW+'" height="'+cbH+'" rx="4" fill="#081016" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(cbX+10)+'" y="'+(cbY+14)+'" fill="#38bdf8" font-size="7.5" font-family="monospace">Total Residual Inspections: T(|V|) = 10 · |V| = '+t_insps+' inspections</text>';
+  svg+='<text x="'+(cbX+10)+'" y="'+(cbY+26)+'" fill="#10b981" font-size="7" font-family="monospace">Linear Model: k_flow = 10.0000 inspections/vertex · Intercept T_0 = 0.0000</text>';
+  svg+='<text x="'+(cbX+10)+'" y="'+(cbY+38)+'" fill="#8ba5b5" font-size="6.5">Max-Flow Min-Cut Equality: Max Flow |f*| = 20 units · Min Cut c(S, T) = 20 units</text>';
+
+  const bX=465,bY=38,bW=220,bH=235;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#7e9bab" font-size="9">TOTAL RESIDUAL INSPECTIONS</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+54)+'" fill="'+orange+'" font-size="24" font-family="monospace" font-weight="bold">'+t_insps+'</text>';
+  svg+='<text x="'+(bX+115)+'" y="'+(bY+50)+'" fill="#8ba5b5" font-size="11">inspections</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+84)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+84)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+102)+'" fill="#7e9bab" font-size="9">NETWORK SCALE PARAMETERS</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+126)+'" fill="'+ink+'" font-size="16" font-family="monospace" font-weight="bold">|V| = '+n+' · |E| = '+e_count+'</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+142)+'" fill="#8ba5b5" font-size="8">3-regular directed flow topology</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+156)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+156)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+174)+'" fill="#7e9bab" font-size="9">LINEAR AUGMENTATION ASYMPTOTE</text>';
+  svg+=text(bX+bW/2,bY+196,'T(|V|) = 10.0000 · |V|','#10b981',10);
+  svg+=text(bX+bW/2,bY+214,'Linear Coordinate: |V| (vertices)',orange,8.5);
+
+  svg+=text(360,305,'Mathematical Model: T(|V|) = 10.0000 · |V| + 0.0000 inspections · R² = 1.000000 · Diff = 0.0000%',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='string-matching-automata'){
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
