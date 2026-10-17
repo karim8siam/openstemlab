@@ -8375,5 +8375,223 @@
     ],
     "intro": "Acid-base indicators are weak organic acids whose protonated conjugate acid form (HIn) and unprotonated conjugate base form (In⁻) possess distinctly different electronic structures and absorption spectra. The position of the indicator equilibrium, HIn ⇌ H⁺ + In⁻, is governed by the thermodynamic acid dissociation constant Ka = [H⁺][In⁻]/[HIn], or in logarithmic form by the Henderson-Hasselbalch equation: pH = pKa + log₁₀([In⁻]/[HIn]). Spectrophotometry provides an exceptionally elegant and precise metrological technique for determining pKa: by monitoring the absorbance at the absorption maximum of the basic form (λ_max = 616 nm for Bromothymol Blue) across a series of calibrated buffer solutions, the fractional ionization is quantified without perturbing the chemical equilibrium. Multi-point linear regression of pH versus log₁₀[(A - A_acid)/(A_base - A)] yields the thermodynamic pKa as the Y-intercept and confirms theoretical unity slope with sub-0.1% accuracy.",
     "modelExtra": "The spectrophotometric model evaluates Bromothymol Blue (BTB) at λ = 616 nm across six buffer solutions from pH 6.20 to 7.70 at 25.00 °C. The limiting absorbances are A_acid = 0.040 AU (in 0.10 M HCl) and A_base = 0.960 AU (in 0.10 M NaOH). At intermediate pH, the speciation ratio is [In⁻]/[HIn] = (A - A_acid)/(A_base - A) = 10^(pH - 7.100). The measured absorbances are [0.143, 0.225, 0.347, 0.500, 0.653, 0.775] AU, corresponding to log ratios [-0.899, -0.599, -0.300, 0.000, 0.300, 0.599]. Linear least-squares regression yields an empirical slope m = 1.00124 (unitless) and Y-intercept b = pKa = 7.10002 with R² = 0.9999997, isolating an experimental pKa = 7.100 ± 0.005 and Ka = 7.94 × 10⁻⁸ M (difference = 0.0003% from literature benchmark 7.100), with standard Gibbs free energy of dissociation ΔG° = +40.53 kJ·mol⁻¹."
+  },
+  {
+    "id": 40,
+    "slug": "isoelectric-point-amphoteric-amino-acids",
+    "department": "chemistry",
+    "subject_id": 3,
+    "title": "Isoelectric Point and Dual-Region Potentiometric Titration of Amphoteric Amino Acids",
+    "shortTitle": "Isoelectric Point of Amino Acids",
+    "page_path": "/chemistry/isoelectric-point-amphoteric-amino-acids/",
+    "aim": "Determine the macroscopic acid dissociation constants (pKa1, pKa2) and the isoelectric point (pI = 5.970) of glycine by high-precision dual-region potentiometric titration with standardized 0.1000 M NaOH at 25.0 °C.",
+    "fitEquation": "\\text{pH}_{\\text{mean}} = 1.0000 \\cdot \\log_{10}\\left(\\frac{\\theta}{1 - \\theta}\\right) + pI  \\implies  pI = 5.970  \\implies  pK_{a1} = 2.340,\\; pK_{a2} = 9.600",
+    "gradientUnit": "pH/log_unit",
+    "interceptUnit": "pH",
+    "target": "5.970",
+    "targetName": "Isoelectric Point (pI)",
+    "resultUnit": "pH",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "samples": [
+      5.0,
+      7.5,
+      10.0,
+      12.5,
+      15.0,
+      17.5
+    ],
+    "emptyX": "Log Neutralization Ratio log(θ/(1-θ))",
+    "emptyY": "Conjugate Mean Buffer pH",
+    "measureLabel": "Titrant Volume in Buffer Region V₁ (mL)",
+    "subject": "chemistry",
+    "number": 40,
+    "published": true,
+    "min": 3.0,
+    "max": 22.0,
+    "step": 0.5,
+    "initial": 12.5,
+    "inputLabel": "Titrant Volume in First Buffer V₁",
+    "shortInput": "V₁",
+    "inputUnit": "mL",
+    "inputDecimals": 2,
+    "rawLabel": "Conjugate Mean Buffer pH",
+    "rawUnit": "pH",
+    "rawDecimals": 3,
+    "angle": false,
+    "timed": false,
+    "observationLabel": "Conjugate mean pH vs log neutralization ratio",
+    "xAxis": "log(θ / (1 - θ))",
+    "yAxis": "Conjugate Mean Buffer pH",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 3,
+    "yDecimals": 3,
+    "settings": [
+      "Analyte Solution: 25.00 mL of 0.1000 M Glycine Hydrochloride (H₂Gly⁺ Cl⁻, 25.00 °C)",
+      "Standard Titrant: Carbonate-Free 0.1000 M NaOH (Class A 50.00 mL Burette, Readability ±0.01 mL)",
+      "Potentiometric Sensor: Combined Glass-Calomel pH Electrode with Microprocessor Resolution ±0.001 pH",
+      "Equilibrium Equivalence Points: V_eq1 = 25.00 mL (Zwitterion HGly±) · V_eq2 = 50.00 mL (Glycinate Gly⁻)"
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "activity",
+        "label": "Potentiometric Titration Bench"
+      },
+      {
+        "id": "compare",
+        "icon": "layers",
+        "label": "Full Biphasic Titration Curve"
+      },
+      {
+        "id": "sandbox",
+        "icon": "sliders",
+        "label": "Zwitterion Speciation & Net Charge"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Combined Glass-Calomel pH Electrode",
+        "purpose": "High-impedance research-grade combined glass electrode with saturated calomel reference and low-resistance bulb glass for measuring electromotive force and pH with readability ±0.001 pH units from pH 0 to 14."
+      },
+      {
+        "name": "Class A Automatic Digital Burette (50.00 mL)",
+        "purpose": "Precision motor-driven piston burette with digital stepper dispensing resolution of 0.005 mL, calibrated to ISO 385 standards for delivering carbonate-free 0.1000 M NaOH titrant."
+      },
+      {
+        "name": "Jacketed Reaction Cell with Magnetic Stirrer",
+        "purpose": "Water-jacketed double-walled borosilicate titration vessel connected to a circulating water bath maintaining 25.00 ± 0.02 °C with variable-speed PTFE-coated magnetic stirrer."
+      },
+      {
+        "name": "Carbonate-Free NaOH Reagent Delivery System",
+        "purpose": "Aspirator bottle containing standardized 0.1000 M NaOH equipped with soda-lime and Ascarite II guard tubes to prevent atmospheric carbon dioxide absorption."
+      },
+      {
+        "name": "Analytical Balance & Class A Volumetric Flasks",
+        "purpose": "Four-decimal analytical balance (readability ±0.0001 g) and 250.00 mL volumetric glassware used to prepare primary standard potassium hydrogen phthalate (KHP) and glycine hydrochloride stock solutions."
+      },
+      {
+        "name": "Microprocessor Millivolt / pH Interface",
+        "purpose": "High-input impedance (> 10¹² Ω) digital electrometer interface logging cell potential (mV) and pH with automatic temperature compensation probe."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Electrode Calibration with IUPAC Primary Standard Buffers",
+        "text": "Power on the pH meter and allow 30 minutes for thermal and electronic stabilization. Perform a two-point calibration of the combined glass electrode using fresh primary IUPAC buffers (pH 4.008 potassium hydrogen phthalate and pH 9.180 sodium tetraborate decahydrate) at 25.00 °C, verifying a Nernstian slope between 98.5% and 100.5% (58.3 to 59.5 mV/pH)."
+      },
+      {
+        "title": "Standardization of Carbonate-Free Sodium Hydroxide",
+        "text": "Standardize the ~0.1 M NaOH solution by potentiometric titration against primary standard potassium hydrogen phthalate (KHP) previously dried at 110 °C for 2 hours. Accurately establish the NaOH molarity to four significant figures (0.1000 M)."
+      },
+      {
+        "title": "Preparation and Thermal Equilibration of Glycine Hydrochloride",
+        "text": "Pipette exactly 25.00 mL of 0.1000 M glycine hydrochloride (H₂Gly⁺ Cl⁻) into the jacketed reaction cell. Immerse the calibrated pH electrode and burette tip below the solution surface. Engage the magnetic stirrer at a moderate rate (300 rpm) without vortex entrainment, and circulate water at 25.00 °C for 15 minutes."
+      },
+      {
+        "title": "First Buffer Region Titration (Carboxylic Deprotonation)",
+        "text": "Add standardized 0.1000 M NaOH in increments of 1.00 mL (reducing to 0.10 mL near the equivalence point). Allow 30 seconds for complete mixing and thermal equilibration after each addition before recording the equilibrium pH₁. At V₁ = 12.50 mL (half-neutralization), record pKa1 = 2.340."
+      },
+      {
+        "title": "First Equivalence Point & Second Buffer Region Titration",
+        "text": "Continue adding NaOH past the first equivalence point (V_eq1 = 25.00 mL, pH = 5.970) into the second buffer region (25.00 to 50.00 mL). Record equilibrium pH₂ at matched conjugate increments V₂ = 25.00 + V₁. At V₂ = 37.50 mL (half-neutralization of the ammonium group), record pKa2 = 9.600."
+      },
+      {
+        "title": "Conjugate Mean Evaluation and Linear Regression",
+        "text": "For each fractional titration extent θ = V₁ / 25.00, compute the conjugate mean pH = (pH₁ + pH₂) / 2 and the logarithmic ratio log₁₀(θ / (1 - θ)). Perform ordinary least-squares regression of mean pH versus log₁₀(θ / (1 - θ)) to directly extract the isoelectric point pI from the Y-intercept and verify unity slope."
+      }
+    ],
+    "topics": [
+      {
+        "question": "How do amphoteric amino acids exist in aqueous solution across different pH regimes?",
+        "answer": "Amino acids are classical amphoteric (amphiprotic) electrolytes that possess both basic amino (-NH₂) and acidic carboxylic (-COOH) functional groups attached to the same α-carbon atom. In aqueous solution, amino acids undergo an internal proton transfer to form dipolar ions known as zwitterions (from the German 'Zwitter', meaning hybrid or hermaphrodite). For a simple diprotic amino acid like glycine (H₂N-CH₂-COOH), three distinct microscopic ionic forms coexist in dynamic chemical equilibrium depending on the solution hydronium ion concentration: (1) At strongly acidic pH (pH < 2), the molecule is fully protonated as a net monovalent cation (+H₃N-CH₂-COOH, designated H₂A⁺); (2) At intermediate neutral pH (pH 4 to 8), the carboxylic proton dissociates while the ammonium nitrogen remains protonated, forming the electrically neutral zwitterion (+H₃N-CH₂-COO⁻, designated HA±); (3) At strongly alkaline pH (pH > 10), the ammonium group deprotonates to yield a net monovalent anion (H₂N-CH₂-COO⁻, designated A⁻). The physical existence of the zwitterion form in the solid state and in aqueous solution is definitively established by unusually high melting points (> 230 °C), low volatility, high aqueous solubility, large dielectric increments, and the absence of infrared carbonyl absorption bands characteristic of un-ionized carboxylic acids (~1720 cm⁻¹), replaced by characteristic carboxylate asymmetric stretching frequencies (~1600 cm⁻¹)."
+      },
+      {
+        "question": "Derive the mathematical expression for the isoelectric point (pI) of a diprotic amino acid",
+        "answer": "The isoelectric point (pI) is defined as the unique pH at which the net macroscopic electrical charge of the amino acid population is exactly zero. The two stepwise macroscopic acid dissociation equilibria are: H₂A⁺ ⇌ H⁺ + HA± with equilibrium constant Ka1 = [H⁺][HA±]/[H₂A⁺], and HA± ⇌ H⁺ + A⁻ with equilibrium constant Ka2 = [H⁺][A⁻]/[HA±]. The condition of zero net electrical charge requires that the concentration of cationic species exactly equals the concentration of anionic species: [H₂A⁺] = [A⁻]. Expressing [H₂A⁺] and [A⁻] in terms of the zwitterion concentration [HA±] from the equilibrium expressions gives: [H₂A⁺] = [H⁺][HA±]/Ka1, and [A⁻] = Ka2[HA±]/[H⁺]. Equating these two expressions: [H⁺][HA±]/Ka1 = Ka2[HA±]/[H⁺]. Because the zwitterion concentration [HA±] is non-zero (in fact, it constitutes > 99.9% of all glycine at the isoelectric state), [HA±] cancels from both sides: [H⁺] / Ka1 = Ka2 / [H⁺], which simplifies to: [H⁺]² = Ka1 · Ka2. Taking the square root gives the hydronium ion concentration at the isoelectric state: [H⁺]_pI = √(Ka1 · Ka2). Taking the negative base-10 logarithm on both sides yields: -log₁₀[H⁺]_pI = -(1/2)·log₁₀(Ka1 · Ka2) = (1/2)·(-log₁₀ Ka1 - log₁₀ Ka2), which establishes the fundamental thermodynamic relation: pI = (pKa1 + pKa2) / 2. For glycine at 25.0 °C, pKa1 = 2.340 and pKa2 = 9.600, yielding an exact isoelectric point of pI = (2.340 + 9.600) / 2 = 5.970."
+      },
+      {
+        "question": "Explain the mathematical basis of the conjugate mean buffer linearization",
+        "answer": "In a potentiometric titration of glycine hydrochloride with standardized sodium hydroxide, the titration curve displays two distinct buffer regions separated by the first equivalence point at V_eq1 = 25.00 mL. In the first buffer region (0 < V₁ < 25.00 mL), the carboxylic group is titrated according to the Henderson-Hasselbalch equation: pH₁ = pKa1 + log₁₀(θ / (1 - θ)), where θ = V₁ / 25.00 is the fractional extent of neutralization. In the second buffer region (25.00 < V₂ < 50.00 mL), the ammonium group is titrated according to: pH₂ = pKa2 + log₁₀(θ / (1 - θ)), where the same fractional neutralization coordinate θ applies to the second stage of titration (V₂ = 25.00 + 25.00·θ). Taking the arithmetic mean of these two conjugate pH coordinates at identical fractional extents of neutralization θ yields: pH_mean = (pH₁ + pH₂) / 2 = (1/2) · [ pKa1 + log₁₀(θ / (1 - θ)) + pKa2 + log₁₀(θ / (1 - θ)) ] = [ (pKa1 + pKa2) / 2 ] + log₁₀(θ / (1 - θ)) = pI + log₁₀(θ / (1 - θ)). This formulation yields a magnificent linear relationship: pH_mean = 1.0000 · log₁₀(θ / (1 - θ)) + pI. By plotting pH_mean on the Y-axis against log₁₀(θ / (1 - θ)) on the X-axis across symmetrical buffer pairs, ordinary least-squares regression directly extracts the isoelectric point pI as the Y-intercept, while verifying theoretical Nernstian unity slope with extreme statistical precision."
+      },
+      {
+        "question": "Why is the zwitterion form of glycine predominantly uncharged overall yet possessed of a gigantic dipole moment?",
+        "answer": "Although the net formal electrical charge of the zwitterion +H₃N-CH₂-COO⁻ is zero (+1 + -1 = 0), the positive and negative charges do not coincide in space. The positive charge resides on the ammonium nitrogen atom, while the negative charge is delocalized across the two oxygen atoms of the carboxylate group. The average separation distance between these two formal charge centers is approximately r ≈ 0.317 nm (3.17 Å). According to classical electrostatics, the electric dipole moment is given by μ = q · r. With formal elementary charge q = 1.602 × 10⁻¹⁹ C, the intrinsic molecular dipole moment of zwitterionic glycine is μ ≈ (1.602 × 10⁻¹⁹ C) × (3.17 × 10⁻¹⁰ m) = 5.08 × 10⁻²⁹ C·m, or approximately 15.2 Debye (where 1 D = 3.336 × 10⁻³⁰ C·m). For comparison, the dipole moment of water is only 1.85 Debye. This enormous dipole moment causes zwitterions to exert powerful long-range ion-dipole and dipole-dipole attractions on surrounding water molecules, inducing strong electrostrictive solvent ordering and imparting an exceptionally high dielectric increment (dε/dc ≈ +23 L·mol⁻¹) to aqueous amino acid solutions."
+      },
+      {
+        "question": "How does the formal isoelectric point (pI) differ from the isoionic point and the point of zero charge (PZC)?",
+        "answer": "In physical and surface chemistry, three closely related concepts are frequently encountered: (1) The Isoelectric Point (pI) is the operational pH at which an ampholyte or colloidal particle exhibits zero net electrophoretic mobility in an external electric field (u = 0). (2) The Isoionic Point is the pH of a solution containing pure ampholyte dissolved in pure water without any added electrolytes or counterions, where the only ions present arise from self-dissociation of the ampholyte and water autoprotolysis. For simple amino acids like glycine, because Ka1 >> Kw and Ka2 >> Kw, the isoionic point is virtually indistinguishable from the theoretical isoelectric point pI = (pKa1 + pKa2)/2. (3) The Point of Zero Charge (PZC) is the pH at which the total surface charge density of an interface or macromolecule equals zero. In the presence of specific ion binding—where certain electrolyte anions (such as Cl⁻, SCN⁻, or HPO₄²⁻) bind preferentially to cationic amino groups through dispersion or coordinate forces—the apparent electrophoretic isoelectric point shifts systematically to lower pH values relative to the true thermodynamic isoionic point, because extra protons must be bound to neutralize the specifically adsorbed negative counterions."
+      },
+      {
+        "question": "What role does atmospheric carbon dioxide play in potentiometric amino acid titrations and how is it suppressed?",
+        "answer": "Atmospheric carbon dioxide (CO₂) is the most pervasive and insidious source of systematic error in quantitative alkaline titrations. When laboratory air contacts alkaline titrant or sample solutions, CO₂ dissolves rapidly to form carbonic acid, which reacts with hydroxide ions: CO₂ + 2 OH⁻ → CO₃²⁻ + H₂O. In the titration of glycine, the absorption of carbonate severely distorts the second buffer region and second equivalence point: (1) Carbonate is a weak base with pKa2 = 10.33, which buffers in the vicinity of pH 9.5 to 11.0, directly overlapping the ammonium deprotonation region of glycine (pKa2 = 9.60); (2) Carbonate consumes titrant non-stoichiometrically, shifting the apparent equivalence point volume and blurring the potentiometric inflection; (3) The presence of carbonate alters the ionic strength and liquid junction potential. To completely eliminate this error, titrant solutions are prepared from carbonate-free 50% w/w NaOH stock (where sodium carbonate is insoluble and precipitates), the burette is sealed with Ascarite II and soda-lime scrubbing tubes, and the reaction cell is continuously blanketed with high-purity humidified nitrogen."
+      },
+      {
+        "question": "How are the microscopic dissociation constants (pKi, pKij) distinguished from the macroscopic constants (pKa1, pKa2)?",
+        "answer": "Macroscopic dissociation constants (Ka1, Ka2) describe the net equilibrium between states differing by one formal proton, irrespective of the specific functional group involved. Microscopic dissociation constants (k₁, k₂, k₁₂, k₂₁) describe ionization at specific molecular sites: k₁ represents proton loss from the -COOH group of +H₃N-CH₂-COOH; k₂ represents proton loss from the -NH₃⁺ group to yield uncharged neutral glycine (H₂N-CH₂-COOH); k₁₂ represents subsequent proton loss from the -NH₃⁺ group of the zwitterion; and k₂₁ represents proton loss from the -COOH group of neutral glycine. The macroscopic constants are related to the microscopic constants by Ka1 = k₁ + k₂ and 1/Ka2 = 1/k₁₂ + 1/k₂₁. The tautomeric equilibrium ratio between zwitterion (+H₃N-CH₂-COO⁻) and neutral uncharged isomer (H₂N-CH₂-COOH) is given by the tautomerization constant K_z = [HA±] / [HA⁰] = k₁ / k₂. Spectroscopic and dielectric measurements demonstrate that for glycine in water, K_z ≈ 1.6 × 10⁵, meaning that more than 99.999% of neutral glycine exists as the dipolar zwitterion rather than the uncharged molecule."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "For a diprotic amino acid with macroscopic acid dissociation constants pKa1 = 2.340 and pKa2 = 9.600, what is its thermodynamic isoelectric point (pI)?",
+        "options": [
+          "pI = 5.970",
+          "pI = 7.000",
+          "pI = 11.940",
+          "pI = 3.630"
+        ],
+        "correct": 0,
+        "explanation": "For a diprotic amino acid with no ionizable side chain, the condition of zero net charge ([H₂A⁺] = [A⁻]) requires [H⁺]_pI = √(Ka1 · Ka2), which upon taking negative logarithms yields pI = (pKa1 + pKa2) / 2 = (2.340 + 9.600) / 2 = 5.970."
+      },
+      {
+        "question": "At its isoelectric point (pH = pI), what is the net macroscopic electrical charge of an amino acid in solution?",
+        "options": [
+          "Net charge is exactly zero, because the concentration of cationic species equals the concentration of anionic species",
+          "Net charge is +1",
+          "Net charge is -1",
+          "Net charge is +0.5"
+        ],
+        "correct": 0,
+        "explanation": "By definition, the isoelectric point is the pH where the average net electrical charge of the amino acid is zero, meaning that the positive charge contributed by [H₂A⁺] exactly cancels the negative charge contributed by [A⁻]."
+      },
+      {
+        "question": "Why does an aqueous solution of glycine exhibit a minimum in buffer capacity (β) at its isoelectric point (pH = 5.97)?",
+        "options": [
+          "Because at pI, the pH is more than 3.6 pH units away from both pKa1 (2.34) and pKa2 (9.60), and the concentrations of weak acid/base conjugate pairs are at a minimum",
+          "Because glycine decomposes at pH 5.97",
+          "Because water autoprotolysis ceases at pH 5.97",
+          "Because sodium ions precipitate at pH 5.97"
+        ],
+        "correct": 0,
+        "explanation": "Buffer capacity β = 2.303 · C_T · [ Ka1[H⁺]/(Ka1 + [H⁺])² + Ka2[H⁺]/(Ka2 + [H⁺])² ] attains maxima at pH = pKa1 and pH = pKa2. At pI = 5.97, the system is far from both buffer regions, the zwitterion dominates overwhelmingly (> 99.9%), and buffer capacity drops to a deep local minimum."
+      },
+      {
+        "question": "In the conjugate mean buffer regression model pH_mean = m · log₁₀(θ / (1 - θ)) + b, what physical quantity is represented by the Y-intercept parameter b?",
+        "options": [
+          "The isoelectric point (pI) of the amino acid",
+          "The first dissociation constant pKa1",
+          "The second dissociation constant pKa2",
+          "The autoprotolysis constant of water (pKw)"
+        ],
+        "correct": 0,
+        "explanation": "When θ = 0.50 (half-neutralization in both buffer branches), log₁₀(θ / (1 - θ)) = log₁₀(1) = 0. The regression model gives pH_mean = b. Because (pKa1 + pKa2) / 2 = pI, the intercept parameter b directly isolates the thermodynamic isoelectric point pI."
+      }
+    ],
+    "precautions": [
+      "Standardize the sodium hydroxide titrant against primary standard potassium hydrogen phthalate on the day of experimentation to guarantee four-figure accuracy.",
+      "Equip all titrant reservoirs and burettes with fresh Ascarite II and soda-lime guard tubes to prevent atmospheric CO₂ absorption.",
+      "Calibrate the combined glass pH electrode with fresh NIST-traceable buffers (pH 4.01 and 9.18) at exactly 25.0 °C before titration.",
+      "Maintain smooth magnetic stirring without forming a surface vortex that entrains atmospheric carbon dioxide into the solution.",
+      "Thermostat the double-walled reaction cell at 25.00 ± 0.02 °C throughout both titration branches to eliminate thermal pKa shifts.",
+      "Allow at least 30 seconds for complete mixing and potentiometric stabilization after each titrant addition before logging pH."
+    ],
+    "limitations": [
+      "Potentiometric titration requires analyte concentrations of at least 10⁻² M to obtain well-defined buffer regions and inflection points.",
+      "Activity coefficients vary slightly during titration due to changing ionic strength as neutral zwitterions are converted into charged ions.",
+      "Alkaline glass electrode error (sodium ion alkaline error) can cause slight underestimation of pH above pH 11.0 unless accounted for."
+    ],
+    "intro": "Amino acids are the fundamental building blocks of proteins, existing in aqueous solution as amphoteric zwitterions with both acidic carboxylic (-COOH) and basic amino (-NH₂) functional groups. The acid-base behavior of a diprotic amino acid like glycine (H₂N-CH₂-COOH) is characterized by two macroscopic dissociation constants: pKa1 = 2.340 for the carboxylic acid group and pKa2 = 9.600 for the α-ammonium group. The isoelectric point (pI) is the characteristic pH at which the net electrical charge of the amino acid is zero, defined mathematically as pI = (pKa1 + pKa2) / 2 = 5.970. By executing a high-precision dual-region potentiometric titration of glycine hydrochloride with standardized 0.1000 M NaOH at 25.0 °C, both buffer regions are resolved. Evaluating the conjugate mean pH across matched fractional neutralization coordinates linearizes the data into the form pH_mean = 1.0000 · log₁₀(θ / (1 - θ)) + pI, isolating the isoelectric point from the Y-intercept with sub-0.01% precision.",
+    "modelExtra": "The potentiometric model evaluates 25.00 mL of 0.1000 M glycine hydrochloride titrated with 0.1000 M NaOH at 25.00 °C. The first equivalence point occurs at V_eq1 = 25.00 mL (pure zwitterion, pH = pI = 5.970), and the second occurs at V_eq2 = 50.00 mL (pure glycinate, pH = 11.35). Across the six experimental sample volumes in the first buffer V₁ = [5.00, 7.50, 10.00, 12.50, 15.00, 17.50] mL (corresponding to fractional extents θ = [0.20, 0.30, 0.40, 0.50, 0.60, 0.70] and matched second buffer volumes V₂ = 25.00 + V₁), the conjugate mean pH values are [5.368, 5.602, 5.794, 5.970, 6.146, 6.338]. Linear regression of conjugate mean pH versus log₁₀(θ / (1 - θ)) yields an empirical slope m = 1.00000 and Y-intercept b = pI = 5.97000 with R² = 1.0000000, isolating the isoelectric point pI = 5.970 with 0.0000% difference from literature reference standards."
   }
 ]

@@ -159,6 +159,21 @@ def observation(c,value):
   v0_mM=raw / 1000.0
   y=rnd(1.0 / v0_mM, 2)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='isoelectric-point-amphoteric-amino-acids':
+  v1=float(value)
+  table_raw={5.00:5.368, 7.50:5.602, 10.00:5.794, 12.50:5.970, 15.00:6.146, 17.50:6.338}
+  table_x={5.00:-0.602, 7.50:-0.368, 10.00:-0.176, 12.50:0.000, 15.00:0.176, 17.50:0.368}
+  key=round(v1, 2)
+  if key in table_raw:
+   raw=table_raw[key]
+   x=table_x[key]
+  else:
+   theta=v1 / 25.00
+   log_rat=math.log10(theta / (1.0 - theta)) if 0 < theta < 1 else 0.0
+   raw=round(5.970 + log_rat, 3)
+   x=round(log_rat, 3)
+  y=raw
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='dissociation-constant-weak-acid-spectrophotometry':
   ph=float(value)
   Aa=0.040
@@ -569,6 +584,10 @@ def estimate(c,f):
   D_scaled=D_est * 1e6
   se=abs(f.get('slopeSE', 0.05)) / prefactor * 2.0 * math.sqrt(D_est) * 1e6
   return D_scaled, se, 7.60
+ elif slug=='isoelectric-point-amphoteric-amino-acids':
+  pI_est=f['b']
+  se=f.get('interceptSE', f.get('slopeSE', 0.005))
+  return pI_est, se, 5.970
  elif slug=='dissociation-constant-weak-acid-spectrophotometry':
   pKa_est=f['b']
   se=f.get('interceptSE', f.get('slopeSE', 0.005))
@@ -763,6 +782,10 @@ def formula(c,f):
   D_est=((m * 1e-6) / prefactor)**2
   D_scaled=D_est * 1e6
   return f"Randles-Ševčík Fit: i_pc = {fmt(m,2)}·ν¹/² + {fmt(b,3)} μA; Diffusion Coefficient D = {fmt(D_scaled,2)} × 10⁻⁶ cm²·s⁻¹; Peak Separation ΔE_p = 59.2 mV"
+ elif slug=='isoelectric-point-amphoteric-amino-acids':
+  m=f['m']
+  b=f['b']
+  return f"Conjugate Mean Buffer Fit: pH_mean = {fmt(m,5)}·log₁₀(θ/(1−θ)) + {fmt(b,3)}; Isoelectric Point pI = {fmt(b,3)}; pKa1 = 2.340, pKa2 = 9.600"
  elif slug=='dissociation-constant-weak-acid-spectrophotometry':
   m=f['m']
   b=f['b']
@@ -1313,6 +1336,46 @@ def worked(c,row):
    f"   Scaled diffusion coefficient: D = {fmt(D_scaled, 2)} × 10⁻⁶ cm²·s⁻¹.\n"
    f"   Literature reference benchmark at 25.00 °C: D = 7.60 × 10⁻⁶ cm²·s⁻¹ (percentage difference = {fmt(abs(D_scaled - 7.60)/7.60*100.0, 4)}%).\n"
    f"   Transient Nernst diffusion layer thickness at ν = {fmt(v_val,1)} mV/s: δ ≈ √(π·D·t) = {fmt(math.sqrt(math.pi * D_est * (0.70/(v_val*1e-3)))*1e4, 1)} μm."
+  )
+ elif slug=='isoelectric-point-amphoteric-amino-acids':
+  v1_val=row['input']
+  raw=row['raw']
+  x_val=row['x']
+  y_val=row['y']
+  theta=v1_val / 25.00
+  v2_val=25.00 + v1_val
+  pKa1=2.340
+  pKa2=9.600
+  log_rat=math.log10(theta / (1.0 - theta))
+  ph1_calc=pKa1 + log_rat
+  ph2_calc=pKa2 + log_rat
+  ph_mean_calc=(ph1_calc + ph2_calc) / 2.0
+  pI_single=ph_mean_calc - log_rat
+  Kw=1.008e-14
+  h_pI=math.sqrt(10.0**(-pKa1) * 10.0**(-pKa2))
+  return (
+   f"1. Conjugate Potentiometric Titration Coordinates at 25.00 °C:\n"
+   f"   First buffer titrant volume (carboxylic deprotonation): V₁ = {fmt(v1_val, 2)} mL of standardized 0.1000 M NaOH.\n"
+   f"   Total equivalence point volume per buffer region: V_eq1 = 25.00 mL (first stoichiometric equivalence).\n"
+   f"   Fractional extent of neutralization: θ = V₁ / V_eq1 = {fmt(v1_val, 2)} / 25.00 = {fmt(theta, 4)} ({fmt(theta*100.0, 2)}% neutral).\n"
+   f"   Matched second buffer titrant volume (ammonium deprotonation): V₂ = 25.00 + V₁ = {fmt(v2_val, 2)} mL.\n"
+   f"   Logarithmic neutralization ratio (X-axis metric): x = log₁₀(θ / (1 − θ)) = log₁₀({fmt(theta, 3)} / {fmt(1.0 - theta, 3)}) = {fmt(log_rat, 3)}.\n"
+   f"\n"
+   f"2. Experimental Equilibrium Buffer Potentials & Speciation:\n"
+   f"   First buffer measured equilibrium pH: pH₁ = pKa1 + log₁₀(θ / (1 − θ)) = 2.340 + ({fmt(log_rat, 3)}) = {fmt(ph1_calc, 3)}.\n"
+   f"   Second buffer measured equilibrium pH: pH₂ = pKa2 + log₁₀(θ / (1 − θ)) = 9.600 + ({fmt(log_rat, 3)}) = {fmt(ph2_calc, 3)}.\n"
+   f"   Observed conjugate mean buffer pH (Y-axis metric): pH_mean = (pH₁ + pH₂) / 2 = ({fmt(ph1_calc, 3)} + {fmt(ph2_calc, 3)}) / 2 = {fmt(raw, 3)}.\n"
+   f"\n"
+   f"3. Henderson-Hasselbalch Isoelectric Single-Point Extraction:\n"
+   f"   Linearized conjugate formulation: pH_mean = pI + log₁₀(θ / (1 − θ))  ⇒  pI = pH_mean − log₁₀(θ / (1 − θ)).\n"
+   f"   Single-point isoelectric estimate: pI = {fmt(raw, 3)} − ({fmt(log_rat, 3)}) = {fmt(pI_single, 3)}.\n"
+   f"\n"
+   f"4. Multi-Point Linear Regression & Macro-Dissociation Constants:\n"
+   f"   Ordinary least-squares regression across six conjugate buffer pairs (V₁ = 5.00 to 17.50 mL) yields:\n"
+   f"   Slope m = 1.00000 (verifying theoretical Nernstian unity slope within 0.000%) and Y-intercept b = pI = 5.97000 with R² = 1.0000000.\n"
+   f"   Macroscopic carboxylic acid constant: pKa1 = 2.340 (Ka1 = 4.57 × 10⁻³ mol·L⁻¹).\n"
+   f"   Macroscopic ammonium constant: pKa2 = 9.600 (Ka2 = 2.51 × 10⁻¹⁰ mol·L⁻¹).\n"
+   f"   Isoelectric hydronium concentration: [H⁺]_pI = √(Ka1 · Ka2) = {fmt(h_pI, 8)} mol·L⁻¹  ⇒  pI = 5.970 (exact 0.0000% difference)."
   )
  elif slug=='dissociation-constant-weak-acid-spectrophotometry':
   ph_val=row['input']
@@ -2181,6 +2244,30 @@ def uncertainty_text(c):
    "propagate as u_r(D) = √[ 4(u(m)/m)² + 4(u(A)/A)² + 4(u(c)/c)² + (u(T)/T)² ] = √[ 4(0.0001)² + 4(0.0033)² + 4(0.0012)² + (0.00007)² ] = 0.70%. "
    "For an empirical diffusion coefficient D = 7.60 × 10⁻⁶ cm²·s⁻¹, the expanded uncertainty at the 95% confidence level (coverage factor k = 2) "
    "is U(D) = ±0.11 × 10⁻⁶ cm²·s⁻¹ (1.4%), confirming exceptional concordance with the authoritative literature benchmark (7.60 ± 0.05 × 10⁻⁶ cm²·s⁻¹)."
+  )
+ elif slug=='isoelectric-point-amphoteric-amino-acids':
+  return (
+   "In the high-precision determination of amino acid isoelectric points and acid-base dissociation constants via dual-region "
+   "potentiometric titration, metrological uncertainties and physical boundary conditions are rigorously quantified across "
+   "potentiometric, volumetric, thermal, chemical, and atmospheric domains: "
+   "(1) Potentiometric pH Sensor Accuracy & Nernstian Response: The combined glass-SCE electrode is calibrated using freshly "
+   "prepared IUPAC primary standard buffers (pH 4.008 potassium hydrogen phthalate and pH 9.180 sodium tetraborate decahydrate) "
+   "at 25.00 °C. The observed electrode slope is 59.16 ± 0.05 mV/pH (100.0% of theoretical Nernstian slope), and the standard "
+   "uncertainty of recorded equilibrium pH coordinates is u(pH) = ±0.005 pH units. "
+   "(2) Piston Burette Delivery Precision & Volumetric Calibration: Carbonate-free 0.1000 M NaOH is dispensed from an automated "
+   "motor-driven piston burette with stepper motor resolution of 0.005 mL. Volumetric calibration by gravimetric water delivery "
+   "yields a dispensing standard uncertainty u(V) = ±0.010 mL across the 50.00 mL titration range (relative uncertainty 0.04%). "
+   "(3) Atmospheric Carbon Dioxide Scrubbing: Titrant reservoirs and the reaction vessel head-space are protected with double "
+   "guard tubes filled with Ascarite II (sodium hydroxide on non-fibrous silicate) and soda-lime. Titrant carbonate contamination "
+   "is verified by barium chloride precipitation to be < 0.05 mol%, preventing alkaline buffering distortion in the ammonium region. "
+   "(4) Constant Temperature & Activity Control: The double-walled borosilicate titration cell is thermostatted at 25.00 ± 0.02 °C "
+   "via an external circulating water bath. Because the dissociation enthalpy of the ammonium group is substantial (ΔH° ≈ +44 kJ/mol), "
+   "rigorous thermal regulation to ±0.02 °C restricts temperature-induced pKa2 drift to < ±0.0005 units. "
+   "(5) Multi-Point Least-Squares Regression & Uncertainty Propagation: Ordinary least-squares regression of conjugate mean pH "
+   "versus log₁₀(θ / (1 − θ)) across six discrete buffer coordinates yields an empirical slope m = 1.00000 ± 0.00002 and an intercept "
+   "b = 5.97000 ± 0.00001 with an ideal coefficient of determination R² = 1.0000000. Propagating the combined uncertainties u(pH), "
+   "u(V), and u(C_titr) yields an expanded uncertainty for the isoelectric point of U(pI) = ±0.006 at the 95% confidence level "
+   "(coverage factor k = 2), demonstrating impeccable agreement with authoritative literature benchmarks (5.970 ± 0.005)."
   )
  elif slug=='dissociation-constant-weak-acid-spectrophotometry':
   return (
@@ -3638,6 +3725,72 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"invariant peak potential separation ΔE_p = 59.2 mV and current ratio |i_pa / i_pc| = 1.000 confirming ideal Nernstian reversibility. The extracted "
    f"diffusion coefficient agrees with authoritative electrochemistry literature benchmarks within {fmt(abs(D_val - 7.60)/7.60*100.0, 4)}% relative deviation, "
    f"demonstrating the high metrological precision of the Randles-Ševčík formulation for diagnostic electrochemistry."
+  )
+  
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='isoelectric-point-amphoteric-amino-acids':
+  m_val=f['m']
+  b_val=f['b']
+  pI_val=value
+  r2_val=f['r2']
+  
+  abstract=(
+   f"The macroscopic acid dissociation constants (pKa1, pKa2) and the isoelectric point (pI) of glycine were determined "
+   f"at 25.00 ± 0.02 °C using precision dual-region potentiometric titration with carbonate-free 0.1000 M sodium hydroxide. "
+   f"A 25.00 mL aliquot of 0.1000 M glycine hydrochloride (H₂Gly⁺ Cl⁻) was titrated across two distinct stoichiometric buffer regions "
+   f"in a water-jacketed cell equipped with a combined glass-calomel electrode and automated piston burette. Deprotonation of the carboxylic "
+   f"group (-COOH) in the first buffer region (0.00 to 25.00 mL NaOH) yielded a half-neutralization potential corresponding to "
+   f"pKa1 = 2.340 ± 0.005. Passing through the first stoichiometric equivalence point at V_eq1 = 25.00 mL (pure zwitterionic glycine, "
+   f"HGly±), titration continued into the second buffer region (25.00 to 50.00 mL NaOH) to neutralize the α-ammonium group (-NH₃⁺), "
+   f"yielding a second half-neutralization constant pKa2 = 9.600 ± 0.005. Symmetrical pairing of conjugate buffer points at matched "
+   f"fractional extents of neutralization θ = V₁ / 25.00 (from θ = 0.20 to 0.70) established a linearized conjugate mean buffer formulation: "
+   f"pH_mean = 1.0000 · log₁₀(θ / (1 − θ)) + pI. Ordinary least-squares regression yielded an empirical slope of m = {fmt(m_val, 5)} "
+   f"(verifying theoretical Nernstian unity within 0.000%) and a Y-intercept of b = pI = {fmt(pI_val, 3)} with an ideal coefficient of "
+   f"determination R² = {fmt(r2_val, 6)}. The extracted isoelectric point pI = {fmt(pI_val, 3)} ± 0.006 matches the authoritative IUPAC "
+   f"literature benchmark (5.970) with 0.0000% difference, confirming the quantitative validity of amphoteric zwitterion equilibria."
+  )
+  
+  graph_choice=(
+   f"The analytical visualization models the conjugate mean buffer linearization: pH_mean = m · log₁₀[θ / (1 − θ)] + pI, "
+   f"where conjugate mean buffer pH represents the dependent variable on the Y-axis and the logarithmic neutralization ratio "
+   f"log₁₀(θ / (1 − θ)) represents the independent variable on the X-axis. This formulation is derived from the symmetrical properties "
+   f"of the diprotic amino acid titration curve. In the first buffer region, carboxylic dissociation follows pH₁ = pKa1 + log₁₀(θ / (1 − θ)); "
+   f"in the second buffer region, ammonium dissociation follows pH₂ = pKa2 + log₁₀(θ / (1 − θ)). Evaluating the arithmetic mean of the two "
+   f"conjugate pH values at identical fractional neutralization extents θ yields pH_mean = (pH₁ + pH₂) / 2 = [ (pKa1 + pKa2) / 2 ] + log₁₀[θ / (1 − θ)]. "
+   f"Because the isoelectric point is fundamentally defined as pI = (pKa1 + pKa2) / 2, this mathematical transformation projects the isoelectric "
+   f"point directly onto the Y-intercept at log₁₀[θ / (1 − θ)] = 0 (θ = 0.50). Multi-point regression across six symmetrical buffer pairs "
+   f"confirms perfect linear adherence (R² = {fmt(r2_val, 6)}), extracting pI = {fmt(b_val, 3)} free from individual electrode offset or asymmetric ionic strength drift."
+  )
+  
+  discussion=(
+   f"The potentiometric titration data provide profound fundamental insights into the amphoteric nature, molecular charge distribution, "
+   f"and solution equilibria of amino acids. Glycine exists in aqueous solution not as an uncharged neutral molecule (H₂N-CH₂-COOH), "
+   f"but as an internally neutralized dipolar zwitterion (+H₃N-CH₂-COO⁻). The titration curve vividly demonstrates this biphasic character "
+   f"through two widely separated buffer plateaus. In the first buffer region (pH 1.5 to 3.5), the titrant neutralizes the strongly acidic "
+   f"carboxylic acid group (pKa1 = 2.340). This pKa value is substantially lower than that of acetic acid (pKa = 4.76), reflecting the powerful "
+   f"electron-withdrawing inductive effect (-I effect) of the adjacent positively charged α-ammonium group (+NH₃-), which destabilizes the carboxylic "
+   f"proton and facilitates its dissociation.\n\n"
+   f"At the first stoichiometric equivalence point (V_eq1 = 25.00 mL), exactly one equivalent of base has been added per mole of glycine hydrochloride. "
+   f"At this point, the solution consists of pure zwitterionic glycine (HGly±). The solution pH at this inflection point equals the thermodynamic "
+   f"isoelectric point pI = 5.970. At this unique pH coordinate, the condition of macroscopic electroneutrality requires that the concentration of "
+   f"monovalent cations (+H₃N-CH₂-COOH) exactly equals the concentration of monovalent anions (H₂N-CH₂-COO⁻): [H₂A⁺] = [A⁻]. Calculation reveals "
+   f"that at pI = 5.970, the zwitterion constitutes 99.98% of all dissolved glycine, while the cationic and anionic forms each account for exactly "
+   f"0.010%. Because the concentration of weak acid/conjugate base pairs is at a global minimum, the buffer capacity β = dC_b / dpH drops to a sharp, "
+   f"pronounced minimum, causing the potentiometric slope dpH/dV to surge to a steep vertical maximum.\n\n"
+   f"In the second buffer region (pH 8.5 to 11.0), the titrant abstracts a proton from the positively charged ammonium group (pKa2 = 9.600) to form "
+   f"the unprotonated glycinate anion (H₂N-CH₂-COO⁻). The ammonium pKa value is lower than that of simple aliphatic amines (e.g., methylamine pKa = 10.64), "
+   f"owing to the electrostatic field stabilization provided by the adjacent negatively charged carboxylate group (-COO⁻). The mathematical linearization "
+   f"via conjugate mean buffer coordinates verified the theoretical Nernstian slope to within 0.000% (empirical slope m = {fmt(m_val, 5)} vs 1.00000), "
+   f"extracting an isoelectric point pI = {fmt(pI_val, 3)} in flawless concordance with international CIPM and IUPAC thermodynamic standards."
+  )
+  
+  conclusion=(
+   f"The macroscopic acid dissociation constants and isoelectric point of glycine were successfully determined at 25.00 °C as "
+   f"pKa1 = 2.340 ± 0.005, pKa2 = 9.600 ± 0.005, and pI = {fmt(pI_val, 3)} ± 0.006 using dual-region potentiometric titration. "
+   f"Symmetrical pairing of buffer coordinates linearized the data according to the conjugate mean formulation with an ideal "
+   f"coefficient of determination R² = {fmt(r2_val, 6)} and an empirical slope m = {fmt(m_val, 5)} confirming theoretical unity. "
+   f"The extracted isoelectric point agrees with authoritative literature benchmarks within {percent:.4f}% relative deviation, "
+   f"establishing an authoritative demonstration of amphoteric zwitterion equilibria and quantitative chemical metrology."
   )
   
   return abstract, graph_choice, discussion, conclusion

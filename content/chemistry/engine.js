@@ -87,7 +87,19 @@ function update(){
   $('apparatusDiagram').innerHTML=drawEnzymeKineticsBenchView(p,rawVal);
   return;
  }
- if(cfg.slug==='dissociation-constant-weak-acid-spectrophotometry'){
+ if(cfg.slug==='isoelectric-point-amphoteric-amino-acids'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawAminoAcidCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawAminoAcidSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawAminoAcidBenchView(p,rawVal);
+  return;
+ }
+  if(cfg.slug==='dissociation-constant-weak-acid-spectrophotometry'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawPkaCompareView(p,rawVal);
    return;
@@ -276,6 +288,19 @@ function update(){
   const dA_dt = v0_uM * 0.0185;
   $('liveState').textContent='Photometric trace recorded: v₀ = '+v0_uM.toFixed(2)+' μM/min (dA/dt = '+(dA_dt/1000).toFixed(4)+' AU/min).';
   message('Assay complete: v₀ = '+v0_uM.toFixed(2)+' μM/min (1/v₀ = '+inv_v0.toFixed(2)+' min/mM, 1/[S] = '+inv_s.toFixed(2)+' mM⁻¹). Record in notebook.');
+ }else if(cfg.slug==='isoelectric-point-amphoteric-amino-acids'){
+  $('liveState').textContent='Ready to record conjugate mean pH at titrant volume V₁ = '+p.input.toFixed(2)+' mL.';
+  message('Adjust titrant volume V₁, measure pH₁ in first buffer and pH₂ in second buffer, record mean pH.');
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawAminoAcidCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawAminoAcidSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawAminoAcidBenchView(p,rawVal);
+  return;
  }else if(cfg.slug==='dissociation-constant-weak-acid-spectrophotometry'){
   $('liveState').textContent='Ready to record absorbance at buffer pH = '+p.input.toFixed(2)+'.';
   message('Adjust buffer pH, insert matched quartz cuvette, zero reference blank & record A_616.');
@@ -13390,6 +13415,369 @@ function drawPkaSandboxView(p, rawVal) {
  ];
  for (var k = 0; k < thermoLines.length; k++) {
   svg += text(472, 163 + k * 13, thermoLines[k], k === 2 || k === 5 ? '#38bdf8' : '#cbd5e1', 5.5, 'start', k === 2 || k === 5 ? 'bold' : 'normal');
+ }
+
+ return svg;
+}
+
+// ======================================================================
+// Lab 40: Isoelectric Point & Potentiometric Titration of Amino Acids
+// ======================================================================
+
+function drawAminoAcidBenchView(p, rawVal) {
+ var v1 = p.input || 12.50;
+ var theta = v1 / 25.00;
+ var v2 = 25.00 + v1;
+ var pKa1 = 2.340;
+ var pKa2 = 9.600;
+ var pI = 5.970;
+ var logRatio = (theta > 0 && theta < 1) ? Math.log10(theta / (1.0 - theta)) : 0.0;
+ var ph1 = pKa1 + logRatio;
+ var ph2 = pKa2 + logRatio;
+ var phMean = (rawVal !== null && rawVal !== undefined) ? rawVal : 5.970;
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#09111b');
+ svg += '<defs>';
+ svg += '<linearGradient id="glySolGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#38bdf8" stop-opacity="0.15"/><stop offset="100%" stop-color="#0284c7" stop-opacity="0.35"/></linearGradient>';
+ svg += '<linearGradient id="naohBurette" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#f8fafc" stop-opacity="0.3"/><stop offset="50%" stop-color="#38bdf8" stop-opacity="0.1"/><stop offset="100%" stop-color="#f8fafc" stop-opacity="0.35"/></linearGradient>';
+ svg += '</defs>';
+
+ // Header Banner
+ svg += text(20, 24, 'LABORATORY BENCH: DUAL-REGION POTENTIOMETRIC TITRATION OF GLYCINE', '#f8fafc', 12, 'bold');
+ svg += text(20, 40, '0.1000 M Glycine·HCl (25.00 mL) + 0.1000 M NaOH · Combined Glass-SCE Electrode · Jacketed Cell (25.00 °C)', '#38bdf8', 9);
+
+ // --- LEFT TITRATION APPARATUS (x: 20 to 350, y: 55 to 305) ---
+ svg += rect(20, 55, 335, 250, '#0f172a', '#1e293b', 1.5, 6);
+ svg += text(30, 74, 'Jacketed Thermostatted Reaction Cell (25.00 °C)', '#94a3b8', 7, 'start', 'bold');
+
+ // Burette Assembly (x: 65, y: 80, w: 22, h: 105)
+ svg += rect(65, 80, 22, 105, 'url(#naohBurette)', '#64748b', 1, 3);
+ var fillH = Math.min(95, (v1 / 25.0) * 95);
+ svg += rect(67, 185 - fillH, 18, fillH, 'rgba(56,189,248,0.25)', 'none');
+ svg += '<line x1="76" y1="80" x2="76" y2="185" stroke="#94a3b8" stroke-width="0.8" stroke-dasharray="1,2"/>';
+ svg += text(76, 75, '0.100 M NaOH', '#38bdf8', 6, 'middle', 'bold');
+ svg += text(76, 130, 'V₁ = ' + v1.toFixed(1) + ' mL', '#facc15', 6, 'middle', 'bold');
+
+ // Burette stopcock and dispensing tip
+ svg += rect(73, 185, 6, 8, '#334155', '#64748b', 1);
+ svg += '<polygon points="74,193 78,193 76,205" fill="#f8fafc" stroke="#64748b" stroke-width="0.8"/>';
+
+ // Titration Droplet
+ svg += circle(76, 212, 2.5, '#38bdf8');
+
+ // Double-Walled Jacketed Titration Vessel (x: 110, y: 155, w: 140, h: 125)
+ var clX = 110, clY = 155, clW = 140, clH = 125;
+ svg += rect(clX, clY, clW, clH, '#1e293b', '#0284c7', 1.5, 8); // Outer water jacket
+ svg += text(clX + 10, clY + 14, 'Water Jacket (25.00 °C)', '#38bdf8', 6, 'start', 'bold');
+
+ // Inner Reaction Chamber
+ svg += rect(clX + 8, clY + 22, clW - 16, clH - 30, '#0f172a', '#334155', 1, 6);
+ svg += rect(clX + 10, clY + 45, clW - 20, clH - 55, 'url(#glySolGrad)', 'none', 0, 4);
+ svg += text(clX + clW/2, clY + clH - 18, '25.00 mL 0.100 M Glycine', '#cbd5e1', 6.5, 'middle', 'bold');
+
+ // Magnetic Stirrer Bar at Vessel Bottom
+ svg += rect(clX + clW/2 - 14, clY + clH - 24, 28, 7, '#f8fafc', '#475569', 1, 3);
+ svg += text(clX + clW/2, clY + clH - 30, '400 rpm Stirrer', '#94a3b8', 5.5, 'middle');
+
+ // Combined Glass-Calomel pH Electrode (x: 195, y: 90, w: 14, h: 120)
+ svg += rect(195, 90, 14, 120, '#f8fafc', '#64748b', 1.2, 2);
+ svg += circle(202, 213, 6, '#38bdf8', '#0284c7', 1.2); // Glass bulb sensor
+ svg += text(202, 85, 'pH Sensor', '#38bdf8', 6, 'middle', 'bold');
+ svg += '<line x1="202" y1="90" x2="202" y2="208" stroke="#0284c7" stroke-width="1.5"/>'; // Ag/AgCl internal lead
+
+ // Automatic Temperature Compensation (ATC) Probe (x: 160, y: 110, w: 8, h: 100)
+ svg += rect(160, 110, 8, 100, '#64748b', '#475569', 1, 2);
+ svg += text(164, 105, 'ATC Probe', '#94a3b8', 5.5, 'middle');
+
+ // Burette tip entry line
+ svg += '<line x1="76" y1="205" x2="135" y2="215" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="2,2"/>';
+
+ // Soda-Lime Guard Tube on Top of Burette
+ svg += rect(71, 60, 10, 20, '#facc15', '#a16207', 1, 2);
+ svg += text(76, 56, 'CO₂ Trap', '#facc15', 5.5, 'middle');
+
+ // --- RIGHT DIGITAL CONSOLE (x: 370 to 705, y: 55 to 305) ---
+ svg += rect(370, 55, 335, 250, '#0f172a', '#334155', 1.5, 6);
+ svg += text(385, 76, 'POTENTIOMETRIC DUAL-REGION METROLOGY', '#f8fafc', 8, 'start', 'bold');
+
+ // Tri-Card Readout (First buffer, Second buffer, Conjugate mean)
+ // Card 1: First Buffer pH₁
+ svg += rect(385, 88, 98, 54, '#020617', '#eab308', 1, 4);
+ svg += text(393, 102, 'FIRST BUFFER (pH₁)', '#eab308', 6, 'start', 'bold');
+ svg += text(434, 130, ph1.toFixed(3), '#eab308', 14, 'middle', 'bold');
+
+ // Card 2: Second Buffer pH₂
+ svg += rect(488, 88, 98, 54, '#020617', '#38bdf8', 1, 4);
+ svg += text(496, 102, 'SECOND BUFFER (pH₂)', '#38bdf8', 6, 'start', 'bold');
+ svg += text(537, 130, ph2.toFixed(3), '#38bdf8', 14, 'middle', 'bold');
+
+ // Card 3: Conjugate Mean pH_mean
+ svg += rect(591, 88, 104, 54, '#020617', '#10b981', 1.2, 4);
+ svg += text(599, 102, 'CONJUGATE MEAN', '#10b981', 6, 'start', 'bold');
+ svg += text(643, 130, phMean.toFixed(3), '#10b981', 14, 'middle', 'bold');
+
+ // Telemetry Data Grid
+ var rowsGrid = [
+  ['Fractional Extent of Neutralization', 'θ = ' + theta.toFixed(3) + ' (V₁ = ' + v1.toFixed(2) + ' mL)'],
+  ['Matched Second Buffer Coordinate', 'V₂ = 25.00 + V₁ = ' + v2.toFixed(2) + ' mL'],
+  ['Logarithmic Neutralization Ratio', 'log₁₀(θ / (1 − θ)) = ' + (logRatio >= 0 ? '+' : '') + logRatio.toFixed(3)],
+  ['Carboxylic Acid Constant (Region 1)', 'pKa1 = ' + (ph1 - logRatio).toFixed(3) + ' (Theory: 2.340)'],
+  ['Ammonium Constant (Region 2)', 'pKa2 = ' + (ph2 - logRatio).toFixed(3) + ' (Theory: 9.600)'],
+  ['Extracted Isoelectric Point (Intercept)', 'pI = (pKa1 + pKa2)/2 = ' + phMean.toFixed(3) + ' (Theory: 5.970)'],
+  ['Isoelectric Equilibrium Point', 'V_eq1 = 25.00 mL · Pure Zwitterion HGly±']
+ ];
+ for (var i = 0; i < rowsGrid.length; i++) {
+  var ry = 154 + i * 16.5;
+  svg += rect(385, ry, 310, 14.5, i % 2 === 0 ? '#1e293b' : '#0f172a', 'none', 0, 2);
+  svg += text(393, ry + 10.5, rowsGrid[i][0], '#94a3b8', 6, 'start');
+  svg += text(685, ry + 10.5, rowsGrid[i][1], i === 5 ? '#facc15' : '#f8fafc', 6, 'end', i === 5 ? 'bold' : 'normal');
+ }
+
+ // Status Badges
+ svg += rect(385, 278, 96, 18, '#164e63', '#06b6d4', 1, 3);
+ svg += text(433, 290, 'CO₂ SCRUBBER ARMED', '#22d3ee', 5.5, 'middle', 'bold');
+
+ svg += rect(490, 278, 102, 18, '#14532d', '#22c55e', 1, 3);
+ svg += text(541, 290, 'SLOPE: 59.16 mV/pH (100%)', '#4ade80', 5.5, 'middle', 'bold');
+
+ svg += rect(601, 278, 94, 18, '#312e81', '#6366f1', 1, 3);
+ svg += text(648, 290, 'T = 25.00 ± 0.02 °C', '#a5b4fc', 5.5, 'middle', 'bold');
+
+ return svg;
+}
+
+function drawAminoAcidCompareView(p, rawVal) {
+ var v1 = p.input || 12.50;
+ var theta = v1 / 25.00;
+ var v2 = 25.00 + v1;
+ var pKa1 = 2.340;
+ var pKa2 = 9.600;
+ var pI = 5.970;
+ var logRatio = (theta > 0 && theta < 1) ? Math.log10(theta / (1.0 - theta)) : 0.0;
+ var ph1 = pKa1 + logRatio;
+ var ph2 = pKa2 + logRatio;
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#09111b');
+
+ // Header
+ svg += text(20, 24, 'FULL BIPHASIC TITRATION CURVE OF GLYCINE·HCl (0.00 to 50.00 mL NaOH)', '#f8fafc', 12, 'bold');
+ svg += text(20, 40, 'First Buffer pKa1 = 2.340 · Equivalence Point 1 (pI = 5.970) at 25.00 mL · Second Buffer pKa2 = 9.600', '#38bdf8', 9);
+
+ // --- LEFT TITRATION PLOT (x: 45 to 480, y: 60 to 275) ---
+ var gx = 45, gy = 60, gw = 435, gh = 215;
+ svg += rect(gx, gy, gw, gh, '#0f172a', '#334155', 1, 4);
+
+ // Grid lines and labels (pH 1 to 13)
+ for (var ph_grid = 2; ph_grid <= 12; ph_grid += 2) {
+  var py = gy + gh - ((ph_grid - 1.0) / 12.0) * gh;
+  svg += '<line x1="' + gx + '" y1="' + py + '" x2="' + (gx + gw) + '" y2="' + py + '" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(gx - 8, py + 3, ph_grid.toString(), '#64748b', 6, 'end');
+ }
+ svg += text(gx - 26, gy + gh/2, 'Solution pH', '#94a3b8', 7, 'middle', 'bold');
+
+ for (var v_grid = 0; v_grid <= 50; v_grid += 10) {
+  var px = gx + (v_grid / 55.0) * gw;
+  svg += '<line x1="' + px + '" y1="' + gy + '" x2="' + px + '" y2="' + (gy + gh) + '" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(px, gy + gh + 12, v_grid.toString(), '#64748b', 6, 'middle');
+ }
+ svg += text(gx + gw/2, gy + gh + 24, 'Titrant Volume V_NaOH (mL)', '#94a3b8', 7, 'middle', 'bold');
+
+ // Generate Complete Biphasic Titration Curve
+ function getTitrationPH(v) {
+  if (v <= 0.0) return 1.30;
+  if (v < 24.5) {
+   var t = v / 25.0;
+   return 2.340 + Math.log10(t / (1.0 - t));
+  }
+  if (v <= 25.5) {
+   // Sharp steep inflection through pI = 5.97
+   var frac = (v - 24.5) / 1.0;
+   return 3.75 + frac * (8.15 - 3.75);
+  }
+  if (v < 49.5) {
+   var t = (v - 25.0) / 25.0;
+   return 9.600 + Math.log10(t / (1.0 - t));
+  }
+  // Above 50 mL: excess NaOH
+  var excess_oh = (v - 50.0) * 0.100 / (75.0 + v);
+  var poh = -Math.log10(Math.max(1e-5, excess_oh));
+  return 14.0 - poh;
+ }
+
+ var ptsCurve = '';
+ for (var v_step = 0.5; v_step <= 52.0; v_step += 0.5) {
+  var px = gx + (v_step / 55.0) * gw;
+  var ph_calc = getTitrationPH(v_step);
+  var py = gy + gh - ((ph_calc - 1.0) / 12.0) * gh;
+  ptsCurve += (v_step === 0.5 ? 'M ' : 'L ') + px.toFixed(1) + ' ' + py.toFixed(1) + ' ';
+ }
+ svg += '<path d="' + ptsCurve + '" fill="none" stroke="#38bdf8" stroke-width="2.2"/>';
+
+ // First Equivalence Point Marker (V = 25.00 mL, pH = 5.97)
+ var pxEq1 = gx + (25.00 / 55.0) * gw;
+ var pyEq1 = gy + gh - ((5.970 - 1.0) / 12.0) * gh;
+ svg += '<line x1="' + pxEq1 + '" y1="' + gy + '" x2="' + pxEq1 + '" y2="' + (gy + gh) + '" stroke="#a855f7" stroke-width="1.2" stroke-dasharray="3,2"/>';
+ svg += circle(pxEq1, pyEq1, 5.5, '#a855f7', '#ffffff', 1.5);
+ svg += text(pxEq1, gy + 15, 'V_eq1 = 25.00 mL · pI = 5.970', '#c084fc', 6.5, 'middle', 'bold');
+
+ // Half-Neutralization Point 1 (V = 12.50 mL, pH = pKa1 = 2.34)
+ var pxHalf1 = gx + (12.50 / 55.0) * gw;
+ var pyHalf1 = gy + gh - ((2.340 - 1.0) / 12.0) * gh;
+ svg += circle(pxHalf1, pyHalf1, 4.5, '#eab308', '#ffffff', 1.2);
+ svg += text(pxHalf1, pyHalf1 - 8, 'pKa1 = 2.34', '#eab308', 6, 'middle', 'bold');
+
+ // Half-Neutralization Point 2 (V = 37.50 mL, pH = pKa2 = 9.60)
+ var pxHalf2 = gx + (37.50 / 55.0) * gw;
+ var pyHalf2 = gy + gh - ((9.600 - 1.0) / 12.0) * gh;
+ svg += circle(pxHalf2, pyHalf2, 4.5, '#3b82f6', '#ffffff', 1.2);
+ svg += text(pxHalf2, pyHalf2 - 8, 'pKa2 = 9.60', '#38bdf8', 6, 'middle', 'bold');
+
+ // Current Experimental Titration Points: V1 and V2
+ var pxCur1 = gx + (v1 / 55.0) * gw;
+ var pyCur1 = gy + gh - ((ph1 - 1.0) / 12.0) * gh;
+ var pxCur2 = gx + (v2 / 55.0) * gw;
+ var pyCur2 = gy + gh - ((ph2 - 1.0) / 12.0) * gh;
+
+ svg += circle(pxCur1, pyCur1, 5, '#facc15', '#ffffff', 1.5);
+ svg += circle(pxCur2, pyCur2, 5, '#22c55e', '#ffffff', 1.5);
+
+ // Symmetrical tie-line connecting V1 and V2 through pI
+ svg += '<line x1="' + pxCur1 + '" y1="' + pyCur1 + '" x2="' + pxCur2 + '" y2="' + pyCur2 + '" stroke="#10b981" stroke-width="1.2" stroke-dasharray="3,2"/>';
+ svg += circle((pxCur1 + pxCur2)/2, (pyCur1 + pyCur2)/2, 4, '#10b981', '#ffffff', 1.2);
+
+ // --- RIGHT CARD: REGION BREAKDOWN (x: 495 to 705) ---
+ svg += rect(495, 55, 210, 250, '#0f172a', '#334155', 1.5, 6);
+ svg += text(505, 75, 'BIPHASIC TITRATION ANALYSIS', '#f8fafc', 8, 'start', 'bold');
+
+ var infoLines = [
+  '• Region 1: -COOH Deprotonation',
+  '  H₂Gly⁺ + OH⁻ → HGly± + H₂O',
+  '  Half-neutralization (12.50 mL): pKa1 = 2.340',
+  '• Equivalence Point 1 (25.00 mL):',
+  '  100% Zwitterion HGly± (Net charge = 0)',
+  '  Inflection pH = pI = 5.970',
+  '• Region 2: -NH₃⁺ Deprotonation',
+  '  HGly± + OH⁻ → Gly⁻ + H₂O',
+  '  Half-neutralization (37.50 mL): pKa2 = 9.600',
+  '• Active Titration Points:',
+  '  V₁ = ' + v1.toFixed(2) + ' mL ⇒ pH₁ = ' + ph1.toFixed(3),
+  '  V₂ = ' + v2.toFixed(2) + ' mL ⇒ pH₂ = ' + ph2.toFixed(3),
+  '  Conjugate Mean = ' + ((ph1 + ph2)/2).toFixed(3)
+ ];
+ for (var j = 0; j < infoLines.length; j++) {
+  var isHeader = (j === 0 || j === 3 || j === 6 || j === 9);
+  svg += text(505, 95 + j * 14.5, infoLines[j], isHeader ? '#38bdf8' : '#cbd5e1', 5.5, 'start', isHeader ? 'bold' : 'normal');
+ }
+
+ return svg;
+}
+
+function drawAminoAcidSandboxView(p, rawVal) {
+ var v1 = p.input || 12.50;
+ var theta = v1 / 25.00;
+ var pKa1 = 2.340;
+ var pKa2 = 9.600;
+ var pI = 5.970;
+ var logRatio = (theta > 0 && theta < 1) ? Math.log10(theta / (1.0 - theta)) : 0.0;
+ var ph1 = pKa1 + logRatio;
+ var ph2 = pKa2 + logRatio;
+ var curPH = (ph1 + ph2) / 2.0;
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#09111b');
+
+ // Header
+ svg += text(20, 24, 'ZWITTERION SPECIATION & MACROSCOPIC NET CHARGE PROFILE', '#f8fafc', 12, 'bold');
+ svg += text(20, 40, 'Equilibrium: Cation H₂A⁺ ⇌ Zwitterion HA± ⇌ Anion A⁻ · Zero Net Charge Crossing at pI = 5.970', '#38bdf8', 9);
+
+ // --- LEFT SPECIATION PLOT (x: 45 to 440, y: 60 to 275) ---
+ var gx = 45, gy = 60, gw = 395, gh = 215;
+ svg += rect(gx, gy, gw, gh, '#0f172a', '#334155', 1, 4);
+
+ // Grid lines and labels (0 to 100%)
+ for (var pct = 0; pct <= 100; pct += 25) {
+  var py = gy + gh - (pct / 100.0) * gh;
+  svg += '<line x1="' + gx + '" y1="' + py + '" x2="' + (gx + gw) + '" y2="' + py + '" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(gx - 8, py + 3, pct + '%', '#64748b', 6, 'end');
+ }
+ svg += text(gx - 26, gy + gh/2, 'Species Percentage (%)', '#94a3b8', 7, 'middle', 'bold');
+
+ for (var p_grid = 0; p_grid <= 14; p_grid += 2) {
+  var px = gx + (p_grid / 14.0) * gw;
+  svg += '<line x1="' + px + '" y1="' + gy + '" x2="' + px + '" y2="' + (gy + gh) + '" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(px, gy + gh + 12, p_grid.toString(), '#64748b', 6, 'middle');
+ }
+ svg += text(gx + gw/2, gy + gh + 24, 'Solution pH', '#94a3b8', 7, 'middle', 'bold');
+
+ // Calculate Speciation Fractions for Cation, Zwitterion, Anion
+ function getFractions(ph_val) {
+  var h = Math.pow(10, -ph_val);
+  var k1 = Math.pow(10, -pKa1);
+  var k2 = Math.pow(10, -pKa2);
+  var denom = h * h + k1 * h + k1 * k2;
+  var f_cat = (h * h) / denom;
+  var f_zwit = (k1 * h) / denom;
+  var f_an = (k1 * k2) / denom;
+  return { cat: f_cat * 100.0, zwit: f_zwit * 100.0, an: f_an * 100.0 };
+ }
+
+ var ptsCat = '', ptsZwit = '', ptsAn = '';
+ for (var p_step = 0.0; p_step <= 14.0; p_step += 0.2) {
+  var px = gx + (p_step / 14.0) * gw;
+  var fr = getFractions(p_step);
+
+  var pyCat = gy + gh - (fr.cat / 100.0) * gh;
+  var pyZwit = gy + gh - (fr.zwit / 100.0) * gh;
+  var pyAn = gy + gh - (fr.an / 100.0) * gh;
+
+  ptsCat += (p_step === 0.0 ? 'M ' : 'L ') + px.toFixed(1) + ' ' + pyCat.toFixed(1) + ' ';
+  ptsZwit += (p_step === 0.0 ? 'M ' : 'L ') + px.toFixed(1) + ' ' + pyZwit.toFixed(1) + ' ';
+  ptsAn += (p_step === 0.0 ? 'M ' : 'L ') + px.toFixed(1) + ' ' + pyAn.toFixed(1) + ' ';
+ }
+
+ // Render Speciation curves
+ svg += '<path d="' + ptsCat + '" fill="none" stroke="#ef4444" stroke-width="2"/>'; // Red: Cation
+ svg += '<path d="' + ptsZwit + '" fill="none" stroke="#10b981" stroke-width="2.5"/>'; // Green: Zwitterion
+ svg += '<path d="' + ptsAn + '" fill="none" stroke="#3b82f6" stroke-width="2"/>'; // Blue: Anion
+
+ // Isoelectric Point Marker at pH = 5.97
+ var pxPi = gx + (pI / 14.0) * gw;
+ var pyPi = gy + gh - (99.98 / 100.0) * gh;
+ svg += '<line x1="' + pxPi + '" y1="' + gy + '" x2="' + pxPi + '" y2="' + (gy + gh) + '" stroke="#a855f7" stroke-width="1.2" stroke-dasharray="3,2"/>';
+ svg += circle(pxPi, pyPi, 5, '#a855f7', '#ffffff', 1.5);
+ svg += text(pxPi, gy + 15, 'pI = 5.970 (99.98% Zwitterion)', '#c084fc', 6.5, 'middle', 'bold');
+
+ // --- RIGHT INTERACTION PANEL (x: 455 to 705) ---
+ svg += rect(455, 55, 250, 250, '#0f172a', '#334155', 1.5, 6);
+ svg += text(465, 75, 'EQUILIBRIUM SPECIES & CHARGE PROFILE', '#f8fafc', 8, 'start', 'bold');
+
+ // Current State Display Card
+ var curFr = getFractions(curPH);
+ var netCharge = (curFr.cat - curFr.an) / 100.0;
+
+ svg += rect(465, 88, 230, 58, '#020617', '#10b981', 1, 4);
+ svg += text(475, 102, 'ISOELECTRIC STATE (pH = ' + curPH.toFixed(2) + ')', '#10b981', 7, 'start', 'bold');
+ svg += text(475, 120, 'Net Charge Z = ' + (netCharge >= 0 ? '+' : '') + netCharge.toFixed(4) + ' e', '#facc15', 8, 'start', 'bold');
+ svg += text(475, 134, 'Zwitterion HA± = ' + curFr.zwit.toFixed(2) + ' %', '#38bdf8', 6.5, 'start');
+
+ // Thermodynamic Explanations
+ var thermoLines = [
+  '• Cation H₂A⁺ (+H₃N-CH₂-COOH): ' + curFr.cat.toFixed(2) + ' %',
+  '• Zwitterion HA± (+H₃N-CH₂-COO⁻): ' + curFr.zwit.toFixed(2) + ' %',
+  '• Anion A⁻ (H₂N-CH₂-COO⁻): ' + curFr.an.toFixed(2) + ' %',
+  '• Electrophoretic Mobility: u ∝ Z_net',
+  '  u > 0 at pH < pI (migrates toward cathode)',
+  '  u = 0 at pH = pI (stationary, no migration)',
+  '  u < 0 at pH > pI (migrates toward anode)',
+  '• Solubility Minimum: Intermolecular attraction',
+  '  between dipolar zwitterions minimizes solubility',
+  '  at the isoelectric point pI = 5.970.'
+ ];
+ for (var k = 0; k < thermoLines.length; k++) {
+  var isKey = (k === 3 || k === 7);
+  svg += text(468, 158 + k * 13, thermoLines[k], isKey ? '#38bdf8' : '#cbd5e1', 5.5, 'start', isKey ? 'bold' : 'normal');
  }
 
  return svg;

@@ -3,6 +3,25 @@
 const round=(v,n)=>Math.round((v+Number.EPSILON)*10**n)/10**n;
 
 function predict(slug,input){
+  if(slug==='isoelectric-point-amphoteric-amino-acids'){
+   const v1=Number(input);
+   const table_raw={5.00:5.368, 7.50:5.602, 10.00:5.794, 12.50:5.970, 15.00:6.146, 17.50:6.338};
+   const table_x={5.00:-0.602, 7.50:-0.368, 10.00:-0.176, 12.50:0.000, 15.00:0.176, 17.50:0.368};
+   const key=round(v1, 2);
+   let raw_val, x_val;
+   if(table_raw.hasOwnProperty(key)){
+    raw_val=table_raw[key];
+    x_val=table_x[key];
+   }else{
+    const theta=v1 / 25.00;
+    const log_rat=(theta > 0 && theta < 1) ? Math.log10(theta / (1.0 - theta)) : 0.0;
+    raw_val=round(5.970 + log_rat, 3);
+    x_val=round(log_rat, 3);
+   }
+   const x=x_val;
+   const y=raw_val;
+   return {raw:raw_val,ideal:raw_val,period:1.0,x,y,valid:v1>=3.00&&v1<=22.00};
+  }
   if(slug==='dissociation-constant-weak-acid-spectrophotometry'){
    const ph=Number(input);
    const pKa=7.100;
@@ -503,6 +522,16 @@ function predict(slug,input){
 
 function reading(slug,input,raw){
  let x=Number(input),y=Number(raw);
+  if(slug==='isoelectric-point-amphoteric-amino-acids'){
+   const v1=Number(input);
+   const raw_val=Number(raw);
+   const table_x={5.00:-0.602, 7.50:-0.368, 10.00:-0.176, 12.50:0.000, 15.00:0.176, 17.50:0.368};
+   const key=round(v1, 2);
+   const theta=v1 / 25.00;
+   const log_rat=(theta > 0 && theta < 1) ? Math.log10(theta / (1.0 - theta)) : 0.0;
+   x=table_x.hasOwnProperty(key)?table_x[key]:round(log_rat, 3);
+   y=raw_val;
+  }
   if(slug==='dissociation-constant-weak-acid-spectrophotometry'){
    const ph=Number(input);
    const raw_val=Number(raw);
@@ -801,6 +830,11 @@ function fit(rows){
 }
 
 function estimate(slug,f){
+  if(slug==='isoelectric-point-amphoteric-amino-acids'){
+   const pI_est=f.b;
+   const se=f.interceptSE || f.slopeSE || 0.005;
+   return {value:pI_est,se:se,reference:5.970};
+  }
   if(slug==='dissociation-constant-weak-acid-spectrophotometry'){
    const pKa_est=f.b;
    const se=f.interceptSE || f.slopeSE || 0.005;
