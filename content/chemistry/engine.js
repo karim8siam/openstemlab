@@ -87,6 +87,18 @@ function update(){
   $('apparatusDiagram').innerHTML=drawEnzymeKineticsBenchView(p,rawVal);
   return;
  }
+ if(cfg.slug==='magnetic-susceptibility-gouy-balance-complexes'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawGouyCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawGouySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawGouyBenchView(p,rawVal);
+  return;
+ }
  if(cfg.slug==='uv-vis-particle-in-a-box-cyanine-dyes'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawCyanineCompareView(p,rawVal);
@@ -348,7 +360,23 @@ function update(){
   const dA_dt = v0_uM * 0.0185;
   $('liveState').textContent='Photometric trace recorded: v₀ = '+v0_uM.toFixed(2)+' μM/min (dA/dt = '+(dA_dt/1000).toFixed(4)+' AU/min).';
   message('Assay complete: v₀ = '+v0_uM.toFixed(2)+' μM/min (1/v₀ = '+inv_v0.toFixed(2)+' min/mM, 1/[S] = '+inv_s.toFixed(2)+' mM⁻¹). Record in notebook.');
- }else if(cfg.slug==='uv-vis-particle-in-a-box-cyanine-dyes'){
+ }else if(cfg.slug==='magnetic-susceptibility-gouy-balance-complexes'){
+  const b2 = p.input;
+  const b_T = Math.sqrt(b2).toFixed(2);
+  const dm_mg = raw.toFixed(3);
+  $('liveState').textContent='Gouy balance magnetized: B = '+b_T+' T (B² = '+b2.toFixed(2)+' T²), Apparent mass gain Δm = +'+dm_mg+' mg.';
+  message('Energized electromagnet to B = '+b_T+' T. Paramagnetic force draws Mohr\'s salt downward. Record Δm in notebook.');
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawGouyCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawGouySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawGouyBenchView(p,rawVal);
+  return;
+}else if(cfg.slug==='uv-vis-particle-in-a-box-cyanine-dyes'){
   const p_val = Math.round(p.input);
   const N = 2 * p_val + 6;
   const x_box = ((N * N) / (N + 1)).toFixed(3);
@@ -15651,6 +15679,295 @@ function drawCyanineSandboxView(p, rawVal) {
   svg += circle(cx, d_y0 + 7, 2.5, '#facc15');
  }
  svg += text((d_x0 + d_x1) / 2, 298, '● Carbon/Nitrogen Atomic Centers (Uniform Bond Length l = 1.390 Å)', '#facc15', 7, 'middle');
+
+ return svg;
+}
+
+// ======================================================================
+// LAB 46: GOUY MAGNETIC BALANCE & SUSCEPTIBILITY OF MOHR'S SALT
+// ======================================================================
+
+function drawGouyBenchView(p, rawVal) {
+ var b2 = Number(p.input) || 1.00;
+ var b_T = Math.sqrt(b2);
+ var dm_mg = (rawVal !== null && rawVal !== undefined) ? rawVal : (639.452 * b2);
+ var F_uN = (dm_mg * 9.80665).toFixed(1);
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a0f1d');
+
+ // Title header
+ svg += text(360, 18, 'GOUY MAGNETIC SUSCEPTIBILITY BALANCE: PARAMAGNETIC DOWNWARD FORCE', '#38bdf8', 11, 'middle', 'bold');
+ svg += text(360, 32, 'Mohr\'s Salt [Fe(H₂O)₆](NH₄)₂(SO₄)₂·6H₂O (2.500 g) | Magnetic Flux Density B = ' + b_T.toFixed(2) + ' T (B² = ' + b2.toFixed(2) + ' T²)', '#94a3b8', 8.5, 'middle');
+
+ // LEFT: Analytical Microbalance & Electromagnet Schematic (x: 15 to 335)
+ svg += rect(15, 42, 320, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(175, 58, 'GOUY APPARATUS & ELECTROMAGNET GAP', '#38bdf8', 9.5, 'middle', 'bold');
+
+ // Analytical balance enclosure atop support frame
+ svg += rect(55, 68, 240, 50, '#1e293b', '#475569', 1, 4);
+ svg += rect(65, 76, 220, 34, '#090d16', '#334155', 1, 3);
+ svg += text(175, 89, 'DIGITAL MICROBALANCE DISPLAY', '#94a3b8', 6.5, 'middle');
+ svg += text(175, 103, 'Δm = +' + dm_mg.toFixed(3) + ' mg', '#4ade80', 10, 'middle', 'bold');
+
+ // Suspension hook & wire passing through floor
+ svg += line(175, 118, 175, 155, '#f59e0b', 1.5); // phosphor bronze wire
+ svg += text(182, 135, 'Suspension Wire', '#f59e0b', 6, 'start');
+
+ // Electromagnet heavy iron yoke & pole caps
+ svg += rect(40, 185, 75, 85, '#334155', '#64748b', 1, 4); // North pole
+ svg += text(77, 225, 'NORTH', '#f8fafc', 8, 'middle', 'bold');
+ svg += text(77, 238, 'POLE', '#f8fafc', 7.5, 'middle', 'bold');
+ svg += polygon('115,200 135,210 135,245 115,255', '#475569'); // tapered cap
+
+ svg += rect(235, 185, 75, 85, '#334155', '#64748b', 1, 4); // South pole
+ svg += text(272, 225, 'SOUTH', '#f8fafc', 8, 'middle', 'bold');
+ svg += text(272, 238, 'POLE', '#f8fafc', 7.5, 'middle', 'bold');
+ svg += polygon('235,200 215,210 215,245 235,255', '#475569'); // tapered cap
+
+ // Magnetic field lines between poles
+ for (var fy = 215; fy <= 245; fy += 7) {
+  svg += line(135, fy, 215, fy, '#38bdf8', 1, 'stroke-dasharray="3,2"');
+ }
+
+ // Pyrex Gouy Tube suspended in gap
+ var tube_x = 167, tube_w = 16, tube_top = 150, tube_bot = 248;
+ svg += rect(tube_x, tube_top, tube_w, tube_bot - tube_top, 'rgba(255,255,255,0.08)', '#94a3b8', 1, 2);
+
+ // Packed Mohr's salt powder (light green, height h = 50 mm)
+ var salt_top = 198;
+ svg += rect(tube_x + 1, salt_top, tube_w - 2, tube_bot - salt_top - 1, '#86efac', 'none', 0, 0);
+ svg += text(tube_x + 8, 228, 'Fe²⁺', '#065f46', 6.5, 'middle', 'bold');
+
+ // Downward force vector arrow
+ svg += line(175, 255, 175, 285, '#f43f5e', 2.5);
+ svg += polygon('171,283 175,291 179,283', '#f43f5e');
+ svg += text(185, 275, 'F_z = ' + F_uN + ' μN (Downward)', '#f43f5e', 7, 'start', 'bold');
+
+ // Transverse Hall probe sensor
+ svg += rect(142, 240, 10, 4, '#fbbf24');
+ svg += line(147, 244, 147, 290, '#fbbf24', 1);
+ svg += text(147, 298, 'Hall Sensor B = ' + b_T.toFixed(2) + ' T', '#fbbf24', 6.5, 'middle');
+
+ // RIGHT PANEL: Magnetostatic Force Calibration & Regression (x: 350 to 705)
+ svg += rect(350, 42, 355, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(527, 58, 'GOUY MAGNETOSTATIC FORCE REGRESSION', '#38bdf8', 9.5, 'middle', 'bold');
+
+ // Plot axes (x: 390 to 675, y: 80 to 225)
+ var plot_x0 = 390, plot_x1 = 675, plot_y0 = 225, plot_y1 = 80;
+ svg += line(plot_x0, plot_y0, plot_x1, plot_y0, '#64748b', 1.5);
+ svg += line(plot_x0, plot_y0, plot_x0, plot_y1, '#64748b', 1.5);
+
+ // X-axis ticks (B^2: 0 to 2.0 T^2)
+ for (var bx = 0; bx <= 2.0; bx += 0.5) {
+  var px = plot_x0 + (bx / 2.0) * (plot_x1 - plot_x0);
+  svg += line(px, plot_y0, px, plot_y0 + 4, '#64748b', 1);
+  svg += text(px, plot_y0 + 13, bx.toFixed(1), '#94a3b8', 6.5, 'middle');
+ }
+ svg += text((plot_x0 + plot_x1) / 2, plot_y0 + 26, 'Squared Magnetic Flux Density B² (T²)', '#cbd5e1', 7.5, 'middle', 'bold');
+
+ // Y-axis ticks (Delta m: 0 to 1400 mg)
+ for (var my = 0; my <= 1200; my += 400) {
+  var py = plot_y0 - (my / 1400) * (plot_y0 - plot_y1);
+  svg += line(plot_x0 - 4, py, plot_x0, py, '#64748b', 1);
+  svg += text(plot_x0 - 7, py + 3, '' + my, '#94a3b8', 6.5, 'end');
+ }
+ svg += text(plot_x0 - 18, (plot_y0 + plot_y1) / 2, 'Δm (mg)', '#cbd5e1', 7.5, 'middle', 'normal', 'rotate(-90 ' + (plot_x0 - 18) + ' ' + ((plot_y0 + plot_y1) / 2) + ')');
+
+ // Regression line: S = 639.45 mg/T^2
+ var r_y1 = plot_y0 - ((639.45 * 2.0) / 1400) * (plot_y0 - plot_y1);
+ svg += line(plot_x0, plot_y0, plot_x1, r_y1, '#38bdf8', 2);
+
+ // Standard sample points
+ var pts = [
+  {b2: 0.16, m: 102.3}, {b2: 0.36, m: 230.2}, {b2: 0.64, m: 409.2},
+  {b2: 1.00, m: 639.5}, {b2: 1.44, m: 920.8}, {b2: 1.96, m: 1253.3}
+ ];
+ for (var i = 0; i < pts.length; i++) {
+  var sx = plot_x0 + (pts[i].b2 / 2.0) * (plot_x1 - plot_x0);
+  var sy = plot_y0 - (pts[i].m / 1400) * (plot_y0 - plot_y1);
+  svg += circle(sx, sy, 3, '#4ade80', '#ffffff', 1);
+ }
+
+ // Current active point marker
+ var cur_px = plot_x0 + (b2 / 2.0) * (plot_x1 - plot_x0);
+ var cur_py = plot_y0 - (dm_mg / 1400) * (plot_y0 - plot_y1);
+ if (cur_px >= plot_x0 && cur_px <= plot_x1 && cur_py <= plot_y0 && cur_py >= plot_y1) {
+  svg += circle(cur_px, cur_py, 5, '#f43f5e', '#ffffff', 1.5);
+ }
+
+ // Bottom Digital Results Box
+ svg += rect(365, 255, 325, 52, '#090d16', '#1e293b', 1, 4);
+ svg += text(375, 269, 'MAGNETIC MOMENT & ELECTRON CONFIGURATION', '#38bdf8', 7.5, 'start', 'bold');
+ svg += text(375, 283, 'Molar Susceptibility: χ_M,corr = 10,066 × 10⁻⁶ cm³/mol', '#f8fafc', 7, 'start');
+ svg += text(375, 297, 'Effective Moment: μ_eff = 4.90 μ_B  |  Spin-Only n = 4 (High-Spin d⁶)', '#4ade80', 7.5, 'start', 'bold');
+
+ return svg;
+}
+
+function drawGouyCompareView(p, rawVal) {
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a0f1d');
+
+ svg += text(360, 18, 'FIRST-ROW TRANSITION METAL COMPLEXES: SPIN-ONLY vs OBSERVED MOMENTS', '#38bdf8', 11, 'middle', 'bold');
+ svg += text(360, 32, 'Crystal Field Splitting, Orbital Angular Momentum Quenching, and Unpaired d-Electrons', '#94a3b8', 8.5, 'middle');
+
+ // Data for transition metal ions
+ var ions = [
+  { name: "Sc³⁺ / Ti⁴⁺", conf: "d⁰", n: 0, spin: 0.00, obs: 0.00, col: "#94a3b8" },
+  { name: "Cu²⁺ (aq)", conf: "d⁹", n: 1, spin: 1.73, obs: 1.85, col: "#38bdf8" },
+  { name: "Ni²⁺ (aq)", conf: "d⁸", n: 2, spin: 2.83, obs: 3.10, col: "#10b981" },
+  { name: "Cr³⁺ (aq)", conf: "d³", n: 3, spin: 3.87, obs: 3.87, col: "#f59e0b" },
+  { name: "Fe²⁺ (Mohr)", conf: "d⁶ hs", n: 4, spin: 4.90, obs: 4.90, col: "#4ade80" },
+  { name: "Mn²⁺ (aq)", conf: "d⁵ hs", n: 5, spin: 5.92, obs: 5.90, col: "#ec4899" }
+ ];
+
+ // Bar Chart Area (x: 25 to 440)
+ svg += rect(25, 42, 425, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(237, 58, 'MAGNETIC MOMENT COMPARISON (μ_B)', '#38bdf8', 9.5, 'middle', 'bold');
+
+ var c_x0 = 55, c_x1 = 430, c_y0 = 265, c_y1 = 80;
+ svg += line(c_x0, c_y0, c_x1, c_y0, '#64748b', 1.5);
+ svg += line(c_x0, c_y0, c_x0, c_y1, '#64748b', 1.5);
+
+ // Y-axis ticks (0 to 6 Bohr Magnetons)
+ for (var u = 0; u <= 6; u += 1) {
+  var uy = c_y0 - (u / 6.5) * (c_y0 - c_y1);
+  svg += line(c_x0 - 4, uy, c_x0, uy, '#64748b', 1);
+  svg += text(c_x0 - 7, uy + 3, '' + u, '#94a3b8', 6.5, 'end');
+ }
+ svg += text(c_x0 - 18, (c_y0 + c_y1) / 2, 'Magnetic Moment (μ_B)', '#cbd5e1', 7.5, 'middle', 'normal', 'rotate(-90 ' + (c_x0 - 18) + ' ' + ((c_y0 + c_y1) / 2) + ')');
+
+ // Draw paired bars for each ion
+ var grp_w = (c_x1 - c_x0) / ions.length;
+ for (var i = 0; i < ions.length; i++) {
+  var gx = c_x0 + i * grp_w + 12;
+  var spin_h = (ions[i].spin / 6.5) * (c_y0 - c_y1);
+  var obs_h = (ions[i].obs / 6.5) * (c_y0 - c_y1);
+
+  // Theoretical spin-only bar (striped / semi-transparent)
+  svg += rect(gx, c_y0 - spin_h, 16, spin_h, '#334155', '#64748b', 1, 2);
+  // Experimental observed bar (solid color)
+  svg += rect(gx + 18, c_y0 - obs_h, 16, obs_h, ions[i].col, 'none', 0, 2);
+
+  // Value text on bar
+  if (ions[i].obs > 0) {
+   svg += text(gx + 26, c_y0 - obs_h - 4, ions[i].obs.toFixed(2), ions[i].col, 6, 'middle', 'bold');
+  }
+
+  // X labels
+  svg += text(gx + 17, c_y0 + 13, ions[i].name, '#f8fafc', 6.5, 'middle', 'bold');
+  svg += text(gx + 17, c_y0 + 24, ions[i].conf + ' (n=' + ions[i].n + ')', '#94a3b8', 6, 'middle');
+ }
+
+ // Legend for bars
+ svg += rect(65, 85, 12, 8, '#334155', '#64748b', 1, 1);
+ svg += text(82, 92, 'μ_spin = √[n(n+2)]', '#94a3b8', 6.5, 'start');
+ svg += rect(175, 85, 12, 8, '#4ade80', 'none', 0, 1);
+ svg += text(192, 92, 'μ_eff (Gouy Observed)', '#4ade80', 6.5, 'start', 'bold');
+
+ // RIGHT PANEL: Theoretical Context & Crystal Field Physics (x: 460 to 705)
+ svg += rect(460, 42, 245, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(582, 58, 'MOHR\'S SALT QUANTUM PARAMETERS', '#38bdf8', 9.5, 'middle', 'bold');
+
+ var info = [
+  { label: "Complex Formula", val: "[Fe(H₂O)₆](NH₄)₂(SO₄)₂" },
+  { label: "Oxidation State", val: "Iron(II), Fe²⁺ (3d⁶)" },
+  { label: "Octahedral Field", val: "Weak-Field Aqua Ligand" },
+  { label: "Crystal Splitting", val: "Δ_oct < P (High-Spin)" },
+  { label: "Orbital Occupation", val: "(t_2g)⁴ (e_g)²" },
+  { label: "Unpaired Electrons", val: "n = 4 (Total Spin S = 2)" },
+  { label: "Theoretical μ_spin", val: "√[4(6)] = 4.90 μ_B" },
+  { label: "Gouy Measured μ_eff", val: "4.90 μ_B (0.00% dev)" }
+ ];
+
+ for (var row = 0; row < info.length; row++) {
+  var ry = 78 + row * 26;
+  svg += rect(470, ry, 225, 22, (row % 2 === 0) ? '#090d16' : '#1e293b', 'none', 0, 3);
+  svg += text(478, ry + 14, info[row].label, '#94a3b8', 6.5, 'start');
+  svg += text(685, ry + 14, info[row].val, (row >= 6) ? '#4ade80' : '#f8fafc', 6.5, 'end', 'bold');
+ }
+
+ svg += rect(470, 288, 225, 22, '#020617', '#334155', 1, 3);
+ svg += text(582, 302, 'COMPLETE ORBITAL QUENCHING IN Fe²⁺', '#f59e0b', 6.5, 'middle', 'bold');
+
+ return svg;
+}
+
+function drawGouySandboxView(p, rawVal) {
+ var b2 = Number(p.input) || 1.00;
+ var b_T = Math.sqrt(b2);
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a0f1d');
+
+ svg += text(360, 18, 'MAGNETOSTATIC FIELD GRADIENT & INTEGRATED FORCE DENSITY', '#38bdf8', 11, 'middle', 'bold');
+ svg += text(360, 32, 'Differential Force dF_z = (A χ_v / μ₀) · B(z) · (dB/dz) dz  =>  F_z = (A χ_v / 2μ₀) · (B² − B₀²)', '#94a3b8', 8.5, 'middle');
+
+ // LEFT: Magnetic Flux Profile B(z) along Tube Height (x: 15 to 350)
+ svg += rect(15, 42, 335, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(182, 58, 'MAGNETIC FIELD PROFILE B(z) vs TUBE HEIGHT z', '#38bdf8', 9.5, 'middle', 'bold');
+
+ var p_x0 = 55, p_x1 = 325, p_y0 = 265, p_y1 = 80;
+ svg += line(p_x0, p_y0, p_x1, p_y0, '#64748b', 1.5);
+ svg += line(p_x0, p_y0, p_x0, p_y1, '#64748b', 1.5);
+
+ // Z-axis ticks (0 to 10 cm)
+ for (var z = 0; z <= 10; z += 2) {
+  var zx = p_x0 + (z / 10.0) * (p_x1 - p_x0);
+  svg += line(zx, p_y0, zx, p_y0 + 4, '#64748b', 1);
+  svg += text(zx, p_y0 + 13, z + ' cm', '#94a3b8', 6.5, 'middle');
+ }
+ svg += text((p_x0 + p_x1) / 2, p_y0 + 26, 'Vertical Coordinate z (Bottom Tip to Top)', '#cbd5e1', 7.5, 'middle', 'bold');
+
+ // Plot Sigmoid B(z) curve
+ var b_path = 'M ' + p_x0 + ' ' + (p_y0 - (b_T / 1.6) * (p_y0 - p_y1));
+ for (var cur_z = 0; cur_z <= 10; cur_z += 0.2) {
+  var b_val = b_T / (1.0 + Math.exp((cur_z - 3.5) / 1.2));
+  var bx = p_x0 + (cur_z / 10.0) * (p_x1 - p_x0);
+  var by = p_y0 - (b_val / 1.6) * (p_y0 - p_y1);
+  b_path += ' L ' + bx.toFixed(1) + ' ' + by.toFixed(1);
+ }
+ svg += '<path d="' + b_path + '" fill="none" stroke="#38bdf8" stroke-width="2.2" />';
+
+ // Mark Bottom Field B and Top Field B_0
+ svg += circle(p_x0, p_y0 - (b_T / 1.6) * (p_y0 - p_y1), 3.5, '#4ade80');
+ svg += text(p_x0 + 8, p_y0 - (b_T / 1.6) * (p_y0 - p_y1) - 6, 'Bottom B = ' + b_T.toFixed(2) + ' T', '#4ade80', 7, 'start', 'bold');
+
+ var top_x = p_x0 + (5.0 / 10.0) * (p_x1 - p_x0);
+ var b_top = b_T / (1.0 + Math.exp((5.0 - 3.5) / 1.2));
+ var top_y = p_y0 - (b_top / 1.6) * (p_y0 - p_y1);
+ svg += circle(top_x, top_y, 3.5, '#f43f5e');
+ svg += text(top_x + 5, top_y - 6, 'h = 5 cm (B₀ ≈ 0.2 B)', '#f43f5e', 7, 'start');
+
+ // RIGHT: Force Density Distribution dF/dz (x: 365 to 705)
+ svg += rect(365, 42, 340, 275, '#0f172a', '#1e293b', 1, 6);
+ svg += text(535, 58, 'FORCE DENSITY GRADIENT dF_z / dz', '#38bdf8', 9.5, 'middle', 'bold');
+
+ var f_x0 = 405, f_x1 = 680, f_y0 = 265, f_y1 = 80;
+ svg += line(f_x0, f_y0, f_x1, f_y0, '#64748b', 1.5);
+ svg += line(f_x0, f_y0, f_x0, f_y1, '#64748b', 1.5);
+
+ // Plot Bell-shaped Force Density B * dB/dz
+ var f_path = 'M ' + f_x0 + ' ' + f_y0;
+ for (var cur_z = 0; cur_z <= 10; cur_z += 0.2) {
+  var exp_term = Math.exp((cur_z - 3.5) / 1.2);
+  var b_val = b_T / (1.0 + exp_term);
+  var db_dz = (b_T * exp_term) / (1.2 * Math.pow(1.0 + exp_term, 2));
+  var force_dens = b_val * db_dz;
+  var fx = f_x0 + (cur_z / 10.0) * (f_x1 - f_x0);
+  var fy = f_y0 - (force_dens / (b2 * 0.45)) * (f_y0 - f_y1);
+  if (fy > f_y0) fy = f_y0;
+  f_path += ' L ' + fx.toFixed(1) + ' ' + fy.toFixed(1);
+ }
+ svg += '<path d="' + f_path + '" fill="rgba(74, 222, 128, 0.2)" stroke="#4ade80" stroke-width="2.2" />';
+
+ svg += text((f_x0 + f_x1) / 2, f_y0 + 26, 'Vertical Coordinate z (cm)', '#cbd5e1', 7.5, 'middle', 'bold');
+ svg += text(540, 125, 'Maximum Force Zone (Pole Edge Gradient)', '#facc15', 7, 'middle', 'bold');
+
+ // Bottom Insight text
+ svg += rect(380, 285, 310, 22, '#090d16', '#334155', 1, 3);
+ svg += text(535, 299, 'Integral of dF/dz over 0 to h yields exactly F_z = (A χ_v / 2μ₀) B²', '#38bdf8', 6.5, 'middle');
 
  return svg;
 }

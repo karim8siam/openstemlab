@@ -159,6 +159,14 @@ def observation(c,value):
   v0_mM=raw / 1000.0
   y=rnd(1.0 / v0_mM, 2)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='magnetic-susceptibility-gouy-balance-complexes':
+  b2=float(value)
+  table_raw={0.16:102.312, 0.36:230.203, 0.64:409.249, 1.00:639.452, 1.44:920.811, 1.96:1253.326}
+  key=round(b2, 2)
+  raw=table_raw.get(key, rnd(639.45213 * b2, 3))
+  x=b2
+  y=raw
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='uv-vis-particle-in-a-box-cyanine-dyes':
   p_val=float(value)
   table_raw={0.0:327.63, 1.0:453.01, 2.0:579.14, 3.0:705.65, 4.0:832.41, 5.0:959.32}
@@ -639,6 +647,22 @@ def estimate(c,f):
   D_scaled=D_est * 1e6
   se=abs(f.get('slopeSE', 0.05)) / prefactor * 2.0 * math.sqrt(D_est) * 1e6
   return D_scaled, se, 7.60
+ elif slug=='magnetic-susceptibility-gouy-balance-complexes':
+  slope=f['m']
+  slope_kg=slope * 1e-6
+  ms_kg=0.00250
+  h_m=0.0500
+  g=9.80665
+  mu0=4.0 * math.pi * 1e-7
+  M=392.14
+  T=298.15
+  chi_g_si=(2.0 * mu0 * g * h_m * slope_kg) / ms_kg
+  chi_g_cgs=chi_g_si / (4.0 * math.pi * 1e-3)
+  chi_M_raw=chi_g_cgs * M
+  chi_M_corr=chi_M_raw + 0.000230
+  mu_eff=math.sqrt(8.0 * T * chi_M_corr)
+  se=(0.5 * mu_eff * f.get('slopeSE', 0.05) / slope) if 'slopeSE' in f else 0.001
+  return mu_eff, se, 4.90
  elif slug=='uv-vis-particle-in-a-box-cyanine-dyes':
   slope=f['m']
   h=6.62607015e-34
@@ -867,6 +891,22 @@ def formula(c,f):
   D_est=((m * 1e-6) / prefactor)**2
   D_scaled=D_est * 1e6
   return f"Randles-Ševčík Fit: i_pc = {fmt(m,2)}·ν¹/² + {fmt(b,3)} μA; Diffusion Coefficient D = {fmt(D_scaled,2)} × 10⁻⁶ cm²·s⁻¹; Peak Separation ΔE_p = 59.2 mV"
+ elif slug=='magnetic-susceptibility-gouy-balance-complexes':
+  m=f['m']
+  b=f['b']
+  slope_kg=m * 1e-6
+  ms_kg=0.00250
+  h_m=0.0500
+  g=9.80665
+  mu0=4.0 * math.pi * 1e-7
+  M=392.14
+  T=298.15
+  chi_g_si=(2.0 * mu0 * g * h_m * slope_kg) / ms_kg
+  chi_g_cgs=chi_g_si / (4.0 * math.pi * 1e-3)
+  chi_M_raw=chi_g_cgs * M
+  chi_M_corr=chi_M_raw + 0.000230
+  mu_eff=math.sqrt(8.0 * T * chi_M_corr)
+  return f"Gouy Force Fit: Δm = {fmt(m,2)}·B² + {fmt(b,3)} mg; χ_g = {fmt(chi_g_cgs*1e6,2)} × 10⁻⁶ cm³/g; χ_M,corr = {fmt(chi_M_corr*1e6,1)} × 10⁻⁶ cm³/mol; μ_eff = {fmt(mu_eff,2)} μ_B"
  elif slug=='uv-vis-particle-in-a-box-cyanine-dyes':
   m=f['m']
   b=f['b']
@@ -1455,6 +1495,57 @@ def worked(c,row):
    f"   Scaled diffusion coefficient: D = {fmt(D_scaled, 2)} × 10⁻⁶ cm²·s⁻¹.\n"
    f"   Literature reference benchmark at 25.00 °C: D = 7.60 × 10⁻⁶ cm²·s⁻¹ (percentage difference = {fmt(abs(D_scaled - 7.60)/7.60*100.0, 4)}%).\n"
    f"   Transient Nernst diffusion layer thickness at ν = {fmt(v_val,1)} mV/s: δ ≈ √(π·D·t) = {fmt(math.sqrt(math.pi * D_est * (0.70/(v_val*1e-3)))*1e4, 1)} μm."
+  )
+ elif slug=='magnetic-susceptibility-gouy-balance-complexes':
+  b2_val=row['input']
+  raw=row['raw']
+  x_val=row['x']
+  y_val=row['y']
+  b_T=math.sqrt(b2_val)
+  m_slope=639.4521
+  b_int=-0.0001
+  ms_kg=0.00250
+  h_m=0.0500
+  g=9.80665
+  mu0=4.0 * math.pi * 1e-7
+  M=392.14
+  T=298.15
+  slope_kg=m_slope * 1e-6
+  chi_g_si=(2.0 * mu0 * g * h_m * slope_kg) / ms_kg
+  chi_g_cgs=chi_g_si / (4.0 * math.pi * 1e-3)
+  chi_M_raw=chi_g_cgs * M
+  chi_M_corr=chi_M_raw + 0.000230
+  mu_eff=math.sqrt(8.0 * T * chi_M_corr)
+  F_N=(raw * 1e-6) * g
+  F_uN=F_N * 1e6
+  pred_dm=m_slope * b2_val + b_int
+  diff_dm=raw - pred_dm
+  return (
+   f"Representative Observation — Gouy Magnetic Susceptibility of Mohr's Salt at B = {fmt(b_T, 2)} T:\n"
+   f"1. Magnetostatic Observables & Magnetic Field Settings:\n"
+   f"   Applied magnetic flux density at lower pole boundary: B = {fmt(b_T, 2)} T.\n"
+   f"   Squared magnetic flux density: x = B² = ({fmt(b_T, 2)} T)² = {fmt(b2_val, 2)} T².\n"
+   f"   Measured apparent mass change: y = Δm = {fmt(raw, 3)} mg = {fmt(raw*1e-6, 8)} kg.\n"
+   f"   Net downward magnetostatic force: F_z = g · Δm = ({fmt(g, 5)} m/s²)({fmt(raw*1e-6, 8)} kg) = {fmt(F_N, 8)} N = {fmt(F_uN, 2)} μN.\n"
+   f"2. Sample Column Geometry & Physical Constants:\n"
+   f"   Paramagnetic complex: Mohr's salt, [Fe(H₂O)₆](NH₄)₂(SO₄)₂·6H₂O (M = 392.14 g/mol).\n"
+   f"   Net powder sample mass in tube: m_s = 2.500 g = 0.002500 kg.\n"
+   f"   Uniform powder packing height: h = 50.00 mm = 0.05000 m (cross-sectional area A = 0.1257 cm²).\n"
+   f"   Magnetic permeability of free space: μ₀ = 4π × 10⁻⁷ N·A⁻² = 1.25664 × 10⁻⁶ H/m.\n"
+   f"   Ambient thermostatic temperature: T = 298.15 K (25.00 °C).\n"
+   f"3. Gouy Force Formulation & Ordinary Least-Squares Fit:\n"
+   f"   Linearized Gouy relation: Δm = [ (m_s · χ_g) / (2·μ₀·g·h) ] · B² + b.\n"
+   f"   Empirical regression slope: S = {fmt(m_slope, 4)} mg/T² = {fmt(slope_kg, 9)} kg/T².\n"
+   f"   Model predicted apparent mass gain: Δm_pred = S · B² + b = {fmt(pred_dm, 3)} mg.\n"
+   f"   Residual mass deviation: Δm_obs − Δm_pred = {fmt(diff_dm, 4)} mg.\n"
+   f"4. Magnetic Susceptibility & Unpaired Electron Extraction:\n"
+   f"   Mass magnetic susceptibility: χ_g(SI) = (2·μ₀·g·h·S_kg) / m_s = {fmt(chi_g_si, 11)} m³/kg.\n"
+   f"   Mass susceptibility in CGS units: χ_g(cgs) = χ_g(SI) / (4π × 10⁻³) = {fmt(chi_g_cgs, 9)} cm³/g = {fmt(chi_g_cgs*1e6, 2)} × 10⁻⁶ emu/g.\n"
+   f"   Raw molar susceptibility: χ_M = χ_g(cgs) · M = ({fmt(chi_g_cgs, 9)}) × (392.14) = {fmt(chi_M_raw, 7)} cm³/mol = {fmt(chi_M_raw*1e6, 1)} × 10⁻⁶ emu/mol.\n"
+   f"   Pascal's diamagnetic correction for [Fe(H₂O)₆](NH₄)₂(SO₄)₂: |χ_dia| = 230 × 10⁻⁶ cm³/mol.\n"
+   f"   Paramagnetic molar susceptibility: χ_M,corr = χ_M + |χ_dia| = {fmt(chi_M_corr*1e6, 1)} × 10⁻⁶ cm³/mol.\n"
+   f"   Effective magnetic moment: μ_eff = 2.8284 · √(T · χ_M,corr) = 2.8284 · √[(298.15)({fmt(chi_M_corr, 7)})] = {fmt(mu_eff, 2)} μ_B.\n"
+   f"   Spin-only formula concordance: μ_spin = √[n(n+2)] = √[4(6)] = 4.90 μ_B (n = 4 unpaired d-electrons, high-spin d⁶)."
   )
  elif slug=='uv-vis-particle-in-a-box-cyanine-dyes':
   p_val=row['input']
@@ -2584,6 +2675,40 @@ def uncertainty_text(c):
    "propagate as u_r(D) = √[ 4(u(m)/m)² + 4(u(A)/A)² + 4(u(c)/c)² + (u(T)/T)² ] = √[ 4(0.0001)² + 4(0.0033)² + 4(0.0012)² + (0.00007)² ] = 0.70%. "
    "For an empirical diffusion coefficient D = 7.60 × 10⁻⁶ cm²·s⁻¹, the expanded uncertainty at the 95% confidence level (coverage factor k = 2) "
    "is U(D) = ±0.11 × 10⁻⁶ cm²·s⁻¹ (1.4%), confirming exceptional concordance with the authoritative literature benchmark (7.60 ± 0.05 × 10⁻⁶ cm²·s⁻¹)."
+  )
+ elif slug=='magnetic-susceptibility-gouy-balance-complexes':
+  return (
+   "In the high-precision determination of mass and molar magnetic susceptibilities and effective magnetic dipole moments "
+   "via the Gouy balance method, experimental uncertainties and systematic physical perturbations are rigorously quantified across "
+   "magnetostatic, optomechanical, gravimetric, barometric, and quantum electronic domains: "
+   "(1) Magnetic Flux Density Measurement, Hall Probe Calibration, and Gap Homogeneity: The magnetic flux density B is measured at the "
+   "central horizontal plane of the pole caps using a temperature-compensated transverse Hall-effect teslameter calibrated against nuclear "
+   "magnetic resonance (NMR) Gauss standards. Wavelength and field linearity are confirmed across the 0.40 to 1.40 T working range. "
+   "The Hall probe positioning uncertainty of ±0.20 mm along the vertical z-axis corresponds to a field gradient uncertainty of u(B)/B ≤ 0.15%. "
+   "Field stability is actively maintained to within ±0.001 T (0.10%) using a constant-current regulated DC power supply (< 0.01% current ripple). "
+   "(2) Gouy Tube Packing Density Uniformity & Meniscus Boundary Condition: The sample of Mohr's salt is pulverized to < 100 mesh and packed "
+   "in small increments with uniform tapping to eliminate density gradients and internal air voids. Bulk density variations along the cylinder "
+   "introduce localized susceptibility fluctuations that average out over the 50.00 mm length to within u(ρ)/ρ ≤ 0.20%. The upper boundary "
+   "of the sample column is positioned at z = 50.0 mm where the fringe field is B_0 ≤ 0.02 B, satisfying B_0² ≤ 0.0004 B² and introducing "
+   "less than 0.04% systematic truncation error into the integrated force equation F_z = (A / 2μ₀) χ_v (B² − B_0²). "
+   "(3) Empty Tube Diamagnetic Correction & Air Susceptibility Compensation: Pyrex glass exhibits a weak temperature-independent diamagnetism "
+   "(χ_v ≈ −1.1 × 10⁻⁶). The empty tube blank correction (Δm_tube ≈ −0.05 to −0.60 mg across 0.4 to 1.4 T) is measured independently and subtracted "
+   "from all sample readings, eliminating tube force contributions to within ±0.01 mg. Furthermore, ambient air possesses a small volume "
+   "paramagnetism due to molecular oxygen (χ_v,air ≈ +0.029 × 10⁻⁶ at 25 °C), which is compensated in the calibration factor β against the "
+   "primary standard Hg[Co(NCS)₄], introducing a net residual buoyancy uncertainty of less than 0.05%. "
+   "(4) Pascal's Constants and Diamagnetic Core Corrections: The diamagnetic susceptibility of [Fe(H₂O)₆](NH₄)₂(SO₄)₂ is computed using "
+   "authoritative Pascal additive constitutive constants: Fe²⁺ (−13 × 10⁻⁶), 6 H₂O (−78 × 10⁻⁶), 2 NH₄⁺ (−26 × 10⁻⁶), and 2 SO₄²⁻ (−80 × 10⁻⁶), "
+   "summing to χ_dia = −230 ± 5 × 10⁻⁶ cm³/mol. This correction accounts for approximately 2.3% of the total measured molar susceptibility, "
+   "with the residual uncertainty in Pascal's constants contributing u(χ_dia) / χ_M ≤ 0.05% to the final magnetic moment. "
+   "(5) Uncertainty Propagation through the Gouy Force Equation: According to the ISO/IEC Guide 98-3 (GUM), the effective magnetic moment "
+   "is related to the empirical regression slope S (mg/T²) via μ_eff = 2.8284 · √[ T · ( (2 μ₀ g h M S 10⁻⁶) / (4π 10⁻³ m_s) + |χ_dia| ) ]. "
+   "Differentiating with respect to the primary variables yields relative sensitivity coefficients: u_r(μ_eff) ≈ (1/2) · √[ (u_r(S))² + (u_r(h))² + (u_r(m_s))² + (u_r(T))² ]. "
+   "From linear regression across six magnetic flux densities, the slope standard error is s_S = 0.025 mg/T² (relative uncertainty u_r(S) = 0.004%). "
+   "Combining with sample mass uncertainty (0.0001 g / 2.500 g = 0.004%), packing height uncertainty (0.05 mm / 50.0 mm = 0.10%), temperature "
+   "uncertainty (0.1 K / 298.15 K = 0.033%), and magnetic field calibration yields a combined relative standard uncertainty of u_c(μ_eff) = 0.12%. "
+   "For an empirical magnetic moment μ_eff = 4.90 μ_B, the expanded uncertainty at the 95% confidence level (coverage factor k = 2) is "
+   "U(μ_eff) = ±0.01 μ_B (0.24%), confirming rigorous concordance with the theoretical spin-only benchmark (4.90 μ_B) and proving the high-spin "
+   "octahedral (t_2g)⁴(e_g)² configuration."
   )
  elif slug=='uv-vis-particle-in-a-box-cyanine-dyes':
   return (
@@ -4205,6 +4330,122 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"invariant peak potential separation ΔE_p = 59.2 mV and current ratio |i_pa / i_pc| = 1.000 confirming ideal Nernstian reversibility. The extracted "
    f"diffusion coefficient agrees with authoritative electrochemistry literature benchmarks within {fmt(abs(D_val - 7.60)/7.60*100.0, 4)}% relative deviation, "
    f"demonstrating the high metrological precision of the Randles-Ševčík formulation for diagnostic electrochemistry."
+  )
+  
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='magnetic-susceptibility-gouy-balance-complexes':
+  m_val=f['m']
+  b_val=f['b']
+  mu_val=value
+  r2_val=f['r2']
+  slope_kg=m_val * 1e-6
+  ms_kg=0.00250
+  h_m=0.0500
+  g=9.80665
+  mu0=4.0 * math.pi * 1e-7
+  M=392.14
+  T=298.15
+  chi_g_si=(2.0 * mu0 * g * h_m * slope_kg) / ms_kg
+  chi_g_cgs=chi_g_si / (4.0 * math.pi * 1e-3)
+  chi_M_raw=chi_g_cgs * M
+  chi_M_corr=chi_M_raw + 0.000230
+  
+  abstract=(
+   f"The magnetostatic force and magnetic susceptibility of analytically pure hexaaquairon(II) ammonium sulfate (Mohr's salt, "
+   f"[Fe(H₂O)₆](NH₄)₂(SO₄)₂·6H₂O, M = 392.14 g/mol) were investigated at 25.0 °C (298.15 K) using a calibrated Gouy magnetic balance "
+   f"and a water-cooled variable-field electromagnet with 50 mm flat-tapered pole pieces. A uniform microcrystalline powder sample "
+   f"(m_s = 2.500 g) was packed into a precision cylindrical Pyrex tube (inner diameter 4.00 mm) to a calibrated column height h = 50.00 mm. "
+   f"The sample tube was suspended from an analytical microbalance such that its lower boundary rested precisely at the central axis "
+   f"of the magnetic pole gap while its upper meniscus extended into the near-zero fringe field. Six discrete magnetic flux densities "
+   f"spanning B = 0.40, 0.60, 0.80, 1.00, 1.20, and 1.40 T (corresponding to B² = 0.16, 0.36, 0.64, 1.00, 1.44, and 1.96 T²) were established "
+   f"and monitored with a calibrated transverse Hall-effect teslameter. The sample exhibited a strong, positive downward magnetostatic force, "
+   f"registering apparent mass gains increasing monotonically from Δm = 102.312 mg at 0.40 T to Δm = 1253.326 mg at 1.40 T after subtraction "
+   f"of the empty tube diamagnetic blank. Ordinary least-squares regression of Δm against B² yielded an empirical slope S = (m_s · χ_g) / (2·μ₀·g·h) = "
+   f"{fmt(m_val, 4)} mg/T² with a Pearson correlation coefficient R² = {fmt(r2_val, 8)}. Applying the magnetostatic Gouy force formulation extracted "
+   f"a mass magnetic susceptibility χ_g = {fmt(chi_g_cgs*1e6, 2)} × 10⁻⁶ cm³/g (χ_g(SI) = {fmt(chi_g_si, 11)} m³/kg) and an observed molar "
+   f"susceptibility χ_M = {fmt(chi_M_raw*1e6, 1)} × 10⁻⁶ cm³/mol. Applying Pascal's diamagnetic core correction (|χ_dia| = 230 × 10⁻⁶ cm³/mol) "
+   f"isolated the corrected paramagnetic molar susceptibility χ_M,corr = {fmt(chi_M_corr*1e6, 1)} × 10⁻⁶ cm³/mol. Substituting into Curie's "
+   f"law yielded an effective magnetic dipole moment μ_eff = {fmt(mu_val, 2)} μ_B, demonstrating near-perfect agreement within "
+   f"{fmt(abs(mu_val - 4.90)/4.90*100.0, 4)}% relative deviation from the 4.90 μ_B theoretical spin-only benchmark for high-spin d⁶ Fe²⁺, "
+   f"rigorously proving the presence of four unpaired d-electrons (S = 2) in an octahedral weak-field coordination environment with complete "
+   f"orbital angular momentum quenching."
+  )
+  
+  graph_choice=(
+   f"To rigorously evaluate the magnetostatic Gouy relationship and extract the fundamental mass and molar magnetic susceptibilities "
+   f"of Mohr's salt, the primary analytical graph plots the experimental apparent mass gain Δm (in milligrams) on the dependent Y-axis "
+   f"against the square of the applied magnetic flux density B² (in Tesla squared, T²) on the independent X-axis across the six measurement "
+   f"coordinates (B² = 0.16, 0.36, 0.64, 1.00, 1.44, 1.96 T²). In the Gouy formulation, the vertical magnetic force acting on an elemental "
+   f"volume slice dz of a cylindrical sample of cross-sectional area A and volume susceptibility χ_v in a magnetic field gradient dB/dz is given "
+   f"by dF_z = (A · χ_v / μ₀) · B(z) · (dB/dz) · dz = (A · χ_v / 2μ₀) · d(B²). Integrating from the lower boundary of the sample tube (z = 0, "
+   f"where the field reaches its maximum homogeneous value B) to the upper meniscus (z = h, where the tube extends into the near-zero fringe "
+   f"field B_0 ≈ 0) yields the total integrated vertical force: F_z = (A · χ_v / 2μ₀) · (B² − B_0²) ≈ (A · χ_v / 2μ₀) · B². Expressing the volume "
+   f"susceptibility in terms of the mass susceptibility χ_g and total packed sample mass m_s as χ_v = ρ · χ_g = (m_s / (A · h)) · χ_g, the "
+   f"resulting force is F_z = (m_s · χ_g / (2·μ₀·h)) · B². Equating this magnetostatic downward force to the gravitational force detected by "
+   f"the balance, F_z = g · Δm, yields the direct linear equation: Δm = [ (m_s · χ_g) / (2·μ₀·g·h) ] · B² = S · B². Plotting Δm vs B² linearizes "
+   f"the entire magnetostatic dataset with exceptional statistical fidelity (R² = {fmt(r2_val, 8)}). The empirical slope S directly yields the "
+   f"gram magnetic susceptibility χ_g without requiring numerical gradient differentiation, while the near-zero Y-intercept (b = {fmt(b_val, 4)} mg) "
+   f"validates the efficacy of the empty-tube blank subtraction and confirms the absence of residual ferromagnetic hysteresis in the pole pieces."
+  )
+  
+  discussion=(
+   f"The quantitative investigation of hexaaquairon(II) ammonium sulfate (Mohr's salt) using the Gouy magnetic balance provides a classic, "
+   f"rigorous experimental bridge linking macroscopic magnetostatic forces with the microscopic quantum mechanical electronic structure "
+   f"of transition metal complexes. Paramagnetism is an intrinsic property of chemical systems possessing unpaired electronic spins. In an "
+   f"isolated transition metal atom or ion, the five d-orbitals (d_xy, d_yz, d_xz, d_x²-y², d_z²) are degenerate. However, when the iron(II) cation "
+   f"(Fe²⁺, [Ar] 3d⁶) is surrounded by six neutral water ligands in an octahedral coordination geometry ([Fe(H₂O)₆]²⁺), the electrostatic "
+   f"crystal field produced by the ligand lone pairs removes this five-fold orbital degeneracy. The d_x²-y² and d_z² orbitals, pointing directly "
+   f"along the Cartesian axes toward the incoming ligands, experience strong electrostatic repulsion and are destabilized to a higher-energy "
+   f"doubly degenerate set designated e_g. Conversely, the d_xy, d_yz, and d_xz orbitals, oriented between the Cartesian axes, experience minimal "
+   f"direct repulsion and are stabilized into a lower-energy triply degenerate set designated t_2g. The energetic separation between these manifolds "
+   f"is the octahedral crystal field splitting energy, Δ_oct (10 Dq). "
+   f"For a 3d⁶ ion, electron configuration depends critically on the relative magnitudes of the crystal field splitting Δ_oct and the mean "
+   f"inter-electronic spin-pairing energy P (the Coulombic repulsion and exchange cost required to place two electrons into the same spatial orbital). "
+   f"According to the spectrochemical series, water (H₂O) is a weak-field ligand, producing a modest crystal field splitting (Δ_oct ≈ 10,400 cm⁻¹ "
+   f"for [Fe(H₂O)₆]²⁺), which is substantially smaller than the spin-pairing energy (P ≈ 17,600 cm⁻¹). Consequently, the complex is high-spin: "
+   f"electrons occupy the orbitals singly with parallel spins across all five d-orbitals before pairing according to Hund's rule of maximum multiplicity, "
+   f"generating the electronic configuration (t_2g)⁴ (e_g)². This ground state possesses exactly n = 4 unpaired electrons and a total electron "
+   f"spin quantum number S = 4 × (1/2) = 2. "
+   f"In free gaseous ions, both electron spin angular momentum (S) and orbital angular momentum (L) contribute to the total magnetic dipole moment. "
+   f"However, in octahedral coordination complexes of first-row (3d) transition metals, the non-central electrostatic ligand field quenches the "
+   f"orbital angular momentum. The inhomogeneous electric field produced by the six surrounding ligands forces the orbital wavefunctions into "
+   f"real, spatially fixed Cartesian orientations (d_xy, d_yz, d_xz), quenching the orbital motion such that the expectation value of the orbital "
+   f"angular momentum operator vanishes (<L_z> ≈ 0). Under complete orbital quenching, the effective magnetic dipole moment is governed "
+   f"exclusively by the spin-only formula: μ_eff ≈ μ_spin = g_e · √[S(S + 1)] · μ_B = √[n(n + 2)] · μ_B, where g_e ≈ 2.0023 is the free-electron "
+   f"g-factor and μ_B = 9.27401 × 10⁻²⁴ J/T is the Bohr magneton. For n = 4 unpaired electrons, the spin-only model predicts μ_spin = √[4(6)] = "
+   f"√24 = 4.899 μ_B ≈ 4.90 μ_B. "
+   f"In the Gouy balance measurement, the packed Mohr's salt cylinder experienced a powerful downward magnetostatic force when energized in the "
+   f"magnetic gap. Linear regression of apparent mass gain Δm against B² across the range 0.16 to 1.96 T² yielded an empirical slope of "
+   f"S = {fmt(m_val, 4)} mg/T² with Pearson correlation coefficient R² = {fmt(r2_val, 8)}. Substituting sample parameters (m_s = 2.500 g, "
+   f"h = 50.00 mm, g = 9.80665 m/s², μ₀ = 4π × 10⁻⁷ N/A²) into the Gouy force expression extracted an empirical gram magnetic susceptibility "
+   f"of χ_g = {fmt(chi_g_cgs*1e6, 2)} × 10⁻⁶ cm³/g (χ_g(SI) = {fmt(chi_g_si, 11)} m³/kg). Multiplying by the formula mass of Mohr's salt "
+   f"(M = 392.14 g/mol) gave the observed raw molar susceptibility χ_M = {fmt(chi_M_raw*1e6, 1)} × 10⁻⁶ cm³/mol. "
+   f"To isolate the true paramagnetic response, Pascal's diamagnetic core correction was rigorously applied. All paired electrons in the core shells "
+   f"of Fe²⁺, the closed shells of the ammonium (NH₄⁺) and sulfate (SO₄²⁻) ions, and the coordinated and crystalline water molecules undergo Larmor "
+   f"precession in the applied field, generating an opposing diamagnetic susceptibility. Using standard Pascal constants, the diamagnetic correction "
+   f"was evaluated as χ_dia = −230 × 10⁻⁶ cm³/mol. Adding this diamagnetic correction yielded the corrected paramagnetic molar susceptibility "
+   f"χ_M,corr = χ_M + |χ_dia| = {fmt(chi_M_corr*1e6, 1)} × 10⁻⁶ cm³/mol. "
+   f"Applying the fundamental Curie relationship relating molar susceptibility to the effective magnetic dipole moment at T = 298.15 K, "
+   f"μ_eff = √[ (3 k_B T χ_M,corr) / (N_A μ_0 μ_B²) ] = 2.8284 · √(T · χ_M,corr), yielded an experimental magnetic moment of μ_eff = {fmt(mu_val, 2)} μ_B. "
+   f"This experimental value exhibits astonishing concordance with the theoretical spin-only benchmark for high-spin d⁶ Fe²⁺ (4.90 μ_B), with a "
+   f"relative percentage difference of only {fmt(abs(mu_val - 4.90)/4.90*100.0, 4)}%. "
+   f"This decisive result confirms that [Fe(H₂O)₆]²⁺ exists unambiguously in the high-spin (t_2g)⁴ (e_g)² electronic ground state with exactly "
+   f"four unpaired d-electrons. Had the complex formed a low-spin configuration (t_2g)⁶ (e_g)⁰, as observed in strong-field hexacyanoferrate(II) "
+   f"([Fe(CN)₆]⁴⁻), all electrons would be paired into the t_2g manifold, yielding S = 0 and diamagnetic behavior (Δm < 0). The experimental "
+   f"finding of μ_eff = 4.90 μ_B provides indisputable spectroscopic and magnetochemical proof of crystal field theory in coordination chemistry."
+  )
+  
+  conclusion=(
+   f"The mass and molar magnetic susceptibilities and effective magnetic moment of hexaaquairon(II) ammonium sulfate (Mohr's salt, "
+   f"[Fe(H₂O)₆](NH₄)₂(SO₄)₂·6H₂O) were determined at 25.0 °C (298.15 K) using a calibrated Gouy magnetic balance across six magnetic flux "
+   f"densities from 0.40 to 1.40 T (B² = 0.16 to 1.96 T²). The apparent mass gain Δm scaled with exquisite linearity against B² "
+   f"(R² = {fmt(r2_val, 8)}), yielding an empirical slope S = {fmt(m_val, 4)} mg/T². The extracted gram susceptibility was χ_g = "
+   f"{fmt(chi_g_cgs*1e6, 2)} × 10⁻⁶ cm³/g. Applying Pascal's diamagnetic correction (|χ_dia| = 230 × 10⁻⁶ cm³/mol) established the corrected "
+   f"paramagnetic molar susceptibility χ_M,corr = {fmt(chi_M_corr*1e6, 1)} × 10⁻⁶ cm³/mol. The effective magnetic dipole moment was extracted "
+   f"as μ_eff = {fmt(mu_val, 2)} μ_B, demonstrating near-perfect agreement within {fmt(abs(mu_val - 4.90)/4.90*100.0, 4)}% relative deviation "
+   f"from the 4.90 μ_B theoretical spin-only benchmark. Expanded uncertainty analysis (U(μ_eff) = ±0.01 μ_B at 95% confidence) definitively "
+   f"verifies complete orbital angular momentum quenching and proves the high-spin octahedral (t_2g)⁴ (e_g)² configuration with n = 4 "
+   f"unpaired d-electrons, confirming fundamental crystal field splitting and quantum magnetochemistry principles."
   )
   
   return abstract, graph_choice, discussion, conclusion

@@ -9687,5 +9687,227 @@
     "observationLabel": "UV-Vis electronic absorption spectrophotometry",
     "xAxis": "Kuhn Box Parameter x = (2p+6)\u00b2/(2p+7)",
     "yAxis": "Absorption Maximum \u03bb_max (nm)"
+  },
+  {
+    "id": 46,
+    "number": 46,
+    "slug": "magnetic-susceptibility-gouy-balance-complexes",
+    "title": "Magnetic Susceptibility and Unpaired d-Electrons of Transition Metal Complexes via the Gouy Balance",
+    "shortTitle": "Gouy Balance & Magnetic Susceptibility",
+    "category": "Spectroscopy, Quantum & Surface Chemistry",
+    "department": "chemistry",
+    "subject_id": 3,
+    "subject": "chemistry",
+    "published": true,
+    "page_path": "/chemistry/magnetic-susceptibility-gouy-balance-complexes/",
+    "aim": "Determine the mass and molar magnetic susceptibility, effective magnetic moment \u03bc_eff, and number of unpaired d-electrons in hexaaquairon(II) ammonium sulfate (Mohr's salt) using a calibrated Gouy magnetic balance.",
+    "difficulty": "Advanced",
+    "time": "3 Hours",
+    "gradientUnit": "mg/T\u00b2",
+    "interceptUnit": "mg",
+    "target": "4.90",
+    "targetName": "Effective Magnetic Moment \u03bc_eff",
+    "resultUnit": "\u03bc_B",
+    "resultScale": 1.0,
+    "resultDecimals": 2,
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 2,
+    "yDecimals": 3,
+    "initial": 1.0,
+    "samples": [
+      0.16,
+      0.36,
+      0.64,
+      1.0,
+      1.44,
+      1.96
+    ],
+    "emptyX": 0.16,
+    "emptyY": 102.312,
+    "measureLabel": "Apparent Mass Change \u0394m",
+    "fitEquation": "\\Delta m = \\frac{m_s \\chi_g}{2 \\mu_0 g h} B^2 = S \\cdot B^2 \\implies \\mu_{\\text{eff}} = \\sqrt{8 T \\chi_{M,\\text{corr}}} = 4.90\\ \\mu_B",
+    "min": 0.1,
+    "max": 2.5,
+    "step": 0.05,
+    "inputLabel": "Squared Magnetic Flux Density B\u00b2",
+    "shortInput": "B\u00b2",
+    "inputUnit": "T\u00b2",
+    "inputDecimals": 2,
+    "rawLabel": "Apparent Mass Change \u0394m",
+    "rawUnit": "mg",
+    "rawDecimals": 3,
+    "angle": false,
+    "timed": false,
+    "observationLabel": "Gouy balance magnetostatic force measurement",
+    "xAxis": "Squared Magnetic Field B\u00b2 (T\u00b2)",
+    "yAxis": "Apparent Mass Change \u0394m (mg)",
+    "settings": [
+      "Paramagnetic Sample: Mohr's Salt [Fe(H2O)6](NH4)2(SO4)2 (2.500 g)",
+      "Gouy Tube Geometry: Internal diameter 4.00 mm, height h = 50.00 mm",
+      "Electromagnet Gap Field: B = 0.40 to 1.40 T (B\u00b2 = 0.16 to 1.96 T\u00b2)",
+      "Ambient Thermostatic Temperature: 25.0 \u00b0C (298.15 K)"
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "\u2696\ufe0f",
+        "label": "Gouy Balance"
+      },
+      {
+        "id": "compare",
+        "icon": "\ud83d\udcca",
+        "label": "Metal Ion Series"
+      },
+      {
+        "id": "sandbox",
+        "icon": "\ud83e\uddf2",
+        "label": "Magnetostatic Field Sandbox"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Gouy Magnetic Balance & Water-Cooled Electromagnet",
+        "purpose": "Precision microbalance (readability \u00b10.01 mg) suspended above a heavy-duty water-cooled electromagnet with 50 mm flat-tapered pole pieces generating stable homogeneous magnetic fields from 0.0 to 1.5 T."
+      },
+      {
+        "name": "Transverse Hall-Effect Teslameter & Micro-Probe",
+        "purpose": "Digital Hall-effect gaussmeter (resolution \u00b10.001 T) with an optical micro-positioning stage to map the magnetic flux density B(z) along the vertical coordinate between pole caps."
+      },
+      {
+        "name": "Precision Pyrex Gouy Sample Suspension Tube",
+        "purpose": "Calibrated cylindrical Pyrex tube (inner diameter 4.00 \u00b1 0.02 mm, outer diameter 6.00 mm, length 120.0 mm) suspended from the balance beam by a fine non-magnetic phosphor-bronze wire."
+      },
+      {
+        "name": "Analytically Pure Mohr's Salt Standard",
+        "purpose": "Crystalline ammonium iron(II) sulfate hexahydrate, (NH4)2Fe(SO4)2\u00b76H2O (purity \u2265 99.9%, M = 392.14 g/mol), finely pulverized in an agate mortar and packed to h = 50.00 mm (net mass m_s = 2.500 g)."
+      },
+      {
+        "name": "Mercury Tetrathiocyanatocobaltate(II) Gouy Calibrant",
+        "purpose": "Certified primary magnetic standard Hg[Co(NCS)4] (gram susceptibility \u03c7_g = 16.44 \u00d7 10\u207b\u2076 cm\u00b3/g at 20.0 \u00b0C) used to calibrate the Gouy tube constant and verify field gradient linearity."
+      },
+      {
+        "name": "Regulated Constant-Current DC Electromagnet Power Supply",
+        "purpose": "Bipolar DC current-regulated power supply (0\u201320.00 A, stability \u00b10.01%) with reverse-polarity switching and digital current/voltage telemetry to suppress residual ferromagnetic pole hysteresis."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Pulverization and Uniform Packing of Mohr's Salt",
+        "text": "Finely pulverize high-purity Mohr's salt crystals in an agate mortar to produce a uniform microcrystalline powder (< 100 mesh). Carefully transfer the powder into the clean, dry Gouy tube in small increments of ~5 mm, tapping the tube firmly on a rubber mat after each addition to eliminate air voids and establish uniform packing density up to a height of h = 50.00 \u00b1 0.05 mm. Record net sample mass m_s = 2.500 g."
+      },
+      {
+        "title": "Gouy Balance Tare and Empty Tube Diamagnetic Blank Calibration",
+        "text": "Suspend the empty Pyrex Gouy tube between the electromagnet pole faces using the phosphor-bronze wire. With the magnet power switched off (B = 0 T), tare the microbalance to 0.0000 g. Energize the electromagnet across field settings (0.40 to 1.40 T) and record the small diamagnetic mass change of the empty tube (\u0394m_tube) to serve as a baseline blank correction."
+      },
+      {
+        "title": "Magnetic Gap Flux Density Calibration via Hall Probe",
+        "text": "Position the calibrated transverse Hall probe at the central horizontal axis between the pole caps where the lower tip of the Gouy tube will hang. Increment the regulated DC current from 2.0 A to 15.0 A to establish target magnetic flux densities B = 0.40, 0.60, 0.80, 1.00, 1.20, and 1.40 T (B\u00b2 = 0.16, 0.36, 0.64, 1.00, 1.44, and 1.96 T\u00b2). Confirm field stability and linearity."
+      },
+      {
+        "title": "Alignment of the Packed Sample Tube in the Field Gradient",
+        "text": "Suspend the packed Mohr's salt tube from the balance arm so that its lower flat base coincides with the central horizontal plane of the pole caps (maximum field B) while its upper powder meniscus resides in the near-zero fringe field (B\u2080 \u2248 0). Ensure the tube hangs freely without touching the pole faces or draft shield walls. Record the unperturbed initial mass m\u2080 at B = 0 T."
+      },
+      {
+        "title": "Measurement of Paramagnetic Downward Force vs Field Strength",
+        "text": "Apply magnetic fields B = 0.40, 0.60, 0.80, 1.00, 1.20, and 1.40 T sequentially. At each field setting, allow the balance to mechanically damp and equilibrate for 60 seconds, recording the apparent mass m_field. Calculate the net downward paramagnetic mass change \u0394m = (m_field \u2212 m\u2080) \u2212 \u0394m_tube in milligrams."
+      },
+      {
+        "title": "Regression Analysis, Susceptibility & Spin-Only Electron Extraction",
+        "text": "Plot \u0394m (mg) against B\u00b2 (T\u00b2). Execute ordinary least-squares linear regression to determine the empirical slope S = (m_s \u00b7 \u03c7_g) / (2 \u03bc\u2080 g h). Convert the mass susceptibility \u03c7_g to molar susceptibility \u03c7_M, apply Pascal's diamagnetic corrections (\u03c7_dia = \u2212230 \u00d7 10\u207b\u2076 cm\u00b3/mol) to isolate paramagnetic molar susceptibility \u03c7_M,corr, and compute the effective magnetic moment \u03bc_eff = 2.828 \u221a(\u03c7_M,corr \u00b7 T), establishing the number of unpaired d-electrons via the spin-only formula."
+      }
+    ],
+    "topics": [
+      {
+        "question": "What is the physical origin of the vertical translational force experienced by a paramagnetic sample in a Gouy balance?",
+        "answer": "In a non-uniform magnetic field, a magnetic dipole of moment m experiences a translational force F = \u2207(m \u00b7 B). For a cylindrical paramagnetic sample of cross-sectional area A and length h suspended along the vertical z-axis, the volume magnetic susceptibility \u03c7_v induces a magnetization M = (\u03c7_v / \u03bc_0) B. Integrating the magnetic force density over the cylinder volume yields F_z = (A / 2\u03bc_0) (\u03c7_v - \u03c7_v,air) (B\u00b2 - B_0\u00b2). Because the bottom tip is in the intense uniform field B between the pole caps and the top meniscus is in the distant fringe field B_0 \u2248 0, the positive susceptibility (\u03c7_v > 0) produces a net downward force F_z = g \u00b7 \u0394m, manifesting as an apparent mass increase on the balance."
+      },
+      {
+        "question": "How does the Curie law describe the temperature dependence of paramagnetism at the microscopic quantum level?",
+        "answer": "Paramagnetism arises from permanent electronic magnetic dipole moments associated with unpaired electron spins (S) and orbital angular momenta (L). In the absence of an external field, thermal kinetic energy (k_B T) completely randomizes the spatial orientations of these atomic dipoles, yielding zero net magnetization. An applied magnetic field B exerts an aligning torque, inducing a Boltzmann energy splitting \u0394E = g_e \u03bc_B B between magnetic sub-levels (m_s). According to Curie's law, the paramagnetic molar susceptibility is inversely proportional to absolute temperature: \u03c7_M = C / T = (N_A \u03bc_eff\u00b2 \u03bc_B\u00b2) / (3 k_B T), reflecting the thermodynamic competition between magnetic field alignment and thermal collisional randomization."
+      },
+      {
+        "question": "Why is the spin-only formula \u03bc_spin = \u221a[n(n+2)] \u03bc_B highly accurate for first-row transition metal complexes but inadequate for lanthanides?",
+        "answer": "In first-row (3d) transition metal complexes, the valence 3d orbitals extend outward into direct spatial contact with the surrounding ligand field. The electrostatic crystal field created by the ligands exerts strong non-central electric forces that split the orbital degeneracy and quench the orbital angular momentum (L \u2248 0), leaving the total orbital angular momentum expectation value near zero. Consequently, only electron spin angular momentum (S = n/2) contributes significantly to the magnetic moment: \u03bc_eff \u2248 \u03bc_spin = g_e \u221a[S(S+1)] \u03bc_B = \u221a[n(n+2)] \u03bc_B. In contrast, for 4f lanthanides, the 4f electrons are deeply shielded by filled 5s\u00b2 5p\u2076 shells; the crystal field cannot quench L, requiring the full Russell-Saunders total angular momentum J = L + S."
+      },
+      {
+        "question": "Why must Pascal's diamagnetic constants be subtracted from experimental molar susceptibility to obtain the true paramagnetic susceptibility?",
+        "answer": "Every chemical substance contains core electrons in closed shells and paired valence electrons in chemical bonds. According to Lenz's law, an applied magnetic field induces circular precession of these electron clouds (Larmor precession), creating an induced magnetic dipole that opposes the applied field. This universal diamagnetic response is negative (\u03c7_dia < 0) and temperature-independent. In a paramagnetic complex, the measured total molar susceptibility is the algebraic sum of the positive paramagnetic susceptibility and the negative diamagnetic contribution: \u03c7_M,obs = \u03c7_M,para + \u03c7_dia. Applying Pascal's additive constants allows precise subtraction of the diamagnetic core contribution: \u03c7_M,corr = \u03c7_M,obs - \u03c7_dia = \u03c7_M,obs + |\u03c7_dia|."
+      },
+      {
+        "question": "How does crystal field splitting energy \u0394_oct determine high-spin versus low-spin configurations in octahedral d\u2076 complexes?",
+        "answer": "In an octahedral coordination environment, the five d-orbitals split into a lower-energy triply degenerate t_2g set and an upper-energy doubly degenerate e_g set separated by the crystal field splitting energy \u0394_oct (10 Dq). For a d\u2076 ion such as Fe\u00b2\u207a, placement of the sixth electron depends on the competition between \u0394_oct and the inter-electronic spin-pairing energy P. In the presence of weak-field ligands (such as H2O in [Fe(H2O)6]\u00b2\u207a), \u0394_oct < P; electrons occupy all orbitals singly before pairing according to Hund's rule, adopting the high-spin configuration (t_2g)\u2074 (e_g)\u00b2 with n = 4 unpaired electrons and S = 2 (paramagnetic, \u03bc_eff \u2248 4.90 \u03bc_B). In strong-field complexes (such as [Fe(CN)6]\u2074\u207b), \u0394_oct > P; all six electrons pair in the t_2g manifold, yielding the low-spin configuration (t_2g)\u2076 (e_g)\u2070 with n = 0 (diamagnetic, \u03bc_eff = 0)."
+      },
+      {
+        "question": "What are the key advantages and experimental limitations of the Gouy balance method compared to Faraday balances and modern SQUID magnetometers?",
+        "answer": "The Gouy method offers simplicity, ruggedness, and high precision using standard analytical balances and large bulk samples (~1\u20133 g). However, its fundamental limitation is that it requires a large sample volume uniformly packed in a long tube, and is sensitive to packing density variations and air voids. The Faraday method utilizes a smaller sample (~5\u201320 mg) placed entirely in a constant field gradient region (d\u00b2B/dz\u00b2 = const), eliminating the packing length requirement. Superconducting Quantum Interference Device (SQUID) magnetometers provide ultimate sensitivity (~10\u207b\u2078 emu) on microgram samples across cryogenic temperatures (1.8\u2013400 K) and high fields (up to 7 T) using Josephson junctions, but involve substantial cryogenic instrumentation overhead."
+      },
+      {
+        "question": "Why must the upper boundary of the sample cylinder extend into a region of negligible magnetic field (B_0 \u2248 0)?",
+        "answer": "The integrated magnetic force expression F_z = (A / 2\u03bc_0) \u03c7_v (B\u00b2 - B_0\u00b2) demonstrates that the translational force depends on the difference between the squares of the magnetic fields at the two ends of the sample cylinder. If the sample tube is too short such that the upper end remains within a significant magnetic field B_0, the upward opposing force on the top meniscus diminishes the net downward force. By ensuring the sample tube extends at least 10 cm above the pole caps into the fringe region where B_0 < 0.02 B, B_0\u00b2 is less than 0.04% of B\u00b2, satisfying the fundamental boundary condition B_0\u00b2 \u2248 0 with negligible truncation error."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "In a Gouy magnetic balance, how does the direction of the magnetic force distinguish a paramagnetic substance from a diamagnetic substance?",
+        "answer": "",
+        "options": [
+          "A paramagnetic substance is drawn into the stronger magnetic field (apparent mass increase), whereas a diamagnetic substance is repelled (apparent mass decrease)",
+          "A paramagnetic substance is repelled from the field, whereas a diamagnetic substance is attracted",
+          "Both paramagnetic and diamagnetic substances experience identical upward repulsive forces",
+          "A paramagnetic substance experiences a rotational torque but zero net translational force"
+        ],
+        "correct": 0,
+        "explanation": "Paramagnetic substances possess positive volume magnetic susceptibility (\u03c7_v > 0) and are attracted into the region of higher magnetic field between the pole caps, creating a downward force (apparent mass gain). Diamagnetic substances have \u03c7_v < 0 and are expelled toward weaker fields, registering an apparent mass loss."
+      },
+      {
+        "question": "For high-spin octahedral hexaaquairon(II), [Fe(H2O)6]\u00b2\u207a (d\u2076 configuration, n = 4 unpaired electrons), what is the theoretical spin-only magnetic moment \u03bc_spin?",
+        "options": [
+          "4.90 \u03bc_B",
+          "1.73 \u03bc_B",
+          "2.83 \u03bc_B",
+          "5.92 \u03bc_B"
+        ],
+        "correct": 0,
+        "explanation": "Using the spin-only formula \u03bc_spin = \u221a[n(n + 2)] \u03bc_B: for n = 4 unpaired electrons, \u03bc_spin = \u221a[4(4 + 2)] = \u221a24 = 4.899 \u03bc_B \u2248 4.90 \u03bc_B."
+      },
+      {
+        "question": "Why is Pascal's diamagnetic correction |\u03c7_dia| added to the experimentally measured molar susceptibility \u03c7_M,obs when determining the paramagnetic moment?",
+        "options": [
+          "Because closed-shell core electrons and ligand bonds generate an opposing diamagnetic susceptibility (\u03c7_dia < 0) that masks a fraction of the true paramagnetism",
+          "Because the Pyrex tube expands thermally in the magnetic field",
+          "Because the Hall probe requires a zero-point resistance correction",
+          "Because water molecules in the hydration sphere undergo nuclear magnetic resonance"
+        ],
+        "correct": 0,
+        "explanation": "Experimental susceptibility is the sum \u03c7_M,obs = \u03c7_M,para + \u03c7_dia. Because \u03c7_dia is negative, the true paramagnetic susceptibility is \u03c7_M,para = \u03c7_M,obs \u2212 \u03c7_dia = \u03c7_M,obs + |\u03c7_dia|."
+      },
+      {
+        "question": "Linear regression of apparent mass gain \u0394m vs B\u00b2 yields an empirical slope S = 639.45 mg/T\u00b2. What does this slope physically represent in the Gouy balance equation?",
+        "options": [
+          "The ratio (m_s \u00b7 \u03c7_g) / (2 \u03bc\u2080 g h), where m_s is sample mass, \u03c7_g is gram susceptibility, h is packing height, and g is gravitational acceleration",
+          "The Curie-Weiss temperature \u03b8 in Kelvin",
+          "The electrical resistance of the copper electromagnet coils",
+          "The orbital angular momentum quantum number L"
+        ],
+        "correct": 0,
+        "explanation": "In the Gouy formulation, the vertical force is F_z = g \u00b7 \u0394m = (m_s \u00b7 \u03c7_g \u00b7 B\u00b2) / (2 \u03bc\u2080 h). Dividing by g yields \u0394m = [ (m_s \u00b7 \u03c7_g) / (2 \u03bc\u2080 g h) ] \u00b7 B\u00b2 = S \u00b7 B\u00b2."
+      }
+    ],
+    "precautions": [
+      "The electromagnet generates intense static magnetic fields (up to 1.5 T) and severe fringe field gradients; keep all ferromagnetic tools, watches, mechanical instruments, and magnetic data storage media at least 2 meters away from the magnet assembly.",
+      "Pack the Gouy sample tube in small increments with firm, consistent tapping to achieve uniform bulk density; non-uniform packing or internal air voids distort the magnetic field gradient and introduce erratic force artifacts.",
+      "Inspect the phosphor-bronze suspension wire to ensure the sample tube hangs strictly vertically without touching the pole caps, Hall probe, or draft shield walls during balance swinging.",
+      "Water cooling for the electromagnet coils must be running with verified flow (> 2.0 L/min) before energizing the DC power supply to prevent coil overheating and resistance drift.",
+      "Allow the electronic analytical microbalance to mechanically damp and settle for at least 60 seconds at each magnetic field setting before reading the digital mass display.",
+      "Handle crystalline Mohr's salt and chemical reagents with a clean spatula and wear nitrile gloves and eye protection; store the salt in a desiccator to prevent atmospheric aerial oxidation of Fe\u00b2\u207a to Fe\u00b3\u207a."
+    ],
+    "limitations": [
+      "The elementary Gouy formulation assumes an ideal infinite cylinder with B_0 = 0 at the upper boundary; in practice, residual fringe fields (B_0 \u2248 0.015 B) introduce a minor systematic truncation error of ~0.02%.",
+      "Radial packing inhomogeneities within the 4.00 mm diameter bore produce localized magnetic susceptibility variations that are averaged over the bulk volume.",
+      "Orbital angular momentum quenching is assumed to be complete in the spin-only approximation; minor spin-orbit coupling (\u03bb \u2248 \u2212100 cm\u207b\u00b9 for Fe\u00b2\u207a) introduces a slight temperature-dependent orbital contribution (typically \u03bc_eff \u2248 5.1\u20135.3 \u03bc_B in single-crystal studies)."
+    ],
+    "intro": "The magnetic properties of chemical compounds provide profound, indispensable insight into electronic structure, chemical bonding, oxidation state, and coordination geometry. When placed in a magnetic field, all substances respond through either diamagnetism (repulsion from the field caused by induced orbital currents in closed shells) or paramagnetism (attraction into the field caused by permanent electronic magnetic dipole moments of unpaired electron spins). In transition metal chemistry, the magnitude of the paramagnetic susceptibility directly reveals the number of unpaired d-electrons and discriminates between high-spin and low-spin crystal field ground states. The classic Gouy balance method provides a robust, highly accurate magnetostatic approach for quantifying magnetic susceptibility. A long cylindrical sample of the complex is suspended such that its lower boundary rests in the intense uniform magnetic field B between the flat pole pieces of an electromagnet, while its upper boundary resides in the near-zero fringe field B_0. The resulting vertical magnetic field gradient exerts a downward translational force F_z proportional to the square of the magnetic flux density B\u00b2. In this investigation, high-spin hexaaquairon(II) ammonium sulfate (Mohr's salt, [Fe(H2O)6](NH4)2(SO4)2\u00b76H2O) is investigated across fields from 0.40 to 1.40 T (B\u00b2 = 0.16 to 1.96 T\u00b2) at 25.0 \u00b0C. Linear regression of apparent mass gain \u0394m against B\u00b2 extracts the mass and molar magnetic susceptibility, evaluates Pascal's diamagnetic corrections, and determines the effective magnetic moment \u03bc_eff = 4.90 \u03bc_B, confirming the presence of four unpaired d-electrons (S = 2) in accordance with crystal field theory.",
+    "modelExtra": "The physical chemistry simulation model evaluates analytically pure Mohr's salt, [Fe(H2O)6](NH4)2(SO4)2\u00b76H2O (M = 392.14 g/mol), at 25.0 \u00b0C (298.15 K). Experimental parameters: sample mass m_s = 2.500 g (0.00250 kg), tube inner diameter d = 4.00 mm, powder packing height h = 50.00 mm (0.0500 m), gravitational acceleration g = 9.80665 m/s\u00b2, magnetic permeability \u03bc_0 = 4\u03c0 \u00d7 10\u207b\u2077 N/A\u00b2. Across the six magnetic flux density settings B = [0.40, 0.60, 0.80, 1.00, 1.20, 1.40] T (B\u00b2 = [0.16, 0.36, 0.64, 1.00, 1.44, 1.96] T\u00b2), the measured apparent mass gains are \u0394m = [102.312, 230.203, 409.249, 639.452, 920.811, 1253.326] mg. Ordinary least-squares regression yields an empirical slope S = 639.4521 mg/T\u00b2 (6.39452 \u00d7 10\u207b\u2074 kg/T\u00b2) and intercept b = \u22120.0001 mg with Pearson correlation coefficient R\u00b2 = 0.9999999999998. Applying the Gouy force relation extracts a gram magnetic susceptibility \u03c7_g(SI) = 3.15209 \u00d7 10\u207b\u2077 m\u00b3/kg (\u03c7_g(cgs) = 2.50834 \u00d7 10\u207b\u2075 emu/g). Multiplying by molar mass gives raw molar susceptibility \u03c7_M = 0.009836 emu/mol. Applying Pascal's diamagnetic correction for [Fe(H2O)6](NH4)2(SO4)2 (|\u03c7_dia| = 230 \u00d7 10\u207b\u2076 emu/mol) yields the corrected paramagnetic molar susceptibility \u03c7_M,corr = 0.010066 emu/mol. Applying the Curie relation \u03bc_eff = \u221a[8 \u00b7 T \u00b7 \u03c7_M,corr] extracts an effective magnetic moment \u03bc_eff = 4.90 \u03bc_B (difference = 0.00007% from the 4.90 \u03bc_B theoretical spin-only benchmark for high-spin d\u2076 Fe\u00b2\u207a), rigorously confirming four unpaired d-electrons."
   }
 ]

@@ -3,6 +3,13 @@
 const round=(v,n)=>Math.round((v+Number.EPSILON)*10**n)/10**n;
 
 function predict(slug,input){
+  if(slug==='magnetic-susceptibility-gouy-balance-complexes'){
+   const b2=Number(input);
+   const table_raw={0.16:102.312, 0.36:230.203, 0.64:409.249, 1.00:639.452, 1.44:920.811, 1.96:1253.326};
+   const key=round(b2, 2);
+   const raw_val=table_raw.hasOwnProperty(key)?table_raw[key]:round(639.45213 * b2, 3);
+   return {raw:raw_val,ideal:raw_val,period:1.0,x:b2,y:raw_val,valid:b2>=0.05&&b2<=2.50};
+  }
   if(slug==='uv-vis-particle-in-a-box-cyanine-dyes'){
    const p=Number(input);
    const table_raw={0.0:327.63, 1.0:453.01, 2.0:579.14, 3.0:705.65, 4.0:832.41, 5.0:959.32};
@@ -570,6 +577,10 @@ function predict(slug,input){
 
 function reading(slug,input,raw){
  let x=Number(input),y=Number(raw);
+  if(slug==='magnetic-susceptibility-gouy-balance-complexes'){
+   x=Number(input);
+   y=Number(raw);
+  }
   if(slug==='uv-vis-particle-in-a-box-cyanine-dyes'){
    const p=Number(input);
    const N=2*p + 6;
@@ -914,6 +925,23 @@ function fit(rows){
 }
 
 function estimate(slug,f){
+  if(slug==='magnetic-susceptibility-gouy-balance-complexes'){
+   const slope=f.m; // in mg / T^2
+   const slope_kg=slope * 1e-6;
+   const ms_kg=0.00250;
+   const h_m=0.0500;
+   const g=9.80665;
+   const mu0=4 * Math.PI * 1e-7;
+   const M=392.14;
+   const T=298.15;
+   const chi_g_si=(2 * mu0 * g * h_m * slope_kg) / ms_kg;
+   const chi_g_cgs=chi_g_si / (4 * Math.PI * 1e-3);
+   const chi_M_raw=chi_g_cgs * M;
+   const chi_M_corr=chi_M_raw + 0.000230;
+   const mu_eff=Math.sqrt(8.0 * T * chi_M_corr);
+   const se=(f.slopeSE ? (0.5 * mu_eff * f.slopeSE / slope) : 0.001);
+   return {value:mu_eff,se:se,reference:4.90};
+  }
   if(slug==='uv-vis-particle-in-a-box-cyanine-dyes'){
    const slope=f.m;
    const h=6.62607015e-34;
