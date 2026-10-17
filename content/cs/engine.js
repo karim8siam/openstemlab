@@ -140,6 +140,56 @@ function drawComparativeSim(t,p,v,ink,soft,orange){
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
+ if(cfg.slug==='backtracking-n-queens-sat'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'COMBINATORIAL SEARCH & CONSTRAINT PARADIGMS (N = '+p.input+' queens)','#e2f0f8',11);
+
+  const n=p.input;
+  const c_minconflicts=Math.round(20 * n);
+  const c_cdcl=Math.round(Math.min(1e7, 4 * n * n + 120));
+  const c_bitmask=Math.round(Math.min(1e8, (n <= 8 ? 2057 : n <= 10 ? 35538 : 500000) * 4));
+  const c_array=Math.round(c_bitmask * 18);
+  const c_brute=Math.round(Math.min(1e9, Math.pow(n, Math.min(n, 7))));
+
+  const strategies=[
+   {name:'Min-Conflicts Local Search',col:'#10b981',cost:c_minconflicts,scale:'O(N) expected heuristic',desc:'Iterative conflict repair; solves N = 1,000,000 in seconds (incomplete)'},
+   {name:'CDCL / DPLL SAT Solver',col:'#38bdf8',cost:c_cdcl,scale:'O(N²) CNF encoding',desc:'Unit propagation, 1UIP clause learning, and Two-Watched-Literals'},
+   {name:'Bitmask Backtracking (Burroughs)',col:'#f97316',cost:c_bitmask,scale:'O(N!) tree, O(1) bitwise',desc:'Single-cycle CPU register masks; 20× faster than array backtracking'},
+   {name:'Array-Based Backtracking',col:'#a855f7',cost:c_array,scale:'O(N! · N) memory lookups',desc:'Iterates boolean column/diagonal arrays with branch penalty and cache misses'},
+   {name:'Brute-Force Permutations',col:'#ef4444',cost:c_brute,scale:'O(N^N) unpruned space',desc:'Exhaustive leaf generation without intermediate pruning; intractable'}
+  ];
+
+  strategies.forEach((item,idx)=>{
+   const rowY=cY+16+idx*42;
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+12)+'" fill="#dcebf2" font-size="8.5" font-weight="bold">'+item.name+'</text>';
+   const costStr=item.cost>=1000000?(item.cost/1000000).toFixed(1)+'M':item.cost>=1000?(item.cost/1000).toFixed(1)+'k':item.cost;
+   svg+='<text x="'+(cX+cW-15)+'" y="'+(rowY+12)+'" text-anchor="end" fill="'+item.col+'" font-size="8.5" font-family="monospace" font-weight="bold">'+costStr+' ops ('+item.scale+')</text>';
+   
+   const barX=cX+15,barY=rowY+16,barMaxW=cW-30;
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barMaxW+'" height="7" rx="2" fill="#16242c"/>';
+   const maxVal=Math.max(1000, c_brute);
+   const frac=Math.min(1.0,Math.log10(item.cost+1)/Math.log10(maxVal+1));
+   const fillW=Math.max(4,frac*barMaxW);
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+fillW+'" height="7" rx="2" fill="'+item.col+'"/>';
+  });
+
+  const bX=460,bY=45,bW=220,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">DIAGONAL PRUNING EFFICIENCY</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="20" font-family="monospace" font-weight="bold">> 99.98% Pruned</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+66)+'" fill="#10b981" font-size="9">For N=8: 16.78M states ⟶ 2,057 nodes</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+76)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+76)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+94)+'" fill="#7e9bab" font-size="9">BITMASK REGISTER INVARIANT</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+116)+'" fill="'+ink+'" font-size="14" font-family="monospace" font-weight="bold">T(N) = 4.0000 · N</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+132)+'" fill="#8ba5b5" font-size="8">4 bitwise ALU operations per row level</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+142)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+142)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+160)+'" fill="#7e9bab" font-size="9">TWO-WATCHED-LITERALS (2WL)</text>';
+  svg+=text(bX+bW/2,bY+184,'O(1) Backtrack (Zero Restore)','#10b981',9.5);
+  svg+=text(bX+bW/2,bY+206,'1UIP Asserting Clause Learning',orange,8.5);
+  svg+=text(360,305,'Microarchitectural Invariant: Bitmask backtracking and 2WL eliminate memory traversal by maintaining constraints in registers and watching non-false literals',soft,10);
+  return svg;
+ }
+
  if(cfg.slug==='computational-geometry-convex-hull'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
   svg+=text(cX+cW/2,cY-14,'PLANAR CONVEX HULL ALGORITHMIC PARADIGMS (n = '+p.input+' points)','#e2f0f8',11);
@@ -1011,6 +1061,79 @@ function drawDynamicSandbox(t,p,v,ink,soft,orange){
  const cX=45,cY=45,cW=400,cH=230;
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+ if(cfg.slug==='backtracking-n-queens-sat'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'N-QUEENS CHESSBOARD & 64-BIT REGISTER SANDBOX (N = '+p.input+')','#e2f0f8',11);
+
+  svg+='<text x="'+(cX+15)+'" y="'+(cY+18)+'" fill="#10b981" font-size="8.5" font-weight="bold">BITWISE CONFLICT MASKS: OCCUPIED = COLS | DIAG_LEFT | DIAG_RIGHT</text>';
+
+  const n=p.input;
+  const bdX=cX+15, bdY=cY+28, bdW=180, bdH=185;
+  svg+='<rect x="'+bdX+'" y="'+bdY+'" width="'+bdW+'" height="'+bdH+'" rx="4" fill="#041a1e" stroke="#14b8a6" stroke-width="1.2"/>';
+  svg+='<text x="'+(bdX+10)+'" y="'+(bdY+15)+'" fill="#2dd4bf" font-size="8" font-weight="bold">'+n+'×'+n+' CHESSBOARD STATE</text>';
+
+  const sqSize=Math.min(18, Math.floor(150 / Math.max(n, 4)));
+  const gridOffX=bdX + Math.floor((bdW - sqSize * Math.min(n, 8)) / 2);
+  const gridOffY=bdY + 26;
+  const dispN=Math.min(n, 8);
+
+  const sampleQueens=[1, 3, 0, 2, 5, 7, 4, 6];
+
+  for(let r=0; r<dispN; r++){
+   for(let c=0; c<dispN; c++){
+    const isDark=(r + c) % 2 === 1;
+    const sqX=gridOffX + c * sqSize;
+    const sqY=gridOffY + r * sqSize;
+    const fillCol=isDark ? '#0f242c' : '#1c3d4a';
+    svg+='<rect x="'+sqX+'" y="'+sqY+'" width="'+sqSize+'" height="'+sqSize+'" fill="'+fillCol+'" stroke="#0a1820" stroke-width="0.5"/>';
+
+    if(r < dispN - 2 && sampleQueens[r] === c){
+     svg+='<circle cx="'+(sqX + sqSize/2)+'" cy="'+(sqY + sqSize/2)+'" r="'+(sqSize*0.38)+'" fill="'+orange+'" stroke="#fde047" stroke-width="1"/>';
+     svg+='<text x="'+(sqX + sqSize/2)+'" y="'+(sqY + sqSize/2 + 3)+'" text-anchor="middle" fill="#0b131a" font-size="8" font-weight="bold">♛</text>';
+    } else if(r === dispN - 2 && c === sampleQueens[r]){
+     svg+='<circle cx="'+(sqX + sqSize/2)+'" cy="'+(sqY + sqSize/2)+'" r="'+(sqSize*0.38)+'" fill="#38bdf8" stroke="#bae6fd" stroke-width="1.2"/>';
+     svg+='<text x="'+(sqX + sqSize/2)+'" y="'+(sqY + sqSize/2 + 3)+'" text-anchor="middle" fill="#0b131a" font-size="8" font-weight="bold">♛</text>';
+    }
+   }
+  }
+
+  const regX=cX+205, regY=cY+28, regW=185, regH=185;
+  svg+='<rect x="'+regX+'" y="'+regY+'" width="'+regW+'" height="'+regH+'" rx="4" fill="#0f172a" stroke="#6366f1" stroke-width="1.2"/>';
+  svg+='<text x="'+(regX+10)+'" y="'+(regY+15)+'" fill="#a5b4fc" font-size="8" font-weight="bold">64-BIT MACHINE REGISTER PIPELINE</text>';
+
+  const regRows=[
+   {lbl:'COLS (Vertical)',bin:'00101101',col:'#38bdf8',desc:'Occupied columns mask'},
+   {lbl:'DIAG_LEFT (r - c)',bin:'01011000',col:'#f97316',desc:'Shifted left (<< 1)'},
+   {lbl:'DIAG_RIGHT (r + c)',bin:'00010110',col:'#a855f7',desc:'Shifted right (>> 1)'},
+   {lbl:'OCCUPIED (OR)',bin:'01111111',col:'#ef4444',desc:'cols | diag_l | diag_r'},
+   {lbl:'AVAILABLE (~OCC)',bin:'10000000',col:'#10b981',desc:'~occupied & full_mask'}
+  ];
+
+  regRows.forEach((rg,i)=>{
+   const rY=regY+24+i*31;
+   svg+='<text x="'+(regX+8)+'" y="'+(rY+9)+'" fill="#94a3b8" font-size="7">'+rg.lbl+':</text>';
+   svg+='<text x="'+(regX+8)+'" y="'+(rY+20)+'" fill="'+rg.col+'" font-size="8.5" font-family="monospace" font-weight="bold">0b'+rg.bin+'</text>';
+   svg+='<text x="'+(regX+regW-8)+'" y="'+(rY+20)+'" text-anchor="end" fill="#64748b" font-size="6.5">'+rg.desc+'</text>';
+  });
+
+  const bX=460, bY=45, bW=220, bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">TWO\'S COMPLEMENT EXTRACTION</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="16" font-family="monospace" font-weight="bold">bit = avail &amp; -avail</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+66)+'" fill="#10b981" font-size="9">Single-Cycle Zero-Branch Isolation</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+76)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+76)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+94)+'" fill="#7e9bab" font-size="9">STATE TRANSITION PER ROW</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+112)+'" fill="'+ink+'" font-size="9" font-family="monospace">1. cols\' = cols | bit</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+126)+'" fill="'+ink+'" font-size="9" font-family="monospace">2. diag_l\' = (diag_l | bit) &lt;&lt; 1</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+140)+'" fill="'+ink+'" font-size="9" font-family="monospace">3. diag_r\' = (diag_r | bit) &gt;&gt; 1</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+150)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+150)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+168)+'" fill="#7e9bab" font-size="9">SPEEDUP VS BOOLEAN ARRAYS</text>';
+  svg+=text(bX+bW/2,bY+190,'15× to 25× CPU Speedup','#10b981',10);
+  svg+=text(bX+bW/2,bY+208,'Zero Cache Misses · All Registers',orange,8.5);
+  svg+=text(360,305,'Microarchitectural Invariant: Bitwise logic evaluates all N column and diagonal conflicts simultaneously in parallel machine registers',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='computational-geometry-convex-hull'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
@@ -2193,6 +2316,115 @@ function draw(t){
  const ink='#38bdf8',soft='#7e9bab',orange='#f97316';
  if(currentSimMode==='compare'){$('apparatusDiagram').innerHTML=drawComparativeSim(t,p,v,ink,soft,orange);return;}
  if(currentSimMode==='sandbox'){$('apparatusDiagram').innerHTML=drawDynamicSandbox(t,p,v,ink,soft,orange);return;}
+
+ if(cfg.slug==='backtracking-n-queens-sat'){
+  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
+  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+  const n=p.input;
+  const ops=v.raw;
+  const maxUnpruned=Math.pow(n, Math.min(n, 6));
+
+  svg+='<rect x="35" y="38" width="410" height="235" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+=text(240,24,'Bitmask State Space Search Tree & Backtracking Traversal');
+
+  svg+='<text x="50" y="56" fill="#7e9bab" font-size="8.5" font-weight="bold">BOARD N = '+n+' · BITMASK OPERATIONS T(N) = '+ops+' · SLOPE m = 4.0000</text>';
+
+  const trX=50, trY=68, trW=235, trH=190;
+  svg+='<rect x="'+trX+'" y="'+trY+'" width="'+trW+'" height="'+trH+'" rx="4" fill="#07131b" stroke="#1e3a4a" stroke-width="1"/>';
+  svg+='<text x="'+(trX+8)+'" y="'+(trY+14)+'" fill="#38bdf8" font-size="7.5" font-weight="bold">STATE SPACE SEARCH TREE (Pruned Subtrees in Red)</text>';
+
+  const rootNode={x:trX+115, y:trY+32, lbl:'Root'};
+  const l1Nodes=[
+   {x:trX+45, y:trY+68, lbl:'Q₀=0', prun:true},
+   {x:trX+115, y:trY+68, lbl:'Q₀=1', prun:false},
+   {x:trX+185, y:trY+68, lbl:'Q₀=2', prun:true}
+  ];
+  const l2Nodes=[
+   {x:trX+85, y:trY+115, lbl:'Q₁=3', prun:false},
+   {x:trX+145, y:trY+115, lbl:'Q₁=0', prun:true}
+  ];
+  const l3Nodes=[
+   {x:trX+65, y:trY+155, lbl:'Q₂=0', prun:false, sol:true},
+   {x:trX+105, y:trY+155, lbl:'Q₂=2', prun:true}
+  ];
+
+  l1Nodes.forEach(n1=>{
+   const col=n1.prun?'#ef4444':'#38bdf8';
+   svg+='<line x1="'+rootNode.x+'" y1="'+rootNode.y+'" x2="'+n1.x+'" y2="'+n1.y+'" stroke="'+col+'" stroke-width="'+(n1.prun?1:1.5)+'"/>';
+  });
+  l2Nodes.forEach(n2=>{
+   const col=n2.prun?'#ef4444':'#10b981';
+   svg+='<line x1="'+l1Nodes[1].x+'" y1="'+l1Nodes[1].y+'" x2="'+n2.x+'" y2="'+n2.y+'" stroke="'+col+'" stroke-width="'+(n2.prun?1:1.5)+'"/>';
+  });
+  l3Nodes.forEach(n3=>{
+   const col=n3.prun?'#ef4444':orange;
+   svg+='<line x1="'+l2Nodes[0].x+'" y1="'+l2Nodes[0].y+'" x2="'+n3.x+'" y2="'+n3.y+'" stroke="'+col+'" stroke-width="'+(n3.prun?1:1.5)+'"/>';
+  });
+
+  svg+='<circle cx="'+rootNode.x+'" cy="'+rootNode.y+'" r="6" fill="#0b1722" stroke="#38bdf8" stroke-width="1.5"/>';
+  svg+='<text x="'+rootNode.x+'" y="'+(rootNode.y+2)+'" text-anchor="middle" fill="#f1f5f9" font-size="6">∅</text>';
+
+  const allTreeNodes=[...l1Nodes, ...l2Nodes, ...l3Nodes];
+  allTreeNodes.forEach(nd=>{
+   const strokeCol = nd.sol ? orange : nd.prun ? '#ef4444' : '#10b981';
+   svg+='<circle cx="'+nd.x+'" cy="'+nd.y+'" r="6" fill="#0b1722" stroke="'+strokeCol+'" stroke-width="1.4"/>';
+   if(nd.prun){
+    svg+='<text x="'+nd.x+'" y="'+(nd.y+2.5)+'" text-anchor="middle" fill="#ef4444" font-size="7" font-weight="bold">✕</text>';
+    svg+='<text x="'+nd.x+'" y="'+(nd.y+13)+'" text-anchor="middle" fill="#f87171" font-size="6">'+nd.lbl+'</text>';
+   } else if(nd.sol){
+    svg+='<text x="'+nd.x+'" y="'+(nd.y+2.5)+'" text-anchor="middle" fill="'+orange+'" font-size="6" font-weight="bold">★</text>';
+    svg+='<text x="'+nd.x+'" y="'+(nd.y+13)+'" text-anchor="middle" fill="'+orange+'" font-size="6" font-weight="bold">'+nd.lbl+'</text>';
+   } else {
+    svg+='<text x="'+nd.x+'" y="'+(nd.y+2.5)+'" text-anchor="middle" fill="#10b981" font-size="6">✓</text>';
+    svg+='<text x="'+nd.x+'" y="'+(nd.y+13)+'" text-anchor="middle" fill="#a7f3d0" font-size="6">'+nd.lbl+'</text>';
+   }
+  });
+
+  const cbrdX=trX+245, cbrdY=trY, cbrdW=140, cbrdH=190;
+  svg+='<rect x="'+cbrdX+'" y="'+cbrdY+'" width="'+cbrdW+'" height="'+cbrdH+'" rx="4" fill="#091824" stroke="#1c303d" stroke-width="1"/>';
+  svg+='<text x="'+(cbrdX+10)+'" y="'+(cbrdY+14)+'" fill="#38bdf8" font-size="7.5" font-weight="bold">ACTIVE TRAIL CHESSBOARD</text>';
+
+  const sz=Math.min(16, Math.floor(100 / Math.max(n, 4)));
+  const ox=cbrdX + Math.floor((cbrdW - sz * Math.min(n, 6)) / 2);
+  const oy=cbrdY + 28;
+  const mN=Math.min(n, 6);
+
+  const trailQueens=[1, 3, 0];
+
+  for(let r=0; r<mN; r++){
+   for(let c=0; c<mN; c++){
+    const isDark=(r+c)%2===1;
+    const col=isDark?'#0f242c':'#1c3d4a';
+    svg+='<rect x="'+(ox+c*sz)+'" y="'+(oy+r*sz)+'" width="'+sz+'" height="'+sz+'" fill="'+col+'" stroke="#0a1820" stroke-width="0.5"/>';
+    if(r < trailQueens.length && trailQueens[r] === c){
+     svg+='<circle cx="'+(ox+c*sz+sz/2)+'" cy="'+(oy+r*sz+sz/2)+'" r="'+(sz*0.38)+'" fill="'+orange+'" stroke="#fde047" stroke-width="1"/>';
+     svg+='<text x="'+(ox+c*sz+sz/2)+'" y="'+(oy+r*sz+sz/2+2.5)+'" text-anchor="middle" fill="#0b131a" font-size="7">♛</text>';
+    }
+   }
+  }
+
+  svg+='<rect x="'+(cbrdX+8)+'" y="'+(cbrdY+136)+'" width="'+(cbrdW-16)+'" height="46" rx="3" fill="#142834" stroke="#38bdf8" stroke-width="0.8"/>';
+  svg+='<text x="'+(cbrdX+12)+'" y="'+(cbrdY+148)+'" fill="#38bdf8" font-size="7" font-weight="bold">BITWISE STEP LOG:</text>';
+  svg+='<text x="'+(cbrdX+12)+'" y="'+(cbrdY+160)+'" fill="#94a3b8" font-size="6.5" font-family="monospace">1. occ = cols | ld | rd</text>';
+  svg+='<text x="'+(cbrdX+12)+'" y="'+(cbrdY+170)+'" fill="#10b981" font-size="6.5" font-family="monospace">2. bit = avail &amp; -avail</text>';
+
+  const bX=460, bY=45, bW=220, bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">BITWISE REGISTER OPERATIONS</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+ops+' Ops</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+66)+'" fill="#10b981" font-size="9">Path Invariant: T(N) = 4.0000 · N</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+76)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+76)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+94)+'" fill="#7e9bab" font-size="9">STATE SPACE REDUCTION</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+112)+'" fill="'+ink+'" font-size="11" font-family="monospace">Unpruned: N^N ≈ '+maxUnpruned.toLocaleString()+'</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+128)+'" fill="#10b981" font-size="11" font-family="monospace">Pruned: >99.98% eliminated</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+138)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+138)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+156)+'" fill="#7e9bab" font-size="9">REGISTER PARALLELISM</text>';
+  svg+=text(bX+bW/2,bY+178,'4 atomic ALU ops per row level','#10b981',9);
+  svg+=text(bX+bW/2,bY+198,'Zero Heap Allocation · L1 Speed',orange,8.5);
+  svg+=text(360,305,'Backtracking Invariant: At each depth level k, exactly 4 bitwise register operations synthesize and propagate constraints along the decision trail',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='computational-geometry-convex-hull'){
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';

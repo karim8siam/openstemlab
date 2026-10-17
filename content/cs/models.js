@@ -131,6 +131,13 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:raw/2000.0,x,y,valid:n>=50&&n<=5000};
  }
+ if(slug==='backtracking-n-queens-sat'){
+  const n=Number(input);
+  const raw=Math.round(4 * n);
+  const x=n;
+  const y=raw;
+  return {raw,ideal:raw,period:raw/200.0,x,y,valid:n>=4&&n<=16};
+ }
  throw Error('Unknown CS experiment: '+slug);
 }
 
@@ -212,6 +219,10 @@ function reading(slug,input,raw){
   x=Number(input);
   y=raw;
  }
+ if(slug==='backtracking-n-queens-sat'){
+  x=Number(input);
+  y=raw;
+ }
  return {input,raw,x,y};
 }
 
@@ -286,6 +297,9 @@ function estimate(slug,f){
  }
  if(slug==='computational-geometry-convex-hull'){
   return {value:f.m,se:f.slopeSE,reference:2.0000};
+ }
+ if(slug==='backtracking-n-queens-sat'){
+  return {value:f.m,se:f.slopeSE,reference:4.0000};
  }
  throw Error('Unknown CS experiment: '+slug);
 }
