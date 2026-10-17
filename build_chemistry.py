@@ -159,6 +159,17 @@ def observation(c,value):
   v0_mM=raw / 1000.0
   y=rnd(1.0 / v0_mM, 2)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='beer-lambert-spectrophotometry-metal-complex':
+  c_uM=float(value)
+  table_raw={10.0:0.111, 20.0:0.222, 35.0:0.389, 50.0:0.555, 65.0:0.722, 80.0:0.888}
+  key=round(c_uM, 1)
+  if key in table_raw:
+   raw=table_raw[key]
+  else:
+   raw=round(0.01110 * c_uM, 3)
+  x=c_uM
+  y=raw
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='isoelectric-point-amphoteric-amino-acids':
   v1=float(value)
   table_raw={5.00:5.368, 7.50:5.602, 10.00:5.794, 12.50:5.970, 15.00:6.146, 17.50:6.338}
@@ -584,6 +595,12 @@ def estimate(c,f):
   D_scaled=D_est * 1e6
   se=abs(f.get('slopeSE', 0.05)) / prefactor * 2.0 * math.sqrt(D_est) * 1e6
   return D_scaled, se, 7.60
+ elif slug=='beer-lambert-spectrophotometry-metal-complex':
+  m=f['m']
+  b_path=1.000
+  eps_est=(m / b_path) * 1e6
+  se=abs(f.get('slopeSE', 0.00005)) * 1e6
+  return eps_est, se, 11100.0
  elif slug=='isoelectric-point-amphoteric-amino-acids':
   pI_est=f['b']
   se=f.get('interceptSE', f.get('slopeSE', 0.005))
@@ -782,6 +799,11 @@ def formula(c,f):
   D_est=((m * 1e-6) / prefactor)**2
   D_scaled=D_est * 1e6
   return f"Randles-Ševčík Fit: i_pc = {fmt(m,2)}·ν¹/² + {fmt(b,3)} μA; Diffusion Coefficient D = {fmt(D_scaled,2)} × 10⁻⁶ cm²·s⁻¹; Peak Separation ΔE_p = 59.2 mV"
+ elif slug=='beer-lambert-spectrophotometry-metal-complex':
+  m=f['m']
+  b=f['b']
+  eps_est=(m / 1.000) * 1e6
+  return f"Beer-Lambert Linear Fit: A₅₁₀ = {fmt(m,5)}·c + {fmt(b,5)}; Molar Absorption Coefficient ε = {fmt(eps_est,0)} L·mol⁻¹·cm⁻¹; LOD = 0.54 μM"
  elif slug=='isoelectric-point-amphoteric-amino-acids':
   m=f['m']
   b=f['b']
@@ -1336,6 +1358,44 @@ def worked(c,row):
    f"   Scaled diffusion coefficient: D = {fmt(D_scaled, 2)} × 10⁻⁶ cm²·s⁻¹.\n"
    f"   Literature reference benchmark at 25.00 °C: D = 7.60 × 10⁻⁶ cm²·s⁻¹ (percentage difference = {fmt(abs(D_scaled - 7.60)/7.60*100.0, 4)}%).\n"
    f"   Transient Nernst diffusion layer thickness at ν = {fmt(v_val,1)} mV/s: δ ≈ √(π·D·t) = {fmt(math.sqrt(math.pi * D_est * (0.70/(v_val*1e-3)))*1e4, 1)} μm."
+  )
+ elif slug=='beer-lambert-spectrophotometry-metal-complex':
+  c_val=row['input']
+  raw=row['raw']
+  x_val=row['x']
+  y_val=row['y']
+  b_path=1.000
+  c_M=c_val * 1e-6
+  c_ppm=c_val * 0.055845
+  T_frac=10.0**(-raw)
+  eps_single=raw / (b_path * c_M) if c_M > 0 else 11100.0
+  s_blank=0.0018
+  m_calib=0.011102
+  lod_calc=3.3 * s_blank / m_calib
+  loq_calc=10.0 * s_blank / m_calib
+  return (
+   f"1. Spectrophotometric Calibration Coordinates at 25.00 °C:\n"
+   f"   Tris(1,10-phenanthroline)iron(II) complex concentration: c = {fmt(c_val, 1)} μM = {fmt(c_M, 7)} mol·L⁻¹ ({fmt(c_ppm, 3)} mg·L⁻¹ Fe).\n"
+   f"   Analytical wavelength: λ_max = 510.0 nm (metal-to-ligand charge-transfer absorption maximum).\n"
+   f"   Internal optical path length: b = {fmt(b_path, 3)} cm (10.00 ± 0.01 mm matched quartz cuvette).\n"
+   f"   Measured absorbance: A_510 = {fmt(raw, 3)} AU (against reagent blank in dual-beam configuration).\n"
+   f"   Corresponding optical transmittance: T = 10^(−A) = 10^(−{fmt(raw, 3)}) = {fmt(T_frac, 5)} ({fmt(T_frac*100.0, 2)}% T).\n"
+   f"\n"
+   f"2. Single-Point Molar Absorptivity Calculation:\n"
+   f"   Beer-Lambert formulation: A = ε · b · c  ⇒  ε = A / (b · c).\n"
+   f"   Apparent single-point molar absorptivity: ε = {fmt(raw, 3)} / ({fmt(b_path, 3)} × {fmt(c_M, 7)}) = {fmt(eps_single, 1)} L·mol⁻¹·cm⁻¹.\n"
+   f"\n"
+   f"3. Multi-Point Calibration Regression & Statistical Performance:\n"
+   f"   Ordinary least-squares linear regression across six calibration standards (10.0 to 80.0 μM) yields:\n"
+   f"   Calibration equation: A_510 = (0.011102 ± 0.000005) · c + (0.000086 ± 0.000235) AU with R² = 0.9999993.\n"
+   f"   Extracted molar absorption coefficient: ε = (m / b) × 10⁶ = 0.0111019 × 10⁶ = 11,102 L·mol⁻¹·cm⁻¹.\n"
+   f"   Reference benchmark: ε_ref = 11,100 L·mol⁻¹·cm⁻¹ (percentage difference = 0.0168%).\n"
+   f"\n"
+   f"4. Analytical Figures of Merit (LOD & LOQ):\n"
+   f"   Standard deviation of blank measurements: s_blank = {fmt(s_blank, 4)} AU (n = 10 replicate blank readings).\n"
+   f"   Limit of Detection (IUPAC 3.3 σ criterion): LOD = 3.3 · s_blank / m = (3.3 × {fmt(s_blank, 4)}) / {fmt(m_calib, 6)} = {fmt(lod_calc, 2)} μM ({fmt(lod_calc*0.055845, 3)} mg·L⁻¹ Fe).\n"
+   f"   Limit of Quantitation (IUPAC 10 σ criterion): LOQ = 10.0 · s_blank / m = (10.0 × {fmt(s_blank, 4)}) / {fmt(m_calib, 6)} = {fmt(loq_calc, 2)} μM ({fmt(loq_calc*0.055845, 3)} mg·L⁻¹ Fe).\n"
+   f"   Linear dynamic range: 1.62 μM to 85.0 μM (0.091 to 4.75 mg·L⁻¹ Fe), fully encompassing the analytical working range."
   )
  elif slug=='isoelectric-point-amphoteric-amino-acids':
   v1_val=row['input']
@@ -2244,6 +2304,32 @@ def uncertainty_text(c):
    "propagate as u_r(D) = √[ 4(u(m)/m)² + 4(u(A)/A)² + 4(u(c)/c)² + (u(T)/T)² ] = √[ 4(0.0001)² + 4(0.0033)² + 4(0.0012)² + (0.00007)² ] = 0.70%. "
    "For an empirical diffusion coefficient D = 7.60 × 10⁻⁶ cm²·s⁻¹, the expanded uncertainty at the 95% confidence level (coverage factor k = 2) "
    "is U(D) = ±0.11 × 10⁻⁶ cm²·s⁻¹ (1.4%), confirming exceptional concordance with the authoritative literature benchmark (7.60 ± 0.05 × 10⁻⁶ cm²·s⁻¹)."
+  )
+ elif slug=='beer-lambert-spectrophotometry-metal-complex':
+  return (
+   "In the high-precision determination of molar absorption coefficients and analytical detection limits via dual-beam UV-Vis "
+   "spectrophotometry, metrological uncertainties and physical boundary conditions are rigorously quantified across photometric, "
+   "path length, gravimetric, volumetric, and spectral domains: "
+   "(1) Photometric Accuracy & Stray Light Elimination: The double-beam spectrophotometer with blazed holographic grating "
+   "possesses a certified photometric accuracy of ±0.002 AU and stray radiant energy < 0.01% T at 510 nm. For calibration absorbances "
+   "between 0.111 AU and 0.888 AU (corresponding to transmittances between 77% and 13%), optical noise falls squarely within the "
+   "optimal Twyman-Lothian precision window, minimizing photometric transmittance error dT/T to < 0.25%. "
+   "(2) Quartz Cuvette Path Length & Optical Matching: Matched 1.000 cm quartz cuvettes are certified to 10.00 ± 0.01 mm internal "
+   "optical path length (relative uncertainty u(b)/b = 0.10%). Cuvette window optical transmission matching against deionized water "
+   "is verified to ±0.001 AU prior to every trial, eliminating path-length disparity and reflection artifacts. "
+   "(3) Primary Standard Gravimetry & Volumetric Serial Dilution: Primary standard ferrous ammonium sulfate hexahydrate "
+   "(Mohr's salt, Fe(NH₄)₂(SO₄)₂·6H₂O, M = 392.14 g/mol, purity 99.98%) is weighed on a 4-decimal balance (readability ±0.0001 g, "
+   "u(m)/m = 0.14%). Serial dilutions using calibrated Class A volumetric flasks (±0.05 mL) and micropipettes (±0.5%) yield a combined "
+   "standard uncertainty in calibration concentrations of u(c)/c = 0.18%. "
+   "(4) Thermostatic Temperature Control: The jacketed sample cell compartment is maintained at 25.00 ± 0.02 °C. Because the "
+   "temperature coefficient of the iron-phenanthroline MLCT absorption band is small (dA/dT ≈ -0.0005 AU/°C), thermal fluctuations "
+   "contribute less than 0.01% to the total uncertainty. "
+   "(5) Multi-Point Least-Squares Regression & Uncertainty Propagation: Ordinary least-squares regression of absorbance A₅₁₀ "
+   "against complex concentration c across six discrete standards yields an empirical slope m = 0.011102 ± 0.000005 AU/μM and an "
+   "intercept b = 0.000086 ± 0.000235 AU with an ideal coefficient of determination R² = 0.9999993. Propagating the combined "
+   "uncertainties u(A), u(b), and u(c) through ε = m / b yields an expanded uncertainty for the molar absorptivity of "
+   "U(ε) = ±50 L·mol⁻¹·cm⁻¹ (0.45%) at the 95% confidence level (coverage factor k = 2), demonstrating extraordinary agreement with "
+   "the authoritative IUPAC and CIPM reference benchmark (11,100 ± 50 L·mol⁻¹·cm⁻¹)."
   )
  elif slug=='isoelectric-point-amphoteric-amino-acids':
   return (
@@ -3725,6 +3811,66 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"invariant peak potential separation ΔE_p = 59.2 mV and current ratio |i_pa / i_pc| = 1.000 confirming ideal Nernstian reversibility. The extracted "
    f"diffusion coefficient agrees with authoritative electrochemistry literature benchmarks within {fmt(abs(D_val - 7.60)/7.60*100.0, 4)}% relative deviation, "
    f"demonstrating the high metrological precision of the Randles-Ševčík formulation for diagnostic electrochemistry."
+  )
+  
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='beer-lambert-spectrophotometry-metal-complex':
+  m_val=f['m']
+  b_val=f['b']
+  eps_val=value
+  r2_val=f['r2']
+  
+  abstract=(
+   f"The quantitative validity of Beer-Lambert's law and the analytical figures of merit for the tris(1,10-phenanthroline)iron(II) "
+   f"complex ([Fe(phen)₃]²⁺, ferroin) were investigated at 25.00 ± 0.02 °C using precision dual-beam UV-Vis spectrophotometry "
+   f"at λ_max = 510.0 nm in matched 10.00 mm optical quartz cuvettes. Calibration standards spanning the concentration range 10.0 to 80.0 μM "
+   f"(0.558 to 4.468 mg·L⁻¹ Fe) were prepared from primary standard ferrous ammonium sulfate hexahydrate, quantitatively reduced with "
+   f"hydroxylamine hydrochloride, and buffered to pH 4.50 ± 0.05 with sodium acetate. Measured steady-state absorbances at 510.0 nm increased "
+   f"strictly linearly from 0.111 AU at 10.0 μM to 0.888 AU at 80.0 μM, falling squarely within the optimum Twyman-Lothian photometric precision "
+   f"window (transmittance 77% to 13%). Ordinary least-squares linear regression yielded an empirical calibration equation of "
+   f"A₅₁₀ = ({fmt(m_val, 6)} ± 0.000005) · c + ({fmt(b_val, 6)} ± 0.000235) AU with an exceptional coefficient of determination "
+   f"R² = {fmt(r2_val, 6)}. The extracted molar absorption coefficient was ε = {fmt(eps_val, 0)} L·mol⁻¹·cm⁻¹ (difference = {percent:.4f}% "
+   f"relative to the authoritative IUPAC literature benchmark of 11,100 L·mol⁻¹·cm⁻¹). Ten replicate blank measurements (s_blank = 0.0018 AU) "
+   f"established an empirical Limit of Detection LOD = 0.54 μM (0.030 mg·L⁻¹ Fe, 3.3 σ) and Limit of Quantitation LOQ = 1.62 μM "
+   f"(0.091 mg·L⁻¹ Fe, 10 σ), proving flawless linear conformity to Beer-Lambert's law across the entire analytical working range."
+  )
+  
+  graph_choice=(
+   f"The primary analytical visualization models the linear Beer-Lambert equation: A₅₁₀ = m · c + A₀, where measured absorbance at "
+   f"λ_max = 510.0 nm represents the dependent variable on the Y-axis and iron(II)-phenanthroline complex concentration c (in μM) serves "
+   f"as the independent variable on the X-axis. According to the first-principles derivation of photon attenuation in non-interacting dilute "
+   f"media, absorbance must scale in direct linear proportionality with concentration: A = ε · b · c. For a certified optical path length of "
+   f"b = 1.000 cm, the empirical calibration slope m = d(A)/dc directly equals the product ε · b, from which the molar absorption coefficient "
+   f"ε is extracted via ε = m / b. Plotting absorbance versus concentration across six discrete calibration standards confirms rigorous linear "
+   f"adherence (R² = {fmt(r2_val, 6)}), with an empirical Y-intercept b = {fmt(b_val, 6)} AU that is statistically indistinguishable from zero "
+   f"within experimental blank uncertainty, confirming zero baseline offset."
+  )
+  
+  discussion=(
+   f"The spectrophotometric data provide comprehensive quantitative verification of the Beer-Lambert law, coordination chemistry, "
+   f"and optical charge-transfer mechanics. The intense orange-red coloration of [Fe(phen)₃]²⁺ originates in a metal-to-ligand charge-transfer "
+   f"(MLCT) transition. Iron(II) in an octahedral field of three bidentate 1,10-phenanthroline ligands adopts a low-spin d⁶ ground state (t_2g⁶ e_g⁰, "
+   f"total spin S = 0). Strong π-backbonding from filled metal t_2g orbitals into low-lying empty π* antibonding molecular orbitals of the aromatic "
+   f"phenanthroline rings generates an allowed electronic transition at 510.0 nm. Because this transition is both spin-allowed (singlet-to-singlet) "
+   f"and Laporte-allowed through vibronic coupling and ligand mixing, it possesses an immense molar absorptivity ε = 11,100 L·mol⁻¹·cm⁻¹.\n\n"
+   f"The experimental observations exhibited exemplary linear behavior across the entire 8-fold concentration range from 10.0 μM to 80.0 μM. "
+   f"No negative deviations (which occur at high concentrations due to solute electrostatic interactions and stray light) or positive deviations "
+   f"(which occur from dye dimerization) were detected, confirming that the complex exists as a discrete, monomeric species in dilute solution. "
+   f"The buffer pH of 4.50 ± 0.05 was optimal: at lower pH (< 3), phenanthroline protonates to phenH⁺ (pKa = 4.96), retarding complexation, "
+   f"while at higher pH (> 5.5), iron hydroxides precipitate. Hydroxylamine hydrochloride quantitatively reduced all trace Fe³⁺ to Fe²⁺, "
+   f"ensuring 100% chelation stoichiometry.\n\n"
+   f"Error analysis through the Twyman-Lothian formulation confirms that the experimental absorbances (0.111 to 0.888 AU) reside squarely inside "
+   f"the high-precision photometric window (10% to 80% Transmittance), where the relative concentration error factor dc/c remains below 1.5%. "
+   f"The empirical Limit of Detection (LOD = 0.54 μM = 0.030 ppm Fe) and Limit of Quantitation (LOQ = 1.62 μM = 0.091 ppm Fe) establish that "
+   f"the method is capable of quantifying sub-ppm trace iron in natural waters and biological specimens with supreme analytical trueness."
+  )
+  
+  conclusion=(
+   f"The Beer-Lambert law was rigorously verified for the tris(1,10-phenanthroline)iron(II) complex at 25.00 °C across concentrations from "
+   f"10.0 to 80.0 μM at λ_max = 510.0 nm in 1.000 cm matched quartz cuvettes. Ordinary least-squares regression yielded an empirical slope of "
+   f"m = {fmt(m_val, 6)} AU·μM⁻¹ with R² = {fmt(r2_val, 6)}, extracting a molar absorption coefficient ε = {fmt(eps_val, 0)} L·mol⁻¹·cm⁻¹ "
+   f"that agrees with authoritative literature benchmarks within {percent:.4f}% relative deviation. Replicate blank analysis confirmed an LOD of "
+   f"0.54 μM (0.030 mg·L⁻¹ Fe) and LOQ of 1.62 μM (0.091 mg·L⁻¹ Fe), demonstrating the supreme reliability of quantitative spectrophotometry."
   )
   
   return abstract, graph_choice, discussion, conclusion

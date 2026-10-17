@@ -3,6 +3,15 @@
 const round=(v,n)=>Math.round((v+Number.EPSILON)*10**n)/10**n;
 
 function predict(slug,input){
+  if(slug==='beer-lambert-spectrophotometry-metal-complex'){
+   const c_uM=Number(input);
+   const table_raw={10.0:0.111, 20.0:0.222, 35.0:0.389, 50.0:0.555, 65.0:0.722, 80.0:0.888};
+   const key=round(c_uM, 1);
+   const raw_val=table_raw.hasOwnProperty(key)?table_raw[key]:round(0.01110 * c_uM, 3);
+   const x=c_uM;
+   const y=raw_val;
+   return {raw:raw_val,ideal:raw_val,period:1.0,x,y,valid:c_uM>=5.0&&c_uM<=100.0};
+  }
   if(slug==='isoelectric-point-amphoteric-amino-acids'){
    const v1=Number(input);
    const table_raw={5.00:5.368, 7.50:5.602, 10.00:5.794, 12.50:5.970, 15.00:6.146, 17.50:6.338};
@@ -522,6 +531,12 @@ function predict(slug,input){
 
 function reading(slug,input,raw){
  let x=Number(input),y=Number(raw);
+  if(slug==='beer-lambert-spectrophotometry-metal-complex'){
+   const c_uM=Number(input);
+   const raw_val=Number(raw);
+   x=c_uM;
+   y=raw_val;
+  }
   if(slug==='isoelectric-point-amphoteric-amino-acids'){
    const v1=Number(input);
    const raw_val=Number(raw);
@@ -830,6 +845,13 @@ function fit(rows){
 }
 
 function estimate(slug,f){
+  if(slug==='beer-lambert-spectrophotometry-metal-complex'){
+   const m=f.m;
+   const b_path=1.000;
+   const eps_est=(m / b_path) * 1e6;
+   const se=Math.abs(f.slopeSE || 0.00005) * 1e6;
+   return {value:eps_est,se:se,reference:11100.0};
+  }
   if(slug==='isoelectric-point-amphoteric-amino-acids'){
    const pI_est=f.b;
    const se=f.interceptSE || f.slopeSE || 0.005;

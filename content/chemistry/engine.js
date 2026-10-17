@@ -87,7 +87,19 @@ function update(){
   $('apparatusDiagram').innerHTML=drawEnzymeKineticsBenchView(p,rawVal);
   return;
  }
- if(cfg.slug==='isoelectric-point-amphoteric-amino-acids'){
+ if(cfg.slug==='beer-lambert-spectrophotometry-metal-complex'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawBeerLambertCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawBeerLambertSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawBeerLambertBenchView(p,rawVal);
+  return;
+ }
+  if(cfg.slug==='isoelectric-point-amphoteric-amino-acids'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawAminoAcidCompareView(p,rawVal);
    return;
@@ -288,6 +300,19 @@ function update(){
   const dA_dt = v0_uM * 0.0185;
   $('liveState').textContent='Photometric trace recorded: v₀ = '+v0_uM.toFixed(2)+' μM/min (dA/dt = '+(dA_dt/1000).toFixed(4)+' AU/min).';
   message('Assay complete: v₀ = '+v0_uM.toFixed(2)+' μM/min (1/v₀ = '+inv_v0.toFixed(2)+' min/mM, 1/[S] = '+inv_s.toFixed(2)+' mM⁻¹). Record in notebook.');
+ }else if(cfg.slug==='beer-lambert-spectrophotometry-metal-complex'){
+  $('liveState').textContent='Ready to measure absorbance of [Fe(phen)₃]²⁺ at c = '+p.input.toFixed(1)+' μM.';
+  message('Set complex concentration c, insert matched 10.00 mm cuvette & measure A_510 against reagent blank.');
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawBeerLambertCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawBeerLambertSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawBeerLambertBenchView(p,rawVal);
+  return;
  }else if(cfg.slug==='isoelectric-point-amphoteric-amino-acids'){
   $('liveState').textContent='Ready to record conjugate mean pH at titrant volume V₁ = '+p.input.toFixed(2)+' mL.';
   message('Adjust titrant volume V₁, measure pH₁ in first buffer and pH₂ in second buffer, record mean pH.');
@@ -13778,6 +13803,343 @@ function drawAminoAcidSandboxView(p, rawVal) {
  for (var k = 0; k < thermoLines.length; k++) {
   var isKey = (k === 3 || k === 7);
   svg += text(468, 158 + k * 13, thermoLines[k], isKey ? '#38bdf8' : '#cbd5e1', 5.5, 'start', isKey ? 'bold' : 'normal');
+ }
+
+ return svg;
+}
+
+// ======================================================================
+// Lab 41: Quantitative Spectrophotometry & Beer-Lambert Law ([Fe(phen)₃]²⁺)
+// ======================================================================
+
+function drawBeerLambertBenchView(p, rawVal) {
+ var c_uM = p.input || 50.0;
+ var rawA = (rawVal !== null && rawVal !== undefined) ? rawVal : 0.555;
+ var eps = 11100.0;
+ var b_path = 1.000;
+ var T_frac = Math.pow(10, -rawA);
+ var T_pct = T_frac * 100.0;
+
+ // Color interpolation: pale orange-pink at 5 uM to deep fiery orange-red at 100 uM
+ var norm = Math.min(1.0, Math.max(0.0, (c_uM - 5.0) / 95.0));
+ var r_col = Math.round(249 - 25 * norm);
+ var g_col = Math.round(115 - 80 * norm);
+ var b_col = Math.round(22 - 15 * norm);
+ var solColor = 'rgb(' + r_col + ',' + g_col + ',' + b_col + ')';
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a111a');
+ svg += '<defs>';
+ svg += '<linearGradient id="ferroinGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + solColor + '" stop-opacity="0.85"/><stop offset="100%" stop-color="' + solColor + '" stop-opacity="0.98"/></linearGradient>';
+ svg += '<linearGradient id="quartzCellGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#94a3b8" stop-opacity="0.4"/><stop offset="50%" stop-color="#f8fafc" stop-opacity="0.1"/><stop offset="100%" stop-color="#94a3b8" stop-opacity="0.4"/></linearGradient>';
+ svg += '<filter id="cyanGlow"><feGaussianBlur stdDeviation="1.5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+ svg += '</defs>';
+
+ // Header
+ svg += text(20, 24, 'LABORATORY BENCH: QUANTITATIVE MOLECULAR SPECTROPHOTOMETRY (510.0 nm)', '#f8fafc', 12, 'bold');
+ svg += text(20, 40, 'Tris(1,10-phenanthroline)iron(II) [Fe(phen)₃]²⁺ · 10.00 mm Matched Optical Cuvettes · Acetate Buffer pH 4.50 (25.0 °C)', '#38bdf8', 9);
+
+ // --- LEFT OPTICAL SYSTEM (x: 20 to 355, y: 55 to 305) ---
+ svg += rect(20, 55, 340, 250, '#0f172a', '#1e293b', 1.5, 6);
+ svg += text(30, 74, 'Dual-Beam Optical Train & Absorption Cell', '#94a3b8', 7, 'start', 'bold');
+
+ // Tungsten Source Lamp
+ svg += rect(30, 140, 36, 46, '#1e293b', '#facc15', 1.2, 4);
+ svg += circle(48, 163, 10, '#fef08a', '#eab308', 1.5);
+ svg += text(48, 166, 'W', '#854d0e', 7, 'middle', 'bold');
+ svg += text(48, 198, 'Lamp', '#94a3b8', 6, 'middle');
+
+ // Entrance polychromatic beam
+ svg += '<line x1="66" y1="163" x2="95" y2="163" stroke="#fef08a" stroke-width="3" filter="url(#cyanGlow)"/>';
+
+ // Monochromator Holographic Grating
+ svg += rect(95, 135, 42, 56, '#1e293b', '#38bdf8', 1, 4);
+ svg += '<line x1="116" y1="140" x2="116" y2="186" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="2,2"/>';
+ svg += text(116, 155, 'Grating', '#94a3b8', 6, 'middle');
+ svg += text(116, 172, '510 nm', '#06b6d4', 7, 'middle', 'bold');
+
+ // Monochromatic 510 nm cyan-green beam
+ svg += '<line x1="137" y1="163" x2="165" y2="163" stroke="#06b6d4" stroke-width="2.5" filter="url(#cyanGlow)"/>';
+
+ // Beam Splitter
+ svg += circle(172, 163, 12, '#334155', '#94a3b8', 1);
+ svg += '<line x1="172" y1="151" x2="172" y2="175" stroke="#f8fafc" stroke-width="1.5"/>';
+ svg += text(172, 185, 'Splitter', '#94a3b8', 5.5, 'middle');
+
+ // Reference Beam (top) and Sample Beam (bottom)
+ svg += '<path d="M 172 151 L 172 105 L 205 105" fill="none" stroke="#06b6d4" stroke-width="2" stroke-dasharray="3,2"/>';
+ svg += '<line x1="184" y1="163" x2="205" y2="215" stroke="#06b6d4" stroke-width="2"/>';
+
+ // Reference Blank Cuvette (top: y: 80 to 130)
+ svg += rect(205, 80, 48, 50, 'url(#quartzCellGrad)', '#64748b', 1.2, 2);
+ svg += rect(208, 86, 42, 42, 'rgba(56,189,248,0.08)', 'none');
+ svg += text(229, 74, 'Reference Blank', '#38bdf8', 6, 'middle', 'bold');
+ svg += text(229, 110, 'Reagents (No Fe)', '#94a3b8', 5.5, 'middle');
+ svg += text(229, 120, 'A = 0.000 AU', '#f8fafc', 6.5, 'middle', 'bold');
+
+ // Sample Cuvette (bottom: y: 190 to 240)
+ svg += rect(205, 190, 48, 50, 'url(#quartzCellGrad)', '#f97316', 1.5, 2);
+ svg += rect(208, 196, 42, 42, 'url(#ferroinGrad)', 'none');
+ svg += text(229, 184, 'Sample [Fe(phen)₃]²⁺', '#f97316', 6, 'middle', 'bold');
+ svg += text(229, 215, c_uM.toFixed(1) + ' μM Fe', '#ffffff', 7, 'middle', 'bold');
+ svg += text(229, 227, 'A = ' + rawA.toFixed(3), '#fef08a', 6, 'middle', 'bold');
+
+ // Transmitted beams to photodiode detectors
+ svg += '<line x1="253" y1="105" x2="285" y2="105" stroke="#06b6d4" stroke-width="2" filter="url(#cyanGlow)"/>';
+ var transW = Math.max(0.4, 2.5 * T_frac);
+ svg += '<line x1="253" y1="215" x2="285" y2="215" stroke="#06b6d4" stroke-width="' + transW + '" filter="url(#cyanGlow)"/>';
+
+ // Reference Detector
+ svg += rect(285, 93, 24, 24, '#1e293b', '#38bdf8', 1, 2);
+ svg += text(297, 107, 'D_ref', '#38bdf8', 6, 'middle', 'bold');
+ svg += text(297, 126, 'I₀ = 100%', '#94a3b8', 5.5, 'middle');
+
+ // Sample Detector
+ svg += rect(285, 203, 24, 24, '#1e293b', '#22c55e', 1, 2);
+ svg += text(297, 217, 'D_smp', '#22c55e', 6, 'middle', 'bold');
+ svg += text(297, 236, 'I = ' + T_pct.toFixed(1) + '%', '#cbd5e1', 5.5, 'middle');
+
+ // Differential Log Amplifier
+ svg += rect(322, 140, 32, 42, '#1e293b', '#06b6d4', 1, 3);
+ svg += text(338, 157, 'Log', '#06b6d4', 6.5, 'middle', 'bold');
+ svg += text(338, 169, 'Ratio', '#06b6d4', 6, 'middle');
+ svg += '<path d="M 309 105 L 338 105 L 338 140" fill="none" stroke="#64748b" stroke-width="1"/>';
+ svg += '<path d="M 309 215 L 338 215 L 338 182" fill="none" stroke="#64748b" stroke-width="1"/>';
+
+ // Path length tag
+ svg += '<line x1="205" y1="247" x2="253" y2="247" stroke="#94a3b8" stroke-width="1"/>';
+ svg += text(229, 257, 'b = 10.00 mm', '#94a3b8', 6, 'middle');
+
+ // Peltier Thermostat Tag
+ svg += rect(205, 265, 48, 16, '#0284c7', 'none', 0, 2);
+ svg += text(229, 276, '25.00 °C', '#ffffff', 6, 'middle', 'bold');
+
+ // --- RIGHT DIGITAL CONSOLE (x: 375 to 705, y: 55 to 305) ---
+ svg += rect(375, 55, 330, 250, '#0f172a', '#334155', 1.5, 6);
+ svg += text(390, 76, 'BEER-LAMBERT QUANTITATIVE ABSORBANCE METROLOGY', '#f8fafc', 8, 'start', 'bold');
+
+ // Dual Primary Readouts (Absorbance & Transmittance)
+ // Absorbance Card
+ svg += rect(390, 88, 145, 56, '#020617', '#f97316', 1.2, 4);
+ svg += text(400, 102, 'ABSORBANCE (510.0 nm)', '#f97316', 6.5, 'start', 'bold');
+ svg += text(462, 132, rawA.toFixed(3) + ' AU', '#f97316', 16, 'middle', 'bold');
+
+ // Transmittance Card
+ svg += rect(545, 88, 145, 56, '#020617', '#22c55e', 1.2, 4);
+ svg += text(555, 102, 'TRANSMITTANCE (%T)', '#22c55e', 6.5, 'start', 'bold');
+ svg += text(617, 132, T_pct.toFixed(2) + ' %', '#22c55e', 16, 'middle', 'bold');
+
+ // Telemetry Data Grid
+ var rowsGrid = [
+  ['Analytical Wavelength', 'λ = 510.0 nm (MLCT Absorption Band)'],
+  ['Sample Concentration', 'c = ' + c_uM.toFixed(1) + ' μM = ' + (c_uM * 0.055845).toFixed(3) + ' mg/L Fe'],
+  ['Optical Path Length', 'b = 1.000 cm (10.00 mm Quartz)'],
+  ['Calibration Slope m = ε·b', 'm = 0.01110 AU/μM (R² = 0.9999993)'],
+  ['Molar Absorption Coefficient', 'ε = 11,100 L·mol⁻¹·cm⁻¹ (CIPM Reference)'],
+  ['Limit of Detection (3.3 σ)', 'LOD = 0.54 μM (0.030 mg/L Fe)'],
+  ['Limit of Quantitation (10 σ)', 'LOQ = 1.62 μM (0.091 mg/L Fe)']
+ ];
+ for (var i = 0; i < rowsGrid.length; i++) {
+  var ry = 154 + i * 16.5;
+  svg += rect(390, ry, 300, 14.5, i % 2 === 0 ? '#1e293b' : '#0f172a', 'none', 0, 2);
+  svg += text(398, ry + 10.5, rowsGrid[i][0], '#94a3b8', 6, 'start');
+  svg += text(682, ry + 10.5, rowsGrid[i][1], i === 4 ? '#facc15' : '#f8fafc', 6, 'end', i === 4 ? 'bold' : 'normal');
+ }
+
+ // Status Badges
+ svg += rect(390, 278, 95, 18, '#164e63', '#06b6d4', 1, 3);
+ svg += text(437, 290, 'MLCT BAND TUNED', '#22d3ee', 5.5, 'middle', 'bold');
+
+ svg += rect(492, 278, 100, 18, '#14532d', '#22c55e', 1, 3);
+ svg += text(542, 290, 'PELTIER: 25.00 ± 0.02 °C', '#4ade80', 5.5, 'middle', 'bold');
+
+ svg += rect(599, 278, 91, 18, '#312e81', '#6366f1', 1, 3);
+ svg += text(644, 290, 'BLANK: ±0.0018 AU', '#a5b4fc', 5.5, 'middle', 'bold');
+
+ return svg;
+}
+
+function drawBeerLambertCompareView(p, rawVal) {
+ var c_uM = p.input || 50.0;
+ var rawA = (rawVal !== null && rawVal !== undefined) ? rawVal : 0.555;
+ var m_slope = 0.01110;
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a111a');
+
+ // Header
+ svg += text(20, 24, 'BEER-LAMBERT CALIBRATION CURVE & RESIDUAL DISTRIBUTION (λ = 510 nm)', '#f8fafc', 12, 'bold');
+ svg += text(20, 40, 'Linear Dynamic Range 10.0 to 80.0 μM · ε = 11,100 L·mol⁻¹·cm⁻¹ (R² = 0.9999993) · LOD = 0.54 μM', '#38bdf8', 9);
+
+ // --- LEFT CALIBRATION PLOT (x: 45 to 475, y: 60 to 275) ---
+ var gx = 45, gy = 60, gw = 430, gh = 215;
+ svg += rect(gx, gy, gw, gh, '#0f172a', '#334155', 1, 4);
+
+ // Grid lines and labels (Absorbance 0.0 to 1.0 AU)
+ for (var a_grid = 0.0; a_grid <= 1.0; a_grid += 0.2) {
+  var py = gy + gh - (a_grid / 1.0) * gh;
+  svg += '<line x1="' + gx + '" y1="' + py + '" x2="' + (gx + gw) + '" y2="' + py + '" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(gx - 8, py + 3, a_grid.toFixed(1), '#64748b', 6, 'end');
+ }
+ svg += text(gx - 26, gy + gh/2, 'Absorbance A₅₁₀ (AU)', '#94a3b8', 7, 'middle', 'bold');
+
+ for (var c_grid = 0; c_grid <= 100; c_grid += 20) {
+  var px = gx + (c_grid / 100.0) * gw;
+  svg += '<line x1="' + px + '" y1="' + gy + '" x2="' + px + '" y2="' + (gy + gh) + '" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(px, gy + gh + 12, c_grid.toString(), '#64748b', 6, 'middle');
+ }
+ svg += text(gx + gw/2, gy + gh + 24, 'Concentration c (μM)', '#94a3b8', 7, 'middle', 'bold');
+
+ // Shaded Quantitation Zone (10 to 85 uM)
+ var pxLOD = gx + (0.54 / 100.0) * gw;
+ var pxLOQ = gx + (1.62 / 100.0) * gw;
+ var pxLinearMax = gx + (85.0 / 100.0) * gw;
+ svg += rect(pxLOQ, gy, pxLinearMax - pxLOQ, gh, 'rgba(34,197,94,0.05)', 'none');
+ svg += '<line x1="' + pxLOQ + '" y1="' + gy + '" x2="' + pxLOQ + '" y2="' + (gy + gh) + '" stroke="#eab308" stroke-width="1" stroke-dasharray="2,2"/>';
+ svg += text(pxLOQ + 2, gy + 12, 'LOQ', '#eab308', 5.5, 'start', 'bold');
+
+ // Calibration Regression Line: A = 0.01110 * c
+ var px0 = gx, py0 = gy + gh;
+ var pxEnd = gx + (95.0 / 100.0) * gw;
+ var pyEnd = gy + gh - ((0.01110 * 95.0) / 1.0) * gh;
+ svg += '<line x1="' + px0 + '" y1="' + py0 + '" x2="' + pxEnd + '" y2="' + pyEnd + '" stroke="#38bdf8" stroke-width="2"/>';
+
+ // Six Calibration Standard Markers
+ var calibSamples = [
+  { c: 10.0, a: 0.111 }, { c: 20.0, a: 0.222 }, { c: 35.0, a: 0.389 },
+  { c: 50.0, a: 0.555 }, { c: 65.0, a: 0.722 }, { c: 80.0, a: 0.888 }
+ ];
+ for (var k = 0; k < calibSamples.length; k++) {
+  var sx = gx + (calibSamples[k].c / 100.0) * gw;
+  var sy = gy + gh - (calibSamples[k].a / 1.0) * gh;
+  svg += circle(sx, sy, 4.5, '#38bdf8', '#ffffff', 1.2);
+ }
+
+ // Active Measurement Marker with Crosshairs
+ var curX = gx + (c_uM / 100.0) * gw;
+ var curY = gy + gh - (rawA / 1.0) * gh;
+ svg += '<line x1="' + curX + '" y1="' + gy + '" x2="' + curX + '" y2="' + (gy + gh) + '" stroke="#f97316" stroke-width="1.2" stroke-dasharray="3,2"/>';
+ svg += '<line x1="' + gx + '" y1="' + curY + '" x2="' + (gx + gw) + '" y2="' + curY + '" stroke="#f97316" stroke-width="1.2" stroke-dasharray="3,2"/>';
+ svg += circle(curX, curY, 6, '#f97316', '#ffffff', 2);
+ svg += text(curX + 8, curY - 6, c_uM.toFixed(1) + ' μM (' + rawA.toFixed(3) + ' AU)', '#f97316', 6.5, 'start', 'bold');
+
+ // --- RIGHT CARD: FIGURES OF MERIT (x: 490 to 705) ---
+ svg += rect(490, 55, 215, 250, '#0f172a', '#334155', 1.5, 6);
+ svg += text(500, 75, 'ANALYTICAL FIGURES OF MERIT', '#f8fafc', 8, 'start', 'bold');
+
+ var infoLines = [
+  '• Calibration Equation (OLS):',
+  '  A = (0.01110 ± 0.00001)·c + 0.0001',
+  '  Linearity: R² = 0.9999993',
+  '• Molar Absorptivity (ε):',
+  '  ε = m / b = 11,102 L·mol⁻¹·cm⁻¹',
+  '  Literature Benchmark: 11,100 L·mol⁻¹·cm⁻¹',
+  '• Blank Noise Statistics (n = 10):',
+  '  s_blank = 0.0018 AU (baseline noise)',
+  '• Detection Capabilities:',
+  '  LOD (3.3 s/m) = 0.54 μM (0.030 ppm Fe)',
+  '  LOQ (10 s/m) = 1.62 μM (0.091 ppm Fe)',
+  '• Valid Linear Dynamic Range:',
+  '  1.62 μM to 85.0 μM (0.09 to 4.75 ppm Fe)'
+ ];
+ for (var j = 0; j < infoLines.length; j++) {
+  var isHeader = (j === 0 || j === 3 || j === 6 || j === 8 || j === 11);
+  svg += text(500, 95 + j * 14.5, infoLines[j], isHeader ? '#38bdf8' : '#cbd5e1', 5.5, 'start', isHeader ? 'bold' : 'normal');
+ }
+
+ return svg;
+}
+
+function drawBeerLambertSandboxView(p, rawVal) {
+ var c_uM = p.input || 50.0;
+ var rawA = (rawVal !== null && rawVal !== undefined) ? rawVal : 0.555;
+ var T_frac = Math.pow(10, -rawA);
+ var T_pct = T_frac * 100.0;
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a111a');
+
+ // Header
+ svg += text(20, 24, 'TWYMAN-LOTHIAN SPECTROPHOTOMETRIC ERROR ANALYSIS & OPTIMUM WINDOW', '#f8fafc', 12, 'bold');
+ svg += text(20, 40, 'Relative Concentration Error dc/c vs Transmittance T · Absolute Minimum at T = 36.8% (A = 0.434 AU)', '#38bdf8', 9);
+
+ // --- LEFT ERROR CURVE PLOT (x: 45 to 440, y: 60 to 275) ---
+ var gx = 45, gy = 60, gw = 395, gh = 215;
+ svg += rect(gx, gy, gw, gh, '#0f172a', '#334155', 1, 4);
+
+ // Grid lines and labels (%Transmittance 0% to 100%)
+ for (var t_grid = 0; t_grid <= 100; t_grid += 20) {
+  var px = gx + (t_grid / 100.0) * gw;
+  svg += '<line x1="' + px + '" y1="' + gy + '" x2="' + px + '" y2="' + (gy + gh) + '" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(px, gy + gh + 12, t_grid + '%', '#64748b', 6, 'middle');
+ }
+ svg += text(gx + gw/2, gy + gh + 24, 'Transmittance (%T)', '#94a3b8', 7, 'middle', 'bold');
+
+ for (var err_grid = 0; err_grid <= 8; err_grid += 2) {
+  var py = gy + gh - (err_grid / 8.0) * gh;
+  svg += '<line x1="' + gx + '" y1="' + py + '" x2="' + (gx + gw) + '" y2="' + py + '" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(gx - 8, py + 3, err_grid.toString(), '#64748b', 6, 'end');
+ }
+ svg += text(gx - 26, gy + gh/2, 'Relative Error Factor [ (dc/c) / dT ]', '#94a3b8', 7, 'middle', 'bold');
+
+ // Optimum Shaded Transmittance Window (10% to 80%)
+ var pxT10 = gx + (10.0 / 100.0) * gw;
+ var pxT80 = gx + (80.0 / 100.0) * gw;
+ svg += rect(pxT10, gy, pxT80 - pxT10, gh, 'rgba(56,189,248,0.06)', 'none');
+ svg += text((pxT10 + pxT80)/2, gy + 15, 'OPTIMAL PRECISION WINDOW (10% to 80% T, 0.10 to 1.00 AU)', '#38bdf8', 6, 'middle', 'bold');
+
+ // Plot U-shaped Twyman-Lothian error curve: err = 0.4343 / ( T * |log10(T)| )
+ var ptsErr = '';
+ for (var t_val = 2.0; t_val <= 98.0; t_val += 1.0) {
+  var T_dec = t_val / 100.0;
+  var err = 0.4343 / (T_dec * Math.abs(Math.log10(T_dec)));
+  var px = gx + T_dec * gw;
+  var py = gy + gh - Math.min(gh, (err / 8.0) * gh);
+  ptsErr += (t_val === 2.0 ? 'M ' : 'L ') + px.toFixed(1) + ' ' + py.toFixed(1) + ' ';
+ }
+ svg += '<path d="' + ptsErr + '" fill="none" stroke="#facc15" stroke-width="2.2"/>';
+
+ // Minimum Point at T = 36.8% (err = 2.718)
+ var pxMin = gx + 0.3679 * gw;
+ var pyMin = gy + gh - (2.718 / 8.0) * gh;
+ svg += '<line x1="' + pxMin + '" y1="' + gy + '" x2="' + pxMin + '" y2="' + (gy + gh) + '" stroke="#a855f7" stroke-width="1.2" stroke-dasharray="2,2"/>';
+ svg += circle(pxMin, pyMin, 5, '#a855f7', '#ffffff', 1.5);
+ svg += text(pxMin, pyMin - 8, 'T = 36.8% (Min Error)', '#c084fc', 6.5, 'middle', 'bold');
+
+ // Current Operating Transmittance Point
+ var curTFrac = Math.max(0.02, Math.min(0.98, T_frac));
+ var curErr = 0.4343 / (curTFrac * Math.abs(Math.log10(curTFrac)));
+ var curX = gx + curTFrac * gw;
+ var curY = gy + gh - Math.min(gh, (curErr / 8.0) * gh);
+ svg += '<line x1="' + curX + '" y1="' + gy + '" x2="' + curX + '" y2="' + (gy + gh) + '" stroke="#f97316" stroke-width="1.5"/>';
+ svg += circle(curX, curY, 5.5, '#f97316', '#ffffff', 1.5);
+
+ // --- RIGHT INTERACTION PANEL (x: 455 to 705) ---
+ svg += rect(455, 55, 250, 250, '#0f172a', '#334155', 1.5, 6);
+ svg += text(465, 75, 'PHOTOMETRIC PRECISION METRICS', '#f8fafc', 8, 'start', 'bold');
+
+ svg += rect(465, 88, 230, 60, '#020617', '#f97316', 1, 4);
+ svg += text(475, 103, 'OPERATING POINT: c = ' + c_uM.toFixed(1) + ' μM', '#f97316', 7, 'start', 'bold');
+ svg += text(475, 122, 'Transmittance %T = ' + T_pct.toFixed(1) + ' % (A = ' + rawA.toFixed(3) + ' AU)', '#38bdf8', 6.5, 'start');
+ svg += text(475, 137, 'Relative Error Factor = ' + curErr.toFixed(2), '#fef08a', 6.5, 'start', 'bold');
+
+ var thermoLines = [
+  '• Theoretical Twyman-Lothian Minimum:',
+  '  T_opt = 1/e = 36.79% (A_opt = 0.434 AU)',
+  '  Minimum relative error: (dc/c) / dT = 2.718',
+  '• High Transmittance Hazard (T > 80%):',
+  '  Small signal difference (I₀ − I) is swamped',
+  '  by photodetector baseline noise.',
+  '• Low Transmittance Hazard (T < 10%):',
+  '  Exponential photon starvation amplifies',
+  '  amplifier noise and stray light leakage.',
+  '• Operational Conclusion: Iron standards between',
+  '  10 and 80 μM reside squarely inside the',
+  '  optimum photometric accuracy window.'
+ ];
+ for (var m_idx = 0; m_idx < thermoLines.length; m_idx++) {
+  var isHead = (m_idx === 0 || m_idx === 3 || m_idx === 6 || m_idx === 9);
+  svg += text(468, 160 + m_idx * 12.5, thermoLines[m_idx], isHead ? '#38bdf8' : '#cbd5e1', 5.5, 'start', isHead ? 'bold' : 'normal');
  }
 
  return svg;
