@@ -80,7 +80,8 @@ def experiment_index(experiments):
     'empirical-formula-magnesium-oxide':'empirical formula magnesium oxide crucible thermal oxidation meker burner porcelain constant mass proust definite proportions dalton magnesium nitride hydrolysis ammonia steam rocksalt lattice',
     'liquid-viscosity-poiseuille':'liquid dynamic viscosity hagen poiseuille capillary flow hydrostatic head water jacket newton shear stress laminar reynolds number ostwald falling sphere rotational couette',
     'surface-tension-stalagmometry':'surface tension drop weight stalagmometry traube tate law harkins jordan correction rayleigh plateau neck pinch off du nouy ring wilhelmy plate capillary rise interfacial thermodynamics',
-    'colligative-freezing-point-depression':'colligative properties freezing point depression cryoscopy beckmann differential thermometer cyclohexane biphenyl raoult law chemical potential plastic crystal supercooling latent heat fusion ebulliometry osmometry'}
+    'colligative-freezing-point-depression':'colligative properties freezing point depression cryoscopy beckmann differential thermometer cyclohexane biphenyl raoult law chemical potential plastic crystal supercooling latent heat fusion ebulliometry osmometry',
+    'solution-calorimetry-neutralization':'solution calorimetry enthalpy of neutralization acid base dewar dewar flask thermistor thermochemistry hess law heat of reaction hydronium hydroxide strong acid strong base adiabatic temperature rise cooling curve heat capacity'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):

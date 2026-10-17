@@ -41,6 +41,9 @@ function update(){
  }else if(cfg.slug==='colligative-freezing-point-depression'){
   $('liveState').textContent='Ready to dissolve '+p.input.toFixed(2)+' g solute in 25.00 g cyclohexane.';
   message('Set solute mass w_solute, cool cell in 2 °C ice bath, resolve cooling curve & record ΔT_f.');
+ }else if(cfg.slug==='solution-calorimetry-neutralization'){
+  $('liveState').textContent='Ready to neutralize '+p.input.toFixed(3)+' mol H3O+/OH- in 100 mL solution.';
+  message('Set stoichiometric moles n, dispense 50 mL acid & 50 mL base, seal Dewar & log temperature rise ΔT.');
  }else{
   $('liveState').textContent='Ready to dispense '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+' of liquid.';
   message('Adjust '+cfg.shortInput+' V, then weigh the dispensed aliquot.');
@@ -70,6 +73,7 @@ $('measure').onclick=async()=>{
  if(cfg.slug==='liquid-viscosity-poiseuille') msgStart='Equilibrating jacket at 20.0 °C, establishing constant overflow head, timing effluent discharge…';
  if(cfg.slug==='surface-tension-stalagmometry') msgStart='Forming quasi-static pendent drops at 20.0 °C, detaching at razor tip, collecting into stoppered bottle…';
  if(cfg.slug==='colligative-freezing-point-depression') msgStart='Cooling in ice bath, stirring at 60 strokes/min, supercooling & extrapolating plateau…';
+ if(cfg.slug==='solution-calorimetry-neutralization') msgStart='Dispensing base into Dewar, sealing lid, stirring at 200 rpm, logging exothermic adiabatic curve…';
  message(msgStart);
  await new Promise(resolve=>setTimeout(resolve,400));
  const raw=prediction.raw;
@@ -103,6 +107,9 @@ $('measure').onclick=async()=>{
  }else if(cfg.slug==='colligative-freezing-point-depression'){
   $('liveState').textContent='Freezing point depressed: ΔT_f = '+raw.toFixed(3)+' °C (T_f = '+(6.550-raw).toFixed(3)+' °C).';
   message('Cryoscopic determination complete: ΔT_f = '+raw.toFixed(3)+' °C for '+p.input.toFixed(2)+' g solute in cyclohexane (M = 154.2 g/mol). Record in notebook.');
+ }else if(cfg.slug==='solution-calorimetry-neutralization'){
+  $('liveState').textContent='Neutralization complete: ΔT = '+raw.toFixed(3)+' °C for '+p.input.toFixed(3)+' mol reacted.';
+  message('Calorimetric measurement complete: ΔT = '+raw.toFixed(3)+' °C (q_rxn = '+(0.44365*raw).toFixed(3)+' kJ, ΔH = '+(-0.44365*raw/p.input).toFixed(2)+' kJ/mol). Record in notebook.');
  }else{
   $('liveState').textContent='Analytical balance stabilized: '+raw.toFixed(cfg.rawDecimals)+' g net mass.';
   message('Gravimetric measurement complete: '+raw.toFixed(cfg.rawDecimals)+' '+cfg.rawUnit+' for '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+'. Record in notebook.');
@@ -320,6 +327,18 @@ function draw(t){
    return;
   }
   $('apparatusDiagram').innerHTML=drawCryoBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='solution-calorimetry-neutralization'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawCalorimetryCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawCalorimetrySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawCalorimetryBenchView(p,rawVal);
   return;
  }
  if(currentSimMode==='compare'){
@@ -2883,5 +2902,287 @@ function drawCryoSandboxView(p,rawVal){
  });
 
  svg+=text(360,305,'Molar Mass Invariant: Ordinary least-squares regression slope m_slope = 5.1873 °C/g isolates M = 154.22 g/mol.','#789c80',9);
+ return svg;
+}
+
+
+// --- LAB 11: ENTHALPY OF NEUTRALIZATION VIA SOLUTION CALORIMETRY ---
+
+function drawCalorimetryBenchView(p, rawVal){
+ const n = (p && p.input) ? p.input : 0.040;
+ const C_eff = 0.44365;
+ const dt = rawVal !== null ? rawVal : (55.84 * n / C_eff);
+ const T_init = 25.000;
+ const T_max = T_init + dt;
+ const q_rxn = C_eff * dt;
+ const dH = -q_rxn / n;
+
+ let svg = '';
+ svg += '<rect x="0" y="0" width="720" height="320" fill="#051009"/>';
+ svg += text(360, 24, 'CONSTANT-PRESSURE SOLUTION CALORIMETER (DEWAR FLASK ASSEMBLY)', '#4ade80', 13);
+ svg += text(360, 39, 'H3O+(aq) + OH-(aq) -> 2 H2O(l) | Net Molar Enthalpy of Neutralization ΔH_neut° = -55.84 kJ/mol', '#94a3b8', 9);
+
+ // --- LEFT PANEL: VACUUM DEWAR FLASK CROSS-SECTION ---
+ const dX = 140, dY = 70;
+ // Outer calorimeter casing
+ svg += '<rect x="'+(dX-65)+'" y="'+(dY+20)+'" width="130" height="180" rx="8" fill="#1e293b" stroke="#334155" stroke-width="2"/>';
+ svg += '<text x="'+dX+'" y="'+(dY+190)+'" text-anchor="middle" fill="#64748b" font-size="7.5">Double-Walled Outer Protective Casing</text>';
+
+ // Silvered vacuum jacket
+ svg += '<path d="M '+(dX-52)+' '+(dY+30)+' L '+(dX-52)+' '+(dY+165)+' Q '+(dX-52)+' '+(dY+175)+' '+(dX-42)+' '+(dY+175)+' L '+(dX+42)+' '+(dY+175)+' Q '+(dX+52)+' '+(dY+175)+' '+(dX+52)+' '+(dY+165)+' L '+(dX+52)+' '+(dY+30)+'" fill="none" stroke="#94a3b8" stroke-width="5" stroke-opacity="0.4"/>';
+ svg += '<path d="M '+(dX-46)+' '+(dY+30)+' L '+(dX-46)+' '+(dY+160)+' Q '+(dX-46)+' '+(dY+168)+' '+(dX-38)+' '+(dY+168)+' L '+(dX+38)+' '+(dY+168)+' Q '+(dX+46)+' '+(dY+168)+' '+(dX+46)+' '+(dY+30)+'" fill="#0b1712" stroke="#38bdf8" stroke-width="1.5"/>';
+
+ // High vacuum space badge
+ svg += '<text x="'+dX+'" y="'+(dY+50)+'" text-anchor="middle" fill="#38bdf8" font-size="7" opacity="0.6">EVACUATED VACUUM SPACE</text>';
+
+ // Liquid fill (100 mL aqueous solution)
+ const liqTop = dY + 90;
+ svg += '<path d="M '+(dX-44)+' '+liqTop+' L '+(dX-44)+' '+(dY+158)+' Q '+(dX-44)+' '+(dY+166)+' '+(dX-36)+' '+(dY+166)+' L '+(dX+36)+' '+(dY+166)+' Q '+(dX+44)+' '+(dY+166)+' '+(dX+44)+' '+liqTop+' Z" fill="#0284c7" fill-opacity="0.35"/>';
+ svg += '<ellipse cx="'+dX+'" cy="'+liqTop+'" rx="44" ry="4" fill="#38bdf8" fill-opacity="0.4"/>';
+ svg += '<text x="'+dX+'" y="'+(liqTop+35)+'" text-anchor="middle" fill="#bae6fd" font-size="8" font-weight="bold">100.0 mL Mixed Solution</text>';
+ svg += '<text x="'+dX+'" y="'+(liqTop+47)+'" text-anchor="middle" fill="#7dd3fc" font-size="7">50 mL HCl(aq) + 50 mL NaOH(aq)</text>';
+
+ // Insulated PTFE lid
+ svg += '<rect x="'+(dX-60)+'" y="'+(dY+15)+'" width="120" height="18" rx="3" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1.5"/>';
+ svg += '<text x="'+(dX-40)+'" y="'+(dY+27)+'" fill="#1e293b" font-size="7" font-weight="bold">PTFE LID</text>';
+
+ // Motorized Paddle Stirrer
+ svg += '<rect x="'+(dX-20)+'" y="'+(dY-10)+'" width="5" height="150" fill="#94a3b8"/>';
+ svg += '<rect x="'+(dX-30)+'" y="'+(dY+135)+'" width="25" height="8" rx="2" fill="#64748b"/>';
+ // Motor head
+ svg += '<rect x="'+(dX-28)+'" y="'+(dY-24)+'" width="21" height="16" rx="2" fill="#475569" stroke="#334155"/>';
+ svg += '<text x="'+(dX-17)+'" y="'+(dY-13)+'" text-anchor="middle" fill="#f8fafc" font-size="6.5">200rpm</text>';
+
+ // Digital Thermistor probe
+ svg += '<rect x="'+(dX+14)+'" y="'+(dY+2)+'" width="4" height="135" rx="1.5" fill="#f59e0b"/>';
+ svg += '<circle cx="'+(dX+16)+'" cy="'+(dY+137)+'" r="3" fill="#ef4444"/>';
+ svg += '<path d="M '+(dX+16)+' '+(dY+2)+' Q '+(dX+25)+' '+(dY-20)+' '+(dX+70)+' '+(dY-15)+'" fill="none" stroke="#f59e0b" stroke-width="1.5"/>';
+
+ // Reagent Pipette Dispenser (simulated)
+ svg += '<path d="M '+(dX-42)+' '+(dY-15)+' L '+(dX-40)+' '+(dY+15)+'" stroke="#38bdf8" stroke-width="2" stroke-dasharray="3,2"/>';
+ svg += '<text x="'+(dX-45)+'" y="'+(dY-18)+'" text-anchor="end" fill="#38bdf8" font-size="7">Class-A Pipette (50 mL)</text>';
+
+
+ // --- RIGHT PANEL: THERMOMETRIC MONITOR & CALORIMETRIC AUDIT ---
+ const rX = 260, rY = 55, rW = 435, rH = 240;
+ svg += '<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+
+ // Digital Multimeter / Thermistor Readout
+ svg += '<rect x="'+(rX+15)+'" y="'+(rY+12)+'" width="200" height="72" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1.2"/>';
+ svg += '<text x="'+(rX+25)+'" y="'+(rY+26)+'" fill="#86efac" font-size="8" font-weight="bold">HIGH-PRECISION DIGITAL THERMISTOR</text>';
+ svg += '<text x="'+(rX+25)+'" y="'+(rY+56)+'" fill="#facc15" font-size="22" font-family="monospace" font-weight="bold">'+T_max.toFixed(3)+' °C</text>';
+ svg += '<text x="'+(rX+140)+'" y="'+(rY+44)+'" fill="#94a3b8" font-size="7.5">T_init = '+T_init.toFixed(3)+' °C</text>';
+ svg += '<text x="'+(rX+140)+'" y="'+(rY+56)+'" fill="#4ade80" font-size="7.5" font-weight="bold">ΔT = +'+dt.toFixed(3)+' °C</text>';
+ svg += '<text x="'+(rX+140)+'" y="'+(rY+68)+'" fill="#38bdf8" font-size="7">±0.001 °C Res.</text>';
+
+ // Mini Live Heating Curve in top-right
+ const cX = rX + 225, cY = rY + 12, cW = 195, cH = 72;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1.2"/>';
+ svg += '<text x="'+(cX+8)+'" y="'+(cY+12)+'" fill="#94a3b8" font-size="7">Time-Temperature Response Profile</text>';
+ // baseline
+ svg += '<line x1="'+(cX+15)+'" y1="'+(cY+55)+'" x2="'+(cX+55)+'" y2="'+(cY+55)+'" stroke="#64748b" stroke-width="1.5"/>';
+ // sharp exothermic rise
+ const peakY = cY + 55 - Math.min(38, dt * 4.2);
+ svg += '<path d="M '+(cX+55)+' '+(cY+55)+' Q '+(cX+65)+' '+(cY+55)+' '+(cX+75)+' '+peakY+'" fill="none" stroke="#ef4444" stroke-width="2"/>';
+ // slow cooling tail
+ svg += '<path d="M '+(cX+75)+' '+peakY+' L '+(cX+185)+' '+(peakY+6)+'" fill="none" stroke="#f59e0b" stroke-width="1.5"/>';
+ svg += '<line x1="'+(cX+55)+'" y1="'+(cY+15)+'" x2="'+(cX+55)+'" y2="'+(cY+65)+'" stroke="#94a3b8" stroke-width="0.7" stroke-dasharray="2,2"/>';
+ svg += '<text x="'+(cX+58)+'" y="'+(cY+23)+'" fill="#38bdf8" font-size="6.5">t_mix</text>';
+ svg += '<text x="'+(cX+185)+'" y="'+(peakY-3)+'" text-anchor="end" fill="#facc15" font-size="6.8" font-weight="bold">Extrapolated ΔT = '+dt.toFixed(3)+' °C</text>';
+
+ // Calorimetric Energy Balance Grid
+ const gY = rY + 92;
+ const metrics = [
+  {label: 'Stoichiometric Moles n', val: n.toFixed(3) + ' mol H3O+/OH-', col: '#86efac', sub: 'n = V_acid · M_acid = 50.0 mL × M'},
+  {label: 'System Heat Capacity C_eff', val: '0.44365 kJ/K (443.65 J/K)', col: '#38bdf8', sub: 'm_soln·c_p (416.15) + C_cal (27.50)'},
+  {label: 'Thermal Energy Evolved q_cal', val: q_rxn.toFixed(4) + ' kJ (' + (q_rxn*1000).toFixed(1) + ' J)', col: '#facc15', sub: 'q_cal = C_eff · ΔT'},
+  {label: 'Calculated Enthalpy ΔH_neut', val: dH.toFixed(2) + ' kJ/mol', col: '#f87171', sub: 'ΔH = -q_cal / n (Target: -55.84 kJ/mol)'}
+ ];
+
+ metrics.forEach((m, idx)=>{
+  const mx = rX + 15 + (idx % 2) * 205;
+  const my = gY + Math.floor(idx / 2) * 52;
+  svg += '<rect x="'+mx+'" y="'+my+'" width="195" height="46" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1"/>';
+  svg += '<text x="'+(mx+10)+'" y="'+(my+13)+'" fill="#94a3b8" font-size="7">'+m.label+'</text>';
+  svg += '<text x="'+(mx+10)+'" y="'+(my+28)+'" fill="'+m.col+'" font-size="9.5" font-weight="bold">'+m.val+'</text>';
+  svg += '<text x="'+(mx+10)+'" y="'+(my+39)+'" fill="#64748b" font-size="6.5">'+m.sub+'</text>';
+ });
+
+ // Bottom Verification Banner
+ svg += '<rect x="'+(rX+15)+'" y="'+(rY+200)+'" width="405" height="30" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1"/>';
+ svg += '<text x="'+(rX+217)+'" y="'+(rY+218)+'" text-anchor="middle" fill="#4ade80" font-size="8.5" font-family="monospace" font-weight="bold">Linear Regression Invariant: ΔT = 125.87 · n => ΔH_neut = -125.87 × 0.44365 = -55.84 kJ/mol (R² = 1.000)</text>';
+
+ svg += text(360, 310, 'Constant-pressure solution calorimetry measures heat evolved directly in a calibrated vacuum Dewar assembly.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawCalorimetryCompareView(p, rawVal){
+ let svg = '';
+ svg += '<rect x="0" y="0" width="720" height="320" fill="#051009"/>';
+ svg += text(360, 24, 'CALORIMETRIC METHODS & ACID-BASE THERMODYNAMICS', '#4ade80', 13);
+ svg += text(360, 39, 'Comparative Analysis of Calorimeters, Acid Strengths & Thermometric Enthalpy Profiles', '#94a3b8', 9);
+
+ const cards = [
+  {
+   title: '1. Strong Acid + Strong Base',
+   sub: 'HCl(aq) + NaOH(aq) -> NaCl + H2O',
+   color: '#4ade80',
+   border: '#166534',
+   items: [
+    'Net Ionic: H3O+(aq) + OH-(aq) -> 2 H2O(l)',
+    'Standard Enthalpy: ΔH_neut° = -55.84 kJ/mol',
+    'Spectator Ions: Na+ and Cl- remain hydrated without state change',
+    'Invariant: Identical for HNO3, HClO4, HBr with KOH, LiOH',
+    'Effective Heat Capacity: C_eff = m_soln·c_p + C_cal = 443.65 J/K',
+    'Linearity: Adiabatic ΔT exhibits flawless R² = 1.000 vs moles'
+   ]
+  },
+  {
+   title: '2. Weak Acid + Strong Base',
+   sub: 'CH3COOH(aq) + NaOH(aq) -> NaCH3COO + H2O',
+   color: '#38bdf8',
+   border: '#0369a1',
+   items: [
+    'Net Ionic: CH3COOH(aq) + OH-(aq) -> CH3COO-(aq) + H2O(l)',
+    'Measured Enthalpy: ΔH_neut° = -56.10 kJ/mol',
+    'Coupled Ionization: ΔH_neut = ΔH_water + ΔH_ioniz(CH3COOH)',
+    'Weak Acid Ionization: ΔH_ioniz ≈ -0.26 kJ/mol (near zero due to entropy)',
+    'Hydrogen Fluoride (HF): Strongly exothermic ionization (ΔH = -68.3 kJ/mol)',
+    'HCN Neutralization: Endothermic ionization yields ΔH_neut = -12.1 kJ/mol'
+   ]
+  },
+  {
+   title: '3. Oxygen Bomb Calorimeter',
+   sub: 'Constant-Volume Combustion Calorimetry',
+   color: '#facc15',
+   border: '#854d0e',
+   items: [
+    'Thermodynamic State: Constant Volume (ΔV = 0), measures ΔU_comb',
+    'Conversion to Enthalpy: ΔH = ΔU + Δ(n_gas)·R·T',
+    'Vessel Structure: Thick-walled stainless steel bomb pressurized to 30 atm O2',
+    'Heat Capacity: Large water jacket (C_cal ≈ 10.5 kJ/K)',
+    'Applications: Benzoic acid calibration, fuel calorific values, foods',
+    'Versus Solution: High pressure, electrical ignition wire, dry combustion'
+   ]
+  }
+ ];
+
+ cards.forEach((c, idx)=>{
+  const x = 20 + idx * 230, y = 50, w = 220, h = 240;
+  svg += '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="6" fill="#0d1f14" stroke="'+c.border+'" stroke-width="1.5"/>';
+  svg += '<rect x="'+(x+8)+'" y="'+(y+8)+'" width="'+(w-16)+'" height="34" rx="4" fill="#051009"/>';
+  svg += '<text x="'+(x+w/2)+'" y="'+(y+22)+'" text-anchor="middle" fill="'+c.color+'" font-size="9" font-weight="bold">'+c.title+'</text>';
+  svg += '<text x="'+(x+w/2)+'" y="'+(y+35)+'" text-anchor="middle" fill="#94a3b8" font-size="7">'+c.sub+'</text>';
+
+  c.items.forEach((item, ii)=>{
+   const iy = y + 54 + ii * 29;
+   svg += '<circle cx="'+(x+14)+'" cy="'+(iy-3)+'" r="2" fill="'+c.color+'"/>';
+   svg += '<foreignObject x="'+(x+22)+'" y="'+(iy-10)+'" width="'+(w-28)+'" height="29"><p xmlns="http://www.w3.org/1999/xhtml" style="font-size:7.2px;color:#cbd5e1;line-height:1.2;margin:0">'+item+'</p></foreignObject>';
+  });
+ });
+
+ svg += text(360, 305, 'Thermodynamic Invariant: Neutralization of any strong monoprotic acid by a strong base yields ΔH° = -55.84 kJ/mol.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawCalorimetrySandboxView(p, rawVal){
+ const n = (p && p.input) ? p.input : 0.040;
+ const C_eff = 0.44365;
+ const dt = rawVal !== null ? rawVal : (55.84 * n / C_eff);
+ const T_init = 25.000;
+ const T_max_ad = T_init + dt;
+ const T_obs_peak = T_max_ad - 0.085;
+
+ let svg = '';
+ svg += '<rect x="0" y="0" width="720" height="320" fill="#051009"/>';
+ svg += text(360, 24, 'ADIABATIC COOLING EXTRAPOLATION & REGNAULT-PFAUNDLER AUDIT', '#4ade80', 13);
+ svg += text(360, 39, 'Graphical Newton Heat-Leak Correction for Quasi-Adiabatic Solution Calorimeters', '#94a3b8', 9);
+
+ // --- LEFT PANEL: DETAILED TEMPERATURE-TIME GRAPH ---
+ const lX = 25, lY = 50, lW = 390, lH = 240;
+ svg += '<rect x="'+lX+'" y="'+lY+'" width="'+lW+'" height="'+lH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+18)+'" text-anchor="middle" fill="#86efac" font-size="9.5" font-weight="bold">CALORIMETER THERMOGRAM & NEWTON COOLING FIT</text>';
+
+ // Coordinate box inside left panel
+ const gX = lX + 45, gY = lY + 35, gW = 325, gH = 155;
+ svg += '<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#051009" stroke="#162e1e" stroke-width="1"/>';
+
+ // Grid lines
+ for(let gy = gY + 30; gy < gY + gH; gy += 30){
+  svg += '<line x1="'+gX+'" y1="'+gy+'" x2="'+(gX+gW)+'" y2="'+gy+'" stroke="#162e1e" stroke-width="0.8" stroke-dasharray="2,2"/>';
+ }
+ for(let gx = gX + 65; gx < gX + gW; gx += 65){
+  svg += '<line x1="'+gx+'" y1="'+gY+'" x2="'+gx+'" y2="'+(gY+gH)+'" stroke="#162e1e" stroke-width="0.8" stroke-dasharray="2,2"/>';
+ }
+
+ // Axes labels
+ svg += '<text x="'+(gX+gW/2)+'" y="'+(gY+gH+14)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5">Time t (seconds)</text>';
+ svg += '<text x="'+(gX-8)+'" y="'+(gY+gH/2)+'" text-anchor="middle" transform="rotate(-90 '+(gX-8)+' '+(gY+gH/2)+')" fill="#94a3b8" font-size="7.5">Calorimeter Temperature T (°C)</text>';
+
+ // Time ticks
+ svg += '<text x="'+gX+'" y="'+(gY+gH+10)+'" text-anchor="middle" fill="#64748b" font-size="6.5">0s</text>';
+ svg += '<text x="'+(gX+65)+'" y="'+(gY+gH+10)+'" text-anchor="middle" fill="#64748b" font-size="6.5">180s (t_mix)</text>';
+ svg += '<text x="'+(gX+130)+'" y="'+(gY+gH+10)+'" text-anchor="middle" fill="#64748b" font-size="6.5">360s</text>';
+ svg += '<text x="'+(gX+195)+'" y="'+(gY+gH+10)+'" text-anchor="middle" fill="#64748b" font-size="6.5">540s</text>';
+ svg += '<text x="'+(gX+gW)+'" y="'+(gY+gH+10)+'" text-anchor="middle" fill="#64748b" font-size="6.5">900s</text>';
+
+ // Temperature curve calculation
+ const yInit = gY + gH - 25;
+ const yAdMax = yInit - Math.min(105, dt * 12.5);
+ const yObsPeak = yAdMax + 10;
+ const tMixX = gX + 65;
+ const tMidX = gX + 90;
+
+ // Pre-period baseline (slight drift)
+ svg += '<line x1="'+gX+'" y1="'+yInit+'" x2="'+tMixX+'" y2="'+yInit+'" stroke="#38bdf8" stroke-width="2"/>';
+ svg += '<text x="'+(gX+30)+'" y="'+(yInit-6)+'" fill="#38bdf8" font-size="6.5">Pre-Period Baseline</text>';
+
+ // Reaction temperature rise
+ svg += '<path d="M '+tMixX+' '+yInit+' Q '+(tMixX+15)+' '+(yInit-5)+' '+(tMixX+35)+' '+yObsPeak+'" fill="none" stroke="#ef4444" stroke-width="2.5"/>';
+
+ // Post-period cooling line (real data)
+ const postEndX = gX + gW - 10;
+ const postEndY = yObsPeak + 14;
+ svg += '<line x1="'+(tMixX+35)+'" y1="'+yObsPeak+'" x2="'+postEndX+'" y2="'+postEndY+'" stroke="#f59e0b" stroke-width="2"/>';
+ svg += '<text x="'+(postEndX-10)+'" y="'+(postEndY-6)+'" text-anchor="end" fill="#f59e0b" font-size="6.5">Post-Period Cooling Tail</text>';
+
+ // Backward linear extrapolation of post-period cooling tail to t_mid
+ const extrapStartX = tMidX;
+ const extrapStartY = yAdMax;
+ svg += '<line x1="'+extrapStartX+'" y1="'+extrapStartY+'" x2="'+(tMixX+35)+'" y2="'+yObsPeak+'" stroke="#facc15" stroke-width="1.8" stroke-dasharray="3,2"/>';
+ svg += '<circle cx="'+tMidX+'" cy="'+yAdMax+'" r="3.5" fill="#facc15"/>';
+ svg += '<text x="'+(tMidX+8)+'" y="'+(yAdMax-4)+'" fill="#facc15" font-size="7" font-weight="bold">Adiabatic Extrapolation T_ad = '+T_max_ad.toFixed(3)+' °C</text>';
+
+ // Vertical line at t_mid
+ svg += '<line x1="'+tMidX+'" y1="'+gY+'" x2="'+tMidX+'" y2="'+(gY+gH)+'" stroke="#94a3b8" stroke-width="0.8" stroke-dasharray="2,2"/>';
+ svg += '<text x="'+tMidX+'" y="'+(gY+12)+'" text-anchor="middle" fill="#94a3b8" font-size="6.5">t_mid (63.2% rise)</text>';
+
+ // Bottom delta T badge
+ svg += '<rect x="'+(lX+15)+'" y="'+(lY+198)+'" width="'+(lW-30)+'" height="32" rx="3" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+218)+'" text-anchor="middle" fill="#86efac" font-size="8" font-family="monospace" font-weight="bold">Corrected Adiabatic Rise: ΔT_ad = T_ad − T_init = +'+dt.toFixed(3)+' °C</text>';
+
+
+ // --- RIGHT PANEL: REGNAULT-PFAUNDLER CORRECTION AUDIT ---
+ const rX = 425, rY = 50, rW = 275, rH = 240;
+ svg += '<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<text x="'+(rX+rW/2)+'" y="'+(rY+18)+'" text-anchor="middle" fill="#86efac" font-size="9.5" font-weight="bold">HEAT LOSS & APPARATUS AUDIT</text>';
+
+ const lossItems = [
+  {label: 'Regnault-Pfaundler Extrapolation', desc: 'Eliminates Newton heat leak to room environment', val: '+0.085 °C Restored', col: '#4ade80'},
+  {label: 'Dewar Vacuum Jacket', desc: 'Silvered double walls reflect radiative heat transfer', val: 'k = 0.0008 s⁻¹', col: '#38bdf8'},
+  {label: 'PTFE Lid Insulation', desc: 'Low thermal conductivity prevents conduction to air', val: '< 0.01 W/m·K', col: '#86efac'},
+  {label: 'Stirring Friction Bias', desc: 'Constant 200 rpm paddle induces <0.002 °C/min heating', val: 'Absorbed in baseline', col: '#fbbf24'},
+  {label: 'OLS Regression Insulation', desc: 'Multi-point slope isolates ΔH independent of zero offset', val: 'R² = 1.00000 Unbiased', col: '#4ade80'}
+ ];
+
+ lossItems.forEach((li, idx)=>{
+  const ly = rY + 30 + idx * 40;
+  svg += '<rect x="'+(rX+8)+'" y="'+ly+'" width="'+(rW-16)+'" height="34" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg += '<text x="'+(rX+14)+'" y="'+(ly+12)+'" fill="'+li.col+'" font-size="7.5" font-weight="bold">'+li.label+'</text>';
+  svg += '<text x="'+(rX+14)+'" y="'+(ly+25)+'" fill="#94a3b8" font-size="6.8">'+li.desc+'</text>';
+  svg += '<text x="'+(rX+rW-14)+'" y="'+(ly+12)+'" text-anchor="end" fill="'+li.col+'" font-size="7.5" font-family="monospace">'+li.val+'</text>';
+ });
+
+ svg += text(360, 305, 'Thermodynamic Invariant: Adiabatic extrapolation recovers true zero-leakage chemical enthalpy rise.', '#789c80', 8.5);
  return svg;
 }

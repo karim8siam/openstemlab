@@ -91,6 +91,15 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:1.0,x,y,valid:w>=0.20&&w<=1.20};
  }
+ if(slug==='solution-calorimetry-neutralization'){
+  const n=Number(input);
+  const C_eff=0.44365;
+  const dH=55.84;
+  const raw=round((dH * n) / C_eff, 3);
+  const x=n;
+  const y=raw;
+  return {raw,ideal:raw,period:1.0,x,y,valid:n>=0.020&&n<=0.070};
+ }
  throw Error('Unknown Chemistry experiment predict: '+slug);
 }
 
@@ -135,6 +144,10 @@ function reading(slug,input,raw){
   y=Number(raw);
  }
  if(slug==='colligative-freezing-point-depression'){
+  x=Number(input);
+  y=Number(raw);
+ }
+ if(slug==='solution-calorimetry-neutralization'){
   x=Number(input);
   y=Number(raw);
  }
@@ -218,6 +231,12 @@ function estimate(slug,f){
   const M_est=Kf / (w_solv * f.m);
   const se=(M_est / f.m) * f.slopeSE;
   return {value:M_est,se:se,reference:154.21};
+ }
+ if(slug==='solution-calorimetry-neutralization'){
+  const C_eff=0.44365;
+  const dH_est= -f.m * C_eff;
+  const se=f.slopeSE * C_eff;
+  return {value:dH_est,se:se,reference:-55.84};
  }
  throw Error('Unknown Chemistry experiment estimate: '+slug);
 }

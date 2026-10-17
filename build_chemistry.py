@@ -86,6 +86,14 @@ def observation(c,value):
   x=w
   y=raw
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='solution-calorimetry-neutralization':
+  n=float(value)
+  C_eff=0.44365
+  dH=55.84
+  raw=rnd((dH * n) / C_eff, 3)
+  x=n
+  y=raw
+  return {'input':value,'raw':raw,'x':x,'y':y}
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fit(rows):
@@ -146,6 +154,11 @@ def estimate(c,f):
   M_est=Kf / (w_solv * f['m'])
   se=(M_est / f['m']) * f['slopeSE']
   return M_est, se, 154.21
+ elif slug=='solution-calorimetry-neutralization':
+  C_eff=0.44365
+  dH_est= -f['m'] * C_eff
+  se=f['slopeSE'] * C_eff
+  return dH_est, se, -55.84
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fmt(v,n=5):
@@ -180,6 +193,9 @@ def formula(c,f):
  elif slug=='colligative-freezing-point-depression':
   conv=20.00 / (0.0250 * f['m'])
   return f"M = K_f / (w_solvent · m_slope) = 20.00 / (0.0250 × {fmt(f['m'],6)}) = {fmt(conv,2)} g/mol; Intercept ΔT₀ = {fmt(f['b'],4)} °C"
+ elif slug=='solution-calorimetry-neutralization':
+  conv= -f['m'] * 0.44365
+  return f"ΔH_neut = −m_slope · C_eff = −{fmt(f['m'],4)} × 0.44365 = {fmt(conv,2)} kJ/mol; Intercept ΔT₀ = {fmt(f['b'],4)} °C"
  return ""
 
 def worked(c,row):
@@ -378,6 +394,24 @@ def worked(c,row):
    f"extracts the cryoscopic slope m_slope = 5.1873 °C/g, inverting via M = K_f / (w_solvent · m_slope) to isolate "
    f"the molecular weight M = 154.22 g/mol with R² = 1.00000, confirming biphenyl (C₁₂H₁₀, theoretical M = 154.21 g/mol)."
   )
+ elif slug=='solution-calorimetry-neutralization':
+  n=row['input']
+  dt=row['raw']
+  C_eff=0.44365
+  q_cal=C_eff * dt
+  dH_single= -q_cal / n
+  return (
+   f"Calorimeter System Heat Capacity: C_eff = m_soln·c_p + C_cal = 101.5 g × 4.10 J/(g·K) + 27.5 J/K = 443.65 J/K = 0.44365 kJ/K.\n"
+   f"Reaction Reactants: Fixed total volume V_total = 100.00 mL (50.00 mL standardized aqueous HCl + 50.00 mL standardized aqueous NaOH).\n"
+   f"Neutralization Stoichiometric Moles: n = {n:.4f} mol H₃O⁺ / OH⁻ neutralized (forming {n:.4f} mol liquid water).\n"
+   f"Corrected Adiabatic Temperature Rise: ΔT = T_max − T_initial = {dt:.3f} °C (extrapolated from post-reaction cooling decay).\n"
+   f"Thermal Energy Absorbed by Calorimeter: q_cal = C_eff · ΔT = 0.44365 kJ/K × {dt:.3f} K = {q_cal:.4f} kJ = {q_cal*1000.0:.1f} J.\n"
+   f"Reaction Thermal Energy Released: q_rxn = −q_cal = −{q_cal:.4f} kJ.\n"
+   f"Single-Trial Molar Enthalpy of Neutralization: ΔH_neut = q_rxn / n = −{q_cal:.4f} kJ / {n:.4f} mol = {dH_single:.2f} kJ/mol.\n"
+   f"Verification: Across the full six-point series from 0.020 to 0.070 mol of H₃O⁺/OH⁻ neutralized, ordinary least-squares "
+   f"linear regression extracts the thermometric slope m_slope = 125.87 °C/mol, scaling via ΔH_neut = −m_slope · C_eff to isolate "
+   f"the molar enthalpy of neutralization ΔH_neut = −55.84 kJ/mol with R² = 1.00000, confirming the standard thermodynamic value."
+  )
  return ""
 
 def uncertainty_text(c):
@@ -557,6 +591,25 @@ def uncertainty_text(c):
    "free from the dimerization non-ideality seen with carboxylic acids. "
    "Ordinary least-squares linear regression across six independent solute loadings (0.20 to 1.20 g) extracts the empirical slope "
    "m_slope = 5.1873 °C/g with an ideal coefficient of determination R² = 1.00000, isolating the solute molar mass M = 154.22 g/mol within 0.009% of theoretical biphenyl."
+  )
+ elif slug=='solution-calorimetry-neutralization':
+  return (
+   "In solution reaction calorimetry governed by the first law relation ΔH_neut = −(C_eff / n) · ΔT = −[ (m_soln · c_p + C_cal) / n ] · ΔT, "
+   "experimental measurement uncertainty is evaluated across thermodynamic, thermal, gravimetric, and volumetric contributions: "
+   "(1) High-Precision Thermistor Resolution: The digital thermistor probe samples temperature at 2 Hz with an instrument resolution of ±0.001 °C "
+   "and an absolute NIST-traceable accuracy of ±0.005 °C. For adiabatic temperature rises spanning 2.517 °C to 8.811 °C, the relative thermometric uncertainty "
+   "is δ(ΔT) / ΔT ≈ 0.002 / 5.66 ≈ 3.5 × 10⁻⁴ (0.035%), ensuring that measurement noise remains orders of magnitude below chemical signals. "
+   "(2) Calorimeter Heat Loss & Newton Cooling Extrapolation: Real Dewar vessels exhibit slight heat exchange with the surrounding environment "
+   "(heat leak rate constant k ≈ 0.0008 s⁻¹). By recording the pre-mixing baseline for 300 s and the post-reaction cooling tail for 600 s, "
+   "the true adiabatic temperature rise ΔT_ad is extracted at the 63.2% reaction midpoint via Regnault-Pfaundler numerical integration, "
+   "reducing non-adiabatic heat transfer bias to less than ±0.004 °C (<0.08%). "
+   "(3) Calorimeter Heat Capacity Calibration: The effective water equivalent of the Dewar calorimeter body and accessories (PTFE lid, stirrer paddle, glass thermistor sheath) "
+   "was determined a priori via electrical Joule heating (P = V·I = 12.00 W for 120.0 s, producing ΔT = 3.245 °C) and cross-validated by mixing 50.00 mL cold water (18.2 °C) "
+   "with 50.00 mL warm water (42.6 °C), yielding C_cal = 27.5 ± 0.5 J/K. This contributes a systematic uncertainty of δC_cal / C_eff = 0.5 / 443.65 ≈ 0.11%. "
+   "(4) Volumetric Dispensing & Titrimetric Titration: Reagents were dispensed using Class-A volumetric pipettes (50.00 ± 0.05 mL, δV/V = 0.10%), "
+   "and standardized against primary standard potassium hydrogen phthalate (KHP) to ±0.0008 M (δM/M = 0.08%). The combined quadrature uncertainty in reaction moles n is δn/n = 0.13%. "
+   "Ordinary least-squares linear regression across six independent neutralization quantities (0.020 to 0.070 mol) extracts the empirical slope "
+   "m_slope = 125.87 °C/mol with an ideal coefficient of determination R² = 1.00000, isolating the standard enthalpy of neutralization ΔH_neut = −55.84 kJ/mol within 0.007% of the reference thermodynamic value."
   )
  return ""
 
@@ -1007,6 +1060,48 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"The observed molar mass confirms the theoretical formula weight of biphenyl (154.21 g/mol) with a percentage difference of {percent:.4f}%. "
    "The investigation verified Raoult's law of colligative lowering, demonstrated the diagnostic utility of Beckmann differential thermometry, "
    "and proved that multi-point cryoscopic regression provides high-accuracy molecular weight determination free from single-point zero-datum biases."
+  )
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='solution-calorimetry-neutralization':
+  abstract=(
+   f"Six precision constant-pressure solution calorimetry trials were conducted in a vacuum-jacketed Dewar calorimeter "
+   f"(calorimeter heat capacity C_cal = 27.5 J/K, total system effective heat capacity C_eff = 0.44365 kJ/K) across stoichiometric neutralization "
+   f"quantities from n = {rows[0]['input']:.3f} mol to {rows[-1]['input']:.3f} mol of hydronium and hydroxide ions at 25.0 °C. "
+   f"Standardized aqueous hydrochloric acid (50.00 mL) and sodium hydroxide (50.00 mL) solutions were rapidly combined under continuous motorized stirring at 200 rpm, "
+   f"yielding corrected adiabatic temperature rises ranging from ΔT = {rows[0]['raw']:.3f} °C to {rows[-1]['raw']:.3f} °C, determined via Regnault-Pfaundler cooling extrapolation. "
+   f"Ordinary least-squares linear regression of temperature rise ΔT against stoichiometric moles neutralized n yielded an empirical thermometric slope of "
+   f"{fmt(f['m'],4)} °C/mol, isolating an experimental molar enthalpy of neutralization of ΔH_neut = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} "
+   f"with an intercept of {fmt(f['b'],c['resultDecimals'])} °C and an ideal coefficient of determination R² = 1.00000, "
+   f"confirming the standard thermodynamic enthalpy of water formation from hydronium and hydroxide ions (reference ΔH_neut° = −55.84 kJ/mol) with a percentage difference of {percent:.4f}%."
+  )
+  graph_choice=(
+   f"The mathematical regression models the first-law calorimetric relation ΔT = [ −ΔH_neut / C_eff ] · n + ΔT₀ = [ |ΔH_neut| / C_eff ] · n + ΔT₀, "
+   f"where n represents the stoichiometric moles of water formed in mol, ΔT represents the corrected adiabatic temperature rise in °C, "
+   f"C_eff = 0.44365 kJ/K represents the total effective heat capacity of the aqueous solution and calorimeter vessel, and ΔT₀ represents the baseline drift intercept in °C (theoretically ΔT₀ = 0.000 °C). "
+   f"Multiplying the regression slope m_slope by −C_eff directly isolates the molar enthalpy of neutralization in {c['resultUnit']}, "
+   f"while any minor pre-mixing thermal equilibration disparities are absorbed into the baseline intercept ΔT₀."
+  )
+  discussion=(
+   "The experimental observations provide rigorous quantitative verification of the First Law of Thermodynamics, Hess's Law of Constant Heat Summation, and Aqueous Acid-Base Energetics. "
+   "In aqueous solution, the neutralization of any strong Arrhenius or Brønsted-Lowry acid by a strong soluble base simplifies identically to the net ionic reaction "
+   "H₃O⁺(aq) + OH⁻(aq) ⟶ 2 H₂O(l). Because both strong electrolytes are completely dissociated into spectator ions (Na⁺ and Cl⁻) whose hydration enthalpies undergo zero net change upon mixing, "
+   "the observed thermal energy arises exclusively from the formation of liquid water covalent O–H bonds and attendant solvent reorganization. "
+   "Across all six neutralization quantities from 0.020 mol to 0.070 mol, the adiabatic temperature rise exhibited impeccable linear proportionality to the number of moles reacted. "
+   "The ordinary least-squares regression line ΔT = 125.874 · n − 0.0002 °C produced an ideal coefficient of determination R² = 1.00000. "
+   "Scaling this empirical slope by the calibrated effective heat capacity of the calorimeter assembly (C_eff = 0.44365 kJ/K) yielded an experimental molar enthalpy of neutralization "
+   "of ΔH_neut = −55.84 kJ/mol, matching the accepted thermodynamic reference value of −55.84 kJ/mol to within 0.0074%. "
+   "Crucially, the multi-point linear regression method completely neutralizes systematic single-point zero-datum errors, such as slight temperature differences between acid and base prior to mixing. "
+   "Thermal loss analysis demonstrated that the vacuum-jacketed Dewar design combined with Regnault-Pfaundler graphical extrapolation limited heat loss corrections to under 1.2% of the total temperature change, "
+   "while constant-speed paddle stirring maintained spatial thermal homogeneity without introducing significant viscous frictional heating."
+  )
+  conclusion=(
+   "This laboratory investigation successfully determined the standard molar enthalpy of acid-base neutralization using precision constant-pressure solution calorimetry. "
+   f"Through systematic thermometric measurements across neutralization quantities from {rows[0]['input']:.3f} mol to {rows[-1]['input']:.3f} mol in a calibrated Dewar vessel, we extracted an "
+   f"experimental molar enthalpy of neutralization of ΔH_neut = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with a fit standard error of "
+   f"{fmt(se*c['resultScale'])} {c['resultUnit']} and an ideal coefficient of determination R² = 1.00000. "
+   f"The observed thermodynamic enthalpy confirms the accepted literature value (−55.84 kJ/mol) with a percentage difference of {percent:.4f}%. "
+   "The investigation verified that strong acid-base neutralization is an invariant exothermic process governed by water formation, demonstrated the rigorous application of calorimeter water equivalents, "
+   "and proved that multi-point calorimetric regression provides supreme thermochemical precision free from single-trial initial baseline biases."
   )
   return abstract, graph_choice, discussion, conclusion
  return "","","",""
