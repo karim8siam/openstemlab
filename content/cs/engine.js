@@ -140,6 +140,56 @@ function drawComparativeSim(t,p,v,ink,soft,orange){
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
+ if(cfg.slug==='binary-search-trees'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'TREE & INDEXING TOPOLOGY COMPARISON (n = '+p.input+')','#e2f0f8',11);
+
+  const n=p.input;
+  const log2n=Math.log2(n);
+  const h_avl=Math.floor(log2n)+1;
+  const h_rb=Math.min(2*h_avl, Math.round(1.3*log2n + 1));
+  const h_random=Math.round(2.07*log2n);
+  const h_btree=Math.max(2, Math.ceil(Math.log(n)/Math.log(64)));
+  const h_degen=n;
+
+  const topologies=[
+   {name:'B-Tree (Fan-Out B = 64)',col:'#10b981',height:h_btree,scale:'O(log_B n)',desc:'Massive branching; cache & disk block aligned'},
+   {name:'AVL Balanced Binary Tree',col:'#38bdf8',height:h_avl,scale:'1.00 log₂ n',desc:'Strict balance |BF| ≤ 1; optimal read lookup depth'},
+   {name:'Red-Black Balanced Tree',col:'#f97316',height:h_rb,scale:'≤ 1.44 log₂ n',desc:'Relaxed balance; at most 2 rotations on insert'},
+   {name:'Random Insertion BST',col:'#a855f7',height:h_random,scale:'~2.07 log₂ n',desc:'No rebalancing; 1.386 ln n average search depth'},
+   {name:'Degenerate List (Sorted Input)',col:'#ef4444',height:h_degen,scale:'O(n) height',desc:'Linear collapse; catastrophic O(n) search latency'}
+  ];
+
+  topologies.forEach((item,idx)=>{
+   const rowY=cY+16+idx*42;
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+12)+'" fill="#dcebf2" font-size="8.5" font-weight="bold">'+item.name+'</text>';
+   svg+='<text x="'+(cX+cW-15)+'" y="'+(rowY+12)+'" text-anchor="end" fill="'+item.col+'" font-size="8.5" font-family="monospace" font-weight="bold">'+item.height+' levels ('+item.scale+')</text>';
+   
+   const barX=cX+15,barY=rowY+16,barMaxW=cW-30;
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barMaxW+'" height="7" rx="2" fill="#16242c"/>';
+   const frac=Math.min(1.0,Math.log10(item.height+1)/Math.log10(h_degen+1));
+   const fillW=Math.max(4,frac*barMaxW);
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+fillW+'" height="7" rx="2" fill="'+item.col+'"/>';
+  });
+
+  const bX=460,bY=45,bW=220,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">DEGENERACY COLLAPSE RATIO</text>';
+  const degRatio=(h_degen/h_avl).toFixed(1);
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+degRatio+'×</text>';
+  svg+='<text x="'+(bX+95)+'" y="'+(bY+46)+'" fill="#dcebf2" font-size="10">List vs Balanced</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#7e9bab" font-size="9">SEARCH PATH COMPARISON</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="16" font-family="monospace" font-weight="bold">'+h_avl+' vs '+h_degen+' hops</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+124)+'" fill="#8ba5b5" font-size="8">Balanced: O(log n) · Degenerate: O(n)</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+136)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+136)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+154)+'" fill="#7e9bab" font-size="9">ROTATION REBALANCING BOUND</text>';
+  svg+=text(bX+bW/2,bY+180,'AVL: at most 1 rotation on insert','#10b981',10.5);
+  svg+=text(bX+bW/2,bY+202,'Red-Black: at most 2 rotations',orange,9.5);
+  svg+=text(360,305,'Comparative Invariant: Tree balancing bounds height to O(log n), preventing catastrophic 300× latency collapse',soft,10);
+  return svg;
+ }
+
  if(cfg.slug==='linked-list-architectures'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
   svg+=text(cX+cW/2,cY-14,'SEQUENTIAL CONTAINER & CACHE LOCALITY BENCHMARK (n = '+p.input+')','#e2f0f8',11);
@@ -443,6 +493,84 @@ function drawDynamicSandbox(t,p,v,ink,soft,orange){
  const cX=45,cY=45,cW=400,cH=230;
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+ if(cfg.slug==='binary-search-trees'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'AVL TREE ROTATION & REBALANCING SANDBOX (n = '+p.input+')','#e2f0f8',11);
+
+  // Before Rotation (LL Heavy) - Left Column
+  svg+='<text x="'+(cX+100)+'" y="'+(cY+22)+'" text-anchor="middle" fill="#ef4444" font-size="8.5" font-weight="bold">BEFORE: LL-HEAVY (|BF| = 2)</text>';
+
+  // Node Z (Root, key 50, BF = +2)
+  const zX=cX+100,zY=cY+45;
+  svg+='<circle cx="'+zX+'" cy="'+zY+'" r="14" fill="#450a0a" stroke="#ef4444" stroke-width="2"/>';
+  svg+='<text x="'+zX+'" y="'+(zY+4)+'" text-anchor="middle" fill="#fca5a5" font-size="8" font-weight="bold">50</text>';
+  svg+='<text x="'+(zX+22)+'" y="'+(zY+3)+'" fill="#ef4444" font-size="7" font-family="monospace">BF:+2</text>';
+
+  // Node Y (Left child, key 25, BF = +1)
+  const yX=cX+60,yY=cY+85;
+  svg+='<line x1="'+zX+'" y1="'+(zY+14)+'" x2="'+yX+'" y2="'+(yY-14)+'" stroke="#ef4444" stroke-width="2"/>';
+  svg+='<circle cx="'+yX+'" cy="'+yY+'" r="14" fill="#1e293b" stroke="'+orange+'" stroke-width="1.5"/>';
+  svg+='<text x="'+yX+'" y="'+(yY+4)+'" text-anchor="middle" fill="#fed7aa" font-size="8" font-weight="bold">25</text>';
+  svg+='<text x="'+(yX-22)+'" y="'+(yY+3)+'" text-anchor="end" fill="'+orange+'" font-size="7" font-family="monospace">BF:+1</text>';
+
+  // Node X (Grandchild, key 12, BF = 0)
+  const xX=cX+30,xY=cY+125;
+  svg+='<line x1="'+yX+'" y1="'+(yY+14)+'" x2="'+xX+'" y2="'+(xY-14)+'" stroke="'+orange+'" stroke-width="2"/>';
+  svg+='<circle cx="'+xX+'" cy="'+xY+'" r="12" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>';
+  svg+='<text x="'+xX+'" y="'+(xY+3.5)+'" text-anchor="middle" fill="#bae6fd" font-size="7.5" font-weight="bold">12</text>';
+
+  // Rotation Arrow in middle
+  const arrX=cX+200;
+  svg+='<path d="M '+(arrX-15)+' '+(cY+75)+' Q '+arrX+' '+(cY+55)+' '+(arrX+15)+' '+(cY+75)+'" fill="none" stroke="#10b981" stroke-width="2.5"/>';
+  svg+='<polygon points="'+(arrX+15)+','+(cY+75)+' '+(arrX+9)+','+(cY+68)+' '+(arrX+18)+','+(cY+67)+'" fill="#10b981"/>';
+  svg+='<text x="'+arrX+'" y="'+(cY+92)+'" text-anchor="middle" fill="#10b981" font-size="8" font-weight="bold">RotateRight(50)</text>';
+
+  // After Rotation (Balanced) - Right Column
+  svg+='<text x="'+(cX+300)+'" y="'+(cY+22)+'" text-anchor="middle" fill="#10b981" font-size="8.5" font-weight="bold">AFTER: EQUILIBRIUM (|BF| = 0)</text>';
+
+  // New Root Y (key 25, BF = 0)
+  const nyX=cX+300,nyY=cY+45;
+  svg+='<circle cx="'+nyX+'" cy="'+nyY+'" r="14" fill="#064e3b" stroke="#10b981" stroke-width="2"/>';
+  svg+='<text x="'+nyX+'" y="'+(nyY+4)+'" text-anchor="middle" fill="#a7f3d0" font-size="8" font-weight="bold">25</text>';
+  svg+='<text x="'+(nyX+22)+'" y="'+(nyY+3)+'" fill="#10b981" font-size="7" font-family="monospace">BF:0</text>';
+
+  // Left child X (key 12, BF = 0)
+  const nxX=cX+260,nxY=cY+85;
+  svg+='<line x1="'+nyX+'" y1="'+(nyY+14)+'" x2="'+nxX+'" y2="'+(nxY-14)+'" stroke="#10b981" stroke-width="2"/>';
+  svg+='<circle cx="'+nxX+'" cy="'+nxY+'" r="13" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>';
+  svg+='<text x="'+nxX+'" y="'+(nxY+4)+'" text-anchor="middle" fill="#bae6fd" font-size="7.5" font-weight="bold">12</text>';
+
+  // Right child Z (key 50, BF = 0)
+  const nzX=cX+340,nzY=cY+85;
+  svg+='<line x1="'+nyX+'" y1="'+(nyY+14)+'" x2="'+nzX+'" y2="'+(nzY-14)+'" stroke="#10b981" stroke-width="2"/>';
+  svg+='<circle cx="'+nzX+'" cy="'+nzY+'" r="13" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>';
+  svg+='<text x="'+nzX+'" y="'+(nzY+4)+'" text-anchor="middle" fill="#bae6fd" font-size="7.5" font-weight="bold">50</text>';
+
+  // Code Sequence Box at Bottom
+  const cdX=cX+15,cdY=cY+145,cdW=cW-30,cdH=75;
+  svg+='<rect x="'+cdX+'" y="'+cdY+'" width="'+cdW+'" height="'+cdH+'" rx="4" fill="#050b0e" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(cdX+12)+'" y="'+(cdY+16)+'" fill="#38bdf8" font-size="8" font-weight="bold">BRANCHLESS ROTATION PRIMITIVE (O(1) TIME · 3 POINTER UPDATES)</text>';
+  svg+='<text x="'+(cdX+12)+'" y="'+(cdY+32)+'" fill="#10b981" font-size="7.5" font-family="monospace">1: Node* y = z-&gt;left;           // Elevate left child</text>';
+  svg+='<text x="'+(cdX+12)+'" y="'+(cdY+46)+'" fill="#10b981" font-size="7.5" font-family="monospace">2: z-&gt;left = y-&gt;right;          // Adopt subtree T2</text>';
+  svg+='<text x="'+(cdX+12)+'" y="'+(cdY+60)+'" fill="'+orange+'" font-size="7.5" font-family="monospace">3: y-&gt;right = z;                // Subtree root becomes right child</text>';
+
+  const bX=465,bY=45,bW=210,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#7e9bab" font-size="9">BALANCE EQUILIBRIUM RESTORED</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+54)+'" fill="'+orange+'" font-size="24" font-family="monospace" font-weight="bold">ΔBF = 2 ⟶ 0</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+70)+'" fill="#8ba5b5" font-size="8">Single rotation reduces subtree height by 1</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+84)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+84)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+102)+'" fill="#7e9bab" font-size="9">ROTATION COMPLEXITY</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+124)+'" fill="'+ink+'" font-size="16" font-family="monospace" font-weight="bold">Strict O(1)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+140)+'" fill="#8ba5b5" font-size="8">3 pointer updates, zero key reallocations</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+154)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+154)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+172)+'" fill="#7e9bab" font-size="9">FIBONACCI HEIGHT BOUND</text>';
+  svg+=text(bX+bW/2,bY+194,'h < 1.4404 · log₂(n + 2) - 0.328','#38bdf8',9.5);
+  svg+=text(bX+bW/2,bY+212,'Golden ratio base φ = (1+√5)/2',orange,8.5);
+  svg+=text(360,305,'Rotation Sandbox: Local O(1) single and double rotations restore balance without traversing whole tree',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='linked-list-architectures'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
@@ -837,6 +965,85 @@ function draw(t){
  const ink='#38bdf8',soft='#7e9bab',orange='#f97316';
  if(currentSimMode==='compare'){$('apparatusDiagram').innerHTML=drawComparativeSim(t,p,v,ink,soft,orange);return;}
  if(currentSimMode==='sandbox'){$('apparatusDiagram').innerHTML=drawDynamicSandbox(t,p,v,ink,soft,orange);return;}
+
+ if(cfg.slug==='binary-search-trees'){
+  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
+  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+  const n=p.input;
+  const h_levels=v.raw;
+  const maxCap=(2**Math.min(20, h_levels)) - 1;
+
+  svg+='<rect x="35" y="38" width="410" height="235" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+=text(240,24,'Complete Binary Search Tree Architecture & Search Path Telemetry');
+
+  svg+='<text x="50" y="58" fill="#7e9bab" font-size="8.5" font-weight="bold">BALANCED BINARY TREE TOPOLOGY (n = '+n+' KEYS · HEIGHT = '+h_levels+' LEVELS)</text>';
+
+  // Tree nodes: Level 0 (Root), Level 1 (2 nodes), Level 2 (4 nodes), Level 3 (8 leaf stubs)
+  const treeNodes=[
+   {key:50,x:240,y:80,isPath:true,lvl:0},
+   {key:25,x:140,y:125,isPath:false,lvl:1},
+   {key:75,x:340,y:125,isPath:true,lvl:1},
+   {key:12,x:90,y:168,isPath:false,lvl:2},
+   {key:37,x:190,y:168,isPath:false,lvl:2},
+   {key:62,x:290,y:168,isPath:true,lvl:2},
+   {key:87,x:390,y:168,isPath:false,lvl:2}
+  ];
+
+  // Tree edges
+  const edges=[
+   {from:0,to:1,isPath:false},
+   {from:0,to:2,isPath:true},
+   {from:1,to:3,isPath:false},
+   {from:1,to:4,isPath:false},
+   {from:2,to:5,isPath:true},
+   {from:2,to:6,isPath:false}
+  ];
+
+  edges.forEach(e=>{
+   const n1=treeNodes[e.from],n2=treeNodes[e.to];
+   const strokeCol=e.isPath?orange:'#243c4a';
+   const strokeW=e.isPath?2.5:1.5;
+   svg+='<line x1="'+n1.x+'" y1="'+n1.y+'" x2="'+n2.x+'" y2="'+n2.y+'" stroke="'+strokeCol+'" stroke-width="'+strokeW+'"/>';
+  });
+
+  treeNodes.forEach(nd=>{
+   const fillCol=nd.isPath?'#431407':'#081016';
+   const strokeCol=nd.isPath?orange:'#38bdf8';
+   svg+='<circle cx="'+nd.x+'" cy="'+nd.y+'" r="14" fill="'+fillCol+'" stroke="'+strokeCol+'" stroke-width="2"/>';
+   svg+='<text x="'+nd.x+'" y="'+(nd.y+4)+'" text-anchor="middle" fill="'+(nd.isPath?'#fed7aa':'#dcebf2')+'" font-size="8" font-weight="bold">'+nd.key+'</text>';
+  });
+
+  // Query search banner
+  const qbX=50,qbY=195,qbW=375,qbH=32;
+  svg+='<rect x="'+qbX+'" y="'+qbY+'" width="'+qbW+'" height="'+qbH+'" rx="4" fill="#081016" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(qbX+10)+'" y="'+(qbY+20)+'" fill="'+orange+'" font-size="8" font-family="monospace">Search Query k = 62: Root (50) ⟶ Right (75) ⟶ Left (62) [Found in 3 comparisons]</text>';
+
+  // Telemetry box
+  const regX=50,regY=232,regW=375,regH=35;
+  svg+='<rect x="'+regX+'" y="'+regY+'" width="'+regW+'" height="'+regH+'" rx="4" fill="#081016" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(regX+10)+'" y="'+(regY+14)+'" fill="#38bdf8" font-size="7.5" font-family="monospace">Height Model: h(n) = ⌊log₂('+n+')⌋ + 1 = '+h_levels+' levels · Capacity N_max = 2^'+h_levels+' − 1 = '+maxCap+'</text>';
+  svg+='<text x="'+(regX+10)+'" y="'+(regY+27)+'" fill="#8ba5b5" font-size="6.5">Invariant: In-order traversal (Left, Node, Right) outputs keys in strictly ascending sorted order</text>';
+
+  const bX=465,bY=38,bW=220,bH=235;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#7e9bab" font-size="9">BALANCED TREE HEIGHT (h)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+54)+'" fill="'+orange+'" font-size="24" font-family="monospace" font-weight="bold">'+h_levels+'</text>';
+  svg+='<text x="'+(bX+75)+'" y="'+(bY+50)+'" fill="#8ba5b5" font-size="11">levels</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+84)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+84)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+102)+'" fill="#7e9bab" font-size="9">KEY DATASET SCALE (n)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+126)+'" fill="'+ink+'" font-size="18" font-family="monospace" font-weight="bold">'+n+' keys</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+142)+'" fill="#8ba5b5" font-size="8">Entropy log₂(n) = '+(Math.log2(n)).toFixed(2)+' bits</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+156)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+156)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+174)+'" fill="#7e9bab" font-size="9">SEARCH PATH COMPLEXITY</text>';
+  svg+=text(bX+bW/2,bY+196,'Worst-Case: O(log n)','#10b981',11);
+  svg+=text(bX+bW/2,bY+214,'Degenerate without balancing: O(n)',orange,8.5);
+
+  svg+=text(360,305,'Mathematical Model: h(n) = 1.0000 · log₂(n) + 1.0000 levels · R² = 1.000000',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='linked-list-architectures'){
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';

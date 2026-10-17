@@ -47,6 +47,13 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:raw/500.0,x,y,valid:n>=64&&n<=16384};
  }
+ if(slug==='binary-search-trees'){
+  const n=Number(input);
+  const x=Math.log2(n);
+  const raw=Math.floor(x)+1;
+  const y=raw;
+  return {raw,ideal:raw,period:raw/2.0,x,y,valid:n>=32&&n<=8192};
+ }
  throw Error('Unknown CS experiment: '+slug);
 }
 
@@ -78,6 +85,10 @@ function reading(slug,input,raw){
  }
  if(slug==='linked-list-architectures'){
   x=Number(input);
+  y=raw;
+ }
+ if(slug==='binary-search-trees'){
+  x=Math.log2(Number(input));
   y=raw;
  }
  return {input,raw,x,y};
@@ -121,6 +132,9 @@ function estimate(slug,f){
  }
  if(slug==='linked-list-architectures'){
   return {value:f.m,se:f.slopeSE,reference:32.0000};
+ }
+ if(slug==='binary-search-trees'){
+  return {value:f.m,se:f.slopeSE,reference:1.0000};
  }
  throw Error('Unknown CS experiment: '+slug);
 }

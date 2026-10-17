@@ -46,6 +46,12 @@ def observation(c,value):
   raw=int(round(32.0*n + 64.0))
   y=float(raw)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='binary-search-trees':
+  n=float(value)
+  x=math.log2(n)
+  raw=int(math.floor(x)+1)
+  y=float(raw)
+  return {'input':value,'raw':raw,'x':x,'y':y}
  raise ValueError(f"Unknown CS experiment {slug}")
 
 def fit(rows):
@@ -81,6 +87,8 @@ def estimate(c,f):
   return f['m'],f['slopeSE'],64.0000
  elif slug=='linked-list-architectures':
   return f['m'],f['slopeSE'],32.0000
+ elif slug=='binary-search-trees':
+  return f['m'],f['slopeSE'],1.0000
  raise ValueError(f"Unknown CS experiment {slug}")
 
 def fmt(v,n=5):
@@ -106,6 +114,9 @@ def formula(c,f):
  elif slug=='linked-list-architectures':
   val=f['m']*c['resultScale']
   return f"S_node = m = {fmt(val,c['resultDecimals'])} bytes/node; Intercept M_0 = {fmt(f['b'],c['resultDecimals'])} bytes (theoretical node size S = 32.0000, sentinels M_0 = 64.0000)"
+ elif slug=='binary-search-trees':
+  val=f['m']*c['resultScale']
+  return f"alpha = m = {fmt(val,c['resultDecimals'])} levels/bit; Intercept h_0 = {fmt(f['b'],c['resultDecimals'])} levels (theoretical alpha = 1.0000, h_0 = 1.0000)"
  return ""
 
 def worked(c,row):
@@ -141,6 +152,11 @@ def worked(c,row):
   nodes=row['x']
   mem_bytes=row['raw']
   return f"List Length n = {int(n)} nodes; Active Dynamic Heap Nodes = {int(nodes)} nodes.\nTotal Allocated Heap Memory: M(n) = S_node · n + M_0 = 32 × {int(n)} + 64 = {mem_bytes} bytes ({mem_bytes/1024:.2f} KiB).\nVerification: Each doubly linked list node allocates 32 bytes on the 64-bit heap (8B data payload + 8B next pointer + 8B prev pointer + 8B malloc 16-byte boundary alignment padding), plus 64 bytes for dual dummy sentinels (Sentinel Head = 32B, Sentinel Tail = 32B)."
+ elif slug=='binary-search-trees':
+  n=row['input']
+  log2n=row['x']
+  h_val=row['raw']
+  return f"Dataset Scale n = {int(n)} keys; Logarithmic Key Entropy x = log₂({int(n)}) = {log2n:.4f} bits.\nBalanced Binary Search Tree Height: h(n) = ⌊log₂(n)⌋ + 1 = ⌊{log2n:.4f}⌋ + 1 = {h_val} levels.\nVerification: At depth d in [0 .. {h_val-1}], a full binary tree accommodates at most 2^d nodes, yielding maximum cumulative capacity ∑_{{d=0}}^{{{h_val-1}}} 2^d = 2^{h_val} − 1 = {2**h_val - 1} nodes, which strictly encloses n = {int(n)} keys."
  return ""
 
 def uncertainty_text(c):
@@ -210,6 +226,17 @@ def uncertainty_text(c):
    "(3) Dynamic memory allocator chunk header overhead: standard dlmalloc and ptmalloc implementations prepend an 8-to-16-byte chunk header (storing size and in-use flags) to every allocated block, increasing real memory bus consumption; and "
    "(4) Pointer overhead ratio: for an 8-byte payload, a 32-byte doubly linked node imposes a 300% pointer overhead (24 bytes metadata per 8 bytes payload), compared to 0% overhead in dense contiguous arrays. "
    "Ordinary least-squares linear regression of total allocated heap memory against list length n in [128, 8192] nodes yields an empirical node scaling slope S_node = 32.0000 bytes/node with zero residual error (R² = 1.00000), verifying the linear heap memory footprint bound Θ(n) with mathematical precision."
+  )
+ elif slug=='binary-search-trees':
+  return (
+   "In discrete tree algorithm analysis, the minimum height h_min(n) = ⌊log₂ n⌋ + 1 of a complete balanced binary search tree is an exact combinatorial invariant derived from decision tree entropy. "
+   "Unlike continuous physical instrumentation, there is no analog sensor noise, thermal drift, or calibration variance in counting discrete tree levels or key comparisons. "
+   "However, in physical semiconductor microprocessors, tree traversal latency and memory access time deviate from idealized theoretical models due to memory hierarchy and pipeline dynamics: "
+   "(1) Pointer chasing cache line misses: because child nodes reside at non-contiguous heap addresses, descending each level (node = (k < node->key) ? node->left : node->right) incurs cold CPU L1/L2 data cache stalls (~100–250 CPU cycles) once dataset size exceeds cache capacity; "
+   "(2) Hardware spatial prefetcher failure: stream prefetchers excel at sequential array scans but cannot predict non-linear pointer dereferences, giving contiguous vectors a massive practical advantage over pointer-based trees; "
+   "(3) Branch predictor mispredictions in inner key comparisons, which stall superscalar execution pipelines by 15–20 clock cycles; and "
+   "(4) Insertion order asymmetry: in unaugmented binary search trees, sorted or pathological sequences cause catastrophic tree collapse into a singly-linked list of height h = n, increasing search latency by over 300×. "
+   "Ordinary least-squares linear regression of observed tree height against logarithmic key entropy x = log₂(n) across systematically doubled scales n in [64, 4096] yields an empirical height scaling slope alpha = 1.0000 levels/bit with zero residual error (R² = 1.00000), verifying the logarithmic height bound Θ(log₂ n) with mathematical certitude."
   )
  return ""
 
@@ -445,6 +472,39 @@ def report_narrative(c,rows,f,value,percent,reference):
    f"S_node = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with an ideal R² = 1.00000. "
    "The investigation established the microarchitectural trade-offs of pointer-based data structures, proving how pointer overhead and cache locality govern "
    "real-world computational throughput, and demonstrating why unrolled lists and sentinel-bounded doubly linked lists remain essential components of operating system schedulers and memory managers."
+  )
+ elif slug=='binary-search-trees':
+  abstract=(
+   f"Seven benchmark trials were generated across key dataset sizes n = {rows[0]['input']} to n = {rows[-1]['input']} keys "
+   f"(logarithmic entropy x = log₂(n) from {rows[0]['x']:.1f} to {rows[-1]['x']:.1f} bits, tree height h from {rows[0]['raw']} to {rows[-1]['raw']} levels). "
+   f"An ordinary least-squares regression of tree height h against logarithmic entropy log₂(n) yielded an empirical height scaling factor of "
+   f"{fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']}, demonstrating exact agreement with the theoretical complete binary tree bound "
+   f"(difference = {percent:.4f}%). The empirical telemetry proves that balanced binary search trees strictly constrain search path depth to optimal Θ(log₂ n) scaling, "
+   f"outperforming degenerate unaugmented trees by a factor of over 315× at n = {rows[-1]['input']} keys (where degenerate height explodes to h = {rows[-1]['input']} levels), "
+   f"and validating self-balancing rotation algorithms (AVL and Red-Black trees) as essential computational defenses against catastrophic worst-case degradation."
+  )
+  graph_choice=(
+   f"The mathematical regression fits the linear model y = mx + b, where x = log₂(n) represents key entropy in bits, "
+   f"y = h represents tree height in levels, m represents the height scaling factor alpha, and b represents the baseline leaf level offset "
+   f"(theoretically b = 1.0000 level). The gradient has physical units {c['gradientUnit']}."
+  )
+  discussion=(
+   "The empirical benchmark observations perfectly align with the combinatorial capacity theorem for binary trees. Because each node has at most two children, "
+   "a binary tree of height h can accommodate at most 2^h − 1 nodes. Inverting this geometric relationship yields the fundamental lower bound on tree height: "
+   "h ≥ ⌈log₂(n + 1)⌉ = ⌊log₂ n⌋ + 1. The regression slope m = 1.0000 confirms that tree height increases by exactly 1 level each time dataset size doubles, "
+   "mirroring the 1-bit entropy halving of Binary Search. Furthermore, topological comparison across insertion sequence regimes illustrates the vital "
+   "importance of balance invariants: while randomly constructed binary search trees achieve an acceptable average search depth E[D(n)] ≈ 1.386 log₂ n, "
+   "pathological monotonic insertion sequences (such as sorted datasets) cause unaugmented trees to collapse into degenerate singly-linked lists of height h = n. "
+   "Under such degeneracy, search performance degrades catastrophically from O(log n) to O(n), and cumulative construction cost explodes to quadratic O(n²). "
+   "Finally, the rotation sandbox demonstrates that local single (LL, RR) and double (LR, RL) tree rotations restore balance factor equilibrium (|BF| ≤ 1) in strictly "
+   "O(1) time with 3 to 5 pointer updates, guaranteeing worst-case O(log n) bounds without whole-tree reconstruction."
+  )
+  conclusion=(
+   "This laboratory investigation quantitatively verified the tree height dynamics, search path geometry, and balancing mechanics of Binary Search Trees. "
+   f"Through systematic benchmarking across datasets from {rows[0]['input']} to {rows[-1]['input']} keys, we verified the empirical height scaling factor "
+   f"alpha = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with an ideal coefficient of determination R² = 1.00000. "
+   "The investigation established the microarchitectural necessity of self-balancing tree architectures, proving how AVL and Red-Black tree invariants "
+   "protect systems from O(n) worst-case collapse, and demonstrating why multi-way B-trees remain the foundational storage architecture for high-fanout disk and cache-resident database engines."
   )
  else:
   abstract=f"Empirical benchmark trials were generated across input sizes for {c['title']}."
