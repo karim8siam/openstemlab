@@ -64,6 +64,15 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:1.0,x,y,valid:m_mg>=0.20&&m_mg<=0.70};
  }
+ if(slug==='liquid-viscosity-poiseuille'){
+  const h=Number(input);
+  const const_geom=6.006263e-5;
+  const eta_ref=0.0010020;
+  const raw=round((const_geom / eta_ref) * h, 3);
+  const x=h;
+  const y=raw;
+  return {raw,ideal:raw,period:1.0,x,y,valid:h>=10.0&&h<=35.0};
+ }
  throw Error('Unknown Chemistry experiment predict: '+slug);
 }
 
@@ -96,6 +105,10 @@ function reading(slug,input,raw){
   y=Number(raw);
  }
  if(slug==='empirical-formula-magnesium-oxide'){
+  x=Number(input);
+  y=Number(raw);
+ }
+ if(slug==='liquid-viscosity-poiseuille'){
   x=Number(input);
   y=Number(raw);
  }
@@ -157,6 +170,12 @@ function estimate(slug,f){
   const ratio_est=f.m * conv;
   const se=f.slopeSE * conv;
   return {value:ratio_est,se:se,reference:1.0000};
+ }
+ if(slug==='liquid-viscosity-poiseuille'){
+  const const_geom=6.006263e-5;
+  const eta_est=(const_geom / f.m) * 1000.0;
+  const se=(const_geom / (f.m * f.m)) * f.slopeSE * 1000.0;
+  return {value:eta_est,se:se,reference:1.0020};
  }
  throw Error('Unknown Chemistry experiment estimate: '+slug);
 }

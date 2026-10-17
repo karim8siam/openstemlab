@@ -77,7 +77,8 @@ def experiment_index(experiments):
     'molar-volume-ideal-gas':'molar volume ideal gas eudiometer acid metal displacement magnesium hydrogen gas dalton partial pressure water vapor pressure leveling cylinder stp avogadro van der waals',
     'volatile-liquid-molar-mass':'molar mass volatile liquid dumas method vapor density cyclohexane boiling water bath pinhole air buoyancy pycnometry ideal gas equation of state van der waals',
     'chemical-reactions-copper-cycle':'chemical reactions copper cycle conservation of mass redox metathesis precipitation dehydration neutralization single displacement gravimetric recovery percentage yield lavoisier stoichiometry tenorite',
-    'empirical-formula-magnesium-oxide':'empirical formula magnesium oxide crucible thermal oxidation meker burner porcelain constant mass proust definite proportions dalton magnesium nitride hydrolysis ammonia steam rocksalt lattice'}
+    'empirical-formula-magnesium-oxide':'empirical formula magnesium oxide crucible thermal oxidation meker burner porcelain constant mass proust definite proportions dalton magnesium nitride hydrolysis ammonia steam rocksalt lattice',
+    'liquid-viscosity-poiseuille':'liquid dynamic viscosity hagen poiseuille capillary flow hydrostatic head water jacket newton shear stress laminar reynolds number ostwald falling sphere rotational couette'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):

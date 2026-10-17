@@ -32,6 +32,9 @@ function update(){
  }else if(cfg.slug==='empirical-formula-magnesium-oxide'){
   $('liveState').textContent='Ready to burn '+p.input.toFixed(2)+' g burnished magnesium ribbon in porcelain crucible.';
   message('Set initial magnesium mass m_Mg, then oxidize, digest nitride with steam, calcine & weigh.');
+ }else if(cfg.slug==='liquid-viscosity-poiseuille'){
+  $('liveState').textContent='Ready to establish '+p.input.toFixed(1)+' cm hydrostatic head across capillary.';
+  message('Set hydrostatic head Δh, equilibrate at 20.0 °C, purge bubbles & record flow rate.');
  }else{
   $('liveState').textContent='Ready to dispense '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+' of liquid.';
   message('Adjust '+cfg.shortInput+' V, then weigh the dispensed aliquot.');
@@ -58,6 +61,7 @@ $('measure').onclick=async()=>{
  if(cfg.slug==='volatile-liquid-molar-mass') msgStart='Immersing Dumas bulb at 100 °C, flushing air through pinhole, condensing & weighing…';
  if(cfg.slug==='chemical-reactions-copper-cycle') msgStart='Dissolving in HNO₃, precipitating Cu(OH)₂, dehydrating to CuO, dissolving in H₂SO₄, reducing with Zn, washing & desiccation…';
  if(cfg.slug==='empirical-formula-magnesium-oxide') msgStart='Igniting magnesium ribbon, throttling aerosol smoke, digesting nitride with hot water, calcining at 850 °C…';
+ if(cfg.slug==='liquid-viscosity-poiseuille') msgStart='Equilibrating jacket at 20.0 °C, establishing constant overflow head, timing effluent discharge…';
  message(msgStart);
  await new Promise(resolve=>setTimeout(resolve,400));
  const raw=prediction.raw;
@@ -82,6 +86,9 @@ $('measure').onclick=async()=>{
  }else if(cfg.slug==='empirical-formula-magnesium-oxide'){
   $('liveState').textContent='Calcined magnesium oxide: incorporated '+raw.toFixed(4)+' g bound oxygen.';
   message('Crucible thermal oxidation complete: incorporated '+raw.toFixed(4)+' g O into '+p.input.toFixed(2)+' g Mg (formula MgO). Record in notebook.');
+ }else if(cfg.slug==='liquid-viscosity-poiseuille'){
+  $('liveState').textContent='Volumetric capillary discharge: '+raw.toFixed(3)+' mL/min at Δh = '+p.input.toFixed(1)+' cm.';
+  message('Poiseuille flow stabilized: discharge rate '+raw.toFixed(3)+' mL/min under '+p.input.toFixed(1)+' cm head (Re < 90, laminar). Record in notebook.');
  }else{
   $('liveState').textContent='Analytical balance stabilized: '+raw.toFixed(cfg.rawDecimals)+' g net mass.';
   message('Gravimetric measurement complete: '+raw.toFixed(cfg.rawDecimals)+' '+cfg.rawUnit+' for '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+'. Record in notebook.');
@@ -263,6 +270,18 @@ function draw(t){
    return;
   }
   $('apparatusDiagram').innerHTML=drawMgBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='liquid-viscosity-poiseuille'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawPoiseuilleCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawPoiseuilleSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawPoiseuilleBenchView(p,rawVal);
   return;
  }
  if(currentSimMode==='compare'){
@@ -2058,5 +2077,264 @@ function drawMgSandboxView(p,rawVal){
  });
 
  svg+=text(360,305,'Formula Verification: Ordinary least-squares regression slope m_slope = 0.65823 g O / g Mg isolations ratio n(O)/n(Mg) = 1.0000.','#789c80',9);
+ return svg;
+}
+
+
+// ======================================================================
+// CHEMISTRY LAB 08: LIQUID VISCOSITY & POISEUILLE FLOW
+// ======================================================================
+function drawPoiseuilleBenchView(p,rawVal){
+ const h_cm=p.input;
+ const q_val=rawVal;
+ const dP_pa=998.2*9.80665*(h_cm/100.0);
+ const v_mean=(q_val/60.0/1e6)/(Math.PI*Math.pow(0.00025,2));
+ const reynolds=(2.0*0.00025*v_mean*998.2)/0.0010020;
+
+ let svg='<defs>';
+ svg+='<linearGradient id="waterFlow" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#0284c7" stop-opacity=".7"/><stop offset="50%" stop-color="#38bdf8" stop-opacity=".9"/><stop offset="100%" stop-color="#0284c7" stop-opacity=".7"/></linearGradient>';
+ svg+='<linearGradient id="jacketGlass" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffffff" stop-opacity=".2"/><stop offset="15%" stop-color="#38bdf8" stop-opacity=".08"/><stop offset="85%" stop-color="#38bdf8" stop-opacity=".12"/><stop offset="100%" stop-color="#ffffff" stop-opacity=".3"/></linearGradient>';
+ svg+='<linearGradient id="reservoirGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#ffffff" stop-opacity=".25"/><stop offset="20%" stop-color="#ffffff" stop-opacity=".05"/><stop offset="80%" stop-color="#ffffff" stop-opacity=".08"/><stop offset="100%" stop-color="#ffffff" stop-opacity=".3"/></linearGradient>';
+ svg+='</defs><rect width="720" height="320" fill="#08140c"/>';
+
+ svg+=text(360,20,'HAGEN-POISEUILLE CONSTANT-HEAD CAPILLARY VISCOMETER (20.0 °C THERMOSTATED)','#86efac',12);
+
+ // Table surface
+ svg+='<rect x="0" y="275" width="720" height="45" fill="#132419" stroke="#1f3b2a" stroke-width="1"/>';
+ svg+='<line x1="0" y1="275" x2="720" y2="275" stroke="#2d523b" stroke-width="2"/>';
+
+ // --- 1. Constant-Head Reservoir (Left: x = 30 to 140) ---
+ const resX=45,resW=65,resH=180,resY=45;
+ svg+='<rect x="'+resX+'" y="'+resY+'" width="'+resW+'" height="'+resH+'" rx="4" fill="url(#reservoirGrad)" stroke="#475569" stroke-width="1.2"/>';
+
+ // Liquid column height in reservoir corresponding to Delta h (cm)
+ const hPixels=(h_cm/40.0)*130;
+ const liquidY=resY+resH-30-hPixels;
+ svg+='<rect x="'+(resX+2)+'" y="'+liquidY+'" width="'+(resW-4)+'" height="'+(resY+resH-liquidY)+'" rx="2" fill="url(#waterFlow)" fill-opacity=".65"/>';
+ svg+='<ellipse cx="'+(resX+resW/2)+'" cy="'+liquidY+'" rx="'+(resW/2-2)+'" ry="4" fill="#7dd3fc" fill-opacity=".8"/>';
+
+ // Overflow weir tube on left of reservoir
+ svg+='<path d="M'+resX+' '+(liquidY+5)+' L'+(resX-18)+' '+(liquidY+5)+' L'+(resX-18)+' '+(resY+resH)+' L'+(resX-24)+' '+(resY+resH)+'" fill="none" stroke="#64748b" stroke-width="3"/>';
+ svg+='<text x="'+(resX-20)+'" y="'+(liquidY)+'" text-anchor="end" fill="#94a3b8" font-size="7">Overflow Weir</text>';
+
+ // Cathetometer height indicator scale
+ svg+='<line x1="'+(resX+resW+8)+'" y1="'+(resY+resH-30)+'" x2="'+(resX+resW+8)+'" y2="'+liquidY+'" stroke="#facc15" stroke-width="2"/>';
+ svg+='<line x1="'+(resX+resW+4)+'" y1="'+liquidY+'" x2="'+(resX+resW+12)+'" y2="'+liquidY+'" stroke="#facc15" stroke-width="2"/>';
+ svg+='<line x1="'+(resX+resW+4)+'" y1="'+(resY+resH-30)+'" x2="'+(resX+resW+12)+'" y2="'+(resY+resH-30)+'" stroke="#facc15" stroke-width="2"/>';
+ svg+='<text x="'+(resX+resW+16)+'" y="'+(liquidY+hPixels/2+4)+'" fill="#facc15" font-size="9" font-weight="bold">Δh = '+h_cm.toFixed(1)+' cm</text>';
+
+ // Feed line connecting reservoir bottom to capillary
+ svg+='<path d="M'+(resX+resW/2)+' '+(resY+resH)+' L'+(resX+resW/2)+' '+(resY+resH+15)+' L160 '+(resY+resH+15)+' L160 170" fill="none" stroke="#38bdf8" stroke-width="5" stroke-opacity=".8"/>';
+
+
+ // --- 2. Jacketed Precision Capillary Tube (Center: x = 160 to 490) ---
+ const capX=170,capY=162,capW=310,capH=16;
+ // Thermostatic Water Jacket (outer cylinder)
+ const jX=155,jY=146,jW=340,jH=48;
+ svg+='<rect x="'+jX+'" y="'+jY+'" width="'+jW+'" height="'+jH+'" rx="8" fill="url(#jacketGlass)" stroke="#38bdf8" stroke-width="1.5"/>';
+ svg+='<text x="'+(jX+jW/2)+'" y="'+(jY-6)+'" text-anchor="middle" fill="#38bdf8" font-size="8.5" font-weight="bold">Water Jacket: 20.0 ± 0.05 °C (Length L = 15.00 cm)</text>';
+
+ // Precision Capillary Tube inside (inner tube)
+ svg+='<rect x="'+capX+'" y="'+capY+'" width="'+capW+'" height="'+capH+'" rx="2" fill="url(#reservoirGrad)" stroke="#64748b" stroke-width="1"/>';
+ // Flowing liquid stream inside capillary
+ svg+='<rect x="'+(capX+1)+'" y="'+(capY+4)+'" width="'+(capW-2)+'" height="'+(capH-8)+'" fill="url(#waterFlow)"/>';
+
+ // Laminar streamline dashes
+ if(busy){
+  for(let l=0;l<5;l++){
+   svg+='<line x1="'+(capX+20+l*55)+'" y1="'+(capY+capH/2)+'" x2="'+(capX+45+l*55)+'" y2="'+(capY+capH/2)+'" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="4,2"/>';
+  }
+ }
+ svg+='<text x="'+(capX+capW/2)+'" y="'+(capY+capH/2+3)+'" text-anchor="middle" fill="#ffffff" font-size="7.5" font-weight="bold">Radius r = 0.250 mm (Poiseuille Laminar Streamlines)</text>';
+
+ // Jacket circulating coolant ports
+ svg+='<rect x="'+(jX+30)+'" y="'+(jY+jH)+'" width="12" height="15" fill="#38bdf8" stroke="#0284c7"/>';
+ svg+='<text x="'+(jX+36)+'" y="'+(jY+jH+24)+'" text-anchor="middle" fill="#38bdf8" font-size="7">Bath In (20°C)</text>';
+ svg+='<rect x="'+(jX+jW-42)+'" y="'+(jY-15)+'" width="12" height="15" fill="#38bdf8" stroke="#0284c7"/>';
+ svg+='<text x="'+(jX+jW-36)+'" y="'+(jY-18)+'" text-anchor="middle" fill="#38bdf8" font-size="7">Bath Out</text>';
+
+
+ // --- 3. Receiving Vessel / Effluent Burette (Right: x = 520 to 690) ---
+ const bX=540,bY=120,bW=34,bH=150;
+ svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="3" fill="url(#reservoirGrad)" stroke="#64748b" stroke-width="1.2"/>';
+ // Capillary exit nozzle into receiving burette
+ svg+='<path d="M'+(capX+capW)+' '+(capY+capH/2)+' L'+(bX+bW/2)+' '+(capY+capH/2)+' L'+(bX+bW/2)+' '+(bY+15)+'" fill="none" stroke="#38bdf8" stroke-width="3"/>';
+ // Dripping effluent
+ svg+='<line x1="'+(bX+bW/2)+'" y1="'+(bY+15)+'" x2="'+(bX+bW/2)+'" y2="'+(bY+35)+'" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="3,3"/>';
+ svg+='<circle cx="'+(bX+bW/2)+'" cy="'+(bY+38)+'" r="2" fill="#7dd3fc"/>';
+
+ // Collected liquid in receiving burette
+ const collH=Math.min(90, Math.max(10, (q_val/2.2)*80));
+ svg+='<rect x="'+(bX+2)+'" y="'+(bY+bH-collH)+'" width="'+(bW-4)+'" height="'+collH+'" rx="2" fill="url(#waterFlow)" fill-opacity=".75"/>';
+ // Burette graduation lines
+ for(let gy=bY+20;gy<bY+bH-10;gy+=12){
+  svg+='<line x1="'+bX+'" y1="'+gy+'" x2="'+(bX+6)+'" y2="'+gy+'" stroke="#94a3b8" stroke-width="0.8"/>';
+ }
+
+ // Analytical Digital Readout Screen (Right Panel)
+ const panX=590,panY=85,panW=115,panH=150;
+ svg+='<rect x="'+panX+'" y="'+panY+'" width="'+panW+'" height="'+panH+'" rx="5" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg+='<text x="'+(panX+panW/2)+'" y="'+(panY+18)+'" text-anchor="middle" fill="#86efac" font-size="9" font-weight="bold">DISCHARGE RATE</text>';
+
+ svg+='<rect x="'+(panX+8)+'" y="'+(panY+26)+'" width="'+(panW-16)+'" height="32" rx="3" fill="#051009" stroke="#162e1e"/>';
+ const dispQ=measurement?q_val.toFixed(3):(busy?(rawVal*0.75).toFixed(3):'0.000');
+ svg+='<text x="'+(panX+panW/2)+'" y="'+(panY+48)+'" text-anchor="middle" fill="#38bdf8" font-size="14" font-family="monospace" font-weight="bold">'+dispQ+'</text>';
+ svg+='<text x="'+(panX+panW/2)+'" y="'+(panY+70)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5">mL / min</text>';
+
+ svg+='<rect x="'+(panX+8)+'" y="'+(panY+78)+'" width="'+(panW-16)+'" height="58" rx="3" fill="#051009" stroke="#162e1e"/>';
+ svg+='<text x="'+(panX+12)+'" y="'+(panY+92)+'" fill="#789c80" font-size="7">ΔP = '+dP_pa.toFixed(0)+' Pa</text>';
+ svg+='<text x="'+(panX+12)+'" y="'+(panY+105)+'" fill="#789c80" font-size="7">v = '+v_mean.toFixed(3)+' m/s</text>';
+ svg+='<text x="'+(panX+12)+'" y="'+(panY+118)+'" fill="#86efac" font-size="7" font-weight="bold">Re = '+reynolds.toFixed(1)+' (Laminar)</text>';
+ svg+='<text x="'+(panX+12)+'" y="'+(panY+130)+'" fill="#facc15" font-size="7">η = 1.0020 mPa·s</text>';
+
+ svg+=text(360,305,'Poiseuille Metrology: Q = (π·r⁴·ΔP) / (8·η·L); High aspect ratio (L/r = 600) eliminates Couette end-effects.','#789c80',8.5);
+ return svg;
+}
+
+function drawPoiseuilleCompareView(p,rawVal){
+ let svg='<rect x="0" y="0" width="720" height="320" fill="#08140c"/>';
+ svg+=text(360,24,'COMPARATIVE VISCOMETRY METROLOGY: PRIMARY VS SECONDARY FLUID TRANSPORT METHODS','#86efac',12);
+
+ const cards=[
+  {
+   title:'1. Absolute Poiseuille Capillary',
+   sub:'Primary Hydrostatic Capillary Flow (Our Lab)',
+   color:'#86efac',
+   border:'#254d33',
+   items:[
+    'Principle: Steady laminar flow under constant hydrostatic head Δh',
+    'Equation: Q = (π · r⁴ · ρ · g · Δh) / (8 · η · L)',
+    'Classification: Fundamental primary method (no calibration fluid needed)',
+    'Fluid range: Low-viscosity fluids (0.3 to 20 mPa·s, water/solvents)',
+    'Temperature control: Thermostated water jacket stable to ±0.05 °C',
+    'Primary advantage: Extracts true absolute dynamic viscosity directly',
+    'Limitation: Highly sensitive to capillary radius bore uniformity (r⁴)'
+   ]
+  },
+  {
+   title:'2. Relative Ostwald / Ubbelohde',
+   sub:'Gravity Efflux Timing in U-Tube',
+   color:'#38bdf8',
+   border:'#1e3a5f',
+   items:[
+    'Principle: Efflux time t of fixed volume draining between etched marks',
+    'Equation: η_unk / η_ref = (ρ_unk · t_unk) / (ρ_ref · t_ref)',
+    'Classification: Secondary relative method (requires pure water reference)',
+    'Fluid range: Polymer solutions, intrinsic viscosity [η], biological serums',
+    'Temperature control: Immersion in large optical thermostatic bath',
+    'Primary advantage: Simple glassware, fast execution, small sample volume',
+    'Limitation: Relative only; variable driving head requires meniscus alignment'
+   ]
+  },
+  {
+   title:'3. Falling Sphere / Rotational',
+   sub:'Stokes Terminal Drag & Concentric Cylinder Shear',
+   color:'#fde047',
+   border:'#5a4814',
+   items:[
+    'Principle: Stokes settling sphere (Höppler) or Couette drag torque',
+    'Equation: Höppler: η = K · (ρ_s - ρ) · t; Couette: τ = η · (du/dy)',
+    'Classification: Direct mechanical shear rate rheometry',
+    'Fluid range: Medium to ultra-high viscosity (1 to 10⁶ mPa·s, oils/polymers)',
+    'Temperature control: Jacketed cell with Peltier heating/cooling',
+    'Primary advantage: Sweeps shear rates to detect shear-thinning (non-Newtonian)',
+    'Limitation: High-viscosity requirement; wall effects alter settling speed'
+   ]
+  }
+ ];
+
+ cards.forEach((c,idx)=>{
+  const x=25+idx*230,y=46,w=210,h=242;
+  svg+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="6" fill="#0d1f14" stroke="'+c.border+'" stroke-width="1.5"/>';
+  svg+='<rect x="'+(x+8)+'" y="'+(y+8)+'" width="'+(w-16)+'" height="32" rx="4" fill="#051009"/>';
+  svg+='<text x="'+(x+w/2)+'" y="'+(y+22)+'" text-anchor="middle" fill="'+c.color+'" font-size="9.5" font-weight="bold">'+c.title+'</text>';
+  svg+='<text x="'+(x+w/2)+'" y="'+(y+34)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5">'+c.sub+'</text>';
+
+  c.items.forEach((item,ii)=>{
+   const iy=y+54+ii*26;
+   svg+='<circle cx="'+(x+16)+'" cy="'+(iy-3)+'" r="2" fill="'+c.color+'"/>';
+   svg+='<foreignObject x="'+(x+24)+'" y="'+(iy-10)+'" width="'+(w-32)+'" height="26"><p xmlns="http://www.w3.org/1999/xhtml" style="font-size:7.5px;color:#cbd5e1;line-height:1.2;margin:0">'+item+'</p></foreignObject>';
+  });
+ });
+
+ svg+=text(360,305,'Comparison: Poiseuille measures absolute viscosity standard-free; Ostwald requires water calibration.','#789c80',9);
+ return svg;
+}
+
+function drawPoiseuilleSandboxView(p,rawVal){
+ const h_cm=p.input;
+ const q_val=rawVal;
+ const dP_pa=998.2*9.80665*(h_cm/100.0);
+ const v_mean=(q_val/60.0/1e6)/(Math.PI*Math.pow(0.00025,2));
+ const reynolds=(2.0*0.00025*v_mean*998.2)/0.0010020;
+
+ let svg='<rect x="0" y="0" width="720" height="320" fill="#08140c"/>';
+ svg+=text(360,22,'PARABOLIC SHEAR VELOCITY PROFILE & LAMINAR FLOW STABILITY: POISEUILLE','#86efac',12);
+
+ // Left Panel: Parabolic Velocity Profile across Capillary Bore (r = -R to +R)
+ const lX=25,lY=46,lW=340,lH=230;
+ svg+='<rect x="'+lX+'" y="'+lY+'" width="'+lW+'" height="'+lH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg+='<text x="'+(lX+lW/2)+'" y="'+(lY+18)+'" text-anchor="middle" fill="#86efac" font-size="10" font-weight="bold">PARABOLIC SHEAR VELOCITY PROFILE v(r)</text>';
+
+ // Upper & lower capillary walls
+ const wY1=lY+45,wY2=lY+165;
+ svg+='<line x1="'+(lX+20)+'" y1="'+wY1+'" x2="'+(lX+lW-20)+'" y2="'+wY1+'" stroke="#94a3b8" stroke-width="3"/>';
+ svg+='<text x="'+(lX+25)+'" y="'+(wY1-6)+'" fill="#94a3b8" font-size="7.5">Upper Capillary Wall (r = +R, v = 0 No-Slip)</text>';
+ svg+='<line x1="'+(lX+20)+'" y1="'+wY2+'" x2="'+(lX+lW-20)+'" y2="'+wY2+'" stroke="#94a3b8" stroke-width="3"/>';
+ svg+='<text x="'+(lX+25)+'" y="'+(wY2+12)+'" fill="#94a3b8" font-size="7.5">Lower Capillary Wall (r = -R, v = 0 No-Slip)</text>';
+
+ // Centerline dashed line
+ const cY=(wY1+wY2)/2;
+ svg+='<line x1="'+(lX+20)+'" y1="'+cY+'" x2="'+(lX+lW-20)+'" y2="'+cY+'" stroke="#334155" stroke-width="1" stroke-dasharray="3,3"/>';
+
+ // Velocity profile arrows (parabolic curve)
+ const vMaxPix=(v_mean/0.20)*130;
+ for(let step=-5;step<=5;step++){
+  const rFrac=step/5.0;
+  const py=cY+rFrac*((wY2-wY1)/2 - 5);
+  const vxLen=vMaxPix*(1 - rFrac*rFrac);
+  if(vxLen>2){
+   svg+='<line x1="'+(lX+50)+'" y1="'+py+'" x2="'+(lX+50+vxLen)+'" y2="'+py+'" stroke="#38bdf8" stroke-width="1.5"/>';
+   svg+='<polygon points="'+(lX+50+vxLen)+','+(py-2.5)+' '+(lX+54+vxLen)+','+py+' '+(lX+50+vxLen)+','+(py+2.5)+'" fill="#38bdf8"/>';
+  }
+ }
+ // Curve connecting arrow heads
+ const pts=[];
+ for(let s=-20;s<=20;s++){
+  const rf=s/20.0;
+  const y=cY+rf*((wY2-wY1)/2 - 5);
+  const x=lX+54+vMaxPix*(1 - rf*rf);
+  pts.push(x.toFixed(1)+','+y.toFixed(1));
+ }
+ svg+='<polyline points="'+pts.join(' ')+'" fill="none" stroke="#facc15" stroke-width="1.8"/>';
+
+ // Data summary below velocity profile
+ svg+='<rect x="'+(lX+15)+'" y="'+(lY+180)+'" width="'+(lW-30)+'" height="38" rx="4" fill="#051009" stroke="#162e1e"/>';
+ svg+='<text x="'+(lX+25)+'" y="'+(lY+194)+'" fill="#789c80" font-size="7.5">Mean Velocity: v_mean = '+v_mean.toFixed(3)+' m/s  |  Max Velocity: v_max = '+(2*v_mean).toFixed(3)+' m/s</text>';
+ svg+='<text x="'+(lX+25)+'" y="'+(lY+208)+'" fill="#86efac" font-size="7.5" font-family="monospace">v(r) = [ΔP/(4ηL)] · (R² - r²)  ⟹  Shear Rate at Wall γ̇_w = '+((4*v_mean)/0.00025).toFixed(0)+' s⁻¹</text>';
+
+
+ // Right Panel: Reynolds Number & End-Correction Analysis
+ const rX=380,rY=46,rW=315,rH=230;
+ svg+='<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg+='<text x="'+(rX+rW/2)+'" y="'+(rY+18)+'" text-anchor="middle" fill="#86efac" font-size="10" font-weight="bold">REYNOLDS CRITERION & HYDRODYNAMIC AUDIT</text>';
+
+ const errItems=[
+  {label:'Reynolds Number',desc:'Re = (2·r·v·ρ)/η = '+reynolds.toFixed(1)+' ≪ 2000',val:'Strictly Laminar Flow',col:'#48bb78'},
+  {label:'Couette End-Losses',desc:'Entrance length L_e ≈ 0.22 cm ≪ 15 cm (L/r = 600)',val:'< 0.2% Dissipation',col:'#38bdf8'},
+  {label:'Radius Sensitivity (r⁴)',desc:'δr/r = 0.4% propagates as 4·(δr/r) = 1.6%',val:'Calibrated to ±0.001 mm',col:'#f87171'},
+  {label:'Thermal Gradient (T)',desc:'∂η/∂T ≈ -2.5%/°C near 20.0 °C',val:'Thermostated ±0.05 °C',col:'#fbbf24'},
+  {label:'OLS Slope Insulation (★)',desc:'Residual meniscus pressure absorbed into Q₀',val:'Slope = 0.05995 Unbiased',col:'#86efac'}
+ ];
+
+ errItems.forEach((ei,idx)=>{
+  const ey=rY+30+idx*39;
+  svg+='<rect x="'+(rX+8)+'" y="'+ey+'" width="'+(rW-16)+'" height="33" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg+='<text x="'+(rX+14)+'" y="'+(ey+12)+'" fill="'+ei.col+'" font-size="7.5" font-weight="bold">'+ei.label+'</text>';
+  svg+='<text x="'+(rX+14)+'" y="'+(ey+25)+'" fill="#94a3b8" font-size="6.8">'+ei.desc+'</text>';
+  svg+='<text x="'+(rX+rW-14)+'" y="'+(ey+12)+'" text-anchor="end" fill="'+ei.col+'" font-size="7.5" font-family="monospace">'+ei.val+'</text>';
+ });
+
+ svg+=text(360,305,'Laminar Invariant: Reynolds number Re = '+reynolds.toFixed(1)+' guarantees pure Poiseuille streamline shear.','#789c80',9);
  return svg;
 }

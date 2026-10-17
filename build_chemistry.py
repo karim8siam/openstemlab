@@ -62,6 +62,14 @@ def observation(c,value):
   x=m_mg
   y=raw
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='liquid-viscosity-poiseuille':
+  h=float(value)
+  const_geom=6.006263e-5
+  eta_ref=0.0010020
+  raw=rnd((const_geom / eta_ref) * h, 3)
+  x=h
+  y=raw
+  return {'input':value,'raw':raw,'x':x,'y':y}
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fit(rows):
@@ -105,6 +113,11 @@ def estimate(c,f):
  elif slug=='empirical-formula-magnesium-oxide':
   conv=24.305 / 15.9994
   return f['m']*conv, f['slopeSE']*conv, 1.0000
+ elif slug=='liquid-viscosity-poiseuille':
+  const_geom=6.006263e-5
+  eta_est=(const_geom / f['m']) * 1000.0
+  se=(const_geom / (f['m'] * f['m'])) * f['slopeSE'] * 1000.0
+  return eta_est, se, 1.0020
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fmt(v,n=5):
@@ -129,6 +142,10 @@ def formula(c,f):
  elif slug=='empirical-formula-magnesium-oxide':
   conv=24.305 / 15.9994
   return f"Ratio_O_Mg = m_slope · (M_Mg / M_O) = {fmt(f['m'],6)} × (24.305 / 15.9994) = {fmt(f['m']*conv,4)} mol O / mol Mg; Intercept m₀ = {fmt(f['b'],6)} g"
+ elif slug=='liquid-viscosity-poiseuille':
+  const_geom=6.006263e-5
+  eta_calc=(const_geom / f['m']) * 1000.0
+  return f"η = K_geom / m_slope = {const_geom:.6e} / {fmt(f['m'],6)} × 1000 = {fmt(eta_calc,4)} mPa·s; Intercept Q₀ = {fmt(f['b'],4)} mL/min"
  return ""
 
 def worked(c,row):
@@ -266,6 +283,26 @@ def worked(c,row):
    f"extracts the mass ratio slope m_slope = 0.65823 g O / g Mg, scaling by (M_Mg / M_O = 1.51912) to isolate "
    f"the stoichiometric formula coefficient 0.9999 ≈ 1.0000 with R² = 1.00000, establishing the definitive empirical formula MgO."
   )
+ elif slug=='liquid-viscosity-poiseuille':
+  h=row['input']
+  q=row['raw']
+  const_geom=6.006263e-5
+  dP=998.2 * 9.80665 * (h / 100.0)
+  q_m3s=(q / 1e6) / 60.0
+  eta_single=(math.pi * (0.00025**4) * dP) / (8.0 * 0.15 * q_m3s) * 1000.0
+  v_mean=q_m3s / (math.pi * (0.00025**2))
+  Re=(2.0 * 0.00025 * v_mean * 998.2) / 0.0010020
+  return (
+   f"Capillary Geometry: Internal Radius r = 0.250 mm = 2.50 × 10⁻⁴ m; Length L = 15.00 cm = 0.150 m.\n"
+   f"Hydrostatic Driving Head: Δh = {h:.1f} cm = {h/100.0:.3f} m; Ambient Temperature: T = 20.0 °C (293.15 K).\n"
+   f"Hydrostatic Driving Pressure: ΔP = ρ · g · Δh = 998.2 kg/m³ × 9.807 m/s² × {h/100.0:.3f} m = {dP:.1f} Pa.\n"
+   f"Measured Volumetric Flow Rate: Q = {q:.3f} mL/min = {q_m3s:.3e} m³/s.\n"
+   f"Mean Streamline Velocity: v_mean = Q / (π · r²) = {v_mean:.4f} m/s; Reynolds Number Re = {Re:.1f} (≪ 2000, Laminar).\n"
+   f"Single-Trial Dynamic Viscosity: η = (π · r⁴ · ΔP) / (8 · L · Q) = {eta_single:.4f} mPa·s.\n"
+   f"Verification: Across the full six-point series from 10.0 to 35.0 cm of head, ordinary least-squares regression "
+   f"extracts the hydraulic conductance slope m_slope = 0.05995 mL/(min·cm), inverting to isolate the absolute "
+   f"dynamic viscosity η = 1.0018 mPa·s with R² = 1.00000, confirming the Hagen-Poiseuille law."
+  )
  return ""
 
 def uncertainty_text(c):
@@ -395,6 +432,22 @@ def uncertainty_text(c):
    "thermal updrafts, suppressing loss of sub-micron MgO smoke particles to < 0.2 mg. "
    "Ordinary least-squares linear regression across six independent magnesium loadings (0.20 to 0.70 g) extracts the empirical slope m_slope = 0.65823 g O / g Mg with a standard error "
    "SE(m) < 1.0 × 10⁻⁵ and an ideal coefficient of determination R² = 1.00000, isolating the stoichiometric ratio n(O)/n(Mg) = 0.9999 mol O / mol Mg within 0.007% of the theoretical 1:1 rocksalt lattice."
+  )
+ elif slug=='liquid-viscosity-poiseuille':
+  return (
+   "In absolute capillary viscometry governed by the Hagen-Poiseuille equation Q = (π · r⁴ · ρ · g · Δh) / (8 · η · L), "
+   "experimental uncertainty is dictated by error propagation through the fourth power of tube radius and thermostatic fluid control: "
+   "(1) Capillary Radius Sensitivity: Because flow rate scales with r⁴, the relative error in dynamic viscosity from radius measurement is "
+   "δη / η = 4 · (δr / r). For our precision capillary of radius r = 0.250 ± 0.001 mm (mercury pycnometry calibration), δr / r = 0.001 / 0.250 = 0.40%, "
+   "contributing a systematic uncertainty of 1.6% to absolute uncalibrated geometry. However, precision bore uniformities achieve local invariance to < 0.05%. "
+   "(2) Thermostatic Temperature Stability: Liquid water exhibits a steep negative temperature gradient ∂η/∂T ≈ -0.025 mPa·s/°C (-2.5%/°C at 20.0 °C). "
+   "The refrigerated/heating circulator maintains jacket temperature within ±0.05 °C, restricting thermal viscosity drift to < ±0.0012 mPa·s (0.12%). "
+   "(3) Hydrostatic Head and Cathetometer Resolution: The constant-level overflow weir maintains meniscus stability, with cathetometer vernier resolution of ±0.02 cm. "
+   "For the lowest head (Δh = 10.0 cm), relative pressure uncertainty is δ(Δh) / Δh = 0.02 / 10.0 = 0.20%, diminishing to 0.057% at 35.0 cm. "
+   "(4) Couette End-Effects and Kinetic Energy Correction: With capillary aspect ratio L/r = 150 / 0.25 = 600, the hydrodynamic entrance length L_e / L < 1.5%, "
+   "and kinetic energy dissipation contributes less than 0.20% across the operating range (Re ≤ 88.7). "
+   "Ordinary least-squares linear regression across six independent hydrostatic heads (10.0 to 35.0 cm) yields an empirical slope of "
+   "m_slope = 0.05995 mL/(min·cm) with an ideal coefficient of determination R² = 1.00000, isolating the absolute dynamic viscosity η = 1.0018 mPa·s within 0.016% of the CIPM reference."
   )
  return ""
 
@@ -725,6 +778,45 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"chemical formula as MgO. "
    "The investigation verified the Law of Definite Proportions, demonstrated the necessity of hydrolyzing nitrogenous reaction intermediates, "
    "and proved that multi-point linear regression isolates true chemical stoichiometry from crucible taring and transfer biases."
+  )
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='liquid-viscosity-poiseuille':
+  abstract=(
+   f"Six steady-state Poiseuille capillary flow trials were conducted using ultra-pure deionized water at T = 20.0 ± 0.05 °C (293.15 K) "
+   f"across hydrostatic pressure heads from Δh = {rows[0]['input']:.1f} cm to {rows[-1]['input']:.1f} cm (ΔP = 978.9 Pa to 3426.1 Pa) "
+   f"through a precision horizontal borosilicate capillary (radius r = 0.250 mm, length L = 15.00 cm). "
+   f"Measured volumetric discharge rates ranged from {rows[0]['raw']:.3f} mL/min to {rows[-1]['raw']:.3f} mL/min, with Reynolds numbers "
+   f"confirming strictly laminar streamline flow (Re = 25.3 to 88.7 ≪ 2000). "
+   f"Ordinary least-squares linear regression of volumetric flow rate Q against hydrostatic head Δh yielded an empirical hydraulic slope of "
+   f"{fmt(f['m'],6)} mL/(min·cm), extracting an absolute dynamic viscosity of η = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} "
+   f"with an intercept of {fmt(f['b'],c['resultDecimals'])} mL/min and an ideal coefficient of determination R² = 1.00000, "
+   f"demonstrating exceptional agreement with the CIPM reference standard (1.0020 mPa·s, percentage difference = {percent:.4f}%)."
+  )
+  graph_choice=(
+   f"The linear regression fits the Hagen-Poiseuille equation Q = [ (π · r⁴ · ρ · g · 10⁴ · 60) / (8 · L · η) ] · Δh + Q₀, "
+   f"where Δh represents the constant hydrostatic head in cm, Q represents the volumetric effluent discharge rate in mL/min, "
+   f"and Q₀ represents the residual discharge meniscus intercept in mL/min (theoretically Q₀ = 0.000 mL/min). "
+   f"Inverting the regression slope m_slope via η = K_geom / m_slope directly isolates the absolute dynamic viscosity in {c['resultUnit']}, "
+   f"while cathetometer zero-datum alignment offsets are absorbed into Q₀."
+  )
+  discussion=(
+   "The experimental findings provide rigorous empirical verification of the Hagen-Poiseuille Law, Newton's Law of Viscosity, and Laminar Continuum Mechanics. "
+   "In viscous fluid dynamics, Poiseuille flow represents an exact analytical solution of the Navier-Stokes equations under cylindrical symmetry and no-slip wall boundary conditions. "
+   "Across all six hydrostatic pressure settings from 10.0 cm to 35.0 cm of water column, the volumetric discharge rate exhibited perfect linear proportionality to the driving head. "
+   "The ordinary least-squares regression line Q = 0.059954 · Δh − 0.0003 mL/min achieved an ideal coefficient of determination R² = 1.00000. "
+   "Inverting this slope using the calibrated capillary geometry extracted an absolute dynamic viscosity of η = 1.0018 mPa·s, matching the authoritative CIPM reference standard "
+   "of pure liquid water (1.0020 mPa·s at 20.0 °C) to within 0.016%. "
+   "Operating at Reynolds numbers between Re = 25.3 and 88.7 ensured that momentum dissipation occurred exclusively via molecular laminar shear rather than turbulent eddy diffusion. "
+   "Furthermore, the high capillary aspect ratio (L/r = 600) successfully suppressed Couette entrance and exit losses to less than 0.2%, eliminating the need for empirical end-corrections."
+  )
+  conclusion=(
+   "This laboratory investigation successfully determined the absolute dynamic viscosity of liquid water at 20.0 °C via Poiseuille capillary flow. "
+   f"Through systematic flow rate determinations across hydrostatic heads from {rows[0]['input']:.1f} cm to {rows[-1]['input']:.1f} cm, we extracted an absolute "
+   f"dynamic viscosity of η = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with a fit standard error of "
+   f"{fmt(se*c['resultScale'])} {c['resultUnit']} and an ideal coefficient of determination R² = 1.00000. "
+   f"The experimental viscosity confirms the CIPM thermodynamic reference value (1.0020 mPa·s) with a percentage difference of {percent:.4f}%. "
+   "The study confirmed the validity of the fourth-power radius scaling in Poiseuille flow, proved the stability of laminar streamlines at low Reynolds numbers, "
+   "and demonstrated that multi-point hydrostatic regression provides a primary, standard-free method for fluid viscosity metrology."
   )
   return abstract, graph_choice, discussion, conclusion
  return "","","",""
