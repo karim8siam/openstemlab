@@ -50,7 +50,8 @@ def experiment_index(experiments):
     'stack-adt-recursion':'stack abstract data type lifo recursion call stack activation record stack frame rsp rbp memory consumption overflow shunting yard parentheses parsing tail call optimization',
     'queue-buffer-management':'queue abstract data type fifo circular ring buffer modular arithmetic producer consumer false sharing cache line padding backpressure disruptor socket buffer pipe',
     'linked-list-architectures':'linked list doubly singly pointer hopping cache locality spatial prefetcher sentinel dummy node unrolled list intrusive list container_of dynamic memory fragmentation',
-    'binary-search-trees':'binary search tree bst tree height balance factor avl red black tree rotations b-tree degeneracy internal path length search depth'}
+    'binary-search-trees':'binary search tree bst tree height balance factor avl red black tree rotations b-tree degeneracy internal path length search depth',
+    'binary-heaps-priority-queues':'binary heap priority queue max heap min heap floyd build_heap sift down sift up heapsort d-ary heap 4-way heap dijkstra scheduler'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   sub='computer-science' if '/computer-science/' in exp.get('page_path','') else 'physics'

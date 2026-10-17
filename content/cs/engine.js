@@ -140,6 +140,59 @@ function drawComparativeSim(t,p,v,ink,soft,orange){
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
+ if(cfg.slug==='binary-heaps-priority-queues'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'PRIORITY QUEUE IMPLEMENTATION & EXTRACTION BENCHMARK (n = '+p.input+')','#e2f0f8',11);
+
+  const n=p.input;
+  const log2n=Math.log2(n);
+  const log4n=Math.log(n)/Math.log(4);
+  const c_dary=Math.round(4*log4n);
+  const c_bin=Math.round(2*log2n);
+  const c_fib=Math.round(2*log2n);
+  const c_sorted=1;
+  const c_unsorted=n-1;
+
+  const queues=[
+   {name:'4-Way D-Ary Heap (d=4)',col:'#10b981',cost:c_dary,scale:'4 log₄ n comps',desc:'Tree height reduced 2×; 4 keys fit in single 64B L1 cache line'},
+   {name:'Binary Max-Heap (In-Place Array)',col:'#38bdf8',cost:c_bin,scale:'2 log₂ n comps',desc:'Zero pointer overhead; implicit arithmetic 2i+1, 2i+2; cache dense'},
+   {name:'Fibonacci Heap (Pointer Forest)',col:'#f97316',cost:c_fib,scale:'O(log n) amortized',desc:'48B metadata/node; 600% pointer overhead; frequent cache misses'},
+   {name:'Sorted Contiguous Array',col:'#ef4444',cost:c_sorted,scale:'1 comparison',desc:'O(1) extract-max, but catastrophic O(n) element shifting on insert'},
+   {name:'Unsorted Dynamic Array',col:'#a855f7',cost:c_unsorted,scale:'O(n) linear scan',desc:'O(1) append, but catastrophic n-1 comparisons to find maximum'}
+  ];
+
+  queues.forEach((item,idx)=>{
+   const rowY=cY+16+idx*42;
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+12)+'" fill="#dcebf2" font-size="8.5" font-weight="bold">'+item.name+'</text>';
+   svg+='<text x="'+(cX+cW-15)+'" y="'+(rowY+12)+'" text-anchor="end" fill="'+item.col+'" font-size="8.5" font-family="monospace" font-weight="bold">'+item.cost+' ('+item.scale+')</text>';
+   
+   const barX=cX+15,barY=rowY+16,barMaxW=cW-30;
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barMaxW+'" height="7" rx="2" fill="#16242c"/>';
+   const frac=Math.min(1.0,Math.log10(item.cost+1)/Math.log10(c_unsorted+1));
+   const fillW=Math.max(4,frac*barMaxW);
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+fillW+'" height="7" rx="2" fill="'+item.col+'"/>';
+  });
+
+  const bX=460,bY=45,bW=220,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">FLOYD HEAPIFY SPEEDUP</text>';
+  const naiveOps=Math.round(n*log2n);
+  const floydOps=v.raw;
+  const speedup=(naiveOps/Math.max(1,floydOps)).toFixed(1);
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+speedup+'×</text>';
+  svg+='<text x="'+(bX+95)+'" y="'+(bY+46)+'" fill="#dcebf2" font-size="10">vs Naive Insert</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#7e9bab" font-size="9">CONSTRUCTION ASYMPTOTICS</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="15" font-family="monospace" font-weight="bold">'+floydOps+' vs '+naiveOps+' ops</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+124)+'" fill="#8ba5b5" font-size="8">Floyd: O(n) · Repeated Insert: O(n log n)</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+136)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+136)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+154)+'" fill="#7e9bab" font-size="9">METADATA POINTER OVERHEAD</text>';
+  svg+=text(bX+bW/2,bY+180,'Binary Heap: 0 B/node (In-Place Array)','#10b981',9.5);
+  svg+=text(bX+bW/2,bY+202,'Fibonacci: 48 B/node (4 ptrs + degree)',orange,8.5);
+  svg+=text(360,305,'Comparative Invariant: Floyd\'s in-place heapify achieves optimal O(n) construction without pointer overhead or heap allocations',soft,10);
+  return svg;
+ }
+
  if(cfg.slug==='binary-search-trees'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
   svg+=text(cX+cW/2,cY-14,'TREE & INDEXING TOPOLOGY COMPARISON (n = '+p.input+')','#e2f0f8',11);
@@ -493,6 +546,87 @@ function drawDynamicSandbox(t,p,v,ink,soft,orange){
  const cX=45,cY=45,cW=400,cH=230;
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+ if(cfg.slug==='binary-heaps-priority-queues'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'FLOYD SIFT-DOWN & BOUNCE OPTIMIZATION SANDBOX (n = '+p.input+')','#e2f0f8',11);
+
+  // Left Section: Step 1 & Step 2 Comparison breakdown
+  svg+='<text x="'+(cX+100)+'" y="'+(cY+22)+'" text-anchor="middle" fill="#ef4444" font-size="8.5" font-weight="bold">SIFT STEP 1: CHILD COMPARISON</text>';
+  svg+='<text x="'+(cX+290)+'" y="'+(cY+22)+'" text-anchor="middle" fill="#10b981" font-size="8.5" font-weight="bold">SIFT STEP 2: PARENT SWAP</text>';
+
+  // Step 1: Parent 15 with Children 82 and 68
+  const p1X=cX+100,p1Y=cY+50;
+  svg+='<circle cx="'+p1X+'" cy="'+p1Y+'" r="14" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/>';
+  svg+='<text x="'+p1X+'" y="'+(p1Y+4)+'" text-anchor="middle" fill="#fed7aa" font-size="8" font-weight="bold">15</text>';
+  svg+='<text x="'+(p1X+20)+'" y="'+(p1Y+3)+'" fill="#ef4444" font-size="7" font-family="monospace">P[0]</text>';
+
+  // Left child 82
+  const c1X=cX+65,c1Y=cY+95;
+  svg+='<line x1="'+p1X+'" y1="'+(p1Y+14)+'" x2="'+c1X+'" y2="'+(c1Y-14)+'" stroke="#10b981" stroke-width="2"/>';
+  svg+='<circle cx="'+c1X+'" cy="'+c1Y+'" r="13" fill="#064e3b" stroke="#10b981" stroke-width="2"/>';
+  svg+='<text x="'+c1X+'" y="'+(c1Y+4)+'" text-anchor="middle" fill="#a7f3d0" font-size="8" font-weight="bold">82</text>';
+  svg+='<text x="'+(c1X-20)+'" y="'+(c1Y+3)+'" text-anchor="end" fill="#10b981" font-size="7" font-family="monospace">L[1] WIN</text>';
+
+  // Right child 68
+  const c2X=cX+135,c2Y=cY+95;
+  svg+='<line x1="'+p1X+'" y1="'+(p1Y+14)+'" x2="'+c2X+'" y2="'+(c2Y-14)+'" stroke="#334155" stroke-width="1.5"/>';
+  svg+='<circle cx="'+c2X+'" cy="'+c2Y+'" r="13" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>';
+  svg+='<text x="'+c2X+'" y="'+(c2Y+4)+'" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="bold">68</text>';
+  svg+='<text x="'+(c2X+20)+'" y="'+(c2Y+3)+'" fill="#64748b" font-size="7" font-family="monospace">R[2]</text>';
+
+  // Child vs child comparison indicator
+  svg+='<path d="M '+(c1X+14)+' '+(c1Y)+' Q '+((c1X+c2X)/2)+' '+(c1Y+15)+' '+(c2X-14)+' '+(c1Y)+'" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="2,2"/>';
+  svg+='<text x="'+((c1X+c2X)/2)+'" y="'+(c1Y+24)+'" text-anchor="middle" fill="#38bdf8" font-size="6.5">Comp 1: 82 &gt; 68 (select left)</text>';
+
+  // Transition Arrow between step 1 and step 2
+  const trX=cX+195;
+  svg+='<path d="M '+(trX-10)+' '+(cY+70)+' L '+(trX+10)+' '+(cY+70)+'" fill="none" stroke="'+orange+'" stroke-width="2"/>';
+  svg+='<polygon points="'+(trX+12)+','+(cY+70)+' '+(trX+6)+','+(cY+66)+' '+(trX+6)+','+(cY+74)+'" fill="'+orange+'"/>';
+  svg+='<text x="'+trX+'" y="'+(cY+86)+'" text-anchor="middle" fill="'+orange+'" font-size="7">Comp 2: 82 &gt; 15</text>';
+
+  // Step 2: After Swap
+  const p2X=cX+290,p2Y=cY+50;
+  svg+='<circle cx="'+p2X+'" cy="'+p2Y+'" r="14" fill="#064e3b" stroke="#10b981" stroke-width="2"/>';
+  svg+='<text x="'+p2X+'" y="'+(p2Y+4)+'" text-anchor="middle" fill="#a7f3d0" font-size="8" font-weight="bold">82</text>';
+  svg+='<text x="'+(p2X+20)+'" y="'+(p2Y+3)+'" fill="#10b981" font-size="7" font-family="monospace">P[0]</text>';
+
+  const nc1X=cX+255,nc1Y=cY+95;
+  svg+='<line x1="'+p2X+'" y1="'+(p2Y+14)+'" x2="'+nc1X+'" y2="'+(nc1Y-14)+'" stroke="#10b981" stroke-width="2"/>';
+  svg+='<circle cx="'+nc1X+'" cy="'+nc1Y+'" r="13" fill="#431407" stroke="'+orange+'" stroke-width="1.5"/>';
+  svg+='<text x="'+nc1X+'" y="'+(nc1Y+4)+'" text-anchor="middle" fill="#fed7aa" font-size="8" font-weight="bold">15</text>';
+  svg+='<text x="'+(nc1X-20)+'" y="'+(nc1Y+3)+'" text-anchor="end" fill="'+orange+'" font-size="7" font-family="monospace">Sunk L[1]</text>';
+
+  const nc2X=cX+325,nc2Y=cY+95;
+  svg+='<line x1="'+p2X+'" y1="'+(p2Y+14)+'" x2="'+nc2X+'" y2="'+(nc2Y-14)+'" stroke="#334155" stroke-width="1.5"/>';
+  svg+='<circle cx="'+nc2X+'" cy="'+nc2Y+'" r="13" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>';
+  svg+='<text x="'+nc2X+'" y="'+(nc2Y+4)+'" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="bold">68</text>';
+  svg+='<text x="'+(nc2X+20)+'" y="'+(nc2Y+3)+'" fill="#64748b" font-size="7" font-family="monospace">R[2]</text>';
+
+  // Code Sequence Box at Bottom
+  const cdX=cX+15,cdY=cY+142,cdW=cW-30,cdH=78;
+  svg+='<rect x="'+cdX+'" y="'+cdY+'" width="'+cdW+'" height="'+cdH+'" rx="4" fill="#050b0e" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(cdX+12)+'" y="'+(cdY+16)+'" fill="#38bdf8" font-size="8" font-weight="bold">FLOYD SIFT-DOWN PRIMITIVE (EXACTLY 2 COMPARISONS / LEVEL)</text>';
+  svg+='<text x="'+(cdX+12)+'" y="'+(cdY+32)+'" fill="#10b981" font-size="7.5" font-family="monospace">1: int c = (i &lt;&lt; 1) + 1;                  // Left child index</text>';
+  svg+='<text x="'+(cdX+12)+'" y="'+(cdY+46)+'" fill="#10b981" font-size="7.5" font-family="monospace">2: if (c+1 &lt; n &amp;&amp; A[c+1] &gt; A[c]) c++;      // Comp 1: Select max child</text>';
+  svg+='<text x="'+(cdX+12)+'" y="'+(cdY+60)+'" fill="'+orange+'" font-size="7.5" font-family="monospace">3: if (A[c] &gt; A[i]) { swap(A[i], A[c]); i = c; } // Comp 2: Sink parent</text>';
+
+  const bX=465,bY=45,bW=210,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#7e9bab" font-size="9">COMPARISONS PER LEVEL</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+54)+'" fill="'+orange+'" font-size="24" font-family="monospace" font-weight="bold">2 comps</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+70)+'" fill="#8ba5b5" font-size="8">1 child-child + 1 parent-child</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+84)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+84)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+102)+'" fill="#7e9bab" font-size="9">FLOYD BOUNCE OPTIMIZATION</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+124)+'" fill="'+ink+'" font-size="16" font-family="monospace" font-weight="bold">1 comp / level</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+140)+'" fill="#8ba5b5" font-size="8">Sink to leaf, then sift up 1-2 steps</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+154)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+154)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+172)+'" fill="#7e9bab" font-size="9">HEAPIFY BOUND CONVERGENCE</text>';
+  svg+=text(bX+bW/2,bY+194,'∑ (h / 2ʰ) ≤ 2 (Geometric Series)','#38bdf8',9.5);
+  svg+=text(bX+bW/2,bY+212,'Strict C(n) ≤ 2n comparisons',orange,8.5);
+  svg+=text(360,305,'Sandbox Invariant: Sift-down compares children first (1 comp) then parent (1 comp), sinking non-leaves in O(1) average time',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='binary-search-trees'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
@@ -965,6 +1099,88 @@ function draw(t){
  const ink='#38bdf8',soft='#7e9bab',orange='#f97316';
  if(currentSimMode==='compare'){$('apparatusDiagram').innerHTML=drawComparativeSim(t,p,v,ink,soft,orange);return;}
  if(currentSimMode==='sandbox'){$('apparatusDiagram').innerHTML=drawDynamicSandbox(t,p,v,ink,soft,orange);return;}
+
+ if(cfg.slug==='binary-heaps-priority-queues'){
+  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
+  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+  const n=p.input;
+  const c_total=v.raw;
+  const h=Math.floor(Math.log2(n));
+
+  svg+='<rect x="35" y="38" width="410" height="235" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+=text(240,24,'In-Place Binary Max-Heap Architecture & Implicit Array Layout');
+
+  svg+='<text x="50" y="56" fill="#7e9bab" font-size="8.5" font-weight="bold">COMPLETE BINARY MAX-HEAP (n = '+n+' KEYS · HEIGHT = '+h+' LEVELS)</text>';
+
+  // Tree nodes: Level 0 (Root), Level 1 (2 nodes), Level 2 (4 nodes)
+  const treeNodes=[
+   {idx:0,key:98,x:240,y:80,isRoot:true},
+   {idx:1,key:85,x:150,y:118,isRoot:false},
+   {idx:2,key:72,x:330,y:118,isRoot:false},
+   {idx:3,key:64,x:105,y:154,isRoot:false},
+   {idx:4,key:51,x:195,y:154,isRoot:false},
+   {idx:5,key:43,x:285,y:154,isRoot:false},
+   {idx:6,key:39,x:375,y:154,isRoot:false}
+  ];
+
+  // Tree edges
+  const edges=[
+   {from:0,to:1},{from:0,to:2},
+   {from:1,to:3},{from:1,to:4},
+   {from:2,to:5},{from:2,to:6}
+  ];
+
+  edges.forEach(e=>{
+   const n1=treeNodes[e.from],n2=treeNodes[e.to];
+   svg+='<line x1="'+n1.x+'" y1="'+n1.y+'" x2="'+n2.x+'" y2="'+n2.y+'" stroke="#243c4a" stroke-width="1.8"/>';
+  });
+
+  treeNodes.forEach(nd=>{
+   const fillCol=nd.isRoot?'#431407':'#081016';
+   const strokeCol=nd.isRoot?orange:'#38bdf8';
+   svg+='<circle cx="'+nd.x+'" cy="'+nd.y+'" r="12" fill="'+fillCol+'" stroke="'+strokeCol+'" stroke-width="1.8"/>';
+   svg+='<text x="'+nd.x+'" y="'+(nd.y+3.5)+'" text-anchor="middle" fill="'+(nd.isRoot?'#fed7aa':'#dcebf2')+'" font-size="7.5" font-weight="bold">'+nd.key+'</text>';
+   svg+='<text x="'+nd.x+'" y="'+(nd.y-14)+'" text-anchor="middle" fill="#64748b" font-size="6.5" font-family="monospace">['+nd.idx+']</text>';
+  });
+
+  // Array Buffer Visualization at Bottom
+  const arrY=184;
+  svg+='<text x="50" y="'+(arrY-6)+'" fill="#38bdf8" font-size="7.5" font-weight="bold">CONTIGUOUS ARRAY BUFFER A[0..n-1] (ZERO POINTER OVERHEAD)</text>';
+  
+  const cellW=48,cellH=28,startX=55;
+  treeNodes.forEach((nd,i)=>{
+   const cX=startX+i*(cellW+6);
+   svg+='<rect x="'+cX+'" y="'+arrY+'" width="'+cellW+'" height="'+cellH+'" rx="3" fill="#081016" stroke="'+(nd.isRoot?orange:'#1e3340')+'" stroke-width="1.2"/>';
+   svg+='<text x="'+(cX+cellW/2)+'" y="'+(arrY+12)+'" text-anchor="middle" fill="#64748b" font-size="6" font-family="monospace">A['+nd.idx+']</text>';
+   svg+='<text x="'+(cX+cellW/2)+'" y="'+(arrY+24)+'" text-anchor="middle" fill="'+(nd.isRoot?'#fed7aa':'#38bdf8')+'" font-size="8" font-weight="bold">'+nd.key+'</text>';
+  });
+
+  // Telemetry box below array
+  const regX=50,regY=226,regW=380,regH=38;
+  svg+='<rect x="'+regX+'" y="'+regY+'" width="'+regW+'" height="'+regH+'" rx="4" fill="#081016" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(regX+10)+'" y="'+(regY+14)+'" fill="#38bdf8" font-size="7.5" font-family="monospace">Floyd Model: C(n) = 2(n − log₂ n) = '+c_total+' comparisons · Height h = ⌊log₂('+n+')⌋ = '+h+'</text>';
+  svg+='<text x="'+(regX+10)+'" y="'+(regY+28)+'" fill="#8ba5b5" font-size="6.5">Implicit Arithmetic: Left = 2i + 1 · Right = 2i + 2 · Parent = ⌊(i − 1) / 2⌋ · Space: 8n bytes</text>';
+
+  const bX=465,bY=38,bW=220,bH=235;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#7e9bab" font-size="9">FLOYD HEAPIFY COMPARISONS C(n)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+54)+'" fill="'+orange+'" font-size="24" font-family="monospace" font-weight="bold">'+c_total+'</text>';
+  svg+='<text x="'+(bX+105)+'" y="'+(bY+50)+'" fill="#8ba5b5" font-size="11">comps</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+84)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+84)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+102)+'" fill="#7e9bab" font-size="9">DATASET SCALE (n)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+126)+'" fill="'+ink+'" font-size="18" font-family="monospace" font-weight="bold">'+n+' keys</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+142)+'" fill="#8ba5b5" font-size="8">Complete binary tree height: '+h+' levels</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+156)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+156)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+174)+'" fill="#7e9bab" font-size="9">HEAP INVARIANT VERIFICATION</text>';
+  svg+=text(bX+bW/2,bY+196,'Max-Heap: A[Parent] ≥ A[Child]','#10b981',10);
+  svg+=text(bX+bW/2,bY+214,'Pointer Overhead: 0 Bytes (Contiguous)',orange,8.5);
+
+  svg+=text(360,305,'Mathematical Model: C(n) = 2.0000 · (n - log₂ n) comps · R² = 1.000000',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='binary-search-trees'){
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';

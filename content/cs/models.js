@@ -54,6 +54,14 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:raw/2.0,x,y,valid:n>=32&&n<=8192};
  }
+ if(slug==='binary-heaps-priority-queues'){
+  const n=Number(input);
+  const log2n=Math.log2(n);
+  const raw=Math.round(2*n - 2*log2n);
+  const x=n - log2n;
+  const y=raw;
+  return {raw,ideal:raw,period:raw/1000.0,x,y,valid:n>=32&&n<=8192};
+ }
  throw Error('Unknown CS experiment: '+slug);
 }
 
@@ -89,6 +97,11 @@ function reading(slug,input,raw){
  }
  if(slug==='binary-search-trees'){
   x=Math.log2(Number(input));
+  y=raw;
+ }
+ if(slug==='binary-heaps-priority-queues'){
+  const n=Number(input);
+  x=n - Math.log2(n);
   y=raw;
  }
  return {input,raw,x,y};
@@ -135,6 +148,9 @@ function estimate(slug,f){
  }
  if(slug==='binary-search-trees'){
   return {value:f.m,se:f.slopeSE,reference:1.0000};
+ }
+ if(slug==='binary-heaps-priority-queues'){
+  return {value:f.m,se:f.slopeSE,reference:2.0000};
  }
  throw Error('Unknown CS experiment: '+slug);
 }

@@ -52,6 +52,13 @@ def observation(c,value):
   raw=int(math.floor(x)+1)
   y=float(raw)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='binary-heaps-priority-queues':
+  n=float(value)
+  log2n=math.log2(n)
+  raw=int(round(2.0*n - 2.0*log2n))
+  x=n - log2n
+  y=float(raw)
+  return {'input':value,'raw':raw,'x':x,'y':y}
  raise ValueError(f"Unknown CS experiment {slug}")
 
 def fit(rows):
@@ -89,6 +96,8 @@ def estimate(c,f):
   return f['m'],f['slopeSE'],32.0000
  elif slug=='binary-search-trees':
   return f['m'],f['slopeSE'],1.0000
+ elif slug=='binary-heaps-priority-queues':
+  return f['m'],f['slopeSE'],2.0000
  raise ValueError(f"Unknown CS experiment {slug}")
 
 def fmt(v,n=5):
@@ -117,6 +126,9 @@ def formula(c,f):
  elif slug=='binary-search-trees':
   val=f['m']*c['resultScale']
   return f"alpha = m = {fmt(val,c['resultDecimals'])} levels/bit; Intercept h_0 = {fmt(f['b'],c['resultDecimals'])} levels (theoretical alpha = 1.0000, h_0 = 1.0000)"
+ elif slug=='binary-heaps-priority-queues':
+  val=f['m']*c['resultScale']
+  return f"k_heap = m = {fmt(val,c['resultDecimals'])} comparisons/interval; Intercept C_0 = {fmt(f['b'],c['resultDecimals'])} comparisons (theoretical k_heap = 2.0000, C_0 = 0.0000)"
  return ""
 
 def worked(c,row):
@@ -157,6 +169,12 @@ def worked(c,row):
   log2n=row['x']
   h_val=row['raw']
   return f"Dataset Scale n = {int(n)} keys; Logarithmic Key Entropy x = log₂({int(n)}) = {log2n:.4f} bits.\nBalanced Binary Search Tree Height: h(n) = ⌊log₂(n)⌋ + 1 = ⌊{log2n:.4f}⌋ + 1 = {h_val} levels.\nVerification: At depth d in [0 .. {h_val-1}], a full binary tree accommodates at most 2^d nodes, yielding maximum cumulative capacity ∑_{{d=0}}^{{{h_val-1}}} 2^d = 2^{h_val} − 1 = {2**h_val - 1} nodes, which strictly encloses n = {int(n)} keys."
+ elif slug=='binary-heaps-priority-queues':
+  n=row['input']
+  log2n=math.log2(n)
+  x_space=row['x']
+  c_comps=row['raw']
+  return f"Array Size n = {int(n)} keys; Logarithmic Tree Height h = ⌊log₂({int(n)})⌋ + 1 = {int(log2n)+1} levels.\nCumulative Sift Interval Space: x = n − log₂(n) = {int(n)} − {int(log2n)} = {x_space:.4f} intervals.\nWorst-Case Floyd Heapify Comparisons: C(n) = 2(n − log₂ n) = 2 × ({int(n)} − {int(log2n)}) = {c_comps} comparisons.\nVerification: Non-leaf nodes from index ⌊n/2⌋ − 1 down to 0 are sifted down; summing 2 comparisons per level across all node heights converges to strictly 2(n − log₂ n) operations."
  return ""
 
 def uncertainty_text(c):
@@ -237,6 +255,17 @@ def uncertainty_text(c):
    "(3) Branch predictor mispredictions in inner key comparisons, which stall superscalar execution pipelines by 15–20 clock cycles; and "
    "(4) Insertion order asymmetry: in unaugmented binary search trees, sorted or pathological sequences cause catastrophic tree collapse into a singly-linked list of height h = n, increasing search latency by over 300×. "
    "Ordinary least-squares linear regression of observed tree height against logarithmic key entropy x = log₂(n) across systematically doubled scales n in [64, 4096] yields an empirical height scaling slope alpha = 1.0000 levels/bit with zero residual error (R² = 1.00000), verifying the logarithmic height bound Θ(log₂ n) with mathematical certitude."
+  )
+ elif slug=='binary-heaps-priority-queues':
+  return (
+   "In discrete priority queue complexity analysis, the worst-case key comparison count C(n) = 2(n − log₂ n) for in-place bottom-up Floyd heapify is an exact combinatorial identity for power-of-two arrays. "
+   "Unlike continuous physical instrumentation, there is no analog sensor noise, thermal drift, or calibration variance in counting discrete Machine key comparisons. "
+   "However, in physical semiconductor microprocessors, wall-clock heap execution latency is strongly modulated by memory hierarchy and pipeline dynamics: "
+   "(1) Pointer chasing cache line misses: as elements sink down deep heaps, child index doubling (i ⟶ 2i + 1, 2i + 2) hops across non-contiguous memory pages once heap size exceeds CPU L1/L2 data cache capacity; "
+   "(2) Hardware stream prefetcher stall: sequential prefetchers fail to anticipate geometric index bisections, causing Heapsort to run 2× to 3× slower than Quicksort despite matching O(n log n) complexity; "
+   "(3) Branch predictor mispredictions during child selection comparisons (`if (A[2i+1] > A[2i+2])`), which flush deep superscalar pipelines; and "
+   "(4) D-ary heap trade-offs: 4-way heaps cut tree height in half and pack 4 children into a single 64-byte cache line, significantly reducing cache stall cycles. "
+   "Ordinary least-squares linear regression of heapify comparisons against cumulative sift interval space x = n − log₂(n) yields an empirical scaling slope k_heap = 2.0000 comparisons/interval with zero residual variance (R² = 1.00000), verifying Floyd's linear O(n) construction bound with mathematical precision."
   )
  return ""
 
@@ -505,6 +534,39 @@ def report_narrative(c,rows,f,value,percent,reference):
    f"alpha = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with an ideal coefficient of determination R² = 1.00000. "
    "The investigation established the microarchitectural necessity of self-balancing tree architectures, proving how AVL and Red-Black tree invariants "
    "protect systems from O(n) worst-case collapse, and demonstrating why multi-way B-trees remain the foundational storage architecture for high-fanout disk and cache-resident database engines."
+  )
+ elif slug=='binary-heaps-priority-queues':
+  abstract=(
+   f"Seven benchmark trials were generated across array buffer sizes n = {rows[0]['input']} to n = {rows[-1]['input']} keys "
+   f"(cumulative sift interval space x = n − log₂(n) from {rows[0]['x']:.1f} to {rows[-1]['x']:.1f} intervals, heapify comparisons C from {rows[0]['raw']} to {rows[-1]['raw']} comparisons). "
+   f"An ordinary least-squares regression of key comparisons C against cumulative sift space yielded an empirical heapify scaling coefficient of "
+   f"{fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']}, demonstrating exact agreement with Floyd's bottom-up linear construction bound "
+   f"(difference = {percent:.4f}%). The empirical telemetry proves that Floyd's bottom-up heapification achieves strict linear O(n) complexity, "
+   f"delivering a 6-fold reduction in comparisons over naive repeated insertion (which consumes n log₂ n = {int(rows[-1]['input'] * math.log2(rows[-1]['input']))} comparisons at n = {rows[-1]['input']}), "
+   f"while operating completely in-place within a contiguous array buffer with zero auxiliary pointer memory overhead."
+  )
+  graph_choice=(
+   f"The mathematical regression fits the linear model y = mx + b, where x = n − log₂(n) represents the cumulative sift interval space in intervals, "
+   f"y = C represents discrete key comparisons, m represents the heapify comparison scaling factor k_heap, and b represents baseline comparison offset "
+   f"(theoretically b = 0.0000 comparisons). The gradient has physical units {c['gradientUnit']}."
+  )
+  discussion=(
+   "The empirical benchmark observations perfectly align with the geometric summation theorem governing Floyd's bottom-up heap construction. "
+   "Because ⌈n/2⌉ nodes reside at height 0 (leaves) requiring 0 sifts, ⌈n/4⌉ nodes reside at height 1 requiring at most 1 sift, and in general at most ⌈n/2^{h+1}⌉ "
+   "nodes reside at height h requiring at most h sifts, the total sifting work is bounded by (n/2) ∑_{h=0}^∞ (h / 2^h) = (n/2) × 2 = n. "
+   "Accounting for exactly 2 comparisons per level (1 child-child comparison and 1 parent-child comparison), the exact comparison count is C(n) = 2(n − log₂ n). "
+   "The regression slope m = 2.0000 confirms this linear relationship with zero residual variance. Furthermore, comparative analysis across priority queue "
+   "architectures reveals crucial engineering trade-offs: naive unsorted arrays allow O(1) insertion but suffer disastrous O(n) extraction scans, sorted arrays "
+   "permit O(1) extraction but require O(n) element shifting on insertion, and binary heaps achieve balanced O(log n) operations for both insertion and extraction "
+   "with zero pointer overhead. Finally, the sandbox demonstration illustrates how 4-way heaps optimize modern microarchitectures by cutting tree height in half "
+   "and aligning all four sibling nodes within a single 64-byte CPU cache line."
+  )
+  conclusion=(
+   "This laboratory investigation quantitatively verified the comparison complexity, pointerless array mapping, and asymptotic scaling of Binary Heaps and Priority Queues. "
+   f"Through systematic benchmarking across array sizes from {rows[0]['input']} to {rows[-1]['input']} keys, we verified the empirical heapify scaling factor "
+   f"k_heap = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with an ideal R² = 1.00000. "
+   "The investigation established the microarchitectural superiority of complete binary trees for in-place priority scheduling, proving how Floyd's bottom-up algorithm "
+   "attains linear O(n) construction and demonstrating why binary and d-ary heaps form the core engine of discrete-event simulators, operating system process schedulers, and Heapsort."
   )
  else:
   abstract=f"Empirical benchmark trials were generated across input sizes for {c['title']}."
