@@ -5,6 +5,8 @@ ROOT=Path(__file__).resolve().parent
 E=lambda s:html.escape(str(s),quote=True)
 def experiment_index(experiments):
  configs={c['slug']:c for c in json.loads((ROOT/'content/physics/experiments.json').read_text())}
+ if (ROOT/'content/cs/experiments.json').exists():
+  configs.update({c['slug']:c for c in json.loads((ROOT/'content/cs/experiments.json').read_text())})
  index=[]
  aliases={'simple-pendulum':'gravity g oscillation bob string time period','bifilar-suspension':'rotation inertia rod oscillation strings','young-modulus':'youngs modulus elasticity stress strain wire stretching','stokes-viscosity':'stokes law fluid liquid sphere terminal velocity','convex-lens':'optics focal length lens image uv method','photoelectric-effect':'photon light planck constant stopping potential work function','ohms-law':'ohm ohms law current voltage resistor resistance circuit ammeter voltmeter','metre-bridge':'meter metre wheatstone bridge null galvanometer unknown resistance','rc-charging':'capacitor capacitance resistor rc charge time constant exponential','glass-slab':'refraction refractive index apparent real depth glass microscope','diffraction-grating':'diffraction interference grating spectrum wavelength laser light','hookes-law':'hooke hookes law spring constant stiffness elasticity elongation extension load force','density-measurement':'density mass volume archimedes copper displacement solid balance cylinder','vernier-micrometer':'vernier caliper micrometer screw gauge least count zero error pi circumference diameter length measurement metrology','friction-laws':'friction laws amontons coulomb sliding kinetic static normal force coefficient dynamometer','principle-of-moments':'principle moments torque center gravity lever parallel forces fulcrum meter rule rotational equilibrium balance steelyard','force-table':'force table concurrent forces vector addition resultant equilibrant components pulleys ring equilibrium parallelogram law','equilibrium-forces':'parallel forces non-concurrent rigid body equilibrium beam reactions dynamometers support moments translational rotational static equilibrium',
   'free-fall':'free fall acceleration gravity g spark timer drop tower kinematics uniformly accelerated motion plummet photogate',
@@ -41,9 +43,13 @@ def experiment_index(experiments):
     'electrical-equivalent-heat':'electrical equivalent heat joule law heating calorimeter immersion coil water equivalent rumford cooling electric power energy conservation nichrome resistance chronometer',
     'potentiometer-emf-comparison':'potentiometer slide wire electromotive force emf weston standard cell null balance galvanometer jockey poggendorff potential gradient volt comparison internal resistance dry cell',
     'emission-spectra-spectroscopy':'emission spectra spectroscopy balmer series rydberg constant hydrogen geissler tube diffraction grating bohr atom quantum energy levels fraunhofer lines wavelength wavenumber',
-    'photometry-lamp-efficiency':'photometry lamp efficiency lummer brodhun bunsen grease spot candela lumen lux illuminance inverse square law luminous efficacy incandescent cfl led photometer bench optical track'}
+    'photometry-lamp-efficiency':'photometry lamp efficiency lummer brodhun bunsen grease spot candela lumen lux illuminance inverse square law luminous efficacy incandescent cfl led photometer bench optical track',
+    'search-algorithms-complexity':'binary search linear search interpolation search time complexity asymptotic analysis big-o logarithm divide and conquer array decision tree algorithm profiling'}
  for exp in experiments:
-  c=configs.get(exp['slug'],{});index.append({'slug':exp['slug'],'title':c.get('title',exp['title']),'subject':'physics','subjectName':'Physics','path':exp['page_path'],'summary':c.get('aim','Determine Planck’s constant from stopping potential and frequency.'),'keywords':' '.join([aliases.get(exp['slug'],''),*[a['name'] for a in c.get('apparatus',[])]])})
+  c=configs.get(exp['slug'],{})
+  sub='computer-science' if '/computer-science/' in exp.get('page_path','') else 'physics'
+  sub_name='Computer Science' if sub=='computer-science' else 'Physics'
+  index.append({'slug':exp['slug'],'title':c.get('title',exp['title']),'subject':sub,'subjectName':sub_name,'path':exp['page_path'],'summary':c.get('aim','Determine Planck’s constant from stopping potential and frequency.'),'keywords':' '.join([aliases.get(exp['slug'],''),*[a['name'] for a in c.get('apparatus',[])]])})
  return index
 
 def search_section(index,subjects,scope='all',heading='Find an experiment',prefix='labs'):

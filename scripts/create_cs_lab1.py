@@ -1,0 +1,191 @@
+#!/usr/bin/env python3
+import json
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+
+cs_exp1 = {
+  "slug": "search-algorithms-complexity",
+  "title": "Empirical Analysis of Search Algorithms and Asymptotic Complexity",
+  "shortTitle": "Search Algorithms & Complexity",
+  "subject": "computer-science",
+  "number": 1,
+  "published": True,
+  "min": 64,
+  "max": 4096,
+  "step": 64,
+  "initial": 512,
+  "inputLabel": "Array size n (elements)",
+  "shortInput": "array size",
+  "inputUnit": "elements",
+  "inputDecimals": 0,
+  "rawLabel": "Worst-case key comparisons C_max",
+  "rawUnit": "comparisons",
+  "rawDecimals": 0,
+  "angle": False,
+  "timed": False,
+  "observationLabel": "Search comparison count",
+  "xAxis": "Logarithmic key entropy log₂(n) (bits)",
+  "yAxis": "Key comparisons C (operations)",
+  "xScale": 1,
+  "yScale": 1,
+  "target": "k_search",
+  "resultUnit": "comparisons/bit",
+  "resultScale": 1,
+  "resultDecimals": 4,
+  "emptyX": [5, 13],
+  "emptyY": [5, 15],
+  "samples": [64, 128, 256, 512, 1024, 2048, 4096],
+  "settings": [
+    "Monotonically sorted array with distinct integer keys uniformly spaced: A[i] = 2·i + 1.",
+    "Worst-case search target key deliberately chosen outside the array bounds (target key K = 2·n + 10) to force maximal decision tree depth.",
+    "Three-way comparison primitive (<, ==, >) executed atomically per search iteration.",
+    "Hardware cycle counts and comparison primitives tracked via high-resolution simulated execution counters."
+  ],
+  "fitEquation": "C = k_search · log₂(n) + b; k_search = m",
+  "gradientUnit": "comparisons/bit",
+  "targetName": "logarithmic search complexity multiplier",
+  "measureLabel": "Execute search benchmark",
+  "aim": "Measure the empirical operation counts (key comparisons) of Linear Search and Binary Search across ordered datasets of varying size n from 64 to 4096 elements, verify the asymptotic complexity bounds Θ(n) and Θ(log₂ n), and extract the fundamental logarithmic scaling multiplier k_search using ordinary least-squares linear regression.",
+  "intro": "Search algorithms constitute the cornerstone of algorithmic computer science, data structures, and information retrieval. In this computational laboratory, we bridge the gap between abstract mathematical complexity theory (Big-O, Big-Omega, Big-Theta notations) and concrete empirical execution metrics. By measuring atomic key comparisons across systematically scaled arrays, we quantitatively verify the profound divide-and-conquer efficiency of Binary Search compared to exhaustive sequential scans, demonstrating how logarithmic time complexity enables planetary-scale data lookups.",
+  "modelExtra": "The theoretical worst-case comparison bound for Binary Search on a sorted array of size n is exactly C_max(n) = ⌊log₂ n⌋ + 1. Under ordinary least-squares regression against x = log₂(n), the theoretical slope is exactly k_search = 1.0000 comparisons per bit of key entropy, with an intercept of b = 1.0000 comparison. For Linear Search, the worst-case comparison count is exactly C_max(n) = n, while the average successful search requires C_avg(n) = (n + 1) / 2 comparisons, exhibiting linear scaling Θ(n). Real-world wall-clock execution time additionally reflects processor cache-line prefetching, memory bus bandwidth, and branch misprediction penalties.",
+  "apparatus": [
+    {
+      "name": "Virtual Execution Engine & Instruction Counter",
+      "purpose": "Simulates a deterministic Von Neumann processor architecture with dedicated hardware instruction counters, tracking atomic comparison operations, memory loads, and branch jumps without nondeterministic operating system scheduling jitter."
+    },
+    {
+      "name": "Monotonically Ordered Contiguous Memory Array",
+      "purpose": "Allocates a contiguous block of primary random-access memory storing n distinct 32-bit integer keys arranged in strictly ascending monotonic order (A[0] < A[1] < ... < A[n-1]), providing O(1) indexed random access."
+    },
+    {
+      "name": "Low, High, and Mid Register Pointer System",
+      "purpose": "Maintains hardware register pointers delimiting the active search interval [low, high] and computes the bisecting midpoint index mid = low + ⌊(high - low) / 2⌋, preventing 32-bit signed integer arithmetic overflow."
+    },
+    {
+      "name": "Target Key Comparator & ALU Logic Unit",
+      "purpose": "Performs ternary key comparison between the target key K and the midpoint element A[mid], asserting equal, less-than, or greater-than status flags to direct control flow branching."
+    },
+    {
+      "name": "Microsecond Algorithmic Profiler & Telemetry Unit",
+      "purpose": "Records wall-clock elapsed execution time, CPU cycle estimates, memory read bandwidth, and decision tree traversal depth across repeated benchmark runs."
+    },
+    {
+      "name": "Synthetic Key Distribution & Randomization Generator",
+      "purpose": "Generates uniform, clustered, and adversarial key distributions to evaluate algorithmic stability, average-case behavior, and degenerate worst-case edge scenarios."
+    }
+  ],
+  "procedure": [
+    {
+      "title": "Buffer Allocation and Key Initialization",
+      "text": "Initialize the contiguous memory array with n distinct sorted integer keys according to the selected benchmark size n in [64, 128, 256, 512, 1024, 2048, 4096]. Verify monotonic ordering across all indices such that A[i] < A[i+1] for all 0 <= i < n - 1."
+    },
+    {
+      "title": "Target Key Selection and Search Boundary Setup",
+      "text": "Configure the search target key K. For worst-case empirical validation, select a key strictly greater than the maximum element (K = A[n-1] + 10) or choose an absent key that forces the search interval to contract until empty. Initialize the hardware register pointers low = 0 and high = n - 1."
+    },
+    {
+      "title": "Midpoint Calculation and Bisection",
+      "text": "In each search iteration, verify the loop invariance condition low <= high. Compute the midpoint index using the overflow-safe formula mid = low + Math.floor((high - low) / 2). Highlight the active search candidate subarray [low, high] on the visual workbench."
+    },
+    {
+      "title": "Three-Way Key Comparison and Operation Increment",
+      "text": "Fetch the element A[mid] from primary memory into the ALU comparison register. Execute the comparison primitive against target key K and increment the atomic comparison counter C by 1. Evaluate whether A[mid] == K, A[mid] < K, or A[mid] > K."
+    },
+    {
+      "title": "Search Interval Contraction and Pointer Update",
+      "text": "If A[mid] == K, terminate with successful match at index mid. If A[mid] < K, discard the lower half of the array by setting low = mid + 1. If A[mid] > K, discard the upper half by setting high = mid - 1. Render discarded elements as inactive on the visual array canvas."
+    },
+    {
+      "title": "Termination, Telemetry Recording, and Regression Fitting",
+      "text": "Repeat iterations until low > high or the key is located. Record the final worst-case comparison count C_max into the observation notebook. Repeat the procedure across all sample array sizes n in [64, 128, 256, 512, 1024, 2048, 4096]. Compute x = log₂(n) and perform ordinary least-squares regression to extract the slope k_search."
+    }
+  ],
+  "topics": [
+    {
+      "question": "Formulate the mathematical definitions of Big-O, Big-Omega, and Big-Theta asymptotic notations, and explain their role in algorithmic analysis.",
+      "answer": "Asymptotic notations characterize the limiting behavior of an algorithm's resource consumption (runtime or memory) as the input problem size n approaches infinity, independent of specific hardware clock speeds, instruction sets, or compiler optimizations. Formally, for two non-negative functions f(n) and g(n):\n\n1. Big-O Notation (Asymptotic Upper Bound): We write f(n) = O(g(n)) if there exist positive constants c > 0 and n₀ >= 0 such that f(n) <= c · g(n) for all n >= n₀. In limit form, limsup_{n → ∞} f(n)/g(n) < ∞. This provides a worst-case guarantee that growth rate does not exceed g(n).\n\n2. Big-Omega Notation (Asymptotic Lower Bound): We write f(n) = Ω(g(n)) if there exist positive constants c > 0 and n₀ >= 0 such that f(n) >= c · g(n) for all n >= n₀, or liminf_{n → ∞} f(n)/g(n) > 0. This establishes an insurmountable theoretical lower bound on the operations required.\n\n3. Big-Theta Notation (Asymptotically Tight Bound): We write f(n) = Θ(g(n)) if and only if f(n) = O(g(n)) and f(n) = Ω(g(n)). That is, there exist positive constants c₁, c₂ > 0 and n₀ >= 0 such that c₁ · g(n) <= f(n) <= c₂ · g(n) for all n >= n₀. For Binary Search, the worst-case number of comparisons is bounded above and below by logarithmic functions, establishing that T_worst(n) = Θ(log₂ n)."
+    },
+    {
+      "question": "Derive the recurrence relation for Binary Search and solve it using the Master Theorem and recurrence tree expansion.",
+      "answer": "In each step of Binary Search, the algorithm performs a constant number of operations (one midpoint computation, one memory array lookup, and a three-way key comparison) and recursively restricts the search domain to one of the two equal halves of the remaining subarray of size ⌊n/2⌋.\n\nThe formal recurrence relation for runtime T(n) is:\nT(n) = T(⌊n/2⌋) + c, with base case T(1) = d,\nwhere c represents the constant time required for midpoint calculation and branching, and d is the base comparison cost.\n\nApplying the Master Theorem for divide-and-conquer recurrences of the form T(n) = a T(n/b) + f(n):\nHere, a = 1 (we branch into exactly one subproblem), b = 2 (the input size is halved at each step), and f(n) = c = Θ(n⁰) = Θ(1).\nWe evaluate the critical watershed exponent c_crit = log_b(a) = log₂(1) = 0.\nComparing f(n) with n^{c_crit}: since f(n) = Θ(n⁰) = Θ(n^{c_crit}), this corresponds to Case 2 of the Master Theorem.\nTherefore, the solution is:\nT(n) = Θ(n^{c_crit} log n) = Θ(n⁰ log₂ n) = Θ(log₂ n).\n\nUnrolling the recurrence explicitly for n = 2^k:\nT(2^k) = T(2^{k-1}) + c = T(2^{k-2}) + 2c = ... = T(1) + k · c = d + c · log₂ n = Θ(log₂ n)."
+    },
+    {
+      "question": "Prove the Information-Theoretic Lower Bound for comparison-based searching in a static sorted array.",
+      "answer": "Any deterministic comparison-based search algorithm operating on an array of n distinct elements can be modeled as a Binary Decision Tree. In this tree:\n- Each internal node represents an elementary comparison between the target key K and an array element A[i].\n- Each branch represents the outcome of the comparison (e.g., K < A[i] or K > A[i]).\n- Each leaf node represents a distinct reachable termination state.\n\nFor an array of n elements, there are n possible successful search outcomes (the target key matches A[0], A[1], ..., or A[n-1]) and at least 1 unsuccessful search outcome (the key is absent from the array, lying in one of the n+1 open intervals (-∞, A[0]), (A[0], A[1]), ..., (A[n-1], +∞)). Thus, the decision tree must contain at least L >= n + 1 distinct leaf nodes to differentiate all possible correct answers.\n\nIn any binary tree of height h, the maximum number of leaves is bounded by 2^h:\nL <= 2^h ⟹ n + 1 <= 2^h.\nTaking base-2 logarithms of both sides:\nh >= log₂(n + 1) ⟹ h >= ⌈log₂(n + 1)⌉.\nBecause the worst-case number of comparisons executed by the algorithm corresponds to the length of the longest path from the root to a leaf (the height h of the decision tree), it follows that:\nC_worst(n) >= ⌈log₂(n + 1)⌉ = Ω(log₂ n).\nHence, no comparison-based search algorithm can ever achieve a worst-case time complexity asymptotically better than Ω(log₂ n)."
+    },
+    {
+      "question": "Explain the famous integer arithmetic overflow bug in Binary Search and detail the correct numerical implementation.",
+      "answer": "In classic textbooks and programming libraries for decades, the midpoint index was commonly computed as:\nint mid = (low + high) / 2;\n\nWhile mathematically correct in unbounded arithmetic, this statement fails catastrophically on finite-precision binary architectures (such as 32-bit signed two's complement integers where maximum value is INT_MAX = 2³¹ - 1 = 2,147,483,647). When searching large arrays where low + high exceeds INT_MAX (for example, low = 1,073,741,824 and high = 1,073,741,824, yielding a sum of 2,147,483,848), the 32-bit addition overflows into negative integer space (-2,147,483,448). Dividing by 2 yields a negative midpoint (mid = -1,073,741,724), causing an ArrayIndexOutOfBoundsException or silent memory segmentation fault.\n\nThe bug was famously identified by Joshua Bloch in 2006 as having existed unnoticed in the Java Standard Library (java.util.Arrays.binarySearch) for over nine years.\n\nThe robust, overflow-safe formulation computes the distance first:\nint mid = low + (high - low) / 2;\nBecause high >= low >= 0, the difference (high - low) is always non-negative and strictly less than high, preventing overflow.\nAlternatively, in languages supporting unsigned arithmetic or bitwise shifts:\nint mid = (int)(((unsigned int)low + (unsigned int)high) >> 1); // Logical right shift avoids negative sign propagation."
+    },
+    {
+      "question": "Compare Linear Search, Binary Search, and Interpolation Search regarding algorithmic assumptions, operational primitives, and average vs worst-case complexities.",
+      "answer": "The three fundamental searching paradigms represent progressive trade-offs between required structural preconditions and lookup efficiency:\n\n1. Linear Search:\n- Assumptions: None. Operates on completely unordered, unsorted, arbitrary collections, streams, or singly linked lists.\n- Operational Primitive: Sequential pointer traversal and equality check A[i] == K.\n- Worst-Case Complexity: O(n) (element absent or at index n-1).\n- Average-Case Complexity: (n + 1)/2 = Θ(n).\n- Space Complexity: O(1) auxiliary.\n\n2. Binary Search:\n- Assumptions: Requires strictly monotonic ordering (sorted keys) AND constant-time random access O(1) (contiguous arrays).\n- Operational Primitive: Exact bisection mid = low + (high - low)/2 and 3-way ternary comparison.\n- Worst-Case Complexity: ⌊log₂ n⌋ + 1 = Θ(log₂ n).\n- Average-Case Complexity: ≈ log₂ n - 1 = Θ(log₂ n).\n- Space Complexity: O(1) iterative, O(log n) recursive.\n\n3. Interpolation Search:\n- Assumptions: Requires sorted keys AND uniform distribution of numerical key values across the key range [A[low], A[high]].\n- Operational Primitive: Linear interpolation formula probe = low + ⌊((K - A[low]) / (A[high] - A[low])) · (high - low)⌋.\n- Worst-Case Complexity: O(n) (degenerate exponential distributions, e.g., keys {1, 2, 4, 8, 16, ..., 2^k}).\n- Average-Case Complexity: Θ(log₂(log₂ n)) for independent, uniformly distributed keys.\n- Space Complexity: O(1) auxiliary."
+    },
+    {
+      "question": "Explain how hardware memory hierarchy, L1/L2 cache line prefetching, and CPU branch prediction influence real-world search performance compared to theoretical operation counts.",
+      "answer": "Asymptotic algorithmic analysis assumes the Theoretical Random Access Machine (RAM) model, where every memory access has uniform unit cost O(1). However, modern superscalar microprocessors feature a steep memory hierarchy:\n- CPU Registers: ~0.5 ns\n- L1 Data Cache: ~1 ns (32–64 KB, 64-byte cache lines)\n- L2 Cache: ~3–4 ns (256–512 KB)\n- L3 Shared Cache: ~10–20 ns (8–32 MB)\n- Main Memory (DRAM): ~60–100 ns\n\nThis physical hierarchy has profound empirical implications:\n1. Spatial Locality & Hardware Prefetching: Linear Search traverses consecutive adjacent memory addresses. Hardware spatial prefetchers detect this sequential stride and prefetch subsequent 64-byte cache lines into L1 cache before the CPU requests them. Consequently, for small arrays (typically n <= 32 to 64 elements), Linear Search frequently out-performs Binary Search in raw wall-clock time despite executing more comparisons, because every Linear Search comparison hits hot L1 cache, whereas Binary Search jumps non-sequentially across memory pages, inducing L1/L2 cache misses.\n\n2. Branch Prediction Penalties: Binary Search executes conditional branches (`if (A[mid] < K)`) whose outcomes alternate unpredictably based on whether the target key is to the left or right. In a deep modern CPU pipeline (14 to 20 stages), a branch misprediction incurs a pipeline flush costing 15 to 20 CPU clock cycles. Branchless binary search techniques (using conditional move instructions `CMOV` or bitmask arithmetic) eliminate branch misprediction penalties at the expense of slightly higher ALU instruction counts."
+    },
+    {
+      "question": "How does external memory searching scale when dataset size exceeds RAM capacity, and why are B-Trees preferred over Binary Search Trees in secondary storage?",
+      "answer": "When the dataset size n exceeds available primary memory (RAM), data must reside on secondary block storage (Solid State Drives or magnetic hard drives). Accessing a block from secondary storage requires milliseconds (HDD) or tens of microseconds (NVMe SSD), which is 10,000 to 100,000 times slower than a DRAM access.\n\nIn the Disk Access Model (Aggarwal & Vitter External Memory Model):\n- Standard Binary Search on disk requires reading O(log₂ n) distinct disk blocks because each step halves the range, jumping across non-adjacent block boundaries.\n- B-Trees and B+ Trees optimize for disk block transfers by maximizing the branching factor (node fan-out B). A single disk block (typically 4 KB or 8 KB) is filled with B keys and B + 1 child pointers (where B is often between 100 and 1000).\n- The height of a B-tree with fan-out B is h = Θ(log_B n). By reading only log_B n disk blocks, a B-tree reduces the number of expensive I/O operations by a factor of log₂(B). For B = 1024, log₂(B) = 10, meaning a search in a billion records requires only 3 to 4 disk reads instead of 30, dramatically accelerating real-world database and filesystem indexing."
+    }
+  ],
+  "quiz": [
+    {
+      "question": "What is the exact maximum number of key comparisons required by Binary Search to find an element or verify its absence in a sorted array of 1,024 elements?",
+      "options": [
+        "10 comparisons",
+        "11 comparisons",
+        "512 comparisons",
+        "1,024 comparisons"
+      ],
+      "correct": 1,
+      "explanation": "The maximum number of comparisons in Binary Search is given by C_max = ⌊log₂ n⌋ + 1. For n = 1,024, log₂(1024) = 10, so C_max = 10 + 1 = 11 comparisons."
+    },
+    {
+      "question": "Why does the statement 'mid = (low + high) / 2' represent a serious software defect in large-scale system implementations?",
+      "options": [
+        "It performs floating-point division instead of integer truncation",
+        "The addition (low + high) can exceed the maximum positive 32-bit signed integer value, overflowing into negative values",
+        "It violates cache alignment by producing fractional memory addresses",
+        "It executes 2 ALU cycles instead of 1 cycle"
+      ],
+      "correct": 1,
+      "explanation": "In 32-bit signed two's complement integer arithmetic, when low + high > 2,147,483,647 (INT_MAX), integer overflow wraps the sum to a negative number, resulting in a negative index and an out-of-bounds memory fault."
+    },
+    {
+      "question": "Which of the following conditions is strictly required for Binary Search to guarantee correct O(log n) execution?",
+      "options": [
+        "The elements must be non-negative integers",
+        "The collection must be stored in a linked list structure",
+        "The collection must be sorted in monotonic order and support O(1) random access indexing",
+        "The array size must be an exact power of two"
+      ],
+      "correct": 2,
+      "explanation": "Binary Search requires both monotonic sorted order (to discard half the remaining search space after each comparison) and O(1) random access by index (contiguous array memory) to compute and access the midpoint in constant time."
+    },
+    {
+      "question": "Under what circumstance does Interpolation Search degrade from its average-case complexity of O(log log n) to its worst-case complexity of O(n)?",
+      "options": [
+        "When all keys are distinct and uniformly distributed",
+        "When the array size is a power of 10",
+        "When keys increase exponentially or cluster severely at one end of the value range",
+        "When the target key is located exactly at index 0"
+      ],
+      "correct": 2,
+      "explanation": "Interpolation Search relies on linear interpolation assuming uniform distribution. When key values grow exponentially (e.g., 1, 2, 4, 8, ..., 2^k) or cluster severely, the calculated probe position barely moves by 1 position per step, degenerating into O(n) sequential stepping."
+    }
+  ],
+  "precautions": [
+    "Verify array sortedness prior to executing binary search; executing binary search on an unsorted buffer produces unpredictable erroneous results and violates algorithmic invariants.",
+    "Always employ the overflow-safe midpoint calculation mid = low + (high - low) / 2 to guarantee numerical stability across arbitrary 32-bit and 64-bit address spaces.",
+    "Maintain strict loop termination conditions (low <= high) to prevent infinite loops when the search target key is strictly absent from the collection.",
+    "When measuring empirical execution wall-clock time, warm up the CPU cache and execute multiple benchmark iterations to eliminate operating system context-switching noise and initial cold-cache loading artifacts."
+  ],
+  "limitations": "The simulated execution model evaluates idealized algorithmic operation counts (atomic comparisons and index updates). In real physical computer hardware, wall-clock execution time is heavily modulated by non-algorithmic architectural factors including L1/L2/L3 CPU cache hierarchy line fills, TLB (Translation Lookaside Buffer) paging misses, hardware prefetching heuristics, speculative execution branch misprediction recovery penalties, compiler register allocation, and operating system thread scheduling latencies. Consequently, algorithmic comparison counts provide pure asymptotic scaling metrics, while hardware execution benchmarks quantify end-to-end wall-clock latency."
+}
+
+(ROOT / 'content/cs').mkdir(parents=True, exist_ok=True)
+(ROOT / 'content/cs/experiments.json').write_text(json.dumps([cs_exp1], indent=2, ensure_ascii=False))
+print("Successfully generated content/cs/experiments.json with Lab 1!")

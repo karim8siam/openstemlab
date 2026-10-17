@@ -14,6 +14,11 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def run_audit(target_slugs=None, verbose=True):
     configs = json.loads((ROOT / 'content/physics/experiments.json').read_text())
+    for c in configs: c['subject'] = 'physics'
+    if (ROOT / 'content/cs/experiments.json').exists():
+        cs_configs = json.loads((ROOT / 'content/cs/experiments.json').read_text())
+        for c in cs_configs: c['subject'] = 'computer-science'
+        configs.extend(cs_configs)
     
     # Identify benchmarks vs new targets
     known_benchmarks = [
@@ -58,17 +63,18 @@ def run_audit(target_slugs=None, verbose=True):
         metrics = {}
 
         # 1. Artifacts existence
+        sub = c.get('subject', 'physics')
         pages_dist = [
-            ROOT / f'dist/physics/{slug}/index.html',
-            ROOT / f'dist/physics/{slug}/theory/index.html',
-            ROOT / f'dist/physics/{slug}/report/index.html',
-            ROOT / f'dist/physics/{slug}/sample-data.csv'
+            ROOT / f'dist/{sub}/{slug}/index.html',
+            ROOT / f'dist/{sub}/{slug}/theory/index.html',
+            ROOT / f'dist/{sub}/{slug}/report/index.html',
+            ROOT / f'dist/{sub}/{slug}/sample-data.csv'
         ]
         pages_rel = [
-            ROOT / f'release/physics/{slug}/index.html',
-            ROOT / f'release/physics/{slug}/theory/index.html',
-            ROOT / f'release/physics/{slug}/report/index.html',
-            ROOT / f'release/physics/{slug}/sample-data.csv'
+            ROOT / f'release/{sub}/{slug}/index.html',
+            ROOT / f'release/{sub}/{slug}/theory/index.html',
+            ROOT / f'release/{sub}/{slug}/report/index.html',
+            ROOT / f'release/{sub}/{slug}/sample-data.csv'
         ]
         missing_dist = [str(p.relative_to(ROOT)) for p in pages_dist if not p.exists()]
         missing_rel = [str(p.relative_to(ROOT)) for p in pages_rel if not p.exists()]
@@ -133,7 +139,7 @@ def run_audit(target_slugs=None, verbose=True):
             failures.append('Missing or insufficient keywords in build_search.py aliases')
 
         # 6. Sitemap & SEO
-        canon = f'https://openstemlab.online/physics/{slug}/'
+        canon = f'https://openstemlab.online/{sub}/{slug}/'
         if canon not in dist_sitemap or f'{canon}theory/' not in dist_sitemap or f'{canon}report/' not in dist_sitemap:
             failures.append('Canonical URLs missing from dist/sitemap.xml')
         if canon not in release_sitemap or f'{canon}theory/' not in release_sitemap or f'{canon}report/' not in release_sitemap:
@@ -177,19 +183,39 @@ def run_audit(target_slugs=None, verbose=True):
 
     # Run JS model tests
     print('\n----------------------------------------------------------------------')
-    print('Testing Mathematical Regression Consistency in Node.js...')
+    print('Testing Mathematical & Algorithmic Model Consistency in Node.js...')
     js_test_code = """
-    const models = require('./content/physics/models.js');
-    const configs = JSON.parse(require('fs').readFileSync('content/physics/experiments.json', 'utf8'));
+    const fs = require('fs');
+    const physModels = require('./content/physics/models.js');
+    const physConfigs = JSON.parse(fs.readFileSync('content/physics/experiments.json', 'utf8'));
+    let csModels = null, csConfigs = [];
+    if (fs.existsSync('content/cs/experiments.json') && fs.existsSync('content/cs/models.js')) {
+        csModels = require('./content/cs/models.js');
+        csConfigs = JSON.parse(fs.readFileSync('content/cs/experiments.json', 'utf8'));
+    }
     let errs = [];
-    configs.forEach(c => {
+    physConfigs.forEach(c => {
         try {
-            const p = models.predict(c.slug, c.initial, 3);
+            const p = physModels.predict(c.slug, c.initial, 3);
             if (!p.valid) errs.push(c.slug + ': initial predict invalid');
-            const rows = c.samples.map(v => models.reading(c.slug, v, models.predict(c.slug, v, 3).raw, 3));
-            const fit = models.fit(rows);
+            const rows = c.samples.map(v => physModels.reading(c.slug, v, physModels.predict(c.slug, v, 3).raw, 3));
+            const fit = physModels.fit(rows);
             if (!fit || fit.r2 < 0.999) errs.push(c.slug + ': r2 < 0.999 (' + (fit ? fit.r2 : 'null') + ')');
-            const est = models.estimate(c.slug, fit);
+            const est = physModels.estimate(c.slug, fit);
+            const diff = Math.abs(est.value - est.reference) / est.reference * 100;
+            if (diff > 0.3) errs.push(c.slug + ': regression diff > 0.3% (' + diff.toFixed(4) + '%)');
+        } catch(e) {
+            errs.push(c.slug + ': exception ' + e.message);
+        }
+    });
+    csConfigs.forEach(c => {
+        try {
+            const p = csModels.predict(c.slug, c.initial);
+            if (!p.valid) errs.push(c.slug + ': initial predict invalid');
+            const rows = c.samples.map(v => csModels.reading(c.slug, v, csModels.predict(c.slug, v).raw));
+            const fit = csModels.fit(rows);
+            if (!fit || fit.r2 < 0.999) errs.push(c.slug + ': r2 < 0.999 (' + (fit ? fit.r2 : 'null') + ')');
+            const est = csModels.estimate(c.slug, fit);
             const diff = Math.abs(est.value - est.reference) / est.reference * 100;
             if (diff > 0.3) errs.push(c.slug + ': regression diff > 0.3% (' + diff.toFixed(4) + '%)');
         } catch(e) {
@@ -197,7 +223,7 @@ def run_audit(target_slugs=None, verbose=True):
         }
     });
     if (errs.length) { console.error(JSON.stringify(errs)); process.exit(1); }
-    console.log('All ' + configs.length + ' experiment models passed mathematical validation.');
+    console.log('All ' + (physConfigs.length + csConfigs.length) + ' experiment models passed validation.');
     """
     js_proc = subprocess.run(['node', '-e', js_test_code], cwd=ROOT, capture_output=True, text=True)
     if js_proc.returncode != 0:
