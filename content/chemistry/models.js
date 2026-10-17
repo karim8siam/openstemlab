@@ -11,6 +11,14 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:1.0,x,y,valid:v>=5.0&&v<=35.0};
  }
+ if(slug==='hydrate-stoichiometric-composition'){
+  const m_hydrate=Number(input);
+  const factor=(5.0*18.0154)/(159.609 + 5.0*18.0154);
+  const raw=round(m_hydrate*factor,4);
+  const x=round(m_hydrate - raw,4);
+  const y=raw;
+  return {raw,ideal:raw,period:1.0,x,y,valid:m_hydrate>=1.5&&m_hydrate<=7.5};
+ }
  throw Error('Unknown Chemistry experiment predict: '+slug);
 }
 
@@ -19,6 +27,12 @@ function reading(slug,input,raw){
  if(slug==='density-mass-volume-precision'){
   x=Number(input);
   y=Number(raw);
+ }
+ if(slug==='hydrate-stoichiometric-composition'){
+  const m_hydrate=Number(input);
+  const r=Number(raw);
+  x=round(m_hydrate - r,4);
+  y=r;
  }
  return {input:Number(input),raw:Number(raw),x,y};
 }
@@ -46,6 +60,11 @@ function fit(rows){
 function estimate(slug,f){
  if(slug==='density-mass-volume-precision'){
   return {value:f.m,se:f.slopeSE,reference:0.9982};
+ }
+ if(slug==='hydrate-stoichiometric-composition'){
+  const x_coeff=f.m * (159.609 / 18.0154);
+  const se=f.slopeSE * (159.609 / 18.0154);
+  return {value:x_coeff,se:se,reference:5.0000};
  }
  throw Error('Unknown Chemistry experiment estimate: '+slug);
 }

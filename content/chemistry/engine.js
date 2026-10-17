@@ -14,8 +14,8 @@ function update(){
  $('readingValue').textContent='—';
  $('recordReading').disabled=true;
  $('measure').disabled=busy;
- $('liveState').textContent='Ready to dispense '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+' of liquid.';
- message('Adjust '+cfg.shortInput+' V, then weigh the dispensed aliquot.');
+ $('liveState').textContent=cfg.slug==='hydrate-stoichiometric-composition'?'Ready to calcine crucible containing '+p.input.toFixed(1)+' g hydrate.':'Ready to dispense '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+' of liquid.';
+ message(cfg.slug==='hydrate-stoichiometric-composition'?'Adjust initial hydrate mass, then calcine to constant mass.':'Adjust '+cfg.shortInput+' V, then weigh the dispensed aliquot.');
  draw(performance.now());
 }
 
@@ -31,14 +31,14 @@ $('measure').onclick=async()=>{
  const p=params(),prediction=model.predict(cfg.slug,p.input);
  if(!prediction.valid){message('Select a valid '+cfg.shortInput+' between '+cfg.min+' and '+cfg.max+' '+cfg.inputUnit+'.',true);return;}
  busy=true;$('measure').disabled=true;$('recordReading').disabled=true;$('independent').disabled=true;$('independentNumber').disabled=true;
- message('Dispensing '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+' into tared beaker…');
+ message(cfg.slug==='hydrate-stoichiometric-composition'?'Heating crucible at 250 °C and evolving steam…':'Dispensing '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+' into tared beaker…');
  await new Promise(resolve=>setTimeout(resolve,400));
  const raw=prediction.raw;
  measurement=model.reading(cfg.slug,p.input,raw);
  busy=false;$('independent').disabled=false;$('independentNumber').disabled=false;$('measure').disabled=false;$('recordReading').disabled=false;
  $('readingValue').textContent=raw.toFixed(cfg.rawDecimals)+' '+cfg.rawUnit;
- $('liveState').textContent='Analytical balance stabilized: '+raw.toFixed(cfg.rawDecimals)+' g net mass.';
- message('Gravimetric measurement complete: '+raw.toFixed(cfg.rawDecimals)+' '+cfg.rawUnit+' for '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+'. Record in notebook.');
+ $('liveState').textContent=cfg.slug==='hydrate-stoichiometric-composition'?'Crucible cooled in desiccator: '+raw.toFixed(4)+' g water evolved.':'Analytical balance stabilized: '+raw.toFixed(cfg.rawDecimals)+' g net mass.';
+ message(cfg.slug==='hydrate-stoichiometric-composition'?'Calcination complete: evolved '+raw.toFixed(4)+' g H₂O from '+p.input.toFixed(1)+' g hydrate. Record in notebook.':'Gravimetric measurement complete: '+raw.toFixed(cfg.rawDecimals)+' '+cfg.rawUnit+' for '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+'. Record in notebook.');
  draw(performance.now());
 };
 
@@ -146,6 +146,18 @@ document.querySelectorAll('.sim-mode-btn').forEach(btn=>{
 function draw(t){
  const p=params();
  const rawVal=measurement?measurement.raw:model.predict(cfg.slug,p.input).raw;
+ if(cfg.slug==='hydrate-stoichiometric-composition'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawHydrateCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawHydrateSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawHydrateBenchView(p,rawVal);
+  return;
+ }
  if(currentSimMode==='compare'){
   $('apparatusDiagram').innerHTML=drawCompareView(p,rawVal);
   return;
@@ -389,5 +401,233 @@ function drawSandboxView(p,rawVal){
  return svg;
 }
 
+function drawHydrateBenchView(p,rawVal){
+ const m_hyd=p.input;
+ const m_wat=measurement?measurement.raw:(busy?rawVal*0.8:rawVal);
+ const m_salt=measurement?m_hyd-m_wat:(busy?m_hyd-m_wat:m_hyd*0.63924);
+ const isDehydrated=Boolean(measurement);
+
+ let svg='<defs><pattern id="chemGrid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" stroke="#ffffff" stroke-opacity=".03" fill="none"/></pattern>';
+ svg+='<linearGradient id="flameInner" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#93c5fd"/><stop offset="60%" stop-color="#60a5fa"/><stop offset="100%" stop-color="#3b82f6" stop-opacity=".2"/></linearGradient>';
+ svg+='<linearGradient id="flameOuter" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#2563eb" stop-opacity=".7"/><stop offset="100%" stop-color="#1d4ed8" stop-opacity="0"/></linearGradient>';
+ svg+='<linearGradient id="crucibleGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#e2e8f0"/><stop offset="30%" stop-color="#ffffff"/><stop offset="80%" stop-color="#f1f5f9"/><stop offset="100%" stop-color="#cbd5e1"/></linearGradient>';
+ svg+='<linearGradient id="blueCrystals" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0284c7"/><stop offset="50%" stop-color="#0369a1"/><stop offset="100%" stop-color="#075985"/></linearGradient>';
+ svg+='<linearGradient id="whiteSalt" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f8fafc"/><stop offset="50%" stop-color="#e2e8f0"/><stop offset="100%" stop-color="#cbd5e1"/></linearGradient>';
+ svg+='</defs><rect width="720" height="320" fill="#0b140e"/><rect width="720" height="320" fill="url(#chemGrid)"/>';
+
+ // Workbench surface
+ svg+='<rect x="0" y="270" width="720" height="50" fill="#132419" stroke="#1f3b28" stroke-width="1"/>';
+ svg+='<line x1="0" y1="270" x2="720" y2="270" stroke="#2d523b" stroke-width="2"/>';
+
+ // 1. LEFT STATION: Tirrill Gas Burner & Porcelain Crucible on Ring Stand
+ const rBaseX=40,rBaseY=258,rBaseW=120,rBaseH=12;
+ svg+='<rect x="'+rBaseX+'" y="'+rBaseY+'" width="'+rBaseW+'" height="'+rBaseH+'" rx="2" fill="#1e293b" stroke="#334155"/>';
+ svg+='<rect x="'+(rBaseX+20)+'" y="35" width="8" height="223" fill="#334155" stroke="#475569"/>';
+ // Iron Ring
+ const ringY=145;
+ svg+='<rect x="'+(rBaseX+15)+'" y="'+ringY+'" width="85" height="7" rx="2" fill="#475569"/>';
+ svg+='<ellipse cx="'+(rBaseX+85)+'" cy="'+(ringY+3)+'" rx="26" ry="7" fill="none" stroke="#64748b" stroke-width="3"/>';
+ // Pipe Clay Triangle
+ const cX=rBaseX+85;
+ svg+='<polygon points="'+(cX-22)+','+(ringY+2)+' '+(cX+22)+','+(ringY+2)+' '+cX+','+(ringY-14)+'" fill="none" stroke="#e2e8f0" stroke-width="4"/>';
+
+ // Tirrill Burner under Crucible
+ const bX=cX-12,bY=205;
+ svg+='<rect x="'+(bX-12)+'" y="260" width="48" height="10" rx="3" fill="#334155" stroke="#475569"/>'; // burner base
+ svg+='<rect x="'+(bX+7)+'" y="215" width="10" height="45" fill="#64748b" stroke="#475569"/>'; // barrel
+ svg+='<circle cx="'+(bX+12)+'" cy="250" r="4" fill="#94a3b8"/>'; // air collar
+ // Gas flame
+ svg+='<path d="M'+(bX+4)+' 215 Q'+(bX+12)+' '+(ringY+25)+' '+(bX+20)+' 215 Z" fill="url(#flameOuter)"/>';
+ svg+='<path d="M'+(bX+7)+' 215 Q'+(bX+12)+' '+(ringY+38)+' '+(bX+17)+' 215 Z" fill="url(#flameInner)"/>';
+
+ // Porcelain Crucible sitting in triangle
+ const crucY=ringY-22;
+ svg+='<path d="M'+(cX-18)+' '+crucY+' L'+(cX-12)+' '+(crucY+28)+' Q'+cX+' '+(crucY+34)+' '+(cX+12)+' '+(crucY+28)+' L'+(cX+18)+' '+crucY+' Z" fill="url(#crucibleGrad)" stroke="#94a3b8" stroke-width="1.2"/>';
+ // Salt inside crucible
+ const saltGrad=isDehydrated?'url(#whiteSalt)':'url(#blueCrystals)';
+ svg+='<ellipse cx="'+cX+'" cy="'+(crucY+18)+'" rx="12" ry="4" fill="'+saltGrad+'"/>';
+
+ // Crucible Lid (slightly ajar 3 mm to vent steam)
+ const lidY=crucY-5;
+ svg+='<path d="M'+(cX-20)+' '+(lidY+3)+' L'+(cX+18)+' '+(lidY-4)+' L'+(cX+19)+' '+(lidY-7)+' L'+(cX-19)+' '+(lidY)+' Z" fill="url(#crucibleGrad)" stroke="#94a3b8" stroke-width="1"/>';
+ svg+='<circle cx="'+cX+'" cy="'+(lidY-3)+'" r="2.5" fill="#cbd5e1"/>'; // lid handle
+
+ // Steam vapor wisps when busy heating
+ if(busy){
+  svg+='<path d="M'+(cX+14)+' '+(lidY-8)+' Q'+(cX+20)+' '+(lidY-25)+' '+(cX+10)+' '+(lidY-45)+' T'+(cX+18)+' '+(lidY-75)+'" fill="none" stroke="#e2e8f0" stroke-width="2" stroke-opacity=".6" stroke-dasharray="4,3"/>';
+  svg+='<path d="M'+(cX+8)+' '+(lidY-10)+' Q'+(cX+4)+' '+(lidY-30)+' '+(cX+16)+' '+(lidY-55)+' T'+(cX+8)+' '+(lidY-85)+'" fill="none" stroke="#e2e8f0" stroke-width="1.5" stroke-opacity=".4" stroke-dasharray="3,3"/>';
+ }
+ svg+='<text x="'+cX+'" y="295" text-anchor="middle" fill="#94a3b8" font-size="9" font-weight="bold">CALCINATION (250 °C)</text>';
+
+ // 2. MIDDLE STATION: Vacuum Desiccator
+ const dX=250,dY=145,dW=130,dH=125;
+ // Desiccator Base
+ svg+='<path d="M'+dX+' '+(dY+dH)+' L'+(dX+10)+' '+(dY+dH-30)+' L'+(dX+dW-10)+' '+(dY+dH-30)+' L'+(dX+dW)+' '+(dY+dH)+' Z" fill="#1e293b" stroke="#334155" stroke-width="1.2"/>';
+ // Cobalt-blue Drierite Crystals in bottom
+ for(let bx=dX+20;bx<dX+dW-20;bx+=10){
+  svg+='<circle cx="'+bx+'" cy="'+(dY+dH-12)+'" r="3.5" fill="#1d4ed8"/>';
+  svg+='<circle cx="'+(bx+5)+'" cy="'+(dY+dH-7)+'" r="3" fill="#2563eb"/>';
+ }
+ // Perforated porcelain plate
+ svg+='<rect x="'+(dX+10)+'" y="'+(dY+dH-34)+'" width="'+(dW-20)+'" height="5" fill="#e2e8f0" stroke="#94a3b8"/>';
+ // Desiccator Glass Dome
+ svg+='<path d="M'+(dX+8)+' '+(dY+dH-34)+' Q'+(dX+8)+' '+(dY+20)+' '+(dX+dW/2)+' '+(dY+10)+' Q'+(dX+dW-8)+' '+(dY+20)+' '+(dX+dW-8)+' '+(dY+dH-34)+' Z" fill="#ffffff" fill-opacity=".06" stroke="#475569" stroke-width="1.5"/>';
+ // Stopcock valve on top
+ svg+='<rect x="'+(dX+dW/2-4)+'" y="'+(dY-2)+'" width="8" height="12" fill="#94a3b8" stroke="#64748b"/>';
+ svg+='<circle cx="'+(dX+dW/2)+'" cy="'+(dY-6)+'" r="4.5" fill="#3b82f6"/>';
+ // Cooled crucible inside desiccator
+ svg+='<path d="M'+(dX+dW/2-12)+' '+(dY+dH-34)+' L'+(dX+dW/2-8)+' '+(dY+dH-52)+' L'+(dX+dW/2+8)+' '+(dY+dH-52)+' L'+(dX+dW/2+12)+' '+(dY+dH-34)+' Z" fill="url(#crucibleGrad)" stroke="#94a3b8"/>';
+ svg+='<text x="'+(dX+dW/2)+'" y="295" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">DESICCATOR COOLING</text>';
+
+ // 3. RIGHT STATION: Electronic Analytical Balance & Live Stoichiometric Telemetry
+ const balX=420,balY=115,balW=270,balH=155;
+ svg+='<rect x="'+balX+'" y="'+balY+'" width="'+balW+'" height="'+balH+'" rx="6" fill="#101e14" stroke="#254d33" stroke-width="1.5"/>';
+ svg+='<rect x="'+balX+'" y="'+balY+'" width="'+balW+'" height="26" rx="5" fill="#14331e"/>';
+ svg+='<text x="'+(balX+balW/2)+'" y="'+(balY+17)+'" text-anchor="middle" fill="#86efac" font-size="10.5" font-weight="bold">ANALYTICAL GRAVIMETRIC TELEMETRY</text>';
+
+ const rows_meta=[
+  {lbl:'INITIAL HYDRATE MASS (m_hyd):',val:m_hyd.toFixed(4)+' g',col:'#60a5fa'},
+  {lbl:'RECOVERED ANHYDROUS SALT (m_salt):',val:(isDehydrated?m_salt.toFixed(4):'—')+' g',col:'#f8fafc'},
+  {lbl:'EVOLVED WATER OF CRYSTALLIZATION:',val:(isDehydrated?m_wat.toFixed(4):'—')+' g',col:'#4ade80'},
+  {lbl:'ANHYDROUS MOLES n(CuSO₄):',val:(isDehydrated?(m_salt/159.609).toFixed(5):'—')+' mol',col:'#cbd5e1'},
+  {lbl:'WATER MOLES n(H₂O):',val:(isDehydrated?(m_wat/18.0154).toFixed(5):'—')+' mol',col:'#cbd5e1'},
+  {lbl:'EMPIRICAL HYDRATION RATIO x:',val:isDehydrated?((m_wat/18.0154)/(m_salt/159.609)).toFixed(4):'5.0000',col:'#fde047'}
+ ];
+
+ rows_meta.forEach((item,idx)=>{
+  const ry=balY+38+idx*19;
+  svg+='<text x="'+(balX+12)+'" y="'+ry+'" fill="#789c80" font-size="8">'+item.lbl+'</text>';
+  svg+='<text x="'+(balX+balW-12)+'" y="'+ry+'" text-anchor="end" fill="'+item.col+'" font-size="9" font-family="monospace" font-weight="bold">'+item.val+'</text>';
+ });
+
+ svg+='<rect x="'+(balX+10)+'" y="'+(balY+balH-24)+'" width="'+(balW-20)+'" height="18" rx="3" fill="#061209" stroke="#1a3d24"/>';
+ svg+='<text x="'+(balX+balW/2)+'" y="'+(balY+balH-12)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-family="monospace">CuSO₄ · 5 H₂O ⟶ CuSO₄ (s) + 5 H₂O (g)</text>';
+
+ svg+=text(360,22,'GRAVIMETRIC HYDRATE STOICHIOMETRY: THERMAL DESICCATION OF COPPER(II) SULFATE','#86efac',11.5);
+ return svg;
+}
+
+function drawHydrateCompareView(p,rawVal){
+ let svg='<rect width="720" height="320" fill="#0b140e"/>';
+ const text=(x,y,str,color='#789c80',size=11)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+ svg+=text(360,26,'WATER OF CRYSTALLIZATION DETERMINATION: THREE ANALYTICAL TECHNIQUES','#86efac',12);
+
+ const methods=[
+  {
+   name:'1. Crucible Calcination',
+   type:'Classical Thermal Gravimetry',
+   prec:'±0.02 mol H₂O',
+   sample:'2.0–5.0 g',
+   dur:'45–60 min',
+   adv:'Simple classical student bench method; requires repeated heating to constant mass to prevent moisture reabsorption.',
+   col:'#38a169',
+   score:75
+  },
+  {
+   name:'2. Thermogravimetric (TGA)',
+   type:'Continuous Microbalance Heating',
+   prec:'±0.002 mol H₂O',
+   sample:'10–20 mg',
+   dur:'30 min',
+   adv:'Resolves stepwise intermediate hydrates (trihydrate, monohydrate) via derivative DTG peaks under inert N₂ purge.',
+   col:'#3b82f6',
+   score:96
+  },
+  {
+   name:'3. Karl Fischer Titration',
+   type:'Coulometric Iodine Redox Reaction',
+   prec:'±0.0005 mol H₂O',
+   sample:'100 mg',
+   dur:'5 min',
+   adv:'Direct chemical reaction with H₂O: I₂ + SO₂ + CH₃OH + H₂O; operates at room temperature without risk of overheating.',
+   col:'#eab308',
+   score:98
+  }
+ ];
+
+ methods.forEach((m,idx)=>{
+  const cx=50+idx*215,cy=45,cw=195,ch=245;
+  svg+='<rect x="'+cx+'" y="'+cy+'" width="'+cw+'" height="'+ch+'" rx="6" fill="#101e14" stroke="'+m.col+'" stroke-width="1.5"/>';
+  svg+='<rect x="'+cx+'" y="'+cy+'" width="'+cw+'" height="28" rx="5" fill="'+m.col+'" fill-opacity=".2"/>';
+  svg+='<text x="'+(cx+cw/2)+'" y="'+(cy+18)+'" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="bold">'+m.name+'</text>';
+  svg+='<text x="'+(cx+cw/2)+'" y="'+(cy+42)+'" text-anchor="middle" fill="#a0aec0" font-size="8.5">'+m.type+'</text>';
+  svg+='<line x1="'+(cx+12)+'" y1="'+(cy+52)+'" x2="'+(cx+cw-12)+'" y2="'+(cy+52)+'" stroke="#1f3b28"/>';
+
+  svg+='<text x="'+(cx+15)+'" y="'+(cy+70)+'" fill="#789c80" font-size="8.5">PRECISION LIMIT:</text>';
+  svg+='<text x="'+(cx+cw-15)+'" y="'+(cy+70)+'" text-anchor="end" fill="'+m.col+'" font-size="10" font-family="monospace" font-weight="bold">'+m.prec+'</text>';
+
+  svg+='<text x="'+(cx+15)+'" y="'+(cy+92)+'" fill="#789c80" font-size="8.5">SAMPLE REQUIREMENT:</text>';
+  svg+='<text x="'+(cx+cw-15)+'" y="'+(cy+92)+'" text-anchor="end" fill="#e2e8f0" font-size="9" font-family="monospace">'+m.sample+'</text>';
+
+  svg+='<text x="'+(cx+15)+'" y="'+(cy+114)+'" fill="#789c80" font-size="8.5">TOTAL RUN DURATION:</text>';
+  svg+='<text x="'+(cx+cw-15)+'" y="'+(cy+114)+'" text-anchor="end" fill="#e2e8f0" font-size="9" font-family="monospace">'+m.dur+'</text>';
+
+  svg+='<line x1="'+(cx+12)+'" y1="'+(cy+126)+'" x2="'+(cx+cw-12)+'" y2="'+(cy+126)+'" stroke="#1f3b28"/>';
+  svg+='<text x="'+(cx+15)+'" y="'+(cy+144)+'" fill="#789c80" font-size="8">ANALYTICAL RESOLUTION SCORE</text>';
+  svg+='<rect x="'+(cx+15)+'" y="'+(cy+152)+'" width="'+(cw-30)+'" height="8" rx="2" fill="#08140c"/>';
+  svg+='<rect x="'+(cx+15)+'" y="'+(cy+152)+'" width="'+((cw-30)*m.score/100)+'" height="8" rx="2" fill="'+m.col+'"/>';
+
+  svg+='<foreignObject x="'+(cx+12)+'" y="'+(cy+170)+'" width="'+(cw-24)+'" height="68"><p xmlns="http://www.w3.org/1999/xhtml" style="font-size:8.5px;color:#a0aec0;line-height:1.4;margin:0">'+m.adv+'</p></foreignObject>';
+ });
+
+ svg+=text(360,306,'Safety Rule: Never exceed 600 °C during calcination to prevent decomposition of CuSO₄ into black CuO and SO₃ gas.','#86efac',9.5);
+ return svg;
+}
+
+function drawHydrateSandboxView(p,rawVal){
+ let svg='<rect width="720" height="320" fill="#0b140e"/>';
+ const text=(x,y,str,color='#789c80',size=11)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+ svg+=text(360,24,'THERMOGRAVIMETRIC (TGA) STEPWISE DEHYDRATION PROFILE: CuSO₄ · 5 H₂O','#86efac',12);
+
+ // TGA Curve Plot (X: Temp 0 to 750 C; Y: Mass % remaining 100% to 20%)
+ const pX=60,pY=50,pW=400,pH=220;
+ svg+='<rect x="'+pX+'" y="'+pY+'" width="'+pW+'" height="'+pH+'" fill="#061009" stroke="#1f3b28" rx="4"/>';
+ const mapX=t=>pX+(t/750)*pW;
+ const mapY=pct=>pY+pH-((pct-20)/85)*pH;
+
+ // TGA step curve coordinates
+ const tgaSteps=[
+  [25,100],[60,100],[95,85.6],[105,85.6],[130,71.2],[200,71.2],[245,63.9],[600,63.9],[680,31.8],[750,31.8]
+ ];
+ const pts=tgaSteps.map(pair=>mapX(pair[0]).toFixed(1)+','+mapY(pair[1]).toFixed(1));
+ svg+='<polyline points="'+pts.join(' ')+'" fill="none" stroke="#38bdf8" stroke-width="2.5"/>';
+
+ // Grid labels
+ [100,200,300,400,500,600,700].forEach(deg=>{
+  svg+='<line x1="'+mapX(deg)+'" y1="'+pY+'" x2="'+mapX(deg)+'" y2="'+(pY+pH)+'" stroke="#16291c" stroke-width="1"/>';
+  svg+='<text x="'+mapX(deg)+'" y="'+(pY+pH+14)+'" text-anchor="middle" fill="#789c80" font-size="8.5">'+deg+' °C</text>';
+ });
+ [40,60,80,100].forEach(pct=>{
+  svg+='<line x1="'+pX+'" y1="'+mapY(pct)+'" x2="'+(pX+pW)+'" y2="'+mapY(pct)+'" stroke="#16291c" stroke-width="1"/>';
+  svg+='<text x="'+(pX-6)+'" y="'+(mapY(pct)+3)+'" text-anchor="end" fill="#789c80" font-size="8.5">'+pct+'%</text>';
+ });
+
+ // Labels on Plateaus
+ svg+='<text x="'+(mapX(75))+'" y="'+(mapY(85.6)-6)+'" text-anchor="middle" fill="#fde047" font-size="7.5">−2 H₂O (Trihydrate)</text>';
+ svg+='<text x="'+(mapX(160))+'" y="'+(mapY(71.2)-6)+'" text-anchor="middle" fill="#fde047" font-size="7.5">−2 H₂O (Monohydrate)</text>';
+ svg+='<text x="'+(mapX(400))+'" y="'+(mapY(63.9)-7)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">ANHYDROUS CuSO₄ (63.9%)</text>';
+ svg+='<text x="'+(mapX(700))+'" y="'+(mapY(31.8)-6)+'" text-anchor="middle" fill="#ef4444" font-size="7.5">CuO residue (31.8%)</text>';
+
+ // Right Sidebar: Crystal Field & Structural Coordination
+ const sX=480,sY=50,sW=200,sH=220;
+ svg+='<rect x="'+sX+'" y="'+sY+'" width="'+sW+'" height="'+sH+'" rx="5" fill="#101e14" stroke="#254d33" stroke-width="1.5"/>';
+ svg+='<text x="'+(sX+sW/2)+'" y="'+(sY+20)+'" text-anchor="middle" fill="#86efac" font-size="10" font-weight="bold">COORDINATION SPHERE</text>';
+ svg+='<line x1="'+(sX+15)+'" y1="'+(sY+28)+'" x2="'+(sX+sW-15)+'" y2="'+(sY+28)+'" stroke="#1f3b28"/>';
+
+ svg+='<text x="'+(sX+12)+'" y="'+(sY+46)+'" fill="#60a5fa" font-size="9" font-weight="bold">Equatorial Ligands (4 H₂O)</text>';
+ svg+='<foreignObject x="'+(sX+12)+'" y="'+(sY+50)+'" width="'+(sW-24)+'" height="45"><p xmlns="http://www.w3.org/1999/xhtml" style="font-size:7.5px;color:#a0aec0;line-height:1.35;margin:0">4 water molecules coordinate equatorially to Cu²⁺ with short bonds (1.97 Å); split d-orbitals produce azure blue color.</p></foreignObject>';
+
+ svg+='<text x="'+(sX+12)+'" y="'+(sY+108)+'" fill="#fde047" font-size="9" font-weight="bold">Bridging Water (5th H₂O)</text>';
+ svg+='<foreignObject x="'+(sX+12)+'" y="'+(sY+112)+'" width="'+(sW-24)+'" height="45"><p xmlns="http://www.w3.org/1999/xhtml" style="font-size:7.5px;color:#a0aec0;line-height:1.35;margin:0">Held by 4 hydrogen bonds between sulfate anions and coordinated waters; released only above 200 °C.</p></foreignObject>';
+
+ svg+='<rect x="'+(sX+12)+'" y="'+(sY+170)+'" width="'+(sW-24)+'" height="38" rx="3" fill="#061209" stroke="#1f3b28"/>';
+ svg+='<text x="'+(sX+sW/2)+'" y="'+(sY+185)+'" text-anchor="middle" fill="#86efac" font-size="8">Hydration Exothermicity:</text>';
+ svg+='<text x="'+(sX+sW/2)+'" y="'+(sY+198)+'" text-anchor="middle" fill="#f8fafc" font-size="8.5" font-family="monospace">ΔH_hyd = −78.2 kJ/mol</text>';
+
+ svg+=text(360,305,'TGA Thermogravimetry: Stepwise mass plateaus isolate discrete stoichiometric intermediate hydrate phases.','#789c80',9);
+ return svg;
+}
+
 update();
 renderResults();
+

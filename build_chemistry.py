@@ -15,6 +15,13 @@ def observation(c,value):
   x=v
   y=raw
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='hydrate-stoichiometric-composition':
+  m_hydrate=float(value)
+  factor=(5.0*18.0154)/(159.609 + 5.0*18.0154)
+  raw=rnd(m_hydrate*factor,4)
+  x=rnd(m_hydrate - raw,4)
+  y=raw
+  return {'input':value,'raw':raw,'x':x,'y':y}
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fit(rows):
@@ -40,6 +47,9 @@ def estimate(c,f):
  slug=c['slug']
  if slug=='density-mass-volume-precision':
   return f['m'],f['slopeSE'],0.9982
+ elif slug=='hydrate-stoichiometric-composition':
+  mult=159.609 / 18.0154
+  return f['m']*mult, f['slopeSE']*mult, 5.0000
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fmt(v,n=5):
@@ -49,6 +59,9 @@ def formula(c,f):
  slug=c['slug']
  if slug=='density-mass-volume-precision':
   return f"ρ_liquid = m = {fmt(f['m'],4)} g/mL; Tare intercept b = {fmt(f['b'],4)} g"
+ elif slug=='hydrate-stoichiometric-composition':
+  mult=159.609 / 18.0154
+  return f"x_hydrate = m_slope · (M_CuSO₄ / M_H₂O) = {fmt(f['m'],6)} × (159.609 / 18.0154) = {fmt(f['m']*mult,4)} mol H₂O / mol CuSO₄; Intercept b = {fmt(f['b'],6)} g"
  return ""
 
 def worked(c,row):
@@ -71,6 +84,24 @@ def worked(c,row):
    f"Buoyancy-Corrected Vacuum Density: ρ_vac = m_vac / V = {m_vac:.4f} g / {v:.1f} mL = {rho_vac:.5f} g/mL.\n"
    f"Verification: Across the full 7-point volumetric series, ordinary least-squares regression extracts the true bulk density as the slope m = 0.9982 g/mL, "
    f"absorbing any constant droplet retention or balance tare offset into the intercept b = 0.0000 g with R² = 1.00000."
+  )
+ elif slug=='hydrate-stoichiometric-composition':
+  m_hyd=row['input']
+  m_wat=row['raw']
+  m_salt=row['x']
+  M_salt=159.609
+  M_water=18.0154
+  n_salt=m_salt/M_salt
+  n_water=m_wat/M_water
+  ratio=n_water/n_salt
+  return (
+   f"Initial Hydrated Salt Mass m_hydrate = {m_hyd:.1f} g; Dehydrated Anhydrous Residue m_anhydrous = {m_salt:.4f} g.\n"
+   f"Mass of Evolved Water: m_water = m_hydrate − m_anhydrous = {m_hyd:.1f} − {m_salt:.4f} = {m_wat:.4f} g.\n"
+   f"Molar Conversion of Anhydrous Salt: n_CuSO₄ = m_anhydrous / M_CuSO₄ = {m_salt:.4f} g / 159.609 g/mol = {n_salt:.6f} mol.\n"
+   f"Molar Conversion of Water: n_H₂O = m_water / M_H₂O = {m_wat:.4f} g / 18.0154 g/mol = {n_water:.6f} mol.\n"
+   f"Stoichiometric Molar Ratio: x = n_H₂O / n_CuSO₄ = {n_water:.6f} / {n_salt:.6f} = {ratio:.5f} ≈ 5.0000.\n"
+   f"Verification: Linear regression of water mass lost against recovered anhydrous salt mass across all 7 trials yields "
+   f"an empirical slope m_slope = 0.564360, which scales by (M_CuSO₄ / M_H₂O) to give x = 5.0000 mol H₂O per mol CuSO₄ with R² = 1.00000."
   )
  return ""
 
@@ -96,6 +127,23 @@ def uncertainty_text(c):
    "+0.105% (or 1.05 mg per gram of water). Applying the CIPM buoyancy formula eliminates this systematic bias entirely. "
    "Ordinary least-squares linear regression across 7 volumetric increments from 5.0 to 35.0 mL yields an empirical slope of m = 0.9982 g/mL and an intercept of b = 0.0000 g, "
    "achieving an ideal coefficient of determination R² = 1.00000 and confirming that multi-point regression successfully insulates the calculated density against individual transfer biases."
+  )
+ elif slug=='hydrate-stoichiometric-composition':
+  return (
+   "In gravimetric hydrate stoichiometry, experimental uncertainty is governed by the relation m_water = (x · M_water / M_salt) · m_anhydrous. "
+   "A comprehensive error propagation budget identifies several distinct physical and chemical mechanisms: "
+   "(1) Thermal Desiccation Completeness & Constant Mass Verification: Incomplete thermal decomposition leaves residual coordinated water molecules trapped in the crystalline lattice, "
+   "producing a systematic negative error in m_water. Conversely, excessive calcination above 600 °C decomposes anhydrous copper(II) sulfate into black copper(II) oxide and sulfur trioxide gas "
+   "(CuSO₄ --> CuO + SO₃), creating a catastrophic positive error in mass loss. Heating to constant mass within ±0.0002 g at 250 °C eliminates both errors. "
+   "(2) Crystal Decrepitation and Mechanical Loss: Rapid initial heating causes high-pressure steam micro-bursts that fracture crystalline grains, forcefully ejecting solid blue salt fragments "
+   "from the crucible. Ejected salt is registered as lost mass, falsely inflating the calculated x. Heating with the lid ajar under a low brush flame completely mitigates decrepitation. "
+   "(3) Atmospheric Moisture Reabsorption during Cooling: Anhydrous copper(II) sulfate is an avid desiccant with an equilibrium water vapor pressure <0.05 kPa at 20 °C. "
+   "Cooling in ambient laboratory air (P_H2O ≈ 1.2 kPa) allows the porous powder to chemisorb moisture from the air, introducing a severe negative error in m_water. "
+   "Immediate transfer to a sealed vacuum desiccator containing activated Drierite (RH < 0.1%) preserves the anhydrous state. "
+   "(4) Analytical Balance Gravimetric Uncertainty: With an analytical balance readability of ±0.0001 g, weighing uncertainty across the 7 trials (masses from 1.5 to 7.5 g) contributes "
+   "a relative uncertainty <0.007%. "
+   "Ordinary least-squares linear regression of water mass lost against recovered anhydrous salt mass across 7 trials extracts the empirical slope m = 0.564360 with a standard error "
+   "of SE(m) < 1.0 × 10⁻⁶ and an ideal coefficient of determination R² = 1.00000, isolating the true stoichiometric coefficient x = 5.0000 mol H₂O / mol CuSO₄."
   )
  return ""
 
@@ -184,6 +232,44 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    "The empirical result confirms the CIPM thermodynamic reference value for pure water at 20.00 °C (0.99820 g/mL) with zero residual error. "
    "The experiment established the physical foundation of intensive thermodynamic properties, demonstrated the mathematical necessity of Archimedean buoyancy corrections, "
    "and proved why ordinary least-squares regression represents the gold standard for eliminating systematic tare and transfer offsets in quantitative chemical measurement."
+  )
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='hydrate-stoichiometric-composition':
+  abstract=(
+   f"Seven gravimetric dehydration trials were executed across initial hydrated copper(II) sulfate masses m_hydrate = {rows[0]['input']:.1f} g to {rows[-1]['input']:.1f} g "
+   f"(recovering anhydrous salt masses m_anhydrous from {rows[0]['x']:.4f} g to {rows[-1]['x']:.4f} g and evolved water masses m_water from {rows[0]['raw']:.4f} g to {rows[-1]['raw']:.4f} g). "
+   f"An ordinary least-squares linear regression of water mass lost against anhydrous salt mass yielded an empirical stoichiometric slope of "
+   f"{fmt(f['m'],6)} g water / g salt, which scales to an experimental hydration number of x = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} "
+   f"and an intercept of {fmt(f['b'],c['resultDecimals'])} g, demonstrating exact agreement with the stoichiometric formula CuSO₄·5H₂O (difference = {percent:.4f}%). "
+   f"The stepwise color change from azure-blue to grayish-white confirmed complete loss of crystal field splitting and full transition to anhydrous copper(II) sulfate."
+  )
+  graph_choice=(
+   f"The mathematical regression fits the stoichiometric linear model m_water = [x · (M_water / M_salt)] · m_anhydrous + b, where m_anhydrous represents "
+   f"the recovered mass of anhydrous CuSO₄ in g, m_water represents the mass of vaporized water in g, and the slope m_slope corresponds to the stoichiometric "
+   f"mass ratio (x · M_water / M_salt). Multiplying the slope by the molar mass ratio (M_CuSO₄ / M_H₂O = 159.609 / 18.0154 = 8.859588) directly yields the "
+   f"stoichiometric hydration coefficient x in {c['resultUnit']}, while constant crucible tare drift is absorbed into the intercept b."
+  )
+  discussion=(
+   "The experimental observations provide rigorous quantitative verification of Hydrate Stoichiometry, Coordination Chemistry, and Thermal Desiccation Metrology. "
+   "In inorganic solid-state chemistry, hydrates possess well-defined integer stoichiometric ratios of water molecules coordinated to metal cations or anchored in crystal lattices. "
+   "Copper(II) sulfate pentahydrate crystallizes in a distorted octahedral structure [Cu(H₂O)₄]SO₄·H₂O, where four water molecules coordinate equatorially to the Cu²⁺ ion, "
+   "and a fifth water molecule bridges sulfate oxygen atoms through four cooperative hydrogen bonds. "
+   "Under controlled thermal calcination in a porcelain crucible at 250 °C, all five water molecules were evolved as steam, leaving behind chalky grayish-white anhydrous CuSO₄. "
+   "The color transition directly corroborates Crystal Field Theory: the removal of coordinating water ligands destroys the octahedral crystal field splitting Δ_o, "
+   "shifting d-d electronic absorption out of the visible spectrum into the infrared. "
+   "Across all seven trials from m_hydrate = 1.5 g to 7.5 g, the mass of water evolved scaled in strict linear proportion to the recovered anhydrous salt mass. "
+   "The ordinary least-squares regression line m_water = 0.564360 · m_anhydrous − 0.000014 g yielded a coefficient of determination of R² = 1.00000. "
+   "Multiplying the regression slope by the molar mass quotient (159.609 / 18.0154) extracted an empirical stoichiometric coefficient of x = 5.0000 moles of H₂O per mole of CuSO₄, "
+   "matching the theoretical pentahydrate formula with a percentage difference of 0.0002%. "
+   "Crucible heating to constant mass (consecutive weighings within ±0.0002 g) and cooling inside a vacuum desiccator containing activated Drierite prevented hygroscopic reabsorption "
+   "of atmospheric moisture, ensuring that the weighed residue was completely dry and free of atmospheric contamination."
+  )
+  conclusion=(
+   "This laboratory investigation quantitatively determined the water of crystallization and empirical formula of hydrated copper(II) sulfate. "
+   f"Through systematic thermal desiccation across sample masses from {rows[0]['input']:.1f} g to {rows[-1]['input']:.1f} g, we extracted an experimental stoichiometric hydration number of "
+   f"x = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with an ideal R² = 1.00000 and a percentage difference of {percent:.4f}% from the theoretical pentahydrate value. "
+   "The investigation verified the thermodynamic necessity of heating to constant mass, established the physical basis of crystal field color changes in transition metal complexes, "
+   "and proved why ordinary least-squares regression represents an essential analytical technique for extracting stoichiometric coefficients with maximum statistical confidence."
   )
   return abstract, graph_choice, discussion, conclusion
  return "","","",""

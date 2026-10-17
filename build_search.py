@@ -71,7 +71,8 @@ def experiment_index(experiments):
     'a-star-pathfinding-heuristics':'a star a* pathfinding heuristic search admissible consistent manhattan euclidean chebyshev octile open set closed set priority queue min heap edge relaxation state space exploration dijkstra greedy best first jump point search jps ida* shortest path graph navigation',
     'fast-fourier-transform':'fast fourier transform fft cooley tukey radix-2 decimation in time dit butterfly operation twiddle factor roots of unity bit reversal permutation convolution theorem polynomial multiplication frequency domain spectral analysis discrete fourier transform dft ifft signal processing',
     'relational-query-optimization':'relational query optimization execution relational algebra equivalence predicate pushdown projection pruning cost-based join nested loop block nested loop index nested loop sort merge join hash join grace hash join selinger dynamic programming system r left deep tree interesting order cardinality estimation selectivity histogram tipping point b+ tree index scan buffer pool',
-    'density-mass-volume-precision':'precision density determination analytical balance volumetric pycnometry burette pipette water buoyancy correction archimedes mass volume least squares regression metrology'}
+    'density-mass-volume-precision':'precision density determination analytical balance volumetric pycnometry burette pipette water buoyancy correction archimedes mass volume least squares regression metrology',
+    'hydrate-stoichiometric-composition':'gravimetric stoichiometry hydrated salts thermal dehydration water crystallization empirical formula copper sulfate pentahydrate crucible desiccator tga jahn teller crystal field'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):
