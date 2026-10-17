@@ -172,6 +172,24 @@ function predict(slug,input){
   const y=round(1.0 / v0_mM, 2);
   return {raw,ideal:raw,period:1.0,x,y,valid:s_val>=0.10&&s_val<=4.00};
  }
+ if(slug==='debye-huckel-onsager-strong-electrolytes'){
+  const c_conc=Number(input);
+  const table_raw={0.50:73.87, 1.00:146.86, 2.00:291.25, 4.00:575.49, 8.00:1131.18, 12.00:1673.98};
+  const table_y={0.50:147.74, 1.00:146.86, 2.00:145.62, 4.00:143.87, 8.00:141.40, 12.00:139.50};
+  const key=round(c_conc, 2);
+  let raw_val;
+  if(table_raw.hasOwnProperty(key)){
+   raw_val=table_raw[key];
+  } else {
+   const c_M=c_conc / 1000.0;
+   const Lambda=149.85 - 94.54 * Math.sqrt(c_M);
+   raw_val=round(Lambda * c_conc, 2);
+  }
+  const c_M=c_conc / 1000.0;
+  const x=round(Math.sqrt(c_M), 4);
+  const y=table_y.hasOwnProperty(key)?table_y[key]:round(raw_val / c_conc, 2);
+  return {raw:raw_val,ideal:raw_val,period:1.0,x,y,valid:c_conc>=0.20&&c_conc<=15.00};
+ }
  if(slug==='conductometric-titration-strong-weak-acids'){
   const v=Number(input);
   const table={1.00:4.80, 2.50:4.21, 4.00:3.63, 5.50:3.08, 7.00:2.54, 8.50:2.01};
@@ -469,6 +487,15 @@ function reading(slug,input,raw){
   const v0_mM=raw_val / 1000.0;
   y=round(1.0 / v0_mM, 2);
  }
+ if(slug==='debye-huckel-onsager-strong-electrolytes'){
+  const c_conc=Number(input);
+  const raw_val=Number(raw);
+  const key=round(c_conc, 2);
+  const table_y={0.50:147.74, 1.00:146.86, 2.00:145.62, 4.00:143.87, 8.00:141.40, 12.00:139.50};
+  const c_M=c_conc / 1000.0;
+  x=round(Math.sqrt(c_M), 4);
+  y=table_y.hasOwnProperty(key)?table_y[key]:round(raw_val / c_conc, 2);
+ }
  if(slug==='conductometric-titration-strong-weak-acids'){
   const v=Number(input);
   const raw_val=Number(raw);
@@ -719,6 +746,11 @@ function estimate(slug,f){
   const KM=f.m / f.b;
   const se=Math.abs(f.slopeSE / f.b);
   return {value:KM,se:se,reference:0.500};
+ }
+ if(slug==='debye-huckel-onsager-strong-electrolytes'){
+  const Lambda0=f.b;
+  const se=f.interceptSE || f.slopeSE || 0.05;
+  return {value:Lambda0,se:se,reference:149.9};
  }
  if(slug==='conductometric-titration-strong-weak-acids'){
   const G0=f.b;

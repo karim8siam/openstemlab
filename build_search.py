@@ -102,6 +102,7 @@ def experiment_index(experiments):
     'activation-energy-arrhenius-acetone-iodination': 'arrhenius activation energy acetone iodination reaction kinetics zero order enolization transition state eyring rate constant temperature dependence',
     'potentiometric-redox-titration-fe-ce': 'potentiometric redox titration iron cerium formal reduction potential nernst equation platinum electrode equivalence point half cell emf',
     'conductometric-titration-strong-weak-acids': 'conductometric titration hydrochloric acid acetic acid sodium hydroxide mixture electrolytic conductivity kohlrausch ionic mobility cell constant dilution correction',
+    'debye-huckel-onsager-strong-electrolytes': 'debye huckel onsager limiting law strong electrolytes molar conductivity potassium chloride kcl kohlrausch square root law relaxation effect electrophoretic effect walden rule',
     'chemical-kinetics-iodine-clock-persulfate':'chemical kinetics iodine clock persulfate iodide reaction order initial rates rate constant thiosulfate starch bronsted bjerrum salt effect transition state photodiode timer'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})

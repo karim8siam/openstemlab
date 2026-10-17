@@ -81,6 +81,18 @@ function update(){
   $('apparatusDiagram').innerHTML=drawEnzymeKineticsBenchView(p,rawVal);
   return;
  }
+ if(cfg.slug==='debye-huckel-onsager-strong-electrolytes'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawOnsagerCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawOnsagerSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawOnsagerBenchView(p,rawVal);
+  return;
+ }
  if(cfg.slug==='conductometric-titration-strong-weak-acids'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawConductometricCompareView(p,rawVal);
@@ -186,6 +198,14 @@ function update(){
   const dA_dt = v0_uM * 0.0185;
   $('liveState').textContent='Photometric trace recorded: v₀ = '+v0_uM.toFixed(2)+' μM/min (dA/dt = '+(dA_dt/1000).toFixed(4)+' AU/min).';
   message('Assay complete: v₀ = '+v0_uM.toFixed(2)+' μM/min (1/v₀ = '+inv_v0.toFixed(2)+' min/mM, 1/[S] = '+inv_s.toFixed(2)+' mM⁻¹). Record in notebook.');
+ }else if(cfg.slug==='debye-huckel-onsager-strong-electrolytes'){
+  const c = p.input;
+  const rawKappa = raw;
+  const c_M = c / 1000.0;
+  const sqrt_c = Math.sqrt(c_M);
+  const Lambda = (rawKappa / c).toFixed(2);
+  $('liveState').textContent='AC Bridge balanced: c(KCl) = '+c.toFixed(2)+' mM, κ = '+rawKappa.toFixed(2)+' μS/cm, Λ_m = '+Lambda+' S·cm²/mol at 25.0 °C.';
+  message('Conductance logged: κ = '+rawKappa.toFixed(2)+' μS/cm, Λ_m = '+Lambda+' S·cm²/mol at √c = '+sqrt_c.toFixed(4)+' M¹/² (K_cell = 1.00 cm⁻¹, 25.0 °C). Record in notebook.');
  }else if(cfg.slug==='conductometric-titration-strong-weak-acids'){
   const v = p.input;
   const rawG = raw;
@@ -10914,6 +10934,308 @@ function drawConductometricSandboxView(p, rawVal) {
 
  // Regression summary text
  svg += text(300, 312, 'Regression Statistics: Branch 1 R² = 0.99999, Slope m₁ = -0.3552 mS/mL, Intercept G₀ = 5.202 mS.', '#789c80', 8);
+
+ return svg;
+}
+
+
+// ======================================================================
+// Lab 33: Debye-Hückel-Onsager Electrolyte Conduction
+// ======================================================================
+
+function drawOnsagerBenchView(p, rawVal) {
+ var c = p.input || 1.00;
+ var rawKappa = rawVal || 146.86;
+ var c_M = c / 1000.0;
+ var sqrt_c = Math.sqrt(c_M);
+ var Lambda = Math.round((rawKappa / c) * 100) / 100;
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0c131d');
+ svg += '<defs>';
+ svg += '<linearGradient id="cellGlass33" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#38bdf8" stop-opacity="0.25"/><stop offset="50%" stop-color="#38bdf8" stop-opacity="0.08"/><stop offset="100%" stop-color="#38bdf8" stop-opacity="0.3"/></linearGradient>';
+ svg += '<linearGradient id="kclSol33" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0284c7" stop-opacity="0.25"/><stop offset="100%" stop-color="#0369a1" stop-opacity="0.55"/></linearGradient>';
+ svg += '</defs>';
+
+ // Header Banner
+ svg += text(20, 24, 'LABORATORY BENCH: DEBYE-HÜCKEL-ONSAGER LIMITING LAW (KCl IN WATER)', '#e2e8f0', 12, 'bold');
+ svg += text(20, 40, 'Platinized Platinum Cell (K_cell = 1.000 cm⁻¹) · 1.0 kHz AC Impedance Bridge · 25.00 ± 0.02 °C', '#38bdf8', 9);
+
+ // --- LEFT REGION: APPARATUS & CELL (x: 20 to 320) ---
+ // Lab Stand & Base
+ svg += rect(35, 290, 140, 14, '#334155', '#1e293b', 1.5);
+ svg += rect(55, 60, 8, 230, '#64748b');
+ svg += rect(59, 140, 50, 6, '#475569');
+
+ // Thermostatic Double-Walled Cell (outer glass jacket)
+ svg += rect(85, 150, 115, 135, 'url(#cellGlass33)', '#38bdf8', 1.5, 6);
+ // Water jacket circulating ports
+ svg += rect(75, 175, 12, 10, '#0ea5e9', '#0284c7', 1);
+ svg += text(69, 183, 'IN', '#bae6fd', 7, 'bold');
+ svg += rect(198, 245, 12, 10, '#0ea5e9', '#0284c7', 1);
+ svg += text(212, 253, 'OUT', '#bae6fd', 7, 'bold');
+
+ // Inner KCl Solution
+ svg += rect(92, 180, 101, 100, 'url(#kclSol33)', '#0284c7', 1, 3);
+ svg += text(142, 195, c.toFixed(2) + ' mM KCl Standard', '#e0f2fe', 7.5, 'bold', 'middle');
+
+ // Platinized Platinum Dip Cell
+ svg += rect(122, 105, 10, 105, '#94a3b8', '#64748b', 1); // glass stem
+ svg += rect(110, 210, 34, 40, 'rgba(56,189,248,0.15)', '#38bdf8', 1); // protective guard
+ // Platinum black plates (1.0 x 1.0 cm)
+ svg += rect(116, 218, 5, 24, '#0f172a', '#334155', 1);
+ svg += rect(133, 218, 5, 24, '#0f172a', '#334155', 1);
+ svg += '<line x1="121" y1="230" x2="133" y2="230" stroke="#38bdf8" stroke-dasharray="1,2" stroke-width="1.5"/>';
+ svg += text(127, 258, 'Pt Black Plates', '#cbd5e1', 5.5, 'normal', 'middle');
+
+ // Thermistor Sensor
+ svg += rect(168, 130, 4, 125, '#f1f5f9', '#94a3b8', 0.8);
+ svg += circle(170, 255, 5, '#ef4444');
+ svg += text(170, 125, '25.00°C', '#f87171', 6.5, 'bold', 'middle');
+
+ // Leads to AC Bridge
+ svg += '<path d="M 124 105 Q 124 85 190 75 T 235 75" stroke="#ef4444" stroke-width="1.5" fill="none"/>';
+ svg += '<path d="M 130 105 Q 135 90 200 80 T 235 80" stroke="#000000" stroke-width="1.5" fill="none"/>';
+
+ // Digital AC Conductivity Bridge Console (x: 220, y: 65, w: 110, h: 90)
+ svg += rect(220, 65, 110, 90, '#1e293b', '#38bdf8', 1.5, 5);
+ svg += rect(227, 72, 96, 32, '#021e28', '#0ea5e9', 1, 3);
+ svg += text(275, 93, rawKappa.toFixed(2) + ' μS/cm', '#38bdf8', 12, 'bold', 'middle');
+ svg += text(275, 117, 'Λ_m = ' + Lambda.toFixed(2) + ' S·cm²/mol', '#34d399', 7, 'bold', 'middle');
+ svg += text(275, 130, 'V_rms = 0.50 V · 1.0 kHz', '#94a3b8', 6.5, 'normal', 'middle');
+ svg += text(275, 143, 'K_cell = 1.000 cm⁻¹', '#cbd5e1', 6.5, 'bold', 'middle');
+
+ // Ionic Atmosphere Schematic Inset (x: 220, y: 165, w: 110, h: 120)
+ svg += rect(220, 165, 110, 120, '#131d2e', '#334155', 1, 5);
+ svg += text(275, 180, 'ION ATMOSPHERE MODEL', '#38bdf8', 7, 'bold', 'middle');
+ // Central K+ cation
+ svg += circle(265, 225, 9, '#38bdf8', '#bae6fd', 1.5);
+ svg += text(265, 228, 'K⁺', '#0f172a', 7, 'bold', 'middle');
+ // Asymmetric counter-ion cloud behind (Cl- ions)
+ svg += '<ellipse cx="280" cy="225" rx="22" ry="16" fill="rgba(239,68,68,0.15)" stroke="#ef4444" stroke-dasharray="2,2" stroke-width="1"/>';
+ svg += circle(288, 218, 5, '#ef4444');
+ svg += text(288, 220, '−', '#fff', 7, 'bold', 'middle');
+ svg += circle(292, 232, 5, '#ef4444');
+ svg += text(292, 234, '−', '#fff', 7, 'bold', 'middle');
+ // Electric field arrow
+ svg += '<line x1="235" y1="205" x2="295" y2="205" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrow)"/>';
+ svg += text(265, 201, 'Applied Field E →', '#fbbf24', 6, 'bold', 'middle');
+ svg += text(275, 260, 'Relaxation Drag: ←', '#f87171', 6.5, 'bold', 'middle');
+ svg += text(275, 273, 'Electrophoretic Flow: ←', '#f59e0b', 6.5, 'bold', 'middle');
+
+ // --- RIGHT REGION: KOHLRAUSCH / ONSAGER MASTER PLOT (x: 350 to 700) ---
+ var pX = 380, pY = 65, pW = 310, pH = 220;
+ svg += rect(pX - 30, pY - 15, pW + 40, pH + 45, '#131d2e', '#334155', 1, 6);
+
+ svg += text(pX + pW/2 - 10, pY - 2, 'DEBYE-HÜCKEL-ONSAGER KOHLRAUSCH PLOT', '#38bdf8', 8.5, 'bold', 'middle');
+
+ // Grid: x in [0, 0.14], y in [135, 152]
+ for (var i = 0; i <= 6; i++) {
+  var gy = pY + (pH / 6) * i;
+  svg += '<line x1="'+pX+'" y1="'+gy+'" x2="'+(pX+pW)+'" y2="'+gy+'" stroke="#1e293b" stroke-width="1"/>';
+  var valY = (152.0 - (i * 17.0 / 6)).toFixed(1);
+  svg += text(pX - 8, gy + 3, valY, '#64748b', 6.5, 'normal', 'end');
+ }
+ for (var j = 0; j <= 7; j++) {
+  var gx = pX + (pW / 7) * j;
+  svg += '<line x1="'+gx+'" y1="'+pY+'" x2="'+gx+'" y2="'+(pY+pH)+'" stroke="#1e293b" stroke-width="1"/>';
+  var valX = (j * 0.02).toFixed(2);
+  svg += text(gx, pY + pH + 12, valX, '#64748b', 6.5, 'normal', 'middle');
+ }
+
+ function oMapX(sqc) { return pX + (sqc / 0.14) * pW; }
+ function oMapY(lm) { return pY + pH - ((lm - 135.0) / 17.0) * pH; }
+
+ // Theoretical Line: Lambda = 149.85 - 94.54 * sqrt_c
+ var lx0 = oMapX(0.0), ly0 = oMapY(149.85);
+ var lx1 = oMapX(0.13), ly1 = oMapY(149.85 - 94.54 * 0.13);
+
+ svg += '<line x1="'+lx0+'" y1="'+ly0+'" x2="'+lx1+'" y2="'+ly1+'" stroke="#38bdf8" stroke-width="2.5"/>';
+
+ // Extrapolated Limiting Value Badge
+ svg += circle(lx0, ly0, 4.5, '#38bdf8', '#f8fafc', 1.5);
+ svg += text(lx0 + 8, ly0 - 6, 'Λ_m° = 149.9 S·cm²/mol', '#38bdf8', 7, 'bold');
+
+ // Experimental sample points
+ var expPts = [
+  {c: 0.5, sq: 0.0224, lm: 147.74},
+  {c: 1.0, sq: 0.0316, lm: 146.86},
+  {c: 2.0, sq: 0.0447, lm: 145.62},
+  {c: 4.0, sq: 0.0632, lm: 143.87},
+  {c: 8.0, sq: 0.0894, lm: 141.40},
+  {c: 12.0, sq: 0.1095, lm: 139.50}
+ ];
+
+ for (var k = 0; k < expPts.length; k++) {
+  var px = oMapX(expPts[k].sq);
+  var py = oMapY(expPts[k].lm);
+  svg += circle(px, py, 3.5, '#f59e0b', '#ffffff', 1);
+ }
+
+ // Current Active Sample Point
+ var curX = oMapX(sqrt_c);
+ var curY = oMapY(Lambda);
+ svg += circle(curX, curY, 6, '#10b981', '#ffffff', 2);
+ svg += '<circle cx="'+curX+'" cy="'+curY+'" r="9" stroke="#10b981" stroke-width="1" fill="none" opacity="0.6"/>';
+
+ // Axis Labels
+ svg += text(pX + pW/2, pY + pH + 24, 'Square Root of Concentration √c (M¹/²)', '#94a3b8', 7.5, 'normal', 'middle');
+ svg += '<text x="'+(pX - 22)+'" y="'+(pY + pH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5" transform="rotate(-90 '+(pX-22)+' '+(pY+pH/2)+')">Molar Conductivity Λ_m (S·cm²·mol⁻¹)</text>';
+
+ // Summary Statistics Callout
+ svg += text(360, 318, 'Fitted Model: Λ_m = -94.54·√c + 149.85 (R² = 0.999998) · Theor Slope: S = 94.50 S·cm²·mol⁻¹·M⁻¹/²', '#a7f3d0', 7.5);
+
+ return svg;
+}
+
+function drawOnsagerCompareView(p, rawVal) {
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0c131d');
+
+ svg += text(20, 24, 'COMPARATIVE KOHLRAUSCH PLOTS: 1:1 vs 2:1 vs 2:2 ELECTROLYTES', '#e2e8f0', 12, 'bold');
+ svg += text(20, 40, 'Demonstrating how ionic charge increases retarding slopes and induces Bjerrum ion-pairing', '#38bdf8', 9);
+
+ var panels = [
+  {title: 'A. 1:1 SALT (KCl)', sub: 'Moderate slope · Wide linear range', col: '#38bdf8', x: 20, w: 215},
+  {title: 'B. 2:1 SALT (MgCl₂)', sub: 'Steeper slope · Divalent cation', col: '#fbbf24', x: 250, w: 215},
+  {title: 'C. 2:2 SALT (MgSO₄)', sub: 'Very steep slope · Ion pairing', col: '#ef4444', x: 480, w: 220}
+ ];
+
+ for (var idx = 0; idx < panels.length; idx++) {
+  var pan = panels[idx];
+  svg += rect(pan.x, 55, pan.w, 235, '#131d2e', '#334155', 1, 6);
+  svg += text(pan.x + 12, 75, pan.title, pan.col, 9, 'bold');
+  svg += text(pan.x + 12, 88, pan.sub, '#94a3b8', 6.5);
+
+  var bx = pan.x + 25, by = 100, bw = pan.w - 40, bh = 140;
+  svg += rect(bx, by, bw, bh, '#0f172a', '#1e293b', 1);
+
+  // Axes
+  svg += '<line x1="'+bx+'" y1="'+(by+bh)+'" x2="'+(bx+bw)+'" y2="'+(by+bh)+'" stroke="#64748b" stroke-width="1"/>';
+  svg += '<line x1="'+bx+'" y1="'+by+'" x2="'+bx+'" y2="'+(by+bh)+'" stroke="#64748b" stroke-width="1"/>';
+
+  if (idx === 0) {
+   // 1:1 Salt (KCl): clean linear drop
+   var kx0 = bx, ky0 = by + 20;
+   var kx1 = bx + bw * 0.9, ky1 = by + 75;
+   svg += '<line x1="'+kx0+'" y1="'+ky0+'" x2="'+kx1+'" y2="'+ky1+'" stroke="#38bdf8" stroke-width="2.5"/>';
+   svg += circle(kx0, ky0, 4, '#38bdf8', '#fff', 1);
+   svg += text(kx0 + 6, ky0 + 12, 'Λ_m° = 149.9', '#38bdf8', 6.5, 'bold');
+   svg += text(bx + bw*0.5, by + 45, 'Slope S = 94.5', '#cbd5e1', 6.5, 'normal', 'middle');
+   svg += text(bx + bw*0.5, by + 58, 'Linear up to 0.015 M', '#94a3b8', 6, 'normal', 'middle');
+   svg += text(pan.x + 12, by + bh + 30, 'Pure univalent Coulombic relaxation & electrophoresis.', '#94a3b8', 6.5);
+  } else if (idx === 1) {
+   // 2:1 Salt (MgCl2): steeper slope
+   var mx0 = bx, my0 = by + 15;
+   var mx1 = bx + bw * 0.9, my1 = by + 115;
+   svg += '<line x1="'+mx0+'" y1="'+my0+'" x2="'+mx1+'" y2="'+my1+'" stroke="#fbbf24" stroke-width="2.5"/>';
+   svg += circle(mx0, my0, 4, '#fbbf24', '#fff', 1);
+   svg += text(mx0 + 6, my0 + 12, 'Λ_m° = 259.0', '#fbbf24', 6.5, 'bold');
+   svg += text(bx + bw*0.5, by + 65, 'Slope S = 278.0', '#cbd5e1', 6.5, 'normal', 'middle');
+   svg += text(bx + bw*0.5, by + 78, 'Linear up to 0.003 M', '#94a3b8', 6, 'normal', 'middle');
+   svg += text(pan.x + 12, by + bh + 30, 'Enhanced relaxation from divalent Mg²⁺ charge density.', '#94a3b8', 6.5);
+  } else {
+   // 2:2 Salt (MgSO4): extreme slope & downward ion pairing curvature
+   var sx0 = bx, sy0 = by + 15;
+   var sx1 = bx + bw * 0.35, sy1 = by + 70;
+   var sx2 = bx + bw * 0.9, sy2 = by + 130;
+   svg += '<path d="M '+sx0+' '+sy0+' Q '+sx1+' '+sy1+' '+sx2+' '+sy2+'" stroke="#ef4444" stroke-width="2.5" fill="none"/>';
+   svg += circle(sx0, sy0, 4, '#ef4444', '#fff', 1);
+   svg += text(sx0 + 6, sy0 + 12, 'Λ_m° = 266.0', '#ef4444', 6.5, 'bold');
+   svg += text(bx + bw*0.5, by + 60, 'S_theor > 420.0', '#cbd5e1', 6.5, 'normal', 'middle');
+   svg += text(bx + bw*0.5, by + 75, 'Ion Pairing (K_A ≈ 200 M⁻¹)', '#f87171', 6, 'bold', 'middle');
+   svg += text(pan.x + 12, by + bh + 30, 'Dramatic downward curvature from neutral ion pairs.', '#fca5a5', 6.5, 'bold');
+  }
+ }
+
+ svg += text(20, 312, 'Physical Conclusion: Debye-Hückel-Onsager theory accurately predicts limiting slopes without empirical parameters for fully dissociated systems.', '#94a3b8', 8);
+ return svg;
+}
+
+function drawOnsagerSandboxView(p, rawVal) {
+ var c = p.input || 1.00;
+ var rawKappa = rawVal || 146.86;
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0c131d');
+
+ svg += text(20, 24, 'DEBYE-HÜCKEL-ONSAGER MULTI-PARAMETER SIMULATION SANDBOX', '#e2e8f0', 12, 'bold');
+ svg += text(20, 40, 'Theoretical decomposition: relaxation vs electrophoretic contributions and Walden product analysis', '#38bdf8', 9);
+
+ // --- LEFT CONTROL PANEL (x: 20 to 250) ---
+ svg += rect(20, 55, 230, 240, '#131d2e', '#334155', 1, 6);
+ svg += text(32, 75, 'STATISTICAL MECHANICAL PARAMETERS', '#38bdf8', 9, 'bold');
+
+ var params = [
+  {name: 'Solvent Relative Permittivity (ε_r)', val: '78.36', desc: 'Liquid water at 298.15 K'},
+  {name: 'Solvent Dynamic Viscosity (η)', val: '0.8904 mPa·s', desc: 'Hydrodynamic shear viscosity'},
+  {name: 'Relaxation Coefficient (A_rel)', val: '0.2289 M⁻¹/²', desc: 'Asymmetry drag factor'},
+  {name: 'Electrophoretic Coeff (B_el)', val: '60.20 S·cm²/mol', desc: 'Hydration counter-current'},
+  {name: 'Limiting Conductivity (Λ_m°)', val: '149.85 S·cm²/mol', desc: 'λ°(K⁺) + λ°(Cl⁻)'},
+  {name: 'Theoretical Slope (S)', val: '94.50 S·cm²/mol·M⁻¹/²', desc: 'A_rel·Λ_m° + B_el'}
+ ];
+
+ for (var i = 0; i < params.length; i++) {
+  var py = 95 + i * 24;
+  svg += text(32, py, params[i].name + ':', '#94a3b8', 7);
+  svg += text(235, py, params[i].val, '#e2e8f0', 7, 'bold', 'end');
+ }
+
+ svg += rect(28, 242, 214, 45, '#1e293b', '#0284c7', 1, 4);
+ svg += text(36, 256, 'THEORETICAL DRAG CONTRIBUTIONS:', '#38bdf8', 7.5, 'bold');
+ svg += text(36, 268, '• Relaxation Effect: 0.2289 × 149.85 = 34.30 S·cm²/mol (36.3%)', '#f87171', 6.5);
+ svg += text(36, 278, '• Electrophoretic Effect: B_el = 60.20 S·cm²/mol (63.7%)', '#34d399', 6.5);
+
+ // --- RIGHT INTERACTIVE DIAGNOSTIC PLOT (x: 270 to 700) ---
+ var pX = 300, pY = 65, pW = 390, pH = 210;
+ svg += rect(pX - 25, pY - 12, pW + 35, pH + 42, '#131d2e', '#334155', 1, 6);
+ svg += text(pX + pW/2, pY - 1, 'THEORETICAL ONSAGER DECOMPOSITION & RESIDUAL BAND', '#38bdf8', 8.5, 'bold', 'middle');
+
+ // Grid
+ for (var k = 0; k <= 6; k++) {
+  var gy = pY + (pH / 6) * k;
+  svg += '<line x1="'+pX+'" y1="'+gy+'" x2="'+(pX+pW)+'" y2="'+gy+'" stroke="#1e293b" stroke-width="1"/>';
+  var valY = (152.0 - k * 2.83).toFixed(1);
+  svg += text(pX - 8, gy + 3, valY, '#64748b', 6.5, 'normal', 'end');
+ }
+ for (var m = 0; m <= 7; m++) {
+  var gx = pX + (pW / 7) * m;
+  svg += '<line x1="'+gx+'" y1="'+pY+'" x2="'+gx+'" y2="'+(pY+pH)+'" stroke="#1e293b" stroke-width="1"/>';
+  var valX = (m * 0.02).toFixed(2);
+  svg += text(gx, pY + pH + 12, valX, '#64748b', 6.5, 'normal', 'middle');
+ }
+
+ function sMapX(sqc) { return pX + (sqc / 0.14) * pW; }
+ function sMapY(lm) { return pY + pH - ((lm - 135.0) / 17.0) * pH; }
+
+ // Draw theoretical components
+ // Base infinite dilution line
+ var x0 = sMapX(0.0), y0 = sMapY(149.85);
+ var xEnd = sMapX(0.13);
+
+ // Only relaxation: Lambda = 149.85 - 34.30 * sqrt_c
+ var yRel = sMapY(149.85 - 34.30 * 0.13);
+ svg += '<line x1="'+x0+'" y1="'+y0+'" x2="'+xEnd+'" y2="'+yRel+'" stroke="#f87171" stroke-width="1.5" stroke-dasharray="3,3"/>';
+ svg += text(xEnd - 5, yRel - 5, 'Relaxation only (S = 34.3)', '#f87171', 6.5, 'bold', 'end');
+
+ // Full DHO line: Lambda = 149.85 - 94.50 * sqrt_c
+ var yFull = sMapY(149.85 - 94.50 * 0.13);
+ svg += '<line x1="'+x0+'" y1="'+y0+'" x2="'+xEnd+'" y2="'+yFull+'" stroke="#38bdf8" stroke-width="2.5"/>';
+ svg += text(xEnd - 5, yFull - 5, 'Full DHO Law (S = 94.5)', '#38bdf8', 6.5, 'bold', 'end');
+
+ // Extrapolated point
+ svg += circle(x0, y0, 4, '#38bdf8', '#fff', 1.5);
+ svg += text(x0 + 8, y0 - 6, 'Λ_m° = 149.85', '#38bdf8', 7, 'bold');
+
+ // Active Point
+ var curSq = Math.sqrt(c / 1000.0);
+ var curLambda = rawKappa / c;
+ var curX = sMapX(curSq);
+ var curY = sMapY(curLambda);
+ svg += circle(curX, curY, 6, '#10b981', '#ffffff', 2);
+
+ // Regression summary text
+ svg += text(300, 312, 'Walden Invariant Product: Λ_m° · η = 149.85 × 0.8904 = 133.4 S·cm²·mPa·s·mol⁻¹.', '#789c80', 8);
 
  return svg;
 }

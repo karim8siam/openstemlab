@@ -159,6 +159,21 @@ def observation(c,value):
   v0_mM=raw / 1000.0
   y=rnd(1.0 / v0_mM, 2)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='debye-huckel-onsager-strong-electrolytes':
+  c_conc=float(value)
+  table_raw={0.50:73.87, 1.00:146.86, 2.00:291.25, 4.00:575.49, 8.00:1131.18, 12.00:1673.98}
+  table_y={0.50:147.74, 1.00:146.86, 2.00:145.62, 4.00:143.87, 8.00:141.40, 12.00:139.50}
+  key=round(c_conc, 2)
+  if key in table_raw:
+   raw=table_raw[key]
+  else:
+   c_M=c_conc / 1000.0
+   Lambda=149.85 - 94.54 * math.sqrt(c_M)
+   raw=round(Lambda * c_conc, 2)
+  c_M=c_conc / 1000.0
+  x=rnd(math.sqrt(c_M), 4)
+  y=table_y.get(key, rnd(raw / c_conc, 2))
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='conductometric-titration-strong-weak-acids':
   v=float(value)
   table_raw={1.00:4.80, 2.50:4.21, 4.00:3.63, 5.50:3.08, 7.00:2.54, 8.50:2.01}
@@ -433,6 +448,10 @@ def estimate(c,f):
   ref=0.500
   se=abs(f.get('slopeSE', 0.05) / b) if b > 0 else 0.002
   return KM, se, ref
+ elif slug=='debye-huckel-onsager-strong-electrolytes':
+  Lambda0=f['b']
+  se=f.get('interceptSE', f.get('slopeSE', 0.05))
+  return Lambda0, se, 149.9
  elif slug=='conductometric-titration-strong-weak-acids':
   G0=f['b']
   absM=abs(f['m'])
@@ -572,6 +591,10 @@ def formula(c,f):
   Vmax=1.0 / b
   KM=m / b
   return f"Slope K_M/V_max = {fmt(m,4)} min; Intercept 1/V_max = {fmt(b,4)} min·mM⁻¹ (V_max = {fmt(Vmax*1000.0,2)} μM/min, K_M = {fmt(KM,4)} mM)"
+ elif slug=='debye-huckel-onsager-strong-electrolytes':
+  Lambda0=f['b']
+  slope=f['m']
+  return f"Debye-Hückel-Onsager Fit: Λ_m = {fmt(slope,2)}·√c + {fmt(Lambda0,2)} S·cm²·mol⁻¹; Limiting Molar Conductivity Λ_m° = {fmt(Lambda0,1)} S·cm²·mol⁻¹; Empirical Slope S = {fmt(abs(slope),2)} S·cm²·mol⁻¹·M⁻¹/²"
  elif slug=='conductometric-titration-strong-weak-acids':
   G0=f['b']
   m=f['m']
@@ -973,6 +996,25 @@ def worked(c,row):
    f"   Linearized equation: 1/v₀ = (K_M / V_max) · (1/[S]) + 1/V_max.\n"
    f"   Slope m = K_M / V_max = 12.50 min; Y-intercept b = 1/V_max = 25.00 min·mM⁻¹.\n"
    f"   Extracted parameters: V_max = 1/b = 0.0400 mM/min (40.0 μM/min); K_M = m / b = 0.500 mM with R² = 1.00000."
+  )
+ elif slug=='debye-huckel-onsager-strong-electrolytes':
+  c=row['input']
+  raw=row['raw']
+  x=row['x']
+  y=row['y']
+  c_M=c / 1000.0
+  return (
+   f"Representative calculation for Debye-Hückel-Onsager electrolyte run at KCl concentration c = {c:.2f} mM ({c_M:.5f} M):\n"
+   f"1. Electrolytic Conductivity Acquisition & Background Correction:\n"
+   f"   Measured specific electrolytic conductivity on 1.0 kHz bridge: κ = {raw:.2f} μS/cm = {raw*1e-6:.6e} S/cm.\n"
+   f"   Solvent background conductivity (ultrapure water): κ_w = 0.05 μS/cm (subtracted to yield net κ_corr = {raw-0.05:.2f} μS/cm).\n"
+   f"2. Coordinate Mapping for Kohlrausch-Onsager Plot:\n"
+   f"   Abscissa: x = √c_M = √({c_M:.5f}) = {x:.4f} M¹/².\n"
+   f"   Ordinate: y = Λ_m = (1000 × κ_corr) / c_M = ({raw:.2f} μS/cm) / ({c:.2f} mM) = {y:.2f} S·cm²·mol⁻¹.\n"
+   f"3. Linear Least-Squares Extraction of Limiting Molar Conductivity:\n"
+   f"   Debye-Hückel-Onsager model: Λ_m = -S · √c_M + Λ_m°.\n"
+   f"   Linear regression across six dilute concentrations yields empirical slope S = 94.54 S·cm²·mol⁻¹·M⁻¹/² (matching theoretical S_theor = 94.50) "
+   f"and Y-intercept Λ_m° = 149.85 S·cm²·mol⁻¹ (R² = 0.999998), agreeing with the reference benchmark (149.9 S·cm²·mol⁻¹)."
   )
  elif slug=='conductometric-titration-strong-weak-acids':
   v=row['input']
@@ -1644,6 +1686,33 @@ def uncertainty_text(c):
    "covariance matrix through the regression parameters gives u(K_M) / K_M = √[ (u(m)/m)² + (u(b)/b)² - 2·cov(m,b)/(m·b) ]. "
    "The high negative correlation between slope and intercept (r ≈ -0.88) substantially attenuates overall uncertainty, yielding an "
    "expanded uncertainty U(K_M) = 0.015 mM (coverage factor k = 2, 95% confidence level)."
+  )
+ elif slug=='debye-huckel-onsager-strong-electrolytes':
+  return (
+   "In the high-precision conductometric investigation of the Debye-Hückel-Onsager limiting law for potassium chloride in water, "
+   "metrological uncertainties and physical electroanalytical boundary factors are rigorously quantified across electrochemical, "
+   "thermostatic, gravimetric, and linear regression domains: "
+   "(1) Audio-Frequency AC Impedance Bridge Calibration and Phase Nulling: Conductance measurements are recorded using an advanced "
+   "microprocessor-controlled alternating-current impedance bridge operating at an excitation frequency of 1.0 kHz (V_rms = 0.50 V). "
+   "High-frequency AC excitation eliminates Faradaic solvent electrolysis and suppresses capacitive double-layer electrode polarization. "
+   "Automatic quadrature phase-nulling balances residual cell capacitance, ensuring that the measured conductance represents pure ohmic "
+   "electrolytic conductivity with an instrumental resolution of 0.001 μS/cm and an uncertainty of ±0.05% of reading. "
+   "(2) Cell Constant Calibration Traceability: The dip-type platinized platinum cell is calibrated against certified 0.0100 M KCl "
+   "primary reference standard solution (κ_std = 1408.7 μS/cm at 25.00 °C, traceable to NIST Standard Reference Material 3193). The experimental "
+   "cell constant K_cell = 1.000 ± 0.004 cm⁻¹ carries an expanded relative uncertainty u_r(K_cell) = 0.40% (coverage factor k = 2). "
+   "(3) Thermostatic Jacket Stability and Temperature Sensitivity: Electrolytic conductivity in aqueous solutions exhibits an exceptionally large "
+   "temperature coefficient of approximately +2.0% per °C (α_25 = +0.020 K⁻¹), primarily governed by the Arrhenius reduction of water dynamic "
+   "viscosity (E_visc ≈ 15 kJ/mol) and thermal activation of ionic mobility. The double-walled conduction cell is maintained at T = 25.00 ± 0.02 °C "
+   "(298.15 K) via a closed-loop refrigerated circulator. This restricts temperature-induced conductivity drift to less than ±0.04%, preventing "
+   "systematic distortion of the Kohlrausch slope. "
+   "(4) Gravimetric Standard Preparation and Solvent Background Correction: Stock 0.1000 M KCl solution was prepared gravimetrically from fused, "
+   "desiccated analytical-reagent KCl (mass measured on a five-decimal balance with uncertainty ±0.02 mg). Serial dilutions were executed using "
+   "certified Class A volumetric flasks (ISO 1042) and calibrated micropipettes (tolerance ±0.20%). The solvent background conductivity of "
+   "ultrapure Milli-Q water (κ_w = 0.048 ± 0.003 μS/cm) was subtracted from all measured conductivities, ensuring high-fidelity electrolyte signal extraction. "
+   "(5) Multi-Point Least-Squares Onsager Linear Regression: Ordinary linear regression of molar conductivity Λ_m against the square root of "
+   "concentration √c across six dilute standards yields an empirical slope S_emp = 94.54 ± 0.12 S·cm²·mol⁻¹·M⁻¹/² (matching the theoretical Onsager "
+   "slope S_theor = 94.50 S·cm²·mol⁻¹·M⁻¹/²) and an extrapolated Y-intercept providing limiting molar conductivity Λ_m° = 149.85 ± 0.05 S·cm²·mol⁻¹ "
+   "(R² = 0.999998), with an expanded uncertainty U(Λ_m°) = 0.10 S·cm²·mol⁻¹ (coverage factor k = 2, 95% confidence level)."
   )
  elif slug=='conductometric-titration-strong-weak-acids':
   return (
@@ -2808,6 +2877,76 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"reversible enzyme inhibition mechanisms."
   )
   
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='debye-huckel-onsager-strong-electrolytes':
+  slope_val=f['m']
+  Lambda0_val=f['b']
+  r2_val=f['r2']
+  
+  abstract=(
+   f"The concentration dependence of molar conductivity for potassium chloride (KCl) in ultrapure water was quantitatively investigated at "
+   f"298.15 ± 0.02 K (25.00 °C) across six dilute concentrations (c = {rows[0]['input']:.2f} mM to {rows[-1]['input']:.2f} mM, corresponding to "
+   f"0.0005 M to 0.0120 M) using a dip-type platinized platinum conductivity cell (cell constant K_cell = 1.000 cm⁻¹) coupled to a 1.0 kHz "
+   f"alternating-current precision impedance bridge. Specific electrolytic conductivities κ were recorded in a double-walled thermostatic cell "
+   f"following 10 minutes of closed-loop thermal equilibration and corrected for solvent background conductivity (κ_w = 0.048 μS/cm). Molar "
+   f"conductivities Λ_m = 1000·κ/c_M decreased monotonically from {rows[0]['y']:.2f} S·cm²·mol⁻¹ at 0.50 mM to {rows[-1]['y']:.2f} S·cm²·mol⁻¹ "
+   f"at 12.00 mM, tracking the square root of concentration √c in strict accordance with the Kohlrausch empirical law. Ordinary linear regression "
+   f"of Λ_m against √c yielded ideal linearity (R² = {r2_val:.6f}). The extracted limiting molar conductivity at infinite dilution was "
+   f"Λ_m° = {Lambda0_val:.2f} ± {se:.2f} S·cm²·mol⁻¹, differing by only {percent:.3f}% from the certified physical benchmark ({reference:.1f} S·cm²·mol⁻¹). "
+   f"The empirical slope S_emp = {abs(slope_val):.2f} S·cm²·mol⁻¹·M⁻¹/² matched the theoretical Debye-Hückel-Onsager limiting slope "
+   f"(S_theor = 94.50 S·cm²·mol⁻¹·M⁻¹/²) to within 0.04%, providing authoritative first-principles validation of interionic relaxation and "
+   f"electrophoretic drag mechanics in dilute strong electrolyte solutions."
+  )
+
+  graph_choice=(
+   f"The primary analytical graphic presents the classic Kohlrausch-Onsager master plot: molar conductivity y = Λ_m (in S·cm²·mol⁻¹) "
+   f"plotted against the square root of electrolyte molar concentration x = √c_M (in M¹/²) across the dilute range 0 to 0.12 M¹/² (0 to 14.4 mM). "
+   f"In accordance with the Debye-Hückel-Onsager limiting law Λ_m = Λ_m° - S·√c, the experimental points conform strictly to a straight line "
+   f"(R² = {r2_val:.6f}). The Y-intercept b = {Lambda0_val:.2f} S·cm²·mol⁻¹ isolates the limiting molar conductivity at infinite dilution where "
+   f"interionic Coulombic forces vanish completely. The negative slope m = {slope_val:.2f} S·cm²·mol⁻¹·M⁻¹/² quantitatively confirms the combined "
+   f"theoretical retarding contributions of the relaxation effect (asymmetry drag, A_rel·Λ_m° = 34.30 S·cm²·mol⁻¹) and the electrophoretic effect "
+   f"(solvent counter-current drag, B_el = 60.20 S·cm²·mol⁻¹). A secondary inset graphic compares the theoretical Onsager limiting slopes for "
+   f"1:1 (KCl), 2:1 (MgCl₂), and 2:2 (MgSO₄) electrolytes, visually illustrating the profound impact of ionic valency on interionic attraction."
+  )
+
+  discussion=(
+   f"The electrical conductivity of electrolyte solutions represents one of the foundational cornerstones of physical chemistry and statistical "
+   f"mechanics. For strong electrolytes such as potassium chloride (KCl), the salt is 100% dissociated into discrete solvated potassium cations (K⁺) "
+   f"and chloride anions (Cl⁻) across all accessible concentrations. The observed decrease in molar conductivity with concentration is therefore "
+   f"not an equilibrium dissociation phenomenon, but a direct consequence of long-range interionic Coulombic electrostatic interactions.\n\n"
+   f"According to the Debye-Hückel theory of electrolyte solutions, thermal kinetic energy causes ions to undergo continuous Brownian motion, "
+   f"while Coulombic forces organize an ionic atmosphere of net opposite charge around every central ion. The spatial thickness of this atmosphere "
+   f"is characterized by the Debye screening length, 1/κ_DH = 0.304 / √I nm (where I is ionic strength in mol/L). In dilute 0.001 M KCl, the ion "
+   f"atmosphere extends over ~9.6 nm. In the absence of an external electric field, this ionic cloud is centrosymmetric and exerts no net force.\n\n"
+   f"When an electric field E is applied, the central ion migrates forward, but its motion is retarded by two distinct physical effects derived from "
+   f"first principles by Lars Onsager:\n"
+   f"1. The Relaxation (Asymmetry) Effect: As the central ion travels forward, the ionic atmosphere behind it takes a finite relaxation time "
+   f"(τ_rel ≈ 10⁻⁸ s) to dissipate, while the new atmosphere ahead takes time to form. The resulting asymmetric charge accumulation behind the ion "
+   f"exerts a continuous electrostatic pull backward. Onsager proved that the relaxation drag retards molar conductivity by A_rel·Λ_m°·√c, "
+   f"where A_rel = 0.2289 M⁻¹/² for 1:1 salts in water at 25 °C. For KCl, this contributes 34.30 S·cm²·mol⁻¹·M⁻¹/² (36.3% of the total slope).\n"
+   f"2. The Electrophoretic Effect: Counter-ions in the atmosphere carry hydration water molecules and migrate in the opposite direction. This creates "
+   f"a localized hydrodynamic counter-current through which the central ion must swim, experiencing enhanced Stokes viscous drag. The electrophoretic "
+   f"retarding term is B_el·√c, where B_el = 60.20 S·cm²·mol⁻¹·M⁻¹/² (63.7% of the total slope).\n\n"
+   f"The combined Debye-Hückel-Onsager equation:\n"
+   f"  Λ_m = Λ_m° - (0.2289 · Λ_m° + 60.20) · √c = Λ_m° - S · √c\n"
+   f"predicts a theoretical limiting slope of S = (0.2289 × 149.85) + 60.20 = 94.50 S·cm²·mol⁻¹·M⁻¹/² without any empirical fitting parameters. "
+   f"The experimental slope obtained from our six-point regression was S_emp = {abs(slope_val):.2f} S·cm²·mol⁻¹·M⁻¹/², differing by only 0.04% "
+   f"from the theoretical prediction. The extrapolated limiting molar conductivity Λ_m° = {Lambda0_val:.2f} S·cm²·mol⁻¹ agrees with the certified "
+   f"benchmark of {reference:.1f} S·cm²·mol⁻¹ ({percent:.3f}% difference), providing conclusive experimental proof of Kohlrausch's law of independent "
+   f"migration and Onsager's statistical mechanical electrolyte theory."
+  )
+
+  conclusion=(
+   f"The conductometric investigation of dilute potassium chloride solutions at 25.00 °C has rigorously established: "
+   f"(1) strict conformity of molar conductivity to Kohlrausch's square-root law across the concentration range 0.50 mM to 12.00 mM (R² = {r2_val:.6f}); "
+   f"(2) an experimental limiting molar conductivity at infinite dilution of Λ_m° = {Lambda0_val:.2f} ± {se:.2f} S·cm²·mol⁻¹, differing by only "
+   f"{percent:.3f}% from the certified benchmark value of {reference:.1f} S·cm²·mol⁻¹; "
+   f"(3) an empirical Onsager limiting slope S_emp = {abs(slope_val):.2f} S·cm²·mol⁻¹·M⁻¹/² agreeing within 0.04% with the theoretical value of "
+   f"94.50 S·cm²·mol⁻¹·M⁻¹/² derived from first principles; "
+   f"and (4) quantitative verification of the relaxation and electrophoretic deceleration mechanisms in dilute strong electrolyte solutions. "
+   f"These results confirm the authoritative validity of Debye-Hückel-Onsager theory for describing ion transport in solution."
+  )
+
   return abstract, graph_choice, discussion, conclusion
  elif slug=='conductometric-titration-strong-weak-acids':
   slope_val=f['m']
