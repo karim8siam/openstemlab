@@ -130,6 +130,19 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:1.0,x,y,valid:m>=2.000&&m<=7.000};
  }
+ if(slug==='vapor-pressure-liquid-clausius-clapeyron'){
+  const t=Number(input);
+  const T=t + 273.15;
+  const R=8.31446;
+  const dH=38560.0;
+  const Tb=351.52;
+  const Pb=101.325;
+  const ln_P=Math.log(Pb) - (dH / R) * (1.0 / T - 1.0 / Tb);
+  const raw=round(Math.exp(ln_P), 2);
+  const x=round(1000.0 / T, 4);
+  const y=round(Math.log(raw), 4);
+  return {raw,ideal:raw,period:1.0,x,y,valid:t>=30.0&&t<=78.0};
+ }
  throw Error('Unknown Chemistry experiment predict: '+slug);
 }
 
@@ -192,6 +205,13 @@ function reading(slug,input,raw){
  if(slug==='heat-solution-crystallization-calorimetry'){
   x=Number(input);
   y=Number(raw);
+ }
+ if(slug==='vapor-pressure-liquid-clausius-clapeyron'){
+  const t=Number(input);
+  const P=Number(raw);
+  const T=t + 273.15;
+  x=round(1000.0 / T, 4);
+  y=round(Math.log(P), 4);
  }
  return {input:Number(input),raw:Number(raw),x,y};
 }
@@ -303,6 +323,11 @@ function estimate(slug,f){
   const dH_est= f.m * M_KNO3 * C_eff;
   const se= f.slopeSE * M_KNO3 * C_eff;
   return {value:dH_est,se:se,reference:34.89};
+ }
+ if(slug==='vapor-pressure-liquid-clausius-clapeyron'){
+  const dH_est= -f.m * 8.31446;
+  const se= f.slopeSE * 8.31446;
+  return {value:dH_est,se:se,reference:38.56};
  }
  throw Error('Unknown Chemistry experiment estimate: '+slug);
 }

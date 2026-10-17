@@ -2968,5 +2968,217 @@
       "Dispose of aqueous potassium nitrate solutions in the designated heavy-metal-free aqueous chemical waste container."
     ],
     "limitations": "The calculation assumes that the specific heat capacity of dilute potassium nitrate solutions remains close to pure water (4.184 J/(g·K)), that non-adiabatic heat leakage is strictly linear and governed by Newton's law of cooling over the 1.5–5.5 °C temperature drop, and that complete crystal dissolution occurs before the post-period re-warming extrapolation baseline begins. Trace heat of immersion of the crystal surface is negligible (<0.1%) and absorbed into the regression intercept."
+  },
+  {
+    "slug": "vapor-pressure-liquid-clausius-clapeyron",
+    "title": "Determination of the Enthalpy of Vaporization from Liquid Vapor Pressure via the Clausius-Clapeyron Equation",
+    "shortTitle": "Clausius-Clapeyron Vapor Pressure",
+    "subject": "chemistry",
+    "number": 15,
+    "published": true,
+    "min": 30.0,
+    "max": 78.0,
+    "step": 10.0,
+    "initial": 50.0,
+    "inputLabel": "Water bath temperature t (°C)",
+    "shortInput": "bath temperature",
+    "inputUnit": "°C",
+    "inputDecimals": 1,
+    "rawLabel": "Equilibrium vapor pressure P",
+    "rawUnit": "kPa",
+    "rawDecimals": 2,
+    "angle": false,
+    "timed": false,
+    "observationLabel": "Isoteniscope vapor pressure measurement",
+    "xAxis": "Inverse absolute temperature 1000/T (K⁻¹)",
+    "yAxis": "Natural logarithm of vapor pressure ln(P/kPa)",
+    "xScale": 1,
+    "yScale": 1,
+    "target": "EnthalpyVaporization_Ethanol",
+    "resultUnit": "kJ/mol",
+    "resultScale": 1,
+    "resultDecimals": 2,
+    "emptyX": [
+      2.7,
+      3.4
+    ],
+    "emptyY": [
+      2.0,
+      5.0
+    ],
+    "samples": [
+      30.0,
+      40.0,
+      50.0,
+      60.0,
+      70.0,
+      78.0
+    ],
+    "measureLabel": "Equilibrate bath, null manometer & record vapor pressure",
+    "aim": "Determine the standard molar enthalpy of vaporization (ΔH_vap°) of pure absolute ethanol by measuring its equilibrium vapor pressure as a function of temperature using a static isoteniscope apparatus, linearizing the liquid-vapor phase boundary with the Clausius-Clapeyron equation, and extracting ΔH_vap° and the normal boiling point via ordinary least-squares regression.",
+    "fitEquation": "ln(P/kPa) = −[ΔH_vap / (1000·R)] · (1000/T) + C  ==>  ln(P) = −4.639 · (1000/T) + 17.814",
+    "gradientUnit": "K",
+    "settings": [
+      "Precision glass isoteniscope cell with liquid reservoir bulb and differential U-tube manometer containing pure absolute ethanol.",
+      "Constant-temperature circulating water bath with PID proportional temperature controller (stability ±0.02 °C) and mechanical immersion stirrer.",
+      "High-accuracy digital absolute pressure transducer / mercury manometer (resolution ±0.01 kPa = ±0.08 mmHg).",
+      "Surge ballast tank (5 L) and precision needle bleed valve connected to a two-stage rotary vane vacuum pump for pressure equalization."
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "⚗️",
+        "label": "1. Static Isoteniscope Apparatus"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "2. Clausius-Clapeyron vs Antoine vs Trouton"
+      },
+      {
+        "id": "sandbox",
+        "icon": "📈",
+        "label": "3. Liquid-Vapor P-T Phase Boundary & Non-Ideality"
+      }
+    ],
+    "intro": "The transition between liquid and vapor phases represents one of the foundational phase equilibria in chemical thermodynamics, governed by the equality of chemical potentials: μ_liquid(T, P) = μ_vapor(T, P). Along the coexistence curve, the differential relationship between equilibrium vapor pressure P and absolute temperature T is given by the exact Clapeyron equation: dP/dT = ΔS_vap / ΔV_vap = ΔH_vap / [ T · (V_m,gas − V_m,liq) ]. Rudolf Clausius introduced two foundational approximations: (1) At temperatures far below the critical point, the molar volume of the condensed liquid is negligible compared to the gas phase: V_m,gas − V_m,liq ≈ V_m,gas. (2) The vapor behaves in accordance with the ideal gas law: V_m,gas ≈ R T / P. Substituting these into the Clapeyron equation yields the classic differential Clausius-Clapeyron equation: d(ln P) / dT = ΔH_vap / (R T²). Assuming the molar enthalpy of vaporization ΔH_vap remains essentially constant over a modest temperature range, integrating with respect to inverse temperature yields the linear form: ln P = −(ΔH_vap / R) · (1/T) + C. In this laboratory investigation, students measure the equilibrium vapor pressure of pure absolute ethanol (C₂H₅OH, formula weight 46.069 g/mol) across temperatures from 30.0 °C to 78.0 °C (303.15 K to 351.15 K) using a glass isoteniscope immersed in a thermostatted circulating water bath. The isoteniscope features a sample reservoir bulb connected to a short U-tube containing the sample liquid itself as the null-indicating manometer fluid, completely eliminating contamination from external manometric fluids. By adjusting the external vacuum ballast manifold with fine needle valves until the liquid levels in both arms of the U-tube are exactly equal, the external system pressure measured by a digital transducer equals the true equilibrium vapor pressure inside the bulb. Plotting ln(P/kPa) against scaled inverse temperature 1000/T (K⁻¹) yields a flawless linear regression line whose slope m_slope = −ΔH_vap / (1000·R) isolates the standard molar enthalpy of vaporization ΔH_vap° = 38.56 kJ/mol and predicts the normal boiling point (T_b = 78.37 °C) with 0.02% precision, providing profound validation of liquid-vapor phase thermodynamics and molecular intermolecular forces.",
+    "modelExtra": "The physical simulation model calculates equilibrium vapor pressure across temperature using the integrated Clausius-Clapeyron relation ln(P / P_b) = −(ΔH_vap / R) · (1/T − 1/T_b), where P_b = 101.325 kPa is standard atmospheric pressure at the normal boiling point T_b = 351.52 K (78.37 °C). Physicochemical parameters for pure absolute ethanol: molar mass M = 46.069 g/mol; universal gas constant R = 8.31446 J/(mol·K) = 0.00831446 kJ/(mol·K); accepted standard molar enthalpy of vaporization: ΔH_vap° = 38.560 kJ/mol (38560 J/mol). Scaled regression coordinates: independent variable x = 1000.0 / T (in K⁻¹), dependent variable y = ln(P in kPa). Theoretical regression slope: m_slope = −ΔH_vap / (1000 · R) = −38560.0 / 8314.46 = −4.63854 K. Theoretical intercept: C = ln(P_b) + (ΔH_vap / R) · (1/T_b) = ln(101.325) + 4.63854 · (1000 / 351.52) = 4.6183 + 13.1957 = 17.8140. Across water bath temperatures from 30.0 °C to 78.0 °C, vapor pressures span P = 12.34 kPa to 99.93 kPa. Linear regression across the six temperature settings isolates ΔH_vap = −m_slope · (1000 · R) with R² = 1.00000; the null-manometer isoteniscope design completely prevents non-condensable air bubble contamination and capillary depression artifacts.",
+    "apparatus": [
+      {
+        "name": "Precision Glass Isoteniscope Cell",
+        "purpose": "Features a sample reservoir bulb, vapor reflux trap, and integral differential U-tube manometer containing pure liquid ethanol to indicate pressure equality without external contamination."
+      },
+      {
+        "name": "Constant-Temperature Circulating Water Bath (±0.02 °C)",
+        "purpose": "Maintains uniform, highly regulated thermal equilibration around the submerged isoteniscope cell using a motorized impeller and PID electronic heater."
+      },
+      {
+        "name": "Digital Absolute Pressure Transducer (±0.01 kPa)",
+        "purpose": "Measures the absolute gas pressure inside the external ballast manifold with high precision (0.01 kPa = 0.08 mmHg) when the isoteniscope U-tube is nulled."
+      },
+      {
+        "name": "5-Liter Vacuum Ballast Surge Reservoir and Needle Valves",
+        "purpose": "Buffers pressure fluctuations and allows ultra-fine throttling of air bleed and vacuum evacuation to precisely balance the isoteniscope manometer liquid levels."
+      },
+      {
+        "name": "Two-Stage Rotary Vane Vacuum Pump and Cold Trap",
+        "purpose": "Evacuates the manifold down to 0.1 kPa during initial boiling and degassing of the sample to purge trapped air from the reservoir bulb."
+      },
+      {
+        "name": "NIST-Calibrated Precision Digital Thermometer (±0.01 °C)",
+        "purpose": "Measures the water bath temperature directly adjacent to the isoteniscope sample bulb ensuring exact thermodynamic temperature registration."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Isoteniscope Loading and System Assembly",
+        "text": "Fill the isoteniscope reservoir bulb two-thirds full with pure anhydrous ethanol (20–25 mL). Tilt the apparatus to introduce enough liquid into the short U-tube to form a 3–4 cm liquid manometer seal. Mount the isoteniscope inside the water bath and connect to the vacuum ballast manifold."
+      },
+      {
+        "title": "Degassing and Trapped Air Purging",
+        "text": "Start the vacuum pump and carefully open the evacuation valve until the ethanol in the bulb boils vigorously under reduced pressure. Vapors sweep out all residual non-condensable air from the bulb and inner U-tube leg. Boil for 1–2 minutes, then slowly admit air through the fine needle valve until the U-tube levels match."
+      },
+      {
+        "title": "Thermal Bath Equilibration",
+        "text": "Set the circulating water bath controller to the initial assigned temperature (30.0 °C). Allow at least 10 minutes of continuous motorized stirring for the ethanol sample in the submerged bulb to achieve true thermodynamic equilibrium with the bath."
+      },
+      {
+        "title": "Manometer Nulling and Vapor Pressure Acquisition",
+        "text": "Carefully manipulate the vacuum valve and air bleed needle valve to adjust the pressure in the ballast manifold until the liquid ethanol menisci in both arms of the isoteniscope U-tube are at the exact same horizontal height. Record the digital pressure transducer reading P (kPa) and bath temperature t (°C)."
+      },
+      {
+        "title": "Temperature Series Progression",
+        "text": "Increase the water bath temperature systematically to 40.0, 50.0, 60.0, 70.0, and 78.0 °C. At each plateau, re-null the U-tube levels by admitting air into the manifold as vapor pressure increases, allowing 8 minutes for thermal equilibration before logging pressure."
+      },
+      {
+        "title": "Clausius-Clapeyron Linear Regression and Analysis",
+        "text": "Convert all temperatures to Kelvin (T = t + 273.15 K) and calculate inverse temperatures 1000/T (K⁻¹). Calculate natural logarithms of vapor pressure ln(P/kPa). Perform ordinary least-squares regression of ln(P) vs 1000/T, extract the slope m_slope, compute ΔH_vap° = −m_slope · 8.31446 kJ/mol, and extrapolate the normal boiling point at 101.325 kPa."
+      }
+    ],
+    "topics": [
+      {
+        "question": "State the Clapeyron equation and explain the two fundamental approximations that transform it into the Clausius-Clapeyron equation.",
+        "answer": "The exact Clapeyron equation derived from the equality of chemical potentials (dμ_liq = dμ_vap) is: dP/dT = ΔS_vap / ΔV_vap = ΔH_vap / [ T · (V_m,gas − V_m,liq) ], where V_m,gas and V_m,liq are the molar volumes of the gas and liquid phases. Rudolf Clausius applied two key physical approximations: (1) Liquid Molar Volume Neglect: Far below the critical point, the molar volume of a gas is typically 1000 to 2000 times larger than that of the liquid (for ethanol at 78 °C, V_m,gas ≈ 28.8 L/mol while V_m,liq ≈ 0.058 L/mol, making V_m,liq < 0.2% of V_m,gas). Thus, ΔV_vap = V_m,gas − V_m,liq ≈ V_m,gas. (2) Ideal Gas Law for the Vapor: The vapor phase is assumed to obey the ideal gas equation of state: V_m,gas ≈ R T / P. Substituting these approximations yields: dP/dT = (ΔH_vap · P) / (R T²), which rearranges into the differential Clausius-Clapeyron equation: d(ln P) / dT = ΔH_vap / (R T²), or d(ln P) / d(1/T) = −ΔH_vap / R."
+      },
+      {
+        "question": "How does the static isoteniscope apparatus work and why does it eliminate errors associated with traditional mercury manometers?",
+        "answer": "An isoteniscope is a closed glass apparatus containing a sample reservoir bulb connected to a short U-tube arm filled with the sample liquid itself. The liquid in the U-tube serves as a differential null-indicating manometer. The outer arm of the U-tube connects to a large ballast vacuum manifold equipped with a digital pressure gauge. When the manifold pressure is carefully balanced until the liquid levels in both arms of the U-tube are identical, the pressure in the manifold equals the equilibrium vapor pressure inside the bulb. This design offers immense advantages: (1) Zero Foreign Manometer Contamination: Traditional mercury manometers exposed directly to organic vapors can dissolve organic compounds or form surface films that contaminate the sample. (2) Capillary Cancellation: Because both arms of the U-tube have identical bores and contain the same liquid, capillary meniscus depression forces cancel out completely. (3) Static Equilibrium: Unlike dynamic boiling (ebulliometry) where bubbling can cause superheating, the isoteniscope measures true static liquid-vapor equilibrium."
+      },
+      {
+        "question": "Why is vigorous boiling under vacuum essential prior to acquiring vapor pressure measurements in an isoteniscope?",
+        "answer": "When the isoteniscope is initially loaded, air (nitrogen, oxygen, argon) and dissolved gases occupy the vapor headspace above the liquid in the reservoir bulb. If not removed, this trapped air exerts a partial pressure according to Dalton's law of partial pressures: P_total = P_vapor + P_air. Because the air cannot escape through the liquid seal, the measured pressure would greatly exceed the true vapor pressure of the liquid, particularly at low temperatures where P_air dominates. By pulling a strong vacuum and allowing the sample liquid to boil vigorously for 1–2 minutes, the rushing ethanol vapor sweeps all non-condensable air molecules out through the U-tube into the vacuum manifold. When boiling ceases, the bulb headspace contains exclusively 100% pure condensable ethanol vapor in equilibrium with its liquid phase."
+      },
+      {
+        "question": "What is Trouton's Rule and how well does pure ethanol conform to it?",
+        "answer": "Trouton's Rule is an empirical thermodynamic generalization stating that for many non-associated liquids at their normal boiling points, the standard molar entropy of vaporization is approximately constant: ΔS_vap° = ΔH_vap / T_b ≈ 85 to 88 J/(mol·K). This reflects the fact that vaporizing any liquid into the dilute, highly disordered gas phase produces a comparable increase in translational and rotational degrees of freedom. For pure absolute ethanol: T_b = 78.37 °C = 351.52 K, and ΔH_vap = 38.56 kJ/mol = 38560 J/mol. The entropy of vaporization is: ΔS_vap° = 38560 / 351.52 = 109.7 J/(mol·K). Ethanol exhibits a significant positive departure from Trouton's rule (~110 vs ~88 J/(mol·K)). This occurs because liquid ethanol possesses extensive intermolecular hydrogen bonding that imposes high local orientational order in the liquid phase; breaking this hydrogen-bonded network upon vaporization creates an abnormally large entropy gain."
+      },
+      {
+        "question": "How does the Antoine equation improve upon the Clausius-Clapeyron equation across wider temperature ranges?",
+        "answer": "The Clausius-Clapeyron equation assumes that ΔH_vap is temperature-independent and that the vapor is an ideal gas. Over large temperature spans (e.g., from room temperature to the critical point), ΔH_vap decreases steadily (falling to zero at the critical temperature T_c), while gas non-ideality and compressibility factor Z = PV/(RT) depart from unity. The empirical Antoine equation introduces a third parameter to correct for this curvature: log₁₀ P = A − [ B / (T + C) ], or ln P = A' − [ B' / (T + C') ]. The temperature offset parameter C effectively accounts for the temperature dependence of ΔH_vap and non-ideal vapor compressibility. While the Antoine equation provides superior empirical curve fitting over broad industrial ranges, the two-parameter Clausius-Clapeyron equation remains the premier fundamental thermodynamic model for extracting molar enthalpy of vaporization."
+      },
+      {
+        "question": "Why is 1000/T used rather than 1/T on the horizontal axis of the linearized plot?",
+        "answer": "Absolute temperatures between 30 °C (303.15 K) and 78 °C (351.15 K) have inverse values ranging from 0.002847 K⁻¹ to 0.003298 K⁻¹. Plotting numbers with multiple leading zeros creates cumbersome axis labels and can introduce truncation errors in graphical slope calculations. Multiplying by 1000 scales the independent variable into convenient single-digit values: 1000/T spans 2.848 to 3.299 K⁻¹. The resulting slope is: m_slope = d(ln P) / d(1000/T) = −ΔH_vap / (1000 · R). Multiplying this empirical slope by −(1000 · R) = −8.31446 kJ/mol directly isolates ΔH_vap in kJ/mol with maximum clarity and numerical stability."
+      },
+      {
+        "question": "How can the normal boiling point of a liquid be determined from the Clausius-Clapeyron linear regression parameters?",
+        "answer": "The normal boiling point T_b is defined as the temperature at which the liquid's equilibrium vapor pressure equals standard atmospheric pressure: P = 1 atm = 101.325 kPa (760.0 mmHg). Using the linear regression equation ln(P) = m_slope · (1000/T) + C, one sets P = 101.325 kPa, yielding: ln(101.325) = 4.6183 = m_slope · (1000/T_b) + C. Rearranging to solve for the normal boiling point: 1000 / T_b = [ 4.6183 − C ] / m_slope, so T_b = 1000 / [ (4.6183 − C) / m_slope ] in Kelvin, and t_b = T_b − 273.15 in °C. For ethanol, with m_slope = −4.6385 and C = 17.814, this yields T_b = 351.52 K (78.37 °C), matching the true physical normal boiling point of pure ethanol."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "According to the Clausius-Clapeyron equation, what is the slope of a linear plot of ln(P) versus 1/T equal to?",
+        "options": [
+          "+ΔH_vap / R",
+          "−ΔH_vap / R",
+          "−ΔH_vap / (R · T)",
+          "+ΔS_vap / R"
+        ],
+        "correct": 1,
+        "explanation": "Integrating d(ln P)/dT = ΔH_vap / (R T²) with respect to (1/T) yields ln(P) = −(ΔH_vap / R) · (1/T) + C. Therefore, the slope of ln(P) vs (1/T) is −ΔH_vap / R."
+      },
+      {
+        "question": "Given an empirical slope of m_slope = −4.639 K for ln(P/kPa) versus 1000/T, what is the calculated molar enthalpy of vaporization of ethanol?",
+        "options": [
+          "38.57 kJ/mol",
+          "44.02 kJ/mol",
+          "32.27 kJ/mol",
+          "55.84 kJ/mol"
+        ],
+        "correct": 0,
+        "explanation": "ΔH_vap = −m_slope · 1000 · R = −(−4.639 K) × 1000 × (8.31446 × 10⁻³ kJ/(mol·K)) = +38.57 kJ/mol."
+      },
+      {
+        "question": "Why does liquid ethanol have a significantly higher entropy of vaporization (ΔS_vap ≈ 110 J/(mol·K)) than predicted by Trouton's rule (~88 J/(mol·K))?",
+        "options": [
+          "Ethanol molecules dissociate into ions in the vapor phase",
+          "Ethanol molecules form hydrogen bonds in the liquid state, creating high structural order that is lost upon vaporization",
+          "Ethanol vapor is denser than liquid ethanol at the boiling point",
+          "Ethanol decomposes into ethylene and water during vaporization"
+        ],
+        "correct": 1,
+        "explanation": "Extensive hydrogen bonding in liquid ethanol creates a structured, low-entropy liquid phase. When it vaporizes, the destruction of this hydrogen-bonded network leads to an exceptionally large increase in disorder, resulting in ΔS_vap > 88 J/(mol·K)."
+      },
+      {
+        "question": "What happens if trapped air is not purged from the isoteniscope bulb prior to measurement?",
+        "options": [
+          "The measured pressure will be erroneously lower than the true vapor pressure",
+          "The measured pressure will be erroneously higher because Dalton's law adds the partial pressure of air: P_measured = P_vapor + P_air",
+          "The liquid will freeze instantly due to adiabatic expansion",
+          "The slope of the Clausius-Clapeyron plot will become positive"
+        ],
+        "correct": 1,
+        "explanation": "Any trapped air remains trapped in the closed bulb and exerts its own partial pressure (Dalton's law). The pressure transducer will measure P_total = P_vapor + P_air, leading to an artificially high reading, especially at lower temperatures."
+      }
+    ],
+    "precautions": [
+      "Work inside a certified chemical fume hood or well-ventilated area; ethanol vapor is flammable and forms explosive air mixtures between 3.3% and 19% by volume.",
+      "Eliminate all open flames, Bunsen burners, and sparking contacts in the laboratory during the experiment; use only intrinsically safe electronic water bath heaters.",
+      "Clamp all glassware securely and inspect the isoteniscope for micro-cracks before pulling vacuum; implosion of evacuated glass cells presents a flying glass hazard.",
+      "Wear safety splash goggles, nitrile gloves, and a laboratory coat during all filling and vacuum degassing procedures.",
+      "Open vacuum needle bleed valves slowly and smoothly; rapid pressure surges can blow the manometric liquid out of the U-tube into the vacuum lines.",
+      "Allow the water bath and isoteniscope to cool below 40 °C before disassembling the apparatus at the conclusion of the session."
+    ],
+    "limitations": "The linear Clausius-Clapeyron model assumes constant enthalpy of vaporization over the 30–78 °C range, ideal gas behavior of ethanol vapor, and negligible liquid molar volume compared to gas volume. Over this modest 48 °C interval, ethanol vapor compressibility Z remains between 0.98 and 1.00, and ΔH_vap varies by less than 1.5%, which is effectively smoothed by the linear regression fit."
   }
 ]

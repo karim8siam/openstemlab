@@ -53,6 +53,9 @@ function update(){
  }else if(cfg.slug==='heat-solution-crystallization-calorimetry'){
   $('liveState').textContent='Ready to dissolve '+p.input.toFixed(3)+' g KNO3 crystals in 100 mL H2O.';
   message('Set solute mass m_KNO3, transfer crystals via powder funnel into Dewar & log temperature drop.');
+ }else if(cfg.slug==='vapor-pressure-liquid-clausius-clapeyron'){
+  $('liveState').textContent='Ready to equilibrate ethanol isoteniscope at '+p.input.toFixed(1)+' °C.';
+  message('Set bath temperature t, adjust vacuum ballast manifold until U-tube levels match & log P.');
  }else{
   $('liveState').textContent='Ready to dispense '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+' of liquid.';
   message('Adjust '+cfg.shortInput+' V, then weigh the dispensed aliquot.');
@@ -86,6 +89,7 @@ $('measure').onclick=async()=>{
  if(cfg.slug==='hess-law-magnesium-calorimetry') msgStart='Dropping polished Mg ribbon into 1.0 M HCl, sealing lid, vigorous H2 evolution & logging ΔT₁…';
  if(cfg.slug==='combustion-bomb-calorimetry-benzoic') msgStart='Discharging 23 V through ignition fuse wire, deflagration in 30 atm O2, logging temperature rise ΔT…';
  if(cfg.slug==='heat-solution-crystallization-calorimetry') msgStart='Pouring KNO3 crystals into Dewar, motorized stirring at 200 rpm, endothermic cooling plunge & logging ΔT_drop…';
+ if(cfg.slug==='vapor-pressure-liquid-clausius-clapeyron') msgStart='Regulating water bath, throttling air-bleed needle valve, nulling U-tube menisci & reading transducer…';
  message(msgStart);
  await new Promise(resolve=>setTimeout(resolve,400));
  const raw=prediction.raw;
@@ -141,6 +145,12 @@ $('measure').onclick=async()=>{
   const dH = q_soln / n_mol;
   $('liveState').textContent='Dissolution complete: ΔT_drop = '+raw.toFixed(3)+' °C for '+p.input.toFixed(3)+' g KNO3.';
   message('Endothermic dissolution complete: ΔT_drop = '+raw.toFixed(3)+' °C (T_min = '+(25.000-raw).toFixed(3)+' °C, ΔH_soln = +'+dH.toFixed(2)+' kJ/mol). Record in notebook.');
+ }else if(cfg.slug==='vapor-pressure-liquid-clausius-clapeyron'){
+  const T_K = p.input + 273.15;
+  const inv_T = 1000.0 / T_K;
+  const ln_P = Math.log(raw);
+  $('liveState').textContent='Equilibrium established: P = '+raw.toFixed(2)+' kPa at '+p.input.toFixed(1)+' °C.';
+  message('Vapor pressure recorded: P = '+raw.toFixed(2)+' kPa ('+(raw*7.50062).toFixed(1)+' mmHg, ln P = '+ln_P.toFixed(4)+', 1000/T = '+inv_T.toFixed(4)+' K⁻¹). Record in notebook.');
  }else{
   $('liveState').textContent='Analytical balance stabilized: '+raw.toFixed(cfg.rawDecimals)+' g net mass.';
   message('Gravimetric measurement complete: '+raw.toFixed(cfg.rawDecimals)+' '+cfg.rawUnit+' for '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+'. Record in notebook.');
@@ -406,6 +416,18 @@ function draw(t){
    return;
   }
   $('apparatusDiagram').innerHTML=drawSolnBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='vapor-pressure-liquid-clausius-clapeyron'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawVapCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawVapSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawVapBenchView(p,rawVal);
   return;
  }
  if(currentSimMode==='compare'){
@@ -4087,5 +4109,279 @@ function drawSolnSandboxView(p, rawVal){
  });
 
  svg += text(360, 305, 'Thermodynamic Invariant: Regnault-Pfaundler extrapolation restores true adiabatic temperature depression.', '#789c80', 8.5);
+ return svg;
+}
+
+
+// --- LAB 15: CLAUSIUS-CLAPEYRON VAPOR PRESSURE & ENTHALPY OF VAPORIZATION ---
+
+function drawVapBenchView(p, rawVal){
+ const t = (p && p.input) ? p.input : 50.0;
+ const T_K = t + 273.15;
+ const inv_T = 1000.0 / T_K;
+ const R = 8.31446;
+ const dH = 38560.0;
+ const Tb = 351.52;
+ const Pb = 101.325;
+ const ln_P_calc = Math.log(Pb) - (dH / R) * (1.0 / T_K - 1.0 / Tb);
+ const P = rawVal !== null ? rawVal : Math.exp(ln_P_calc);
+ const ln_P = Math.log(P);
+ const P_mmHg = P * 7.50062;
+
+ let svg = '';
+ svg += '<rect x="0" y="0" width="720" height="320" fill="#051009"/>';
+ svg += text(360, 24, 'STATIC ISOTENISCOPE APPARATUS (LIQUID-VAPOR EQUILIBRIUM)', '#4ade80', 13);
+ svg += text(360, 39, 'C2H5OH(l) <=> C2H5OH(g) | Clausius-Clapeyron Enthalpy of Vaporization ΔH_vap° = 38.56 kJ/mol', '#94a3b8', 9);
+
+ // --- LEFT PANEL: SUBMERGED ISOTENISCOPE IN WATER BATH ---
+ const iX = 140, iY = 70;
+ // Water bath tank (transparent glass)
+ svg += '<rect x="'+(iX-70)+'" y="'+(iY+20)+'" width="140" height="180" rx="8" fill="#0284c7" fill-opacity="0.15" stroke="#38bdf8" stroke-width="1.8"/>';
+ svg += '<text x="'+iX+'" y="'+(iY+190)+'" text-anchor="middle" fill="#64748b" font-size="7.5">Thermostatted Water Bath ('+t.toFixed(1)+' °C)</text>';
+
+ // Liquid level in bath
+ svg += '<line x1="'+(iX-68)+'" y1="'+(iY+35)+'" x2="'+(iX+68)+'" y2="'+(iY+35)+'" stroke="#38bdf8" stroke-width="1" stroke-dasharray="3,2"/>';
+
+ // Bath heater coil & impeller stirrer
+ svg += '<path d="M '+(iX-55)+' '+(iY+50)+' L '+(iX-55)+' '+(iY+160)+' Q '+(iX-50)+' '+(iY+165)+' '+(iX-45)+' '+(iY+160)+' L '+(iX-45)+' '+(iY+50)+'" fill="none" stroke="#ef4444" stroke-width="2"/>';
+ svg += '<text x="'+(iX-50)+'" y="'+(iY+45)+'" text-anchor="middle" fill="#ef4444" font-size="6">PID Heater</text>';
+
+ // Glass Isoteniscope Cell Assembly
+ // Reservoir bulb containing liquid ethanol
+ svg += '<circle cx="'+(iX-15)+'" cy="'+(iY+145)+'" r="18" fill="#38bdf8" fill-opacity="0.25" stroke="#cbd5e1" stroke-width="1.5"/>';
+ // Liquid fill in bulb
+ svg += '<path d="M '+(iX-31)+' '+(iY+148)+' A 18 18 0 0 0 '+(iX+1)+' '+(iY+148)+' Z" fill="#38bdf8" fill-opacity="0.6"/>';
+ svg += '<text x="'+(iX-15)+'" y="'+(iY+148)+'" text-anchor="middle" fill="#ffffff" font-size="6.5">Ethanol</text>';
+
+ // Neck connecting bulb to U-tube
+ svg += '<path d="M '+(iX-15)+' '+(iY+127)+' L '+(iX-15)+' '+(iY+100)+' Q '+(iX-15)+' '+(iY+90)+' '+(iX-5)+' '+(iY+90)+' L '+(iX+10)+' '+(iY+90)+'" fill="none" stroke="#cbd5e1" stroke-width="3"/>';
+
+ // Differential U-Tube Manometer (nulled)
+ const uLeft = iX + 15, uRight = iX + 30, uBot = iY + 155, uLvl = iY + 130;
+ svg += '<path d="M '+uLeft+' '+(iY+90)+' L '+uLeft+' '+uBot+' Q '+((uLeft+uRight)/2)+' '+(uBot+8)+' '+uRight+' '+uBot+' L '+uRight+' '+(iY+70)+'" fill="none" stroke="#cbd5e1" stroke-width="3.5"/>';
+ // Liquid fill in U-tube (nulled: exact same height in both arms)
+ svg += '<path d="M '+uLeft+' '+uLvl+' L '+uLeft+' '+uBot+' Q '+((uLeft+uRight)/2)+' '+(uBot+8)+' '+uRight+' '+uBot+' L '+uRight+' '+uLvl+'" fill="none" stroke="#38bdf8" stroke-width="2.5"/>';
+ // Level indicator line across U-tube
+ svg += '<line x1="'+(uLeft-5)+'" y1="'+uLvl+'" x2="'+(uRight+5)+'" y2="'+uLvl+'" stroke="#4ade80" stroke-width="1" stroke-dasharray="2,2"/>';
+ svg += '<text x="'+(uRight+8)+'" y="'+(uLvl+3)+'" fill="#4ade80" font-size="6.5" font-weight="bold">Nulled (h₁ = h₂)</text>';
+
+ // Connecting line to vacuum ballast manifold
+ svg += '<path d="M '+uRight+' '+(iY+70)+' L '+uRight+' '+(iY+15)+' Q '+uRight+' '+(iY+5)+' '+(uRight+15)+' '+(iY+5)+' L '+(iX+85)+' '+(iY+5)+'" fill="none" stroke="#94a3b8" stroke-width="2"/>';
+ svg += '<text x="'+(iX+88)+'" y="'+(iY+8)+'" fill="#38bdf8" font-size="6.5">To Vacuum Ballast</text>';
+
+ // Thermistor probe in bath adjacent to bulb
+ svg += '<rect x="'+(iX+42)+'" y="'+(iY+25)+'" width="3" height="120" rx="1" fill="#f59e0b"/>';
+ svg += '<circle cx="'+(iX+43.5)+'" cy="'+(iY+145)+'" r="2.8" fill="#ef4444"/>';
+
+
+ // --- RIGHT PANEL: DIGITAL TRANSDUCER & THERMODYNAMIC AUDIT ---
+ const rX = 260, rY = 55, rW = 435, rH = 240;
+ svg += '<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+
+ // Digital Pressure Transducer Readout
+ svg += '<rect x="'+(rX+15)+'" y="'+(rY+12)+'" width="200" height="72" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1.2"/>';
+ svg += '<text x="'+(rX+25)+'" y="'+(rY+26)+'" fill="#86efac" font-size="8" font-weight="bold">DIGITAL PRESSURE TRANSDUCER</text>';
+ svg += '<text x="'+(rX+25)+'" y="'+(rY+56)+'" fill="#facc15" font-size="22" font-family="monospace" font-weight="bold">'+P.toFixed(2)+' kPa</text>';
+ svg += '<text x="'+(rX+140)+'" y="'+(rY+44)+'" fill="#94a3b8" font-size="7.5">'+P_mmHg.toFixed(1)+' mmHg</text>';
+ svg += '<text x="'+(rX+140)+'" y="'+(rY+56)+'" fill="#38bdf8" font-size="7.5" font-weight="bold">ln P = '+ln_P.toFixed(3)+'</text>';
+ svg += '<text x="'+(rX+140)+'" y="'+(rY+68)+'" fill="#86efac" font-size="7">±0.01 kPa Res.</text>';
+
+ // Mini Clausius-Clapeyron Linear Regression Profile
+ const cX = rX + 225, cY = rY + 12, cW = 195, cH = 72;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1.2"/>';
+ svg += '<text x="'+(cX+8)+'" y="'+(cY+12)+'" fill="#94a3b8" font-size="7">ln(P) vs 1000/T Coexistence Line</text>';
+ // Axes inside mini box
+ svg += '<line x1="'+(cX+15)+'" y1="'+(cY+60)+'" x2="'+(cX+185)+'" y2="'+(cY+60)+'" stroke="#162e1e" stroke-width="1"/>';
+ svg += '<line x1="'+(cX+15)+'" y1="'+(cY+18)+'" x2="'+(cX+15)+'" y2="'+(cY+60)+'" stroke="#162e1e" stroke-width="1"/>';
+ // Linear regression line sloping downwards (higher 1000/T = lower T => lower ln P)
+ svg += '<line x1="'+(cX+25)+'" y1="'+(cY+22)+'" x2="'+(cX+175)+'" y2="'+(cY+56)+'" stroke="#4ade80" stroke-width="1.8"/>';
+ // Current data point
+ const ptX = cX + 25 + (3.3 - inv_T) / (3.3 - 2.8) * 150;
+ const ptY = cY + 56 - (ln_P - 2.5) / (4.65 - 2.5) * 34;
+ svg += '<circle cx="'+ptX+'" cy="'+ptY+'" r="3.5" fill="#facc15" stroke="#ef4444" stroke-width="1"/>';
+ svg += '<text x="'+(cX+185)+'" y="'+(cY+24)+'" text-anchor="end" fill="#facc15" font-size="6.8" font-weight="bold">Slope = −4.639 K</text>';
+
+ // Thermochemical State Matrix Grid
+ const gY = rY + 92;
+ const metrics = [
+  {label: 'Water Bath Temperature t', val: t.toFixed(1) + ' °C (' + T_K.toFixed(2) + ' K)', col: '#86efac', sub: '1000/T = ' + inv_T.toFixed(4) + ' K⁻¹'},
+  {label: 'Equilibrium Vapor Pressure P', val: P.toFixed(2) + ' kPa (' + P_mmHg.toFixed(1) + ' mmHg)', col: '#38bdf8', sub: 'Isoteniscope differential manometer nulled'},
+  {label: 'Logarithmic Coordinate ln(P)', val: ln_P.toFixed(4), col: '#facc15', sub: 'Linear coordinate y = ln(P/kPa)'},
+  {label: 'Enthalpy of Vaporization ΔH_vap°', val: '38.57 kJ/mol', col: '#f87171', sub: 'ΔH_vap = −m_slope · 8.3145 (Lit: 38.56)'}
+ ];
+
+ metrics.forEach((mi, idx)=>{
+  const mx = rX + 15 + (idx % 2) * 205;
+  const my = gY + Math.floor(idx / 2) * 52;
+  svg += '<rect x="'+mx+'" y="'+my+'" width="195" height="46" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1"/>';
+  svg += '<text x="'+(mx+10)+'" y="'+(my+13)+'" fill="#94a3b8" font-size="7">'+mi.label+'</text>';
+  svg += '<text x="'+(mx+10)+'" y="'+(my+28)+'" fill="'+mi.col+'" font-size="9" font-weight="bold">'+mi.val+'</text>';
+  svg += '<text x="'+(mx+10)+'" y="'+(my+39)+'" fill="#64748b" font-size="6.5">'+mi.sub+'</text>';
+ });
+
+ // Bottom Verification Banner
+ svg += '<rect x="'+(rX+15)+'" y="'+(rY+200)+'" width="405" height="30" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1"/>';
+ svg += '<text x="'+(rX+217)+'" y="'+(rY+218)+'" text-anchor="middle" fill="#4ade80" font-size="8.2" font-family="monospace" font-weight="bold">Clausius-Clapeyron Invariant: ln P = −4.639·(1000/T) + 17.814 => ΔH_vap° = 38.57 kJ/mol (R² = 1.000)</text>';
+
+ svg += text(360, 310, 'Static isoteniscope nulls differential pressure, isolating true vapor pressure free from non-condensable air.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawVapCompareView(p, rawVal){
+ let svg = '';
+ svg += '<rect x="0" y="0" width="720" height="320" fill="#051009"/>';
+ svg += text(360, 24, 'VAPOR PRESSURE THERMODYNAMIC MODELS & DEPARTURES', '#4ade80', 13);
+ svg += text(360, 39, 'Clausius-Clapeyron Linear Model vs Antoine 3-Parameter vs Trouton Entropy Rule', '#94a3b8', 9);
+
+ const cards = [
+  {
+   title: '1. Clausius-Clapeyron',
+   sub: 'ln P = −(ΔH/R)·(1/T) + C',
+   color: '#4ade80',
+   border: '#166534',
+   items: [
+    'Thermodynamic Derivation: Integrated exact Clapeyron equation',
+    'Approximations: V_liq << V_gas; vapor obeys ideal gas law (PV = nRT)',
+    'Enthalpy Assumption: ΔH_vap constant over narrow temperature range',
+    'Linearity: Ideal R² = 1.000 across 30 °C to 78 °C',
+    'Ethanol Result: ΔH_vap° = 38.56 kJ/mol; Normal T_b = 78.37 °C',
+    'Physical Value: Direct measurement of molecular cohesion energy'
+   ]
+  },
+  {
+   title: '2. Antoine Equation',
+   sub: 'log₁₀ P = A − [ B / (T + C) ]',
+   color: '#38bdf8',
+   border: '#0369a1',
+   items: [
+    'Empirical Extension: Adds 3rd parameter C for non-ideality',
+    'Temperature Range: Accurate over hundreds of degrees to near T_crit',
+    'Compressibility Correction: Accommodates vapor non-ideality (Z < 1)',
+    'Enthalpy Variation: Accounts for temperature dependence dΔH_vap/dT',
+    'Ethanol Parameters: A = 8.204, B = 1642.9, C = 230.3 (°C / mmHg)',
+    'Primary Use: Industrial chemical engineering and distillation design'
+   ]
+  },
+  {
+   title: '3. Trouton's Rule',
+   sub: 'ΔS_vap° = ΔH_vap / T_b ≈ 88 J/(mol·K)',
+   color: '#facc15',
+   border: '#854d0e',
+   items: [
+    'Non-Polar Standard: ΔS_vap ≈ 85–88 J/(mol·K) for inert liquids (CCl4, C6H6)',
+    'Physical Basis: Vaporization produces similar translational entropy gain',
+    'Ethanol Anomaly: ΔS_vap = 38560 / 351.52 = 109.7 J/(mol·K)',
+    'Molecular Cause: Strong intermolecular hydrogen bonding in liquid',
+    'Structured Liquid: Liquid has low entropy; vaporization destroys H-bonds',
+    'Diagnostic Power: Proves presence of liquid-state associated networks'
+   ]
+  }
+ ];
+
+ cards.forEach((c, idx)=>{
+  const x = 20 + idx * 230, y = 50, w = 220, h = 240;
+  svg += '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="6" fill="#0d1f14" stroke="'+c.border+'" stroke-width="1.5"/>';
+  svg += '<rect x="'+(x+8)+'" y="'+(y+8)+'" width="'+(w-16)+'" height="34" rx="4" fill="#051009"/>';
+  svg += '<text x="'+(x+w/2)+'" y="'+(y+22)+'" text-anchor="middle" fill="'+c.color+'" font-size="9" font-weight="bold">'+c.title+'</text>';
+  svg += '<text x="'+(x+w/2)+'" y="'+(y+35)+'" text-anchor="middle" fill="#94a3b8" font-size="7">'+c.sub+'</text>';
+
+  c.items.forEach((item, ii)=>{
+   const iy = y + 54 + ii * 29;
+   svg += '<circle cx="'+(x+14)+'" cy="'+(iy-3)+'" r="2" fill="'+c.color+'"/>';
+   svg += '<foreignObject x="'+(x+22)+'" y="'+(iy-10)+'" width="'+(w-28)+'" height="29"><p xmlns="http://www.w3.org/1999/xhtml" style="font-size:7.2px;color:#cbd5e1;line-height:1.2;margin:0">'+item+'</p></foreignObject>';
+  });
+ });
+
+ svg += text(360, 305, 'Thermodynamic Invariant: Clausius-Clapeyron linearity proves that ethanol vaporization is governed by constant enthalpy.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawVapSandboxView(p, rawVal){
+ const t = (p && p.input) ? p.input : 50.0;
+ const T_K = t + 273.15;
+ const R = 8.31446;
+ const dH = 38560.0;
+ const Tb = 351.52;
+ const Pb = 101.325;
+ const ln_P_calc = Math.log(Pb) - (dH / R) * (1.0 / T_K - 1.0 / Tb);
+ const P = rawVal !== null ? rawVal : Math.exp(ln_P_calc);
+
+ let svg = '';
+ svg += '<rect x="0" y="0" width="720" height="320" fill="#051009"/>';
+ svg += text(360, 24, 'LIQUID-VAPOR P-T COEXISTENCE PHASE DIAGRAM & ERROR AUDIT', '#4ade80', 13);
+ svg += text(360, 39, 'Exponential Vapor Pressure Boundary and Vacuum Degassing Efficacy', '#94a3b8', 9);
+
+ // --- LEFT PANEL: EXPONENTIAL P-T PHASE BOUNDARY ---
+ const lX = 25, lY = 50, lW = 390, lH = 240;
+ svg += '<rect x="'+lX+'" y="'+lY+'" width="'+lW+'" height="'+lH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+18)+'" text-anchor="middle" fill="#86efac" font-size="9.5" font-weight="bold">LIQUID-VAPOR P-T COEXISTENCE BOUNDARY</text>';
+
+ const gX = lX + 45, gY = lY + 35, gW = 325, gH = 155;
+ svg += '<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#051009" stroke="#162e1e" stroke-width="1"/>';
+
+ // Grid lines
+ for(let gy = gY + 30; gy < gY + gH; gy += 30){
+  svg += '<line x1="'+gX+'" y1="'+gy+'" x2="'+(gX+gW)+'" y2="'+gy+'" stroke="#162e1e" stroke-width="0.8" stroke-dasharray="2,2"/>';
+ }
+ for(let gx = gX + 65; gx < gX + gW; gx += 65){
+  svg += '<line x1="'+gx+'" y1="'+gY+'" x2="'+gx+'" y2="'+(gY+gH)+'" stroke="#162e1e" stroke-width="0.8" stroke-dasharray="2,2"/>';
+ }
+
+ // Labels
+ svg += '<text x="'+(gX+gW/2)+'" y="'+(gY+gH+14)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5">Bath Temperature t (°C)</text>';
+ svg += '<text x="'+(gX-8)+'" y="'+(gY+gH/2)+'" text-anchor="middle" transform="rotate(-90 '+(gX-8)+' '+(gY+gH/2)+')" fill="#94a3b8" font-size="7.5">Vapor Pressure P (kPa)</text>';
+
+ // Ticks
+ svg += '<text x="'+gX+'" y="'+(gY+gH+10)+'" text-anchor="middle" fill="#64748b" font-size="6.5">20 °C</text>';
+ svg += '<text x="'+(gX+80)+'" y="'+(gY+gH+10)+'" text-anchor="middle" fill="#64748b" font-size="6.5">40 °C</text>';
+ svg += '<text x="'+(gX+160)+'" y="'+(gY+gH+10)+'" text-anchor="middle" fill="#64748b" font-size="6.5">60 °C</text>';
+ svg += '<text x="'+(gX+240)+'" y="'+(gY+gH+10)+'" text-anchor="middle" fill="#64748b" font-size="6.5">80 °C</text>';
+ svg += '<text x="'+(gX+gW)+'" y="'+(gY+gH+10)+'" text-anchor="middle" fill="#64748b" font-size="6.5">100 °C</text>';
+
+ // Exponential vapor pressure curve
+ svg += '<path d="M '+gX+' '+(gY+gH-10)+' Q '+(gX+140)+' '+(gY+gH-16)+' '+(gX+200)+' '+(gY+gH-45)+' T '+(gX+235)+' '+(gY+25)+'" fill="none" stroke="#38bdf8" stroke-width="2.5"/>';
+
+ // Normal boiling point point at T = 78.37 °C, P = 101.325 kPa
+ const nbX = gX + 233.5, nbY = gY + 25;
+ svg += '<circle cx="'+nbX+'" cy="'+nbY+'" r="3.5" fill="#ef4444"/>';
+ svg += '<text x="'+(nbX-8)+'" y="'+(nbY-6)+'" text-anchor="end" fill="#f87171" font-size="7" font-weight="bold">Normal T_b = 78.37 °C (101.3 kPa)</text>';
+
+ // Liquid region vs vapor region text
+ svg += '<text x="'+(gX+50)+'" y="'+(gY+40)+'" fill="#38bdf8" font-size="8" font-weight="bold" opacity="0.6">LIQUID PHASE (μ_liq < μ_vap)</text>';
+ svg += '<text x="'+(gX+180)+'" y="'+(gY+130)+'" fill="#facc15" font-size="8" font-weight="bold" opacity="0.6">VAPOR PHASE (μ_vap < μ_liq)</text>';
+
+ // Current experimental point
+ const curX = gX + (t - 20) / 80 * 240;
+ const curY = gY + gH - (P / 105.0) * (gH - 25);
+ svg += '<circle cx="'+curX+'" cy="'+curY+'" r="4" fill="#facc15" stroke="#4ade80" stroke-width="1.5"/>';
+ svg += '<text x="'+(curX+8)+'" y="'+(curY+3)+'" fill="#facc15" font-size="7" font-weight="bold">'+P.toFixed(1)+' kPa</text>';
+
+ // Bottom invariant badge
+ svg += '<rect x="'+(lX+15)+'" y="'+(lY+198)+'" width="'+(lW-30)+'" height="32" rx="3" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+218)+'" text-anchor="middle" fill="#86efac" font-size="8" font-family="monospace" font-weight="bold">Phase Equilibrium: μ_liquid(T,P) = μ_vapor(T,P) along Coexistence Curve</text>';
+
+
+ // --- RIGHT PANEL: SOURCES OF BIAS & SYSTEM AUDIT ---
+ const rX = 425, rY = 50, rW = 275, rH = 240;
+ svg += '<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<text x="'+(rX+rW/2)+'" y="'+(rY+18)+'" text-anchor="middle" fill="#86efac" font-size="9.5" font-weight="bold">SOURCES OF BIAS & SYSTEM AUDIT</text>';
+
+ const lossItems = [
+  {label: 'Air Headspace Degassing', desc: 'Vacuum boiling purges Dalton non-condensable air', val: 'P_air < 0.02 kPa', col: '#4ade80'},
+  {label: 'Manometer Nulling Accuracy', desc: 'Twin U-tube menisci nulled to ±0.2 mm using cathetometer', val: 'δP < 0.002 kPa', col: '#38bdf8'},
+  {label: 'Zero External Contamination', desc: 'Ethanol serves as own manometric fluid; no mercury film', val: 'Zero foreign vapor', col: '#86efac'},
+  {label: 'Capillary Depression Null', desc: 'Identical bore arms cancel surface tension forces', val: 'Zero capillary error', col: '#facc15'},
+  {label: 'Multi-Point OLS Regression', desc: 'Linearization ln(P) vs 1000/T averages non-idealities', val: 'R² = 1.00000 Unbiased', col: '#4ade80'}
+ ];
+
+ lossItems.forEach((li, idx)=>{
+  const ly = rY + 30 + idx * 40;
+  svg += '<rect x="'+(rX+8)+'" y="'+ly+'" width="'+(rW-16)+'" height="34" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg += '<text x="'+(rX+14)+'" y="'+(ly+12)+'" fill="'+li.col+'" font-size="7.5" font-weight="bold">'+li.label+'</text>';
+  svg += '<text x="'+(rX+14)+'" y="'+(ly+25)+'" fill="#94a3b8" font-size="6.8">'+li.desc+'</text>';
+  svg += '<text x="'+(rX+rW-14)+'" y="'+(ly+12)+'" text-anchor="end" fill="'+li.col+'" font-size="7.5" font-family="monospace">'+li.val+'</text>';
+ });
+
+ svg += text(360, 305, 'Thermodynamic Invariant: Isoteniscope eliminates air contamination, isolating pure vapor pressure.', '#789c80', 8.5);
  return svg;
 }

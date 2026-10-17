@@ -121,6 +121,18 @@ def observation(c,value):
   x=m
   y=raw
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='vapor-pressure-liquid-clausius-clapeyron':
+  t=float(value)
+  T=t + 273.15
+  R=8.31446
+  dH=38560.0
+  Tb=351.52
+  Pb=101.325
+  ln_P=math.log(Pb) - (dH / R) * (1.0 / T - 1.0 / Tb)
+  raw=rnd(math.exp(ln_P), 2)
+  x=rnd(1000.0 / T, 4)
+  y=rnd(math.log(raw), 4)
+  return {'input':value,'raw':raw,'x':x,'y':y}
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fit(rows):
@@ -207,6 +219,10 @@ def estimate(c,f):
   dH_est= f['m'] * M_KNO3 * C_eff
   se=f['slopeSE'] * M_KNO3 * C_eff
   return dH_est, se, 34.89
+ elif slug=='vapor-pressure-liquid-clausius-clapeyron':
+  dH_est= -f['m'] * 8.31446
+  se=f['slopeSE'] * 8.31446
+  return dH_est, se, 38.56
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fmt(v,n=5):
@@ -257,6 +273,11 @@ def formula(c,f):
  elif slug=='heat-solution-crystallization-calorimetry':
   conv= f['m'] * 101.103 * 0.44590
   return f"ΔH_soln = m_slope · M_KNO3 · C_eff = {fmt(f['m'],4)} × 45.082 = {fmt(conv,2)} kJ/mol; Intercept ΔT₀ = {fmt(f['b'],4)} °C"
+ elif slug=='vapor-pressure-liquid-clausius-clapeyron':
+  conv= -f['m'] * 8.31446
+  Tb_K= 1000.0 / ((math.log(101.325) - f['b']) / f['m'])
+  Tb_C= Tb_K - 273.15
+  return f"ΔH_vap = −m_slope · (1000·R) = −({fmt(f['m'],4)}) × 8.3145 = {fmt(conv,2)} kJ/mol; Normal T_b = {fmt(Tb_C,2)} °C; Intercept C = {fmt(f['b'],4)}"
  return ""
 
 def worked(c,row):
@@ -543,6 +564,23 @@ def worked(c,row):
    f"linear regression extracts the thermometric slope m_slope = 0.7739 °C/g, scaling via ΔH_soln = m_slope · M · C_eff to isolate "
    f"the standard molar enthalpy of solution ΔH_soln° = +34.89 kJ/mol with R² = 1.00000, confirming the accepted literature thermodynamic value."
   )
+ elif slug=='vapor-pressure-liquid-clausius-clapeyron':
+  t=row['input']
+  P=row['raw']
+  T_K=t + 273.15
+  inv_T=1000.0 / T_K
+  ln_P=math.log(P)
+  return (
+   f"Equilibrated Water Bath Temperature: t = {t:.1f} °C => Absolute Temperature T = {T_K:.2f} K.\n"
+   f"Scaled Inverse Temperature Coordinate: x = 1000/T = 1000 / {T_K:.2f} K = {inv_T:.4f} K⁻¹.\n"
+   f"Equilibrium Vapor Pressure (Manometer Nulled): P = {P:.2f} kPa ({P*7.50062:.1f} mmHg = {P*10.0:.1f} mbar).\n"
+   f"Logarithmic Pressure Coordinate: y = ln(P/kPa) = ln({P:.2f}) = {ln_P:.4f}.\n"
+   f"Linearized Clausius-Clapeyron Model: ln P = −[ΔH_vap / (1000·R)] · (1000/T) + C.\n"
+   f"Verification: Across the full six-point series from 30.0 °C to 78.0 °C (1000/T from 3.2987 to 2.8478 K⁻¹), "
+   f"ordinary least-squares linear regression extracts the thermometric slope m_slope = −4.6385 K, inverting via "
+   f"ΔH_vap = −m_slope · (1000·R) = −(−4.6385) × 8.31446 = 38.57 kJ/mol with R² = 1.00000 and predicted normal boiling point "
+   f"T_b = 78.37 °C (at P = 101.325 kPa), confirming the accepted literature thermodynamic value for pure absolute ethanol."
+  )
  return ""
 
 def uncertainty_text(c):
@@ -807,6 +845,27 @@ def uncertainty_text(c):
    "Ordinary least-squares linear regression across six independent crystal masses (2.000 to 7.000 g) extracts the empirical slope "
    "m_slope = 0.7739 °C/g with an ideal coefficient of determination R² = 1.00000, isolating the standard integral molar enthalpy of solution "
    "ΔH_soln° = +34.89 kJ/mol within 0.009% of the accepted literature thermodynamic benchmark."
+  )
+ elif slug=='vapor-pressure-liquid-clausius-clapeyron':
+  return (
+   "In the determination of the standard molar enthalpy of vaporization via the Clausius-Clapeyron equation "
+   "ln(P/kPa) = −[ ΔH_vap / (1000·R) ] · (1000/T) + C, "
+   "experimental measurement uncertainty is evaluated across thermodynamic, thermal, manometric, degassing, and non-ideality contributions: "
+   "(1) Thermostatted Bath Temperature Stability: The PID-controlled water bath circulates liquid around the submerged isoteniscope cell "
+   "with a temporal stability of ±0.015 °C. Using a NIST-calibrated digital thermistor with ±0.005 °C resolution, temperature uncertainty "
+   "propagates into inverse temperature as δ(1000/T) = 1000 · δT / T² ≈ 1000 · (0.01) / (325)² ≈ 9.5 × 10⁻⁵ K⁻¹ (0.003%), confirming exceptional thermal precision. "
+   "(2) Pressure Transducer Resolution and Manometer Nulling: The digital piezoresistive pressure transducer features a calibrated resolution "
+   "of ±0.01 kPa (±0.08 mmHg). Balancing the liquid ethanol menisci in the twin arms of the isoteniscope U-tube is achieved to within ±0.2 mm "
+   "using a magnifying cathetometer. For liquid ethanol density ρ = 0.789 g/cm³, this height disparity introduces an uncertainty of "
+   "δP = ρ · g · δh ≈ (789)(9.81)(0.0002) = 1.5 Pa = 0.0015 kPa, which is negligible compared to the 12.34 to 99.93 kPa vapor pressure signal. "
+   "(3) Trapped Air and Degassing Efficacy: Initial vacuum boiling for 120 seconds purges non-condensable air (N₂, O₂, Ar) from the bulb headspace. "
+   "Residual air partial pressure is verified to be under 0.02 kPa by observing complete vapor collapse upon cooling the isolated cell in an ice bath. "
+   "(4) Ideal Gas and Constant Enthalpy Assumptions: Over the 30.0 °C to 78.0 °C range, ethanol vapor exhibits a second virial coefficient "
+   "B ≈ −950 cm³/mol, yielding a vapor compressibility factor Z = PV/(RT) between 0.985 and 1.000. Furthermore, the true enthalpy of vaporization "
+   "decreases slightly by ~1.2% over this 48 K interval. Multi-point linear regression provides an optimal least-squares average across the experimental window. "
+   "Ordinary least-squares linear regression across six independent temperature settings (30.0 °C to 78.0 °C) extracts the empirical slope "
+   "m_slope = −4.6385 K with an ideal coefficient of determination R² = 1.00000, isolating the molar enthalpy of vaporization "
+   "ΔH_vap° = 38.57 kJ/mol within 0.018% of the accepted literature standard and predicting the normal boiling point T_b = 78.37 °C."
   )
  return ""
 
@@ -1444,6 +1503,53 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"The observed thermodynamic value confirms the accepted literature standard (+34.89 kJ/mol) with a percentage difference of {percent:.4f}%. "
    "The investigation verified the Born-Haber lattice-hydration enthalpy partitioning model, explained the entropic driving force behind endothermic spontaneous dissolution, "
    "and proved that multi-point calorimetric regression with Regnault-Pfaundler cooling extrapolation provides high-precision thermochemical results free from ambient heat-leak biases."
+  )
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='vapor-pressure-liquid-clausius-clapeyron':
+  abstract=(
+   f"Six precision equilibrium vapor pressure measurements were conducted on high-purity absolute ethanol (C₂H₅OH, formula weight 46.069 g/mol) "
+   f"across temperatures from t = {rows[0]['input']:.1f} °C to {rows[-1]['input']:.1f} °C (303.15 K to 351.15 K) using a glass isoteniscope immersed "
+   f"in a constant-temperature circulating water bath (stability ±0.02 °C). "
+   f"After complete vacuum degassing to eliminate non-condensable head-space air, the differential U-tube manometer was nulled against an external ballast manifold, "
+   f"yielding equilibrium vapor pressures spanning from P = {rows[0]['raw']:.2f} kPa to {rows[-1]['raw']:.2f} kPa. "
+   f"Ordinary least-squares linear regression of natural logarithm of vapor pressure ln(P/kPa) against scaled inverse absolute temperature 1000/T (K⁻¹) "
+   f"yielded an empirical slope of m_slope = {fmt(f['m'],4)} K, isolating an experimental standard molar enthalpy of vaporization of "
+   f"ΔH_vap° = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with a fit standard error of {fmt(se*c['resultScale'])} {c['resultUnit']} "
+   f"and an ideal coefficient of determination R² = 1.00000. "
+   f"Extrapolating the regression equation to standard atmospheric pressure (P = 101.325 kPa) yielded a predicted normal boiling point of "
+   f"T_b = 78.37 °C, confirming the accepted literature thermodynamic benchmark (reference ΔH_vap° = 38.56 kJ/mol, T_b = 78.37 °C) with a percentage difference of {percent:.4f}%."
+  )
+  graph_choice=(
+   f"The mathematical regression models the integrated Clausius-Clapeyron equation ln(P/kPa) = −[ ΔH_vap / (1000·R) ] · (1000/T) + C, "
+   f"where x = 1000/T represents the scaled inverse absolute temperature in K⁻¹, y = ln(P/kPa) represents the natural logarithm of equilibrium vapor pressure, "
+   f"R = 8.31446 J/(mol·K) is the universal gas constant, and C represents the integration constant. "
+   f"Multiplying the negative regression slope −m_slope by 1000·R directly isolates the standard molar enthalpy of vaporization in {c['resultUnit']}, "
+   f"while setting ln(101.325) identifies the reciprocal normal boiling point 1000/T_b."
+  )
+  discussion=(
+   "The experimental observations provide rigorous quantitative verification of Liquid-Vapor Phase Equilibria, the Clausius-Clapeyron Equation, and Intermolecular Hydrogen Bonding. "
+   "Along the liquid-vapor coexistence boundary, equilibrium requires equality of the chemical potentials: μ_liq(T, P) = μ_vap(T, P). "
+   "Applying the exact Clapeyron differential equation dP/dT = ΔH_vap / [ T · ΔV_vap ] and introducing the Clausius approximations—namely that the liquid molar volume is negligible "
+   "relative to the vapor volume (V_m,liq << V_m,gas) and that the vapor obeys ideal gas behavior (V_m,gas = RT/P)—produces the linearized relationship ln P = −(ΔH_vap / R)·(1/T) + C. "
+   "Across the six temperature plateaus from 30.0 °C to 78.0 °C, the measured vapor pressure increased from 12.34 kPa to 99.93 kPa, displaying steep exponential growth. "
+   "When plotted as ln(P/kPa) against scaled inverse temperature 1000/T (K⁻¹), the observations conformed to an impeccable linear relationship with R² = 1.00000. "
+   "The ordinary least-squares regression line ln P = −4.6385 · (1000/T) + 17.814 extracted an empirical slope of m_slope = −4.6385 K. "
+   "Multiplying this slope by −(1000·R) = −8.31446 kJ/mol isolated a molar enthalpy of vaporization of ΔH_vap° = 38.57 kJ/mol, matching the accepted literature standard "
+   "of 38.56 kJ/mol to within 0.018%. "
+   "Setting P = 101.325 kPa (ln P = 4.6183) into the regression model yielded an extrapolated normal boiling point of T_b = 351.52 K (78.37 °C), exactly matching the known physical boiling point of pure ethanol. "
+   "Evaluating the entropy of vaporization at the boiling point yielded ΔS_vap° = ΔH_vap / T_b = 38567 / 351.52 = 109.7 J/(mol·K). "
+   "This exceeds the classical Trouton's rule empirical value (~88 J/(mol·K)), quantitatively demonstrating the existence of strong intermolecular hydrogen bonding in liquid ethanol "
+   "that imparts significant structural order, which is completely disrupted upon vaporization."
+  )
+  conclusion=(
+   "This laboratory investigation successfully determined the standard molar enthalpy of vaporization and normal boiling point of pure absolute ethanol using an isoteniscope apparatus. "
+   f"Through systematic static vapor pressure measurements across temperatures from {rows[0]['input']:.1f} °C to {rows[-1]['input']:.1f} °C, we extracted an "
+   f"experimental molar enthalpy of vaporization of ΔH_vap° = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with a fit standard error of "
+   f"{fmt(se*c['resultScale'])} {c['resultUnit']} and an ideal coefficient of determination R² = 1.00000. "
+   f"The observed thermodynamic enthalpy confirms the accepted literature standard (38.56 kJ/mol) with a percentage difference of {percent:.4f}%, "
+   "and predicted the normal boiling point T_b = 78.37 °C with zero perceptible offset. "
+   "The investigation verified the validity of the Clausius-Clapeyron equation for hydrogen-bonded liquids, explained the elevated entropy of vaporization via Trouton's rule departure, "
+   "and demonstrated that the static isoteniscope null-manometer methodology completely eliminates foreign fluid contamination and non-condensable air biases."
   )
   return abstract, graph_choice, discussion, conclusion
  return "","","",""
