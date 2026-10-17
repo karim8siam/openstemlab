@@ -37,6 +37,18 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:1.0,x,y,valid:m_mg>=10.0&&m_mg<=35.0};
  }
+ if(slug==='volatile-liquid-molar-mass'){
+  const v=Number(input);
+  const M_ref=84.161;
+  const R=82.0574;
+  const T=373.15;
+  const P=1.000;
+  const rho_ideal=(P * M_ref) / (R * T);
+  const raw=round(rho_ideal * v, 4);
+  const x=v;
+  const y=raw;
+  return {raw,ideal:raw,period:1.0,x,y,valid:v>=125.0&&v<=375.0};
+ }
  throw Error('Unknown Chemistry experiment predict: '+slug);
 }
 
@@ -57,6 +69,10 @@ function reading(slug,input,raw){
   y=Number(raw);
  }
  if(slug==='molar-volume-ideal-gas'){
+  x=Number(input);
+  y=Number(raw);
+ }
+ if(slug==='volatile-liquid-molar-mass'){
   x=Number(input);
   y=Number(raw);
  }
@@ -101,6 +117,14 @@ function estimate(slug,f){
   const Vm_est=f.m * 24.305;
   const se=f.slopeSE * 24.305;
   return {value:Vm_est,se:se,reference:22.414};
+ }
+ if(slug==='volatile-liquid-molar-mass'){
+  const R=82.0574;
+  const T=373.15;
+  const P=1.000;
+  const M_est=(f.m * R * T) / P;
+  const se=(f.slopeSE * R * T) / P;
+  return {value:M_est,se:se,reference:84.161};
  }
  throw Error('Unknown Chemistry experiment estimate: '+slug);
 }

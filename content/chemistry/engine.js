@@ -23,6 +23,9 @@ function update(){
  }else if(cfg.slug==='molar-volume-ideal-gas'){
   $('liveState').textContent='Ready to react '+p.input.toFixed(1)+' mg magnesium ribbon in eudiometer.';
   message('Set magnesium mass m_Mg, then react, equilibrate meniscus & convert to STP.');
+ }else if(cfg.slug==='volatile-liquid-molar-mass'){
+  $('liveState').textContent='Ready to vaporize liquid in calibrated '+p.input.toFixed(1)+' mL Dumas bulb.';
+  message('Set Dumas bulb volume V_flask, then vaporize, flush air, condense & weigh.');
  }else{
   $('liveState').textContent='Ready to dispense '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+' of liquid.';
   message('Adjust '+cfg.shortInput+' V, then weigh the dispensed aliquot.');
@@ -46,6 +49,7 @@ $('measure').onclick=async()=>{
  if(cfg.slug==='hydrate-stoichiometric-composition') msgStart='Heating crucible at 250 °C and evolving steam…';
  if(cfg.slug==='limiting-reactant-precipitation') msgStart='Adding Na₂SO₄ dropwise at 85 °C, digesting, filtering through Gooch crucible, drying to constant mass…';
  if(cfg.slug==='molar-volume-ideal-gas') msgStart='Inverting eudiometer, diffusing 6 M HCl, evolving H₂ gas, leveling menisci…';
+ if(cfg.slug==='volatile-liquid-molar-mass') msgStart='Immersing Dumas bulb at 100 °C, flushing air through pinhole, condensing & weighing…';
  message(msgStart);
  await new Promise(resolve=>setTimeout(resolve,400));
  const raw=prediction.raw;
@@ -61,6 +65,9 @@ $('measure').onclick=async()=>{
  }else if(cfg.slug==='molar-volume-ideal-gas'){
   $('liveState').textContent='Eudiometric gas volume at STP: '+raw.toFixed(3)+' mL H₂.';
   message('Reaction complete: generated '+raw.toFixed(3)+' mL H₂ at STP from '+p.input.toFixed(1)+' mg Mg. Record in notebook.');
+ }else if(cfg.slug==='volatile-liquid-molar-mass'){
+  $('liveState').textContent='Condensed vapor mass: '+raw.toFixed(4)+' g in '+p.input.toFixed(1)+' mL bulb.';
+  message('Vapor density determination complete: condensed '+raw.toFixed(4)+' g vapor in '+p.input.toFixed(1)+' mL flask. Record in notebook.');
  }else{
   $('liveState').textContent='Analytical balance stabilized: '+raw.toFixed(cfg.rawDecimals)+' g net mass.';
   message('Gravimetric measurement complete: '+raw.toFixed(cfg.rawDecimals)+' '+cfg.rawUnit+' for '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+'. Record in notebook.');
@@ -206,6 +213,18 @@ function draw(t){
    return;
   }
   $('apparatusDiagram').innerHTML=drawGasBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='volatile-liquid-molar-mass'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawDumasCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawDumasSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawDumasBenchView(p,rawVal);
   return;
  }
  if(currentSimMode==='compare'){
@@ -1223,6 +1242,266 @@ function drawGasSandboxView(p,rawVal){
  svg+='<text x="'+(sX+sW/2)+'" y="'+(sY+205)+'" text-anchor="middle" fill="#38bdf8" font-size="8" font-family="monospace">gases to ideal Avogadro behavior.</text>';
 
  svg+=text(360,305,'Thermodynamics: Repulsive excluded volume slightly exceeds attractive dispersion for H₂ at STP.','#789c80',9);
+ return svg;
+}
+
+// ======================================================================
+// CHEMISTRY LAB 05: DUMAS VAPOR DENSITY METHOD (MOLAR MASS)
+// ======================================================================
+function drawDumasBenchView(p,rawVal){
+ const v_flask=p.input;
+ const m_vap=rawVal;
+ const rho_vap=(m_vap/v_flask);
+
+ let svg='<defs>';
+ svg+='<linearGradient id="boilWater" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#0284c7" stop-opacity=".3"/><stop offset="50%" stop-color="#38bdf8" stop-opacity=".15"/><stop offset="100%" stop-color="#0284c7" stop-opacity=".35"/></linearGradient>';
+ svg+='<linearGradient id="flaskGlass" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#ffffff" stop-opacity=".2"/><stop offset="25%" stop-color="#ffffff" stop-opacity=".06"/><stop offset="75%" stop-color="#38bdf8" stop-opacity=".1"/><stop offset="100%" stop-color="#ffffff" stop-opacity=".25"/></linearGradient>';
+ svg+='<linearGradient id="alumFoil" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f1f5f9"/><stop offset="50%" stop-color="#94a3b8"/><stop offset="100%" stop-color="#64748b"/></linearGradient>';
+ svg+='<linearGradient id="heatPlateDumas" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#334155"/><stop offset="100%" stop-color="#0f172a"/></linearGradient>';
+ svg+='<filter id="plumeGlow"><feGaussianBlur stdDeviation="2.5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+ svg+='</defs>';
+
+ // Background bench layout
+ svg+='<rect x="0" y="0" width="720" height="320" fill="#08140c"/>';
+ svg+='<line x1="20" y1="280" x2="700" y2="280" stroke="#1f3b28" stroke-width="2"/>';
+
+ // Header banner
+ svg+=text(360,20,'DUMAS VAPOR DENSITY: PV = (m/M)RT ⟹ M = (m·R·T) / (P·V) [CYCLOHEXANE]','#86efac',11);
+
+ // -------------------------------------------------------------
+ // 1. LEFT STATION: Boiling Water Bath & Submerged Dumas Bulb
+ // -------------------------------------------------------------
+ const bX=145,bY=80;
+ // Retort Stand & Clamp
+ svg+='<rect x="'+(bX-85)+'" y="30" width="5" height="250" fill="#64748b"/>';
+ svg+='<rect x="'+(bX-105)+'" y="276" width="45" height="6" rx="2" fill="#475569"/>';
+ svg+='<rect x="'+(bX-85)+'" y="75" width="80" height="6" fill="#94a3b8"/>'; // clamp rod
+ svg+='<circle cx="'+(bX-5)+'" cy="78" r="5" fill="#cbd5e1"/>'; // boss head
+ // Clamp jaws grasping flask neck
+ svg+='<path d="M'+(bX-14)+' 90 Q'+(bX-5)+' 84 '+bX+' 90" fill="none" stroke="#ef4444" stroke-width="4"/>';
+ svg+='<path d="M'+bX+' 90 Q'+(bX+5)+' 84 '+(bX+14)+' 90" fill="none" stroke="#ef4444" stroke-width="4"/>';
+
+ // Hotplate
+ const hpX=bX-65,hpY=245,hpW=130,hpH=35;
+ svg+='<rect x="'+hpX+'" y="'+hpY+'" width="'+hpW+'" height="'+hpH+'" rx="4" fill="url(#heatPlateDumas)" stroke="#475569" stroke-width="1.2"/>';
+ svg+='<rect x="'+(hpX+8)+'" y="'+(hpY+8)+'" width="42" height="18" rx="2" fill="#020617" stroke="#1e293b"/>';
+ svg+='<text x="'+(hpX+29)+'" y="'+(hpY+21)+'" text-anchor="middle" fill="#ef4444" font-size="8.5" font-family="monospace">100.0°C</text>';
+ svg+='<circle cx="'+(hpX+75)+'" cy="'+(hpY+17)+'" r="6" fill="#64748b"/>';
+ svg+='<text x="'+(hpX+102)+'" y="'+(hpY+21)+'" text-anchor="middle" fill="#86efac" font-size="7.5">BOIL</text>';
+
+ // 2000 mL Tall Pyrex Beaker Water Bath
+ const bkX=bX-55,bkY=115,bkW=110,bkH=130;
+ svg+='<rect x="'+bkX+'" y="'+bkY+'" width="'+bkW+'" height="'+bkH+'" rx="3" fill="url(#boilWater)" stroke="#94a3b8" stroke-width="1.5"/>';
+ // Boiling water level (near top)
+ const boilTop=bkY+20;
+ svg+='<rect x="'+(bkX+2)+'" y="'+boilTop+'" width="'+(bkW-4)+'" height="'+(bkH-22)+'" fill="#0284c7" fill-opacity=".2"/>';
+ svg+='<line x1="'+bkX+'" y1="'+boilTop+'" x2="'+(bkX+bkW)+'" y2="'+boilTop+'" stroke="#38bdf8" stroke-width="1.2"/>';
+ // Boiling bubbles
+ for(let bi=0;bi<14;bi++){
+  const bx=bkX+12+(bi*13)%(bkW-24);
+  const by=bkY+bkH-10-((bi*19)%(bkH-35));
+  svg+='<circle cx="'+bx+'" cy="'+by+'" r="2" fill="#ffffff" fill-opacity=".7"/>';
+ }
+
+ // Submerged Dumas Bulb (Erlenmeyer / bulb form)
+ const flW=46,flH=95;
+ const flTop=bkY+5;
+ svg+='<path d="M'+(bX-8)+' '+flTop+' L'+(bX-8)+' '+(flTop+35)+' L'+(bX-flW/2)+' '+(flTop+flH)+' Q'+bX+' '+(flTop+flH+6)+' '+(bX+flW/2)+' '+(flTop+flH)+' L'+(bX+8)+' '+(flTop+35)+' L'+(bX+8)+' '+flTop+' Z" fill="url(#flaskGlass)" stroke="#e0f2fe" stroke-width="1.2"/>';
+
+ // Aluminum foil cap with pinhole
+ svg+='<polygon points="'+(bX-12)+','+(flTop-4)+' '+(bX+12)+','+(flTop-4)+' '+(bX+10)+','+(flTop+8)+' '+(bX-10)+','+(flTop+8)+'" fill="url(#alumFoil)" stroke="#475569"/>';
+ svg+='<circle cx="'+bX+'" cy="'+(flTop-4)+'" r="1.2" fill="#020617"/>'; // pinhole
+
+ // Vapor venting jet / plume from pinhole if busy
+ if(busy){
+  svg+='<path d="M'+bX+' '+(flTop-6)+' Q'+(bX-6)+' '+(flTop-25)+' '+(bX+4)+' '+(flTop-45)+' T'+(bX-2)+' '+(flTop-65)+'" fill="none" stroke="#f8fafc" stroke-width="2" stroke-opacity=".8" filter="url(#plumeGlow)"/>';
+  svg+='<path d="M'+(bX+2)+' '+(flTop-6)+' Q'+(bX+8)+' '+(flTop-20)+' '+(bX-4)+' '+(flTop-40)+'" fill="none" stroke="#38bdf8" stroke-width="1.2" stroke-opacity=".6"/>';
+ }
+ svg+='<text x="'+(bX+18)+'" y="'+(flTop-15)+'" fill="#38bdf8" font-size="7.5">0.5 mm Pinhole</text>';
+
+ svg+='<text x="'+bX+'" y="295" text-anchor="middle" fill="#94a3b8" font-size="9" font-weight="bold">1. BOILING WATER BATH (100.0 °C)</text>';
+
+ // -------------------------------------------------------------
+ // 2. CENTER STATION: Water Pycnometry Calibration
+ // -------------------------------------------------------------
+ const pycX=350,pycY=125;
+ svg+='<rect x="'+(pycX-40)+'" y="'+pycY+'" width="80" height="120" rx="4" fill="#0f172a" fill-opacity=".6" stroke="#334155" stroke-width="1.2"/>';
+ // Calibrated flask filled with water to brim
+ svg+='<path d="M'+(pycX-7)+' '+(pycY+20)+' L'+(pycX-7)+' '+(pycY+40)+' L'+(pycX-25)+' '+(pycY+105)+' Q'+pycX+' '+(pycY+110)+' '+(pycX+25)+' '+(pycY+105)+' L'+(pycX+7)+' '+(pycY+40)+' L'+(pycX+7)+' '+(pycY+20)+' Z" fill="url(#boilWater)" stroke="#7dd3fc" stroke-width="1.2"/>';
+ // Flat ground glass optical plate shearing meniscus
+ svg+='<rect x="'+(pycX-15)+'" y="'+(pycY+17)+'" width="30" height="3" fill="#cbd5e1" stroke="#94a3b8"/>';
+ svg+='<text x="'+pycX+'" y="'+(pycY+12)+'" text-anchor="middle" fill="#38bdf8" font-size="7">Optical Flat Plate</text>';
+ svg+='<text x="'+pycX+'" y="'+(pycY+70)+'" text-anchor="middle" fill="#f8fafc" font-size="8.5" font-family="monospace">'+v_flask.toFixed(1)+' mL</text>';
+ svg+='<text x="'+pycX+'" y="'+(pycY+82)+'" text-anchor="middle" fill="#94a3b8" font-size="7">±0.02 mL (Pycnometry)</text>';
+
+ svg+='<text x="'+pycX+'" y="295" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">2. VOLUME PYCNOMETRY</text>';
+
+ // -------------------------------------------------------------
+ // 3. RIGHT STATION: Analytical Balance & Condensed Vapor Telemetry
+ // -------------------------------------------------------------
+ const abX=490,abY=95,abW=205,abH=175;
+ svg+='<rect x="'+abX+'" y="'+abY+'" width="'+abW+'" height="'+abH+'" rx="5" fill="#101e14" stroke="#254d33" stroke-width="1.5"/>';
+ svg+='<text x="'+(abX+abW/2)+'" y="'+(abY+18)+'" text-anchor="middle" fill="#86efac" font-size="9.5" font-weight="bold">VAPOR DENSITY TELEMETRY</text>';
+ svg+='<line x1="'+(abX+12)+'" y1="'+(abY+25)+'" x2="'+(abX+abW-12)+'" y2="'+(abY+25)+'" stroke="#1f3b28"/>';
+
+ svg+='<text x="'+(abX+14)+'" y="'+(abY+42)+'" fill="#94a3b8" font-size="8">Bulb Volume V_flask:</text>';
+ svg+='<text x="'+(abX+abW-14)+'" y="'+(abY+42)+'" text-anchor="end" fill="#f8fafc" font-size="8.5" font-family="monospace">'+v_flask.toFixed(1)+' mL</text>';
+
+ svg+='<text x="'+(abX+14)+'" y="'+(abY+57)+'" fill="#94a3b8" font-size="8">Bath Temp T_bath:</text>';
+ svg+='<text x="'+(abX+abW-14)+'" y="'+(abY+57)+'" text-anchor="end" fill="#f8fafc" font-size="8.5" font-family="monospace">100.00 °C (373.15 K)</text>';
+
+ svg+='<text x="'+(abX+14)+'" y="'+(abY+72)+'" fill="#94a3b8" font-size="8">Barometric Pressure P:</text>';
+ svg+='<text x="'+(abX+abW-14)+'" y="'+(abY+72)+'" text-anchor="end" fill="#f8fafc" font-size="8.5" font-family="monospace">1.0000 atm (760.0 mmHg)</text>';
+
+ svg+='<line x1="'+(abX+12)+'" y1="'+(abY+80)+'" x2="'+(abX+abW-12)+'" y2="'+(abY+80)+'" stroke="#1f3b28"/>';
+
+ svg+='<text x="'+(abX+14)+'" y="'+(abY+96)+'" fill="#38bdf8" font-size="8">Condensed Vapor m:</text>';
+ svg+='<text x="'+(abX+abW-14)+'" y="'+(abY+96)+'" text-anchor="end" fill="#4ade80" font-size="8.5" font-family="monospace">'+m_vap.toFixed(4)+' g</text>';
+
+ svg+='<text x="'+(abX+14)+'" y="'+(abY+111)+'" fill="#94a3b8" font-size="8">Vapor Density ρ_vap:</text>';
+ svg+='<text x="'+(abX+abW-14)+'" y="'+(abY+111)+'" text-anchor="end" fill="#f8fafc" font-size="8.5" font-family="monospace">'+rho_vap.toFixed(6)+' g/mL</text>';
+
+ svg+='<rect x="'+(abX+10)+'" y="'+(abY+120)+'" width="'+(abW-20)+'" height="30" rx="3" fill="#061209" stroke="#1f3b28"/>';
+ svg+='<text x="'+(abX+abW/2)+'" y="'+(abY+133)+'" text-anchor="middle" fill="#86efac" font-size="7.5">Calculated Molar Mass M:</text>';
+ const m_calc=(m_vap*82.0574*373.15)/(1.000*v_flask);
+ svg+='<text x="'+(abX+abW/2)+'" y="'+(abY+145)+'" text-anchor="middle" fill="#38bdf8" font-size="9" font-family="monospace" font-weight="bold">'+m_calc.toFixed(2)+' g/mol</text>';
+
+ svg+='<text x="'+(abX+14)+'" y="'+(abY+164)+'" fill="#94a3b8" font-size="7.5">Substance Identification:</text>';
+ svg+='<text x="'+(abX+abW-14)+'" y="'+(abY+164)+'" text-anchor="end" fill="#fde047" font-size="8" font-weight="bold">Cyclohexane (C₆H₁₂)</text>';
+
+ svg+='<text x="'+(abX+abW/2)+'" y="295" text-anchor="middle" fill="#4ade80" font-size="9" font-weight="bold">3. ANALYTICAL BALANCE (±0.1 mg)</text>';
+
+ svg+=text(360,312,'Dumas Metrology: Pure vapor fills bulb at T_bath and P_atm. Condensation isolates exact mole mass.','#789c80',8.5);
+ return svg;
+}
+
+function drawDumasCompareView(p,rawVal){
+ let svg='<rect x="0" y="0" width="720" height="320" fill="#08140c"/>';
+ svg+=text(360,24,'COMPARATIVE ANALYTICAL METROLOGY: MOLECULAR WEIGHT DETERMINATION TECHNIQUES','#86efac',12);
+
+ const cards=[
+  {
+   title:'1. Dumas Vapor Method',
+   sub:'Open Bulb Boiling Bath Gravimetry',
+   color:'#86efac',
+   border:'#254d33',
+   items:[
+    'Principle: Vapor sweeps air; bulb filled at T_bath & P_atm',
+    'Measurement: Mass of condensed vapor filling bulb of volume V',
+    'Formula: M = (m_vapor · R · T) / (P · V)',
+    'Precision: ±0.5% to ±1.0% molar mass accuracy',
+    'Applicability: Volatile liquids with bp 40 °C to 95 °C',
+    'Primary advantage: Classical direct physical gravimetry',
+    'Limitation: Saturated vapor near bp exhibits non-ideality'
+   ]
+  },
+  {
+   title:'2. Victor Meyer Method',
+   sub:'Closed Chamber Air Displacement',
+   color:'#38bdf8',
+   border:'#1e3a5f',
+   items:[
+    'Principle: Fragile sample ampoule dropped into heated tube',
+    'Measurement: Displaced air volume collected over water',
+    'Formula: M = (m_sample · R · T_room) / (P_dry · V_air)',
+    'Precision: ±1.0% to ±2.0% accuracy',
+    'Applicability: High-boiling volatiles up to 300 °C (vapor jackets)',
+    'Primary advantage: Requires only tiny sample aliquot (~0.1 g)',
+    'Limitation: Thermal convection currents, rubber stopper leakage'
+   ]
+  },
+  {
+   title:'3. Cryoscopic Osmometry',
+   sub:'Freezing-Point Depression Colligative',
+   color:'#fde047',
+   border:'#5a4814',
+   items:[
+    'Principle: Colligative freezing point shift: ΔT_f = K_f · m_solute',
+    'Measurement: Differential temperature drop via Beckmann sensor',
+    'Formula: M = (K_f · w_solute · 1000) / (ΔT_f · W_solvent)',
+    'Precision: ±0.2% to ±0.8% with large K_f solvents (camphor)',
+    'Applicability: Non-volatile and volatile solutes in solution',
+    'Primary advantage: Operates at low temperature, zero vapor loss',
+    'Limitation: Solute association/dissociation shifts van\'t Hoff i'
+   ]
+  }
+ ];
+
+ cards.forEach((c,idx)=>{
+  const x=25+idx*230,y=46,w=210,h=242;
+  svg+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="6" fill="#0d1f14" stroke="'+c.border+'" stroke-width="1.5"/>';
+  svg+='<rect x="'+(x+8)+'" y="'+(y+8)+'" width="'+(w-16)+'" height="32" rx="4" fill="#051009"/>';
+  svg+='<text x="'+(x+w/2)+'" y="'+(y+22)+'" text-anchor="middle" fill="'+c.color+'" font-size="9.5" font-weight="bold">'+c.title+'</text>';
+  svg+='<text x="'+(x+w/2)+'" y="'+(y+34)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5">'+c.sub+'</text>';
+
+  c.items.forEach((item,ii)=>{
+   const iy=y+54+ii*26;
+   svg+='<circle cx="'+(x+16)+'" cy="'+(iy-3)+'" r="2" fill="'+c.color+'"/>';
+   svg+='<foreignObject x="'+(x+24)+'" y="'+(iy-10)+'" width="'+(w-32)+'" height="26"><p xmlns="http://www.w3.org/1999/xhtml" style="font-size:7.5px;color:#cbd5e1;line-height:1.2;margin:0">'+item+'</p></foreignObject>';
+  });
+ });
+
+ svg+=text(360,305,'Comparison: Dumas measures vapor mass directly; Victor Meyer measures displaced air volume.','#789c80',9);
+ return svg;
+}
+
+function drawDumasSandboxView(p,rawVal){
+ const v_flask=p.input;
+ const m_vap=rawVal;
+ let svg='<rect x="0" y="0" width="720" height="320" fill="#08140c"/>';
+ svg+=text(360,22,'VAPOR DENSITY LINEARITY & VAN DER WAALS NON-IDEALITY: CYCLOHEXANE (C₆H₁₂)','#86efac',12);
+
+ // Left Plot: Condensed vapor mass vs Flask volume (0 to 420 mL)
+ const pX=55,pY=48,pW=390,pH=225;
+ svg+='<rect x="'+pX+'" y="'+pY+'" width="'+pW+'" height="'+pH+'" fill="#061209" stroke="#1f3b28" rx="4"/>';
+
+ const mapX=vol=>pX+(vol/420.0)*pW;
+ const mapY=mass=>pY+pH-(mass/1.20)*pH;
+
+ const x0=mapX(0),y0=mapY(0);
+ const xEnd=mapX(420.0),yEnd=mapY(420.0*0.00274859);
+ svg+='<line x1="'+x0+'" y1="'+y0+'" x2="'+xEnd+'" y2="'+yEnd+'" stroke="#38bdf8" stroke-width="2.5"/>';
+
+ [100,200,300,400].forEach(vol=>{
+  svg+='<line x1="'+mapX(vol)+'" y1="'+pY+'" x2="'+mapX(vol)+'" y2="'+(pY+pH)+'" stroke="#16291c" stroke-width="1"/>';
+  svg+='<text x="'+mapX(vol)+'" y="'+(pY+pH+14)+'" text-anchor="middle" fill="#789c80" font-size="8.5">'+vol+' mL</text>';
+ });
+ [0.3,0.6,0.9,1.2].forEach(mass=>{
+  svg+='<line x1="'+pX+'" y1="'+mapY(mass)+'" x2="'+(pX+pW)+'" y2="'+mapY(mass)+'" stroke="#16291c" stroke-width="1"/>';
+  svg+='<text x="'+(pX-6)+'" y="'+(mapY(mass)+3)+'" text-anchor="end" fill="#789c80" font-size="8.5">'+mass.toFixed(1)+' g</text>';
+ });
+
+ const curX=mapX(v_flask);
+ const curY=mapY(m_vap);
+ svg+='<circle cx="'+curX+'" cy="'+curY+'" r="6" fill="#4ade80" stroke="#08140c" stroke-width="2"/>';
+ svg+='<circle cx="'+curX+'" cy="'+curY+'" r="9" fill="none" stroke="#4ade80" stroke-width="1.2" stroke-opacity=".6"/>';
+ svg+='<line x1="'+curX+'" y1="'+curY+'" x2="'+curX+'" y2="'+(pY+pH)+'" stroke="#4ade80" stroke-dasharray="2,2"/>';
+ svg+='<text x="'+(curX+10)+'" y="'+(curY-8)+'" fill="#86efac" font-size="8.5" font-family="monospace">m_vap = '+m_vap.toFixed(4)+' g</text>';
+
+ // Right Sidebar: Molecular Chair Conformation & Non-Ideality
+ const sX=465,sY=48,sW=235,sH=225;
+ svg+='<rect x="'+sX+'" y="'+sY+'" width="'+sW+'" height="'+sH+'" rx="5" fill="#101e14" stroke="#254d33" stroke-width="1.5"/>';
+ svg+='<text x="'+(sX+sW/2)+'" y="'+(sY+18)+'" text-anchor="middle" fill="#86efac" font-size="9.5" font-weight="bold">MOLECULAR THERMODYNAMICS</text>';
+ svg+='<line x1="'+(sX+15)+'" y1="'+(sY+25)+'" x2="'+(sX+sW-15)+'" y2="'+(sY+25)+'" stroke="#1f3b28"/>';
+
+ svg+='<text x="'+(sX+12)+'" y="'+(sY+42)+'" fill="#38bdf8" font-size="8.5" font-weight="bold">Cyclohexane (C₆H₁₂, Chair Form):</text>';
+ svg+='<text x="'+(sX+12)+'" y="'+(sY+55)+'" fill="#94a3b8" font-size="7.5">Molar Mass M = 84.161 g/mol, bp = 80.7 °C</text>';
+ svg+='<text x="'+(sX+12)+'" y="'+(sY+67)+'" fill="#94a3b8" font-size="7.5">van der Waals a = 23.3 L²·bar/mol², b = 0.144 L/mol</text>';
+
+ svg+='<line x1="'+(sX+12)+'" y1="'+(sY+76)+'" x2="'+(sX+sW-12)+'" y2="'+(sY+76)+'" stroke="#1f3b28"/>';
+
+ svg+='<text x="'+(sX+12)+'" y="'+(sY+92)+'" fill="#fde047" font-size="8.5" font-weight="bold">Compressibility Factors (Z = PV/nRT):</text>';
+ svg+='<text x="'+(sX+14)+'" y="'+(sY+106)+'" fill="#86efac" font-size="7.5">Ideal Gas: Z = 1.0000 ⟹ M = 84.16 g/mol</text>';
+ svg+='<text x="'+(sX+14)+'" y="'+(sY+118)+'" fill="#38bdf8" font-size="7.5">Real Cyclohexane at 100 °C: Z = 0.985</text>';
+ svg+='<text x="'+(sX+14)+'" y="'+(sY+130)+'" fill="#94a3b8" font-size="7.5">Uncorrected M_apparent = M_true / Z ≈ 85.4 g/mol</text>';
+
+ svg+='<line x1="'+(sX+12)+'" y1="'+(sY+138)+'" x2="'+(sX+sW-12)+'" y2="'+(sY+138)+'" stroke="#1f3b28"/>';
+
+ svg+='<rect x="'+(sX+10)+'" y="'+(sY+146)+'" width="'+(sW-20)+'" height="68" rx="3" fill="#061209" stroke="#1f3b28"/>';
+ svg+='<text x="'+(sX+sW/2)+'" y="'+(sY+160)+'" text-anchor="middle" fill="#86efac" font-size="7.5" font-weight="bold">Multi-Point Regression Benefit:</text>';
+ svg+='<foreignObject x="'+(sX+14)+'" y="'+(sY+165)+'" width="'+(sW-28)+'" height="46"><p xmlns="http://www.w3.org/1999/xhtml" style="font-size:7px;color:#a0aec0;line-height:1.25;margin:0">Plotting m_vapor vs V_flask across 6 calibrated bulbs absorbs constant aluminum foil tare errors into the intercept m₀ = 0.0000 g, isolating true vapor density with R² = 1.00000.</p></foreignObject>';
+
+ svg+=text(360,305,'Thermodynamics: Dense organic vapors near condensation exhibit attractive London dispersion (Z < 1).','#789c80',9);
  return svg;
 }
 

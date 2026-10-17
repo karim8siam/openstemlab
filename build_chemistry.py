@@ -38,6 +38,17 @@ def observation(c,value):
   x=m_mg
   y=raw
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='volatile-liquid-molar-mass':
+  v=float(value)
+  M_ref=84.161
+  R=82.0574
+  T=373.15
+  P=1.000
+  rho_ideal=(P * M_ref) / (R * T)
+  raw=rnd(rho_ideal * v, 4)
+  x=v
+  y=raw
+  return {'input':value,'raw':raw,'x':x,'y':y}
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fit(rows):
@@ -70,6 +81,12 @@ def estimate(c,f):
   return f['m']*10000.0, f['slopeSE']*10000.0, 233.390
  elif slug=='molar-volume-ideal-gas':
   return f['m']*24.305, f['slopeSE']*24.305, 22.414
+ elif slug=='volatile-liquid-molar-mass':
+  R=82.0574
+  T=373.15
+  P=1.000
+  conv=(R * T) / P
+  return f['m']*conv, f['slopeSE']*conv, 84.161
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fmt(v,n=5):
@@ -86,6 +103,9 @@ def formula(c,f):
   return f"M_BaSO₄ = m_slope · (1000 / C_SO₄) = {fmt(f['m'],6)} × 10000 = {fmt(f['m']*10000.0,2)} g/mol; Baseline intercept b = {fmt(f['b'],6)} g"
  elif slug=='molar-volume-ideal-gas':
   return f"V_m,STP = m_slope · M_Mg = {fmt(f['m'],6)} × 24.305 = {fmt(f['m']*24.305,3)} L/mol; Intercept V₀ = {fmt(f['b'],4)} mL"
+ elif slug=='volatile-liquid-molar-mass':
+  conv=(82.0574 * 373.15) / 1.000
+  return f"M_vapor = m_slope · (R · T_bath / P_atm) = {fmt(f['m'],6)} × {conv:.2f} = {fmt(f['m']*conv,2)} g/mol; Tare intercept m₀ = {fmt(f['b'],6)} g"
  return ""
 
 def worked(c,row):
@@ -166,6 +186,24 @@ def worked(c,row):
    f"Verification: Across the full six-point series from 10.0 to 35.0 mg of Mg, ordinary least-squares regression "
    f"extracts the slope m_slope = 0.92220 mL/mg, multiplying by M(Mg) = 24.305 g/mol to yield V_m,STP = 22.414 L/mol with R² = 1.00000."
   )
+ elif slug=='volatile-liquid-molar-mass':
+  v=row['input']
+  m_vap=row['raw']
+  M_ref=84.161
+  R=82.0574
+  T=373.15
+  P=1.000
+  rho_exp=m_vap / v
+  M_calc=(m_vap * R * T) / (P * v)
+  return (
+   f"Calibrated Dumas Bulb Internal Volume: V_flask = {v:.1f} mL; Boiling Water Bath Temperature: T = 100.0 °C = 373.15 K.\n"
+   f"Ambient Barometric Pressure: P_atm = 1.000 atm = 760.0 mmHg; Universal Gas Constant: R = 82.0574 mL·atm/(mol·K).\n"
+   f"Net Mass of Condensed Vapor: m_vapor = m_gross − m_tare = {m_vap:.4f} g.\n"
+   f"Experimental Vapor Density at 100 °C: ρ_vapor = m_vapor / V_flask = {m_vap:.4f} g / {v:.1f} mL = {rho_exp:.6f} g/mL.\n"
+   f"Single-Trial Molecular Weight Calculation: M = (m_vapor · R · T) / (P · V) = ({m_vap:.4f} × 82.0574 × 373.15) / (1.000 × {v:.1f}) = {M_calc:.2f} g/mol.\n"
+   f"Verification: Across the full six-point series from 125.0 to 375.0 mL, ordinary least-squares regression "
+   f"extracts the empirical slope m_slope = 0.0027485 g/mL, multiplying by (R·T/P = 30619.7) to isolate M = 84.16 g/mol with R² = 1.00000."
+  )
  return ""
 
 def uncertainty_text(c):
@@ -243,6 +281,23 @@ def uncertainty_text(c):
    "(5) Oxide Coating Bias: Thorough abrasion of magnesium ribbon with 600-grit emery paper eliminates surface MgO, which would otherwise lead to a negative gas yield error. "
    "Ordinary least-squares linear regression across six independent magnesium loadings (10.0 to 35.0 mg) extracts the empirical slope m_slope = 0.92220 mL/mg with a standard error "
    "SE(m) < 1.0 × 10⁻⁵ and an ideal coefficient of determination R² = 1.00000, isolating the standard molar volume V_m,STP = 22.414 L/mol with zero residual offset."
+  )
+ elif slug=='volatile-liquid-molar-mass':
+  return (
+   "In vapor density metrology using the classical Dumas method, experimental uncertainty is governed by M = (m_vapor · R · T_bath) / (P_atm · V_flask). "
+   "A complete analytical uncertainty budget partitions random and systematic variance into distinct physical components: "
+   "(1) Gravimetric Mass Resolution: The analytical balance features a digital readability of ±0.0001 g and repeatability of ±0.00015 g. "
+   "For condensed vapor masses ranging from 0.3436 g to 1.0307 g, the relative weighing uncertainty is δm / m ≈ 0.00015 / 0.7559 ≈ 2.0 × 10⁻⁴ (0.020%). "
+   "(2) Pycnometric Volume Calibration: Flask volumes are determined individually via brim-full water pycnometry using a precision ground glass cover plate. "
+   "With water density known to ±0.00001 g/mL, volumetric uncertainty is less than ±0.03 mL, contributing δV / V = 0.03 / 275.0 ≈ 1.1 × 10⁻⁴ (0.011%). "
+   "(3) Bath Temperature Stability: The boiling water bath is monitored with an immersion NIST thermistor to ±0.05 °C in 373.15 K, "
+   "yielding a temperature uncertainty of δT / T = 0.05 / 373.15 ≈ 1.3 × 10⁻⁴ (0.013%). "
+   "(4) Barometric Pressure Accuracy: Ambient atmospheric pressure is recorded from a Fortin mercury barometer with vernier resolution of ±0.1 mmHg, "
+   "yielding δP / P = 0.1 / 760.0 ≈ 1.3 × 10⁻⁴ (0.013%). "
+   "(5) Real Gas Non-Ideality: Cyclohexane vapor at 100 °C exhibits weak London dispersion attraction (van der Waals a = 23.3 L²·bar/mol²), "
+   "giving a compressibility factor Z ≈ 0.985 that slightly shifts uncorrected molar mass by ~1.5%. "
+   "Ordinary least-squares linear regression across six independent bulb volumes (125.0 to 375.0 mL) extracts the empirical slope m_slope = 0.0027485 g/mL with a standard error "
+   "SE(m) < 1.0 × 10⁻⁶ and an ideal coefficient of determination R² = 1.00000, isolating the experimental molar mass M = 84.16 g/mol within 0.003% of the true formula weight."
   )
  return ""
 
@@ -450,6 +505,45 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"The empirical result confirms the theoretical IUPAC STP molar volume of an ideal gas (22.414 L/mol) with a percentage difference of {percent:.4f}%. "
    "The investigation validated Dalton's law of partial pressures, demonstrated the fluid mechanics of hydrostatic head neutralization, "
    "and established multi-point linear regression as an indispensable method for high-accuracy gas metrology."
+  )
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='volatile-liquid-molar-mass':
+  abstract=(
+   f"Six Dumas vapor density trials were conducted using precision-calibrated borosilicate bulbs (internal volumes V_flask = {rows[0]['input']:.1f} mL to {rows[-1]['input']:.1f} mL) "
+   f"immersed in a boiling water bath at T_bath = 100.0 °C (373.15 K) under barometric pressure P_atm = 1.000 atm (760.0 mmHg), yielding condensed cyclohexane masses "
+   f"from {rows[0]['raw']:.4f} g to {rows[-1]['raw']:.4f} g. "
+   f"An ordinary least-squares linear regression of condensed vapor mass m_vapor against bulb volume V_flask yielded an empirical vapor density slope of "
+   f"{fmt(f['m'],7)} g/mL, extracting an experimental molar mass of M = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} "
+   f"and an intercept of {fmt(f['b'],c['resultDecimals'])} g, demonstrating exceptional agreement with the theoretical formula weight of cyclohexane (84.161 g/mol, difference = {percent:.4f}%). "
+   f"Complete air purging through a 0.5 mm pinhole and gravimetric water pycnometry ensured high analytical fidelity."
+  )
+  graph_choice=(
+   f"The mathematical regression fits the stoichiometric vapor model m_vapor = [P_atm · M / (R · T_bath)] · V_flask + m₀, where V_flask represents "
+   f"the calibrated internal volume of the Dumas bulb in mL, m_vapor represents the mass of condensed organic liquid in g, and m₀ represents the baseline "
+   f"intercept in g (theoretically m₀ = 0.0000 g). Multiplying the regression slope m_slope by (R · T_bath / P_atm = 30619.7 mL·atm/mol) directly isolates the "
+   f"molecular weight M in {c['resultUnit']}, while constant aluminum foil crimp tare artifacts or external wiping offsets are absorbed into m₀."
+  )
+  discussion=(
+   "The experimental observations provide rigorous quantitative verification of Avogadro's Hypothesis, the Kinetic Molecular Theory of Gases, and Dumas Vapor Metrology. "
+   "In quantitative physical chemistry, the Dumas method provides a direct macroscopic gateway to molecular weight determination by measuring the bulk density of an unknown "
+   "vapor in thermal equilibrium with its surroundings. "
+   "When liquid cyclohexane (bp 80.7 °C) was heated in a boiling water bath at 100.0 °C, the rapid generation of vapor purged ambient air out through the 0.5 mm pinhole. "
+   "At the instant the last liquid droplet vaporized, the bulb contained pure cyclohexane vapor at exactly 100.0 °C (373.15 K) and 1.000 atm (760.0 mmHg). "
+   "Across all six calibrated Dumas bulbs from 125.0 mL to 375.0 mL, the mass of condensed vapor scaled in strictly linear proportion to flask volume. "
+   "The ordinary least-squares linear regression line m_vapor = 0.0027485 · V_flask + 0.00002 g yielded an ideal coefficient of determination R² = 1.00000. "
+   "Multiplying the regression slope by (R · T / P) extracted an experimental molar mass of M = 84.16 g/mol, matching the true formula weight of cyclohexane (84.161 g/mol) to within 0.0027%. "
+   "A critical procedural safeguard was confirming complete vaporization prior to quenching: because liquid cyclohexane is ~283 times denser than its vapor, "
+   "even a microscopic 0.05 mL residual droplet would have produced a severe +5% positive mass bias. "
+   "Furthermore, pycnometric calibration of each flask volume with deionized water using a flat optical glass plate eliminated standard glassware volumetric tolerances, "
+   "achieving volume accuracy within ±0.02 mL."
+  )
+  conclusion=(
+   "This laboratory investigation successfully demonstrated the quantitative determination of the molar mass of a volatile organic liquid using the classical Dumas method. "
+   f"Through systematic vapor density determinations across calibrated bulb volumes from {rows[0]['input']:.1f} mL to {rows[-1]['input']:.1f} mL, we extracted an experimental "
+   f"molar mass of M = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with a fit standard error of {fmt(se*c['resultScale'])} {c['resultUnit']} and an ideal R² = 1.00000. "
+   f"The experimental value confirms the theoretical molecular weight of cyclohexane (84.161 g/mol) with a percentage error of {percent:.4f}%. "
+   "The investigation validated the ideal gas equation of state, evaluated van der Waals real-gas non-ideality, "
+   "and proved that multi-point linear regression represents a powerful analytical strategy for eliminating tare and transfer biases in gas gravimetry."
   )
   return abstract, graph_choice, discussion, conclusion
  return "","","",""
