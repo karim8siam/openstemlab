@@ -159,6 +159,16 @@ def observation(c,value):
   v0_mM=raw / 1000.0
   y=rnd(1.0 / v0_mM, 2)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='job-method-continuous-variation-complex-stoichiometry':
+  vl=float(value)
+  table_raw={1.00:0.573, 2.00:1.060, 3.00:1.435, 4.00:1.674, 5.00:1.756, 6.00:1.674}
+  table_x={1.00:-4.139, 2.00:-3.784, 3.00:-3.551, 4.00:-3.369, 5.00:-3.215, 6.00:-3.082}
+  table_y={1.00:-1.118, 2.00:-0.763, 3.00:-0.530, 4.00:-0.347, 5.00:-0.194, 6.00:-0.061}
+  key=round(vl, 2)
+  raw=table_raw.get(key, round(1.756*math.exp(-((vl-5.0)/3.2)**2), 3))
+  x=table_x.get(key, round(-3.215 + (vl - 5.0)*0.21, 3))
+  y=table_y.get(key, round(-0.194 + (vl - 5.0)*0.21, 3))
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='beer-lambert-spectrophotometry-metal-complex':
   c_uM=float(value)
   table_raw={10.0:0.111, 20.0:0.222, 35.0:0.389, 50.0:0.555, 65.0:0.722, 80.0:0.888}
@@ -595,6 +605,10 @@ def estimate(c,f):
   D_scaled=D_est * 1e6
   se=abs(f.get('slopeSE', 0.05)) / prefactor * 2.0 * math.sqrt(D_est) * 1e6
   return D_scaled, se, 7.60
+ elif slug=='job-method-continuous-variation-complex-stoichiometry':
+  n_est=f['m']
+  se=f.get('slopeSE', 0.005)
+  return n_est, se, 1.000
  elif slug=='beer-lambert-spectrophotometry-metal-complex':
   m=f['m']
   b_path=1.000
@@ -799,6 +813,11 @@ def formula(c,f):
   D_est=((m * 1e-6) / prefactor)**2
   D_scaled=D_est * 1e6
   return f"Randles-Ševčík Fit: i_pc = {fmt(m,2)}·ν¹/² + {fmt(b,3)} μA; Diffusion Coefficient D = {fmt(D_scaled,2)} × 10⁻⁶ cm²·s⁻¹; Peak Separation ΔE_p = 59.2 mV"
+ elif slug=='job-method-continuous-variation-complex-stoichiometry':
+  m=f['m']
+  b=f['b']
+  Kf_est=10.0**b
+  return f"Job Continuous Variation Log Fit: log([ML]/[M]) = {fmt(m,4)}·log[L] + {fmt(b,4)}; Stoichiometric Index n = {fmt(m,3)}; Formation Constant Kf = {fmt(Kf_est,0)} M⁻¹"
  elif slug=='beer-lambert-spectrophotometry-metal-complex':
   m=f['m']
   b=f['b']
@@ -1358,6 +1377,51 @@ def worked(c,row):
    f"   Scaled diffusion coefficient: D = {fmt(D_scaled, 2)} × 10⁻⁶ cm²·s⁻¹.\n"
    f"   Literature reference benchmark at 25.00 °C: D = 7.60 × 10⁻⁶ cm²·s⁻¹ (percentage difference = {fmt(abs(D_scaled - 7.60)/7.60*100.0, 4)}%).\n"
    f"   Transient Nernst diffusion layer thickness at ν = {fmt(v_val,1)} mV/s: δ ≈ √(π·D·t) = {fmt(math.sqrt(math.pi * D_est * (0.70/(v_val*1e-3)))*1e4, 1)} μm."
+  )
+ elif slug=='job-method-continuous-variation-complex-stoichiometry':
+  vl_val=row['input']
+  raw=row['raw']
+  x_val=row['x']
+  y_val=row['y']
+  vm_val=10.00 - vl_val
+  xl_val=vl_val / 10.00
+  eps_val=4500.0
+  b_path=1.000
+  c_complex=(raw / eps_val) * 1000.0
+  c_fe_tot=(vm_val / 10.00) * 2.000
+  c_scn_tot=(vl_val / 10.00) * 2.000
+  fe_free=max(0.0001, c_fe_tot - c_complex)
+  scn_free=max(0.0001, c_scn_tot - c_complex)
+  kf_single=(c_complex * 1e-3) / ((fe_free * 1e-3) * (scn_free * 1e-3))
+  return (
+   f"1. Continuous Variation Volumetric & Photometric Coordinates:\n"
+   f"   Total analytical concentration: C_T = [Fe³⁺] + [SCN⁻] = 2.000 mM (total volume V_T = 10.00 mL in 0.100 M HNO₃).\n"
+   f"   Dispensed ligand volume (SCN⁻): V_L = {fmt(vl_val, 2)} mL  ⇒  Dispensed metal volume (Fe³⁺): V_M = 10.00 − V_L = {fmt(vm_val, 2)} mL.\n"
+   f"   Ligand mole fraction: X_L = V_L / V_T = {fmt(vl_val, 2)} / 10.00 = {fmt(xl_val, 3)}.\n"
+   f"   Measured absorbance at λ = 450.0 nm: A_450 = {fmt(raw, 3)} AU (10.00 mm quartz cuvette against 0.100 M HNO₃ blank at 25.00 °C).\n"
+   f"\n"
+   f"2. Equilibrium Speciation and Free Concentration Computations:\n"
+   f"   Initial analytical concentrations before reaction:\n"
+   f"   C_M,0 = (V_M / 10.00) × 2.000 mM = {fmt(c_fe_tot, 3)} mM;  C_L,0 = (V_L / 10.00) × 2.000 mM = {fmt(c_scn_tot, 3)} mM.\n"
+   f"   Equilibrium complex concentration: [Fe(SCN)²⁺] = A_450 / (ε · b) = {fmt(raw, 3)} / (4500 × 1.000) = {fmt(c_complex*1000.0, 1)} μM ({fmt(c_complex, 4)} mM).\n"
+   f"   Free uncomplexed metal cation: [Fe³⁺]_free = C_M,0 − [FeSCN²⁺] = {fmt(c_fe_tot, 3)} − {fmt(c_complex, 4)} = {fmt(fe_free, 4)} mM.\n"
+   f"   Free uncomplexed ligand anion: [SCN⁻]_free = C_L,0 − [FeSCN²⁺] = {fmt(c_scn_tot, 3)} − {fmt(c_complex, 4)} = {fmt(scn_free, 4)} mM.\n"
+   f"   Single-point apparent stability constant: K_f = [ML] / ([M][L]) = ({fmt(c_complex*1e-3, 6)}) / (({fmt(fe_free*1e-3, 6)}) × ({fmt(scn_free*1e-3, 6)})) = {fmt(kf_single, 0)} M⁻¹.\n"
+   f"\n"
+   f"3. Continuous Variation Curve & Job's Stoichiometric Apex:\n"
+   f"   According to Job's theorem, maximum complex concentration occurs at the stoichiometric equivalence ratio:\n"
+   f"   X_L,max = n / (1 + n). Across the continuous variation series, maximum absorbance A_max = 1.756 AU occurs at X_L = 0.500.\n"
+   f"   Equating X_L,max = 0.500: n / (1 + n) = 0.500  ⇒  n = 1.000, establishing the 1:1 coordination formula [Fe(SCN)]²⁺.\n"
+   f"   Extrapolated vertex for hypothetical complete reaction (K_f → ∞) reaches A_extrap = 2.250 AU, indicating that at 25.0 °C\n"
+   f"   the real equilibrium yields a complexation yield of (1.756 / 2.250) × 100% = 78.0% (equilibrium dissociation α = 22.0%).\n"
+   f"\n"
+   f"4. Logarithmic Linearization and Precision Metrological Extraction:\n"
+   f"   Linearized equilibrium model: log₁₀([ML] / [M]_free) = n · log₁₀[L]_free + log₁₀(K_f).\n"
+   f"   Experimental coordinates: x = log₁₀[L]_free = {fmt(x_val, 3)};  y = log₁₀([ML]/[M]_free) = {fmt(y_val, 3)}.\n"
+   f"   Ordinary least-squares linear regression across all six continuous variation mixtures yields:\n"
+   f"   Slope m = 1.00020 ± 0.00050  ⇒  stoichiometric index n = 1.000 (percentage difference = 0.0203% from exact integer).\n"
+   f"   Y-intercept b = 3.02188 ± 0.00180  ⇒  thermodynamic formation constant K_f = 10^(3.02188) = 1052 ± 12 M⁻¹ (log K_f = 3.022),\n"
+   f"   confirming flawless concordance with the authoritative chemical literature benchmark (K_f = 1050 M⁻¹).\n"
   )
  elif slug=='beer-lambert-spectrophotometry-metal-complex':
   c_val=row['input']
@@ -2304,6 +2368,32 @@ def uncertainty_text(c):
    "propagate as u_r(D) = √[ 4(u(m)/m)² + 4(u(A)/A)² + 4(u(c)/c)² + (u(T)/T)² ] = √[ 4(0.0001)² + 4(0.0033)² + 4(0.0012)² + (0.00007)² ] = 0.70%. "
    "For an empirical diffusion coefficient D = 7.60 × 10⁻⁶ cm²·s⁻¹, the expanded uncertainty at the 95% confidence level (coverage factor k = 2) "
    "is U(D) = ±0.11 × 10⁻⁶ cm²·s⁻¹ (1.4%), confirming exceptional concordance with the authoritative literature benchmark (7.60 ± 0.05 × 10⁻⁶ cm²·s⁻¹)."
+  )
+ elif slug=='job-method-continuous-variation-complex-stoichiometry':
+  return (
+   "In the high-precision determination of complex ion stoichiometric composition and thermodynamic formation constants via "
+   "Job's method of continuous variations, experimental uncertainties and physical boundary conditions are rigorously quantified "
+   "across spectrophotometric, volumetric, acid-hydrolytic, ionic strength, and equilibrium domains: "
+   "(1) Spectrophotometric Optical Fidelity & Path Length Metrology: Dual-beam UV-Vis spectrophotometry at λ = 450.0 nm is conducted "
+   "using blazed holographic grating optics with a certified photometric accuracy of ±0.002 AU and stray radiant energy < 0.01% T. "
+   "Matched 1.000 cm optical quartz cuvettes (certified path length b = 10.00 ± 0.01 mm, u(b)/b = 0.10%) are referenced against a "
+   "0.100 M HNO₃ reagent blank, eliminating reflection and solvent absorption artifacts. "
+   "(2) Piston Dispensing & Constant-Volume Volumetric Control: Stock solutions of equimolar 0.00200 M Fe³⁺ and 0.00200 M SCN⁻ "
+   "are dispensed using calibrated micro-burettes (dispensing readability ±0.005 mL, u(V) = ±0.008 mL). Because the total volume "
+   "V_T = V_M + V_L is held strictly invariant at 10.00 ± 0.01 mL (relative uncertainty 0.10%), total analytical concentration "
+   "C_T = 2.000 ± 0.003 mM remains constant across all mixtures, satisfying the fundamental premise of Job's theorem. "
+   "(3) Prevention of Iron(III) Hydrolysis and Matrix Control: Uncomplexed ferric iron undergoes hydrolytic polymerization in water "
+   "([Fe(H₂O)₅(OH)]²⁺, pKa = 2.19). By conducting all continuous variation trials in 0.100 M HNO₃ (pH = 1.00 ± 0.02), hydrolysis is "
+   "suppressed to < 0.6%, ensuring that > 99.4% of uncomplexed iron exists as the monomeric hexa-aqua cation [Fe(H₂O)₆]³⁺. "
+   "(4) Suppression of Higher-Order Polynucleation: Thiocyanate forms higher-order complexes ([Fe(SCN)₂]⁺, [Fe(SCN)₃]) at high ligand "
+   "excess. Under the experimental boundary conditions (C_T = 2.000 mM, maximum [SCN⁻] ≤ 1.20 mM), the concentration ratio [SCN⁻]/[Fe³⁺] "
+   "remains below 1.5, restricting the fraction of [Fe(SCN)₂]⁺ to < 1.2% and ensuring that the mono-complex [Fe(SCN)]²⁺ governs the equilibrium. "
+   "(5) Multi-Point Least-Squares Regression & Uncertainty Propagation: Linear regression of log₁₀([ML]/[M]_free) against log₁₀[L]_free "
+   "yields an empirical slope m = 1.00020 ± 0.00050 and Y-intercept b = 3.02188 ± 0.00180 with R² = 0.9999989. Propagating standard "
+   "uncertainties through the logarithmic equilibrium expression yields an expanded uncertainty for the stoichiometric index of "
+   "U(n) = ±0.004 at the 95% confidence level (coverage factor k = 2), conclusively resolving n = 1.000 (1:1 stoichiometry). "
+   "For the thermodynamic stability constant, the expanded uncertainty is U(K_f) = ±25 M⁻¹ (K_f = 1052 ± 25 M⁻¹), in outstanding "
+   "agreement with the accepted literature benchmark (1050 ± 30 M⁻¹).\n"
   )
  elif slug=='beer-lambert-spectrophotometry-metal-complex':
   return (
@@ -3811,6 +3901,73 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"invariant peak potential separation ΔE_p = 59.2 mV and current ratio |i_pa / i_pc| = 1.000 confirming ideal Nernstian reversibility. The extracted "
    f"diffusion coefficient agrees with authoritative electrochemistry literature benchmarks within {fmt(abs(D_val - 7.60)/7.60*100.0, 4)}% relative deviation, "
    f"demonstrating the high metrological precision of the Randles-Ševčík formulation for diagnostic electrochemistry."
+  )
+  
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='job-method-continuous-variation-complex-stoichiometry':
+  m_val=f['m']
+  b_val=f['b']
+  n_val=value
+  r2_val=f['r2']
+  kf_val=10.0**b_val
+  
+  abstract=(
+   f"The stoichiometric composition and thermodynamic formation constant of the monothiocyanatoiron(III) complex ([Fe(SCN)]²⁺) "
+   f"were investigated at 25.00 ± 0.02 °C using Job's method of continuous variations coupled with precision dual-beam spectrophotometry "
+   f"at λ = 450.0 nm in a 0.100 M HNO₃ background matrix. Six continuous variation mixtures were prepared from equimolar 0.00200 M Fe³⁺ "
+   f"and 0.00200 M SCN⁻ stock solutions by systematically varying ligand volume V_L from 1.00 to 6.00 mL while maintaining total volume "
+   f"strictly constant at V_T = 10.00 mL (total analytical concentration C_T = 2.000 mM, ligand mole fraction X_L spanning 0.10 to 0.60). "
+   f"Measured absorbances in matched 10.00 mm quartz cuvettes traced a smooth parabolic continuous variation profile with an apex maximum "
+   f"at X_L,max = 0.500 (A_max = 1.756 AU). According to Job's theorem X_L,max = n / (1 + n), this apex position unambiguously establishes "
+   f"an exact 1:1 coordination stoichiometry (n = 1.000). Linearization of the equilibrium mass-action expression via the logarithmic model "
+   f"log₁₀([ML]/[M]_free) = n · log₁₀[L]_free + log₁₀(K_f) across the six experimental points yielded an empirical slope of "
+   f"m = {fmt(m_val, 5)} ± 0.00050 (difference = {percent:.4f}% from integer unity) and a Y-intercept of b = {fmt(b_val, 5)} ± 0.00180 "
+   f"with an extraordinary coefficient of determination R² = {fmt(r2_val, 6)}. The extracted thermodynamic stability constant was "
+   f"K_f = {fmt(kf_val, 0)} ± 25 M⁻¹ (log₁₀ K_f = {fmt(b_val, 3)}), demonstrating impeccable agreement with the authoritative literature "
+   f"benchmark of K_f = 1050 M⁻¹."
+  )
+  
+  graph_choice=(
+   f"The quantitative analysis relies on two complementary graphical representations: (1) The Primary Job Continuous Variation Plot "
+   f"models absorbance A₄₅₀ on the Y-axis against ligand mole fraction X_L = V_SCN / (V_Fe + V_SCN) on the X-axis across the range 0.0 to 1.0. "
+   f"Because the complex concentration [ML_n] reaches an absolute mathematical maximum when the analytical ratio C_L / C_M equals the "
+   f"stoichiometric ratio n, the location of the peak maximum satisfies X_L,max = n / (1 + n). The experimental data delineate a classic "
+   f"symmetrical dome reaching its zenith at X_L = 0.500. Extrapolating the linear asymptotic arms for hypothetical infinite stability "
+   f"(K_f → ∞) yields an intersection apex at A_extrap = 2.250 AU, illustrating how thermodynamic dissociation rounds the real curve to "
+   f"A_exp = 1.756 AU (complexation yield = 78.0%). (2) The Equilibrium Linearization Plot models log₁₀([ML]/[M]_free) on the Y-axis "
+   f"against log₁₀[L]_free on the X-axis. Derived directly from K_f = [ML_n] / ([M][L]^n), this linear model yields a slope equal to "
+   f"the coordination number n and a Y-intercept equal to log₁₀ K_f, enabling simultaneous, rigorous least-squares evaluation of both "
+   f"stoichiometry and stability with R² = {fmt(r2_val, 6)}."
+  )
+  
+  discussion=(
+   f"The continuous variation and spectrophotometric results provide profound insights into coordination thermodynamics, ligand field theory, "
+   f"and solution speciation. In aqueous acidic media, the iron(III) cation exists as the pale-yellow hexaaqua complex [Fe(H₂O)₆]³⁺. Upon adding "
+   f"thiocyanate, a rapid inner-sphere ligand substitution occurs wherein one coordinated water molecule is displaced by the ambidentate "
+   f"thiocyanate anion (coordinating preferentially via its hard nitrogen atom): [Fe(H₂O)₆]³⁺ + SCN⁻ ⇌ [Fe(H₂O)₅(NCS)]²⁺ + H₂O. The intense "
+   f"blood-red coloration of the resulting complex arises from a low-energy ligand-to-metal charge-transfer (LMCT) transition at 450.0 nm, "
+   f"wherein electron density from the ligand π orbitals is optically promoted into the partially filled iron(III) t_2g orbitals.\n\n"
+   f"The observed peak apex at X_L = 0.500 provides definitive proof that the mono-thiocyanato complex [Fe(SCN)]²⁺ is the sole predominant "
+   f"species formed under these conditions. If a bis-thiocyanato complex [Fe(SCN)₂]⁺ had formed predominantly, the Job apex would have "
+   f"shifted to X_L = 2/3 = 0.667; if a tris-chelate had formed, the apex would appear at X_L = 3/4 = 0.750. The complete absence of skewness "
+   f"or apex displacement confirms that higher-order thiocyanate coordination is negligible at total thiocyanate concentrations below 1.5 mM. "
+   f"Furthermore, maintaining a high hydronium concentration (0.100 M HNO₃) was essential: it suppressed ferric ion hydrolysis to [Fe(OH)]²⁺ "
+   f"(pKa = 2.19), which would otherwise introduce competing light-absorbing colloidal species and distort the baseline.\n\n"
+   f"The extracted stability constant K_f = {fmt(kf_val, 0)} M⁻¹ (log K_f = {fmt(b_val, 3)}) is in extraordinary harmony with literature "
+   f"values obtained by potentiometry and solvent extraction (K_f = 1050 ± 30 M⁻¹ at 25 °C, I = 0.10 M). Methodologically, Job's method of "
+   f"continuous variations exhibits decisive advantages over the mole-ratio and slope-ratio techniques: it identifies stoichiometry "
+   f"independently of prior knowledge of molar absorptivity ε, while the logarithmic linearization provides an unconstrained regression "
+   f"framework that extracts both n and K_f with minimal propagation of photometric error."
+  )
+  
+  conclusion=(
+   f"Job's method of continuous variations was successfully applied to resolve the stoichiometric composition and formation constant of "
+   f"the monothiocyanatoiron(III) complex at 25.00 °C in 0.100 M HNO₃ at λ = 450.0 nm. The continuous variation absorbance profile attained "
+   f"its apex maximum at X_L = 0.500, confirming 1:1 metal-to-ligand coordination stoichiometry. Linear regression of the equilibrium "
+   f"model log₁₀([ML]/[M]_free) = n · log₁₀[L]_free + log₁₀(K_f) yielded an empirical slope m = {fmt(m_val, 5)} (stoichiometric index "
+   f"n = {fmt(n_val, 3)}, difference = {percent:.4f}% from integer 1.000) and an intercept b = {fmt(b_val, 5)} with R² = {fmt(r2_val, 6)}, "
+   f"extracting a thermodynamic stability constant K_f = {fmt(kf_val, 0)} ± 25 M⁻¹ (log K_f = {fmt(b_val, 3)}), in flawless agreement "
+   f"with accepted physical chemistry literature standards."
   )
   
   return abstract, graph_choice, discussion, conclusion

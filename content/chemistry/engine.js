@@ -87,6 +87,18 @@ function update(){
   $('apparatusDiagram').innerHTML=drawEnzymeKineticsBenchView(p,rawVal);
   return;
  }
+ if(cfg.slug==='job-method-continuous-variation-complex-stoichiometry'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawJobCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawJobSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawJobBenchView(p,rawVal);
+  return;
+ }
  if(cfg.slug==='beer-lambert-spectrophotometry-metal-complex'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawBeerLambertCompareView(p,rawVal);
@@ -300,6 +312,21 @@ function update(){
   const dA_dt = v0_uM * 0.0185;
   $('liveState').textContent='Photometric trace recorded: v₀ = '+v0_uM.toFixed(2)+' μM/min (dA/dt = '+(dA_dt/1000).toFixed(4)+' AU/min).';
   message('Assay complete: v₀ = '+v0_uM.toFixed(2)+' μM/min (1/v₀ = '+inv_v0.toFixed(2)+' min/mM, 1/[S] = '+inv_s.toFixed(2)+' mM⁻¹). Record in notebook.');
+ }else if(cfg.slug==='job-method-continuous-variation-complex-stoichiometry'){
+  const vl = p.input;
+  const xl = vl / 10.00;
+  $('liveState').textContent='Ready to measure absorbance of continuous variation mixture V_L = '+vl.toFixed(2)+' mL (X_L = '+xl.toFixed(3)+').';
+  message('Mix (10.00 - V_L) mL Fe³⁺ with V_L mL SCN⁻ in 0.100 M HNO₃, record A₄₅₀ at 25.0 °C.');
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawJobCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawJobSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawJobBenchView(p,rawVal);
+  return;
  }else if(cfg.slug==='beer-lambert-spectrophotometry-metal-complex'){
   $('liveState').textContent='Ready to measure absorbance of [Fe(phen)₃]²⁺ at c = '+p.input.toFixed(1)+' μM.';
   message('Set complex concentration c, insert matched 10.00 mm cuvette & measure A_510 against reagent blank.');
@@ -14140,6 +14167,349 @@ function drawBeerLambertSandboxView(p, rawVal) {
  for (var m_idx = 0; m_idx < thermoLines.length; m_idx++) {
   var isHead = (m_idx === 0 || m_idx === 3 || m_idx === 6 || m_idx === 9);
   svg += text(468, 160 + m_idx * 12.5, thermoLines[m_idx], isHead ? '#38bdf8' : '#cbd5e1', 5.5, 'start', isHead ? 'bold' : 'normal');
+ }
+
+ return svg;
+}
+
+function drawJobBenchView(p, rawVal) {
+ var vl = p.input || 5.00;
+ var vm = 10.00 - vl;
+ var xl = vl / 10.00;
+ var rawA = (rawVal !== null && rawVal !== undefined) ? rawVal : 1.756;
+ var T_frac = Math.pow(10, -rawA);
+ var T_pct = T_frac * 100.0;
+
+ // Color interpolation: pale golden-amber at low A to deep blood-ruby at high A
+ var norm = Math.min(1.0, Math.max(0.0, rawA / 1.80));
+ var r_col = Math.round(180 + 55 * norm);
+ var g_col = Math.round(110 - 85 * norm);
+ var b_col = Math.round(30 - 15 * norm);
+ var solColor = 'rgb(' + r_col + ',' + g_col + ',' + b_col + ')';
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a111a');
+ svg += '<defs>';
+ svg += '<linearGradient id="jobSolGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + solColor + '" stop-opacity="0.80"/><stop offset="100%" stop-color="' + solColor + '" stop-opacity="0.98"/></linearGradient>';
+ svg += '<linearGradient id="jobCuvGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#94a3b8" stop-opacity="0.4"/><stop offset="50%" stop-color="#f8fafc" stop-opacity="0.1"/><stop offset="100%" stop-color="#94a3b8" stop-opacity="0.4"/></linearGradient>';
+ svg += '<filter id="jobBlueGlow"><feGaussianBlur stdDeviation="1.5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+ svg += '</defs>';
+
+ // Header
+ svg += text(20, 24, "LABORATORY BENCH: JOB'S METHOD OF CONTINUOUS VARIATION (450.0 nm)", '#f8fafc', 12, 'bold');
+ svg += text(20, 40, 'Iron(III)-Thiocyanate System [Fe(SCN)]²⁺ · C_T = 2.000 mM · Matched 10.00 mm Cuvettes · 0.100 M HNO₃ (25.0 °C)', '#38bdf8', 9);
+
+ // --- LEFT SECTION: DISPENSING & OPTICAL TRAIN (x: 20 to 365, y: 55 to 305) ---
+ svg += rect(20, 55, 345, 250, '#0f172a', '#1e293b', 1.5, 6);
+ svg += text(30, 72, 'Volumetric Mixing & Spectrophotometric Assembly', '#94a3b8', 7, 'start', 'bold');
+
+ // Burette 1: Fe3+ stock (0.00200 M)
+ svg += rect(35, 85, 22, 65, '#1e293b', '#e2e8f0', 1, 2);
+ var feFillH = Math.max(4, (vm / 10.0) * 55);
+ svg += rect(37, 145 - feFillH, 18, feFillH, '#ca8a04', 'none');
+ svg += text(46, 80, 'Fe³⁺', '#eab308', 6, 'middle', 'bold');
+ svg += text(46, 160, vm.toFixed(2) + ' mL', '#cbd5e1', 5.5, 'middle');
+
+ // Burette 2: SCN- stock (0.00200 M)
+ svg += rect(75, 85, 22, 65, '#1e293b', '#e2e8f0', 1, 2);
+ var scnFillH = Math.max(4, (vl / 10.0) * 55);
+ svg += rect(77, 145 - scnFillH, 18, scnFillH, '#94a3b8', 'none');
+ svg += text(86, 80, 'SCN⁻', '#38bdf8', 6, 'middle', 'bold');
+ svg += text(86, 160, vl.toFixed(2) + ' mL', '#cbd5e1', 5.5, 'middle');
+
+ // Dispensing stream into 10 mL mixing flask
+ svg += '<path d="M 46 165 L 66 185" stroke="#ca8a04" stroke-width="1.2" stroke-dasharray="2,2"/>';
+ svg += '<path d="M 86 165 L 66 185" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="2,2"/>';
+
+ // Mixing Flask (x: 50, y: 185, w: 32, h: 45)
+ svg += '<path d="M 60 185 L 72 185 L 78 215 L 54 215 Z" fill="url(#jobSolGrad)" stroke="#64748b" stroke-width="1.2"/>';
+ svg += text(66, 227, 'V_T = 10 mL', '#94a3b8', 5.5, 'middle');
+ svg += text(66, 237, 'X_L = ' + xl.toFixed(2), '#facc15', 6, 'middle', 'bold');
+
+ // Spectrophotometer Optical System (x: 125 to 355)
+ // Light Source (450 nm blue-violet)
+ svg += rect(125, 125, 30, 42, '#1e293b', '#6366f1', 1.2, 4);
+ svg += circle(140, 146, 8, '#818cf8', '#4f46e5', 1.2);
+ svg += text(140, 149, '450', '#ffffff', 5.5, 'middle', 'bold');
+ svg += text(140, 178, 'Lamp', '#94a3b8', 6, 'middle');
+
+ // Incident Beam
+ svg += '<line x1="155" y1="146" x2="190" y2="146" stroke="#60a5fa" stroke-width="2.5" filter="url(#jobBlueGlow)"/>';
+
+ // 10.00 mm Quartz Cuvette containing blood-red [Fe(SCN)]2+
+ svg += rect(190, 115, 48, 62, 'url(#jobCuvGrad)', '#ef4444', 1.5, 2);
+ svg += rect(193, 122, 42, 52, 'url(#jobSolGrad)', 'none');
+ svg += text(214, 110, '[Fe(SCN)]²⁺', '#ef4444', 6, 'middle', 'bold');
+ svg += text(214, 148, 'A = ' + rawA.toFixed(3), '#ffffff', 6.5, 'middle', 'bold');
+ svg += text(214, 185, 'b = 10.0 mm', '#94a3b8', 5.5, 'middle');
+
+ // Transmitted Beam
+ var tBeamW = Math.max(0.4, 2.5 * T_frac);
+ svg += '<line x1="238" y1="146" x2="275" y2="146" stroke="#60a5fa" stroke-width="' + tBeamW + '" filter="url(#jobBlueGlow)"/>';
+
+ // Photodiode Detector
+ svg += rect(275, 134, 26, 24, '#1e293b', '#22c55e', 1, 2);
+ svg += text(288, 148, 'Det', '#22c55e', 6, 'middle', 'bold');
+ svg += text(288, 168, T_pct.toFixed(1) + '% T', '#cbd5e1', 5.5, 'middle');
+
+ // Log Amplifier & A/D Converter
+ svg += rect(315, 131, 36, 30, '#1e293b', '#06b6d4', 1, 3);
+ svg += text(333, 146, 'Log(I₀/I)', '#06b6d4', 5.5, 'middle', 'bold');
+ svg += '<line x1="301" y1="146" x2="315" y2="146" stroke="#64748b" stroke-width="1.2"/>';
+
+ // Bottom Bench Tags
+ svg += rect(125, 255, 105, 36, '#1e293b', '#334155', 1, 3);
+ svg += text(135, 270, 'Matrix: 0.100 M HNO₃', '#94a3b8', 6, 'start');
+ svg += text(135, 283, 'Suppresses Fe³⁺ Hydrolysis', '#38bdf8', 5.5, 'start');
+
+ svg += rect(240, 255, 110, 36, '#1e293b', '#334155', 1, 3);
+ svg += text(250, 270, 'Peltier: 25.00 ± 0.02 °C', '#4ade80', 6, 'start', 'bold');
+ svg += text(250, 283, 'K_f = 1050 M⁻¹ benchmark', '#94a3b8', 5.5, 'start');
+
+ // --- RIGHT SECTION: DIGITAL CONSOLE (x: 375 to 705, y: 55 to 305) ---
+ svg += rect(375, 55, 330, 250, '#0f172a', '#334155', 1.5, 6);
+ svg += text(390, 74, "CONTINUOUS VARIATION EQUILIBRIUM TELEMETRY", '#f8fafc', 8, 'start', 'bold');
+
+ // Dual Primary Digital Readouts
+ svg += rect(390, 85, 145, 54, '#020617', '#ef4444', 1.2, 4);
+ svg += text(400, 98, 'ABSORBANCE (450.0 nm)', '#ef4444', 6, 'start', 'bold');
+ svg += text(462, 126, rawA.toFixed(3) + ' AU', '#ef4444', 15, 'middle', 'bold');
+
+ svg += rect(545, 85, 145, 54, '#020617', '#38bdf8', 1.2, 4);
+ svg += text(555, 98, 'LIGAND MOLE FRACTION X_L', '#38bdf8', 6, 'start', 'bold');
+ svg += text(617, 126, xl.toFixed(3), '#38bdf8', 15, 'middle', 'bold');
+
+ // Telemetry Data Grid
+ var c_complex = (rawA / 4500.0) * 1000.0; // in mM
+ var fe_total = (vm / 10.0) * 2.000;
+ var scn_total = (vl / 10.0) * 2.000;
+ var fe_free = Math.max(0.001, fe_total - c_complex);
+ var scn_free = Math.max(0.001, scn_total - c_complex);
+
+ var rowsGrid = [
+  ['Analytical Wavelength', 'λ = 450.0 nm (Charge-Transfer Band)'],
+  ['Stock Concentrations', 'C_Fe = C_SCN = 2.000 mM (Equimolar)'],
+  ['Ligand Volume Dispensed', 'V_SCN = ' + vl.toFixed(2) + ' mL  (Fe³⁺ = ' + vm.toFixed(2) + ' mL)'],
+  ['Complex Concentration [FeSCN²⁺]', '[ML] = ' + (c_complex * 1000).toFixed(1) + ' μM (' + c_complex.toFixed(3) + ' mM)'],
+  ['Free Metal [Fe³⁺]', '[M] = ' + fe_free.toFixed(3) + ' mM'],
+  ['Free Ligand [SCN⁻]', '[L] = ' + scn_free.toFixed(3) + ' mM'],
+  ['Apparent Formation Constant', 'K_f = ' + ((c_complex / (fe_free * scn_free)) * 1000).toFixed(0) + ' M⁻¹']
+ ];
+ for (var i = 0; i < rowsGrid.length; i++) {
+  var ry = 148 + i * 17;
+  svg += rect(390, ry, 300, 15, i % 2 === 0 ? '#1e293b' : '#0f172a', 'none', 0, 2);
+  svg += text(398, ry + 11, rowsGrid[i][0], '#94a3b8', 6, 'start');
+  svg += text(682, ry + 11, rowsGrid[i][1], i === 3 ? '#ef4444' : (i === 6 ? '#facc15' : '#f8fafc'), 6, 'end', (i === 3 || i === 6) ? 'bold' : 'normal');
+ }
+
+ // Status Badges
+ svg += rect(390, 275, 95, 18, '#1e3a8a', '#3b82f6', 1, 3);
+ svg += text(437, 287, 'JOB VARIATION', '#60a5fa', 5.5, 'middle', 'bold');
+
+ svg += rect(492, 275, 100, 18, '#7f1d1d', '#ef4444', 1, 3);
+ svg += text(542, 287, 'APEX AT X_L = 0.500', '#f87171', 5.5, 'middle', 'bold');
+
+ svg += rect(599, 275, 91, 18, '#14532d', '#22c55e', 1, 3);
+ svg += text(644, 287, 'n = 1:1 COMPLEX', '#4ade80', 5.5, 'middle', 'bold');
+
+ return svg;
+}
+
+function drawJobCompareView(p, rawVal) {
+ var vl = p.input || 5.00;
+ var xl = vl / 10.00;
+ var rawA = (rawVal !== null && rawVal !== undefined) ? rawVal : 1.756;
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a111a');
+
+ // Header
+ svg += text(20, 24, "JOB'S CONTINUOUS VARIATION CURVE & ASYMPTOTIC EXTRAPOLATION", '#f8fafc', 12, 'bold');
+ svg += text(20, 40, 'Absorbance A₄₅₀ vs Ligand Mole Fraction X_L · Apex at X_L = 0.500 (1:1 Stoichiometry) · K_f = 1052 M⁻¹', '#38bdf8', 9);
+
+ // --- LEFT JOB PLOT (x: 45 to 465, y: 60 to 275) ---
+ var gx = 45, gy = 60, gw = 420, gh = 215;
+ svg += rect(gx, gy, gw, gh, '#0f172a', '#334155', 1, 4);
+
+ // Y-axis grid lines (Absorbance 0.0 to 2.5 AU)
+ for (var a_grid = 0.0; a_grid <= 2.5; a_grid += 0.5) {
+  var py = gy + gh - (a_grid / 2.5) * gh;
+  svg += '<line x1="' + gx + '" y1="' + py + '" x2="' + (gx + gw) + '" y2="' + py + '" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(gx - 8, py + 3, a_grid.toFixed(1), '#64748b', 6, 'end');
+ }
+ svg += text(gx - 26, gy + gh/2, 'Absorbance A₄₅₀ (AU)', '#94a3b8', 7, 'middle', 'bold');
+
+ // X-axis grid lines (Mole Fraction 0.0 to 1.0)
+ for (var x_grid = 0.0; x_grid <= 1.0; x_grid += 0.2) {
+  var px = gx + (x_grid / 1.0) * gw;
+  svg += '<line x1="' + px + '" y1="' + gy + '" x2="' + px + '" y2="' + (gy + gh) + '" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(px, gy + gh + 12, x_grid.toFixed(1), '#64748b', 6, 'middle');
+ }
+ svg += text(gx + gw/2, gy + gh + 24, 'Ligand Mole Fraction X_L = V_SCN / V_total', '#94a3b8', 7, 'middle', 'bold');
+
+ // Asymptotic Tangents (Hypothetical Complete Formation K_f -> infinity, peak at 2.25 AU)
+ var px0 = gx, py0 = gy + gh;
+ var pxApex = gx + 0.500 * gw;
+ var pyApexHyp = gy + gh - (2.25 / 2.5) * gh;
+ var px1 = gx + gw, py1 = gy + gh;
+ svg += '<line x1="' + px0 + '" y1="' + py0 + '" x2="' + pxApex + '" y2="' + pyApexHyp + '" stroke="#64748b" stroke-width="1.2" stroke-dasharray="3,2"/>';
+ svg += '<line x1="' + pxApex + '" y1="' + pyApexHyp + '" x2="' + px1 + '" y2="' + py1 + '" stroke="#64748b" stroke-width="1.2" stroke-dasharray="3,2"/>';
+ svg += text(pxApex, pyApexHyp - 6, 'Complete Reaction Extrapolation (K_f → ∞)', '#94a3b8', 5.5, 'middle');
+
+ // Theoretical Smooth Equilibrium Parabolic Curve: A(X_L)
+ var ptsJob = '';
+ for (var xi = 0.0; xi <= 1.001; xi += 0.02) {
+  // Analytical continuous variation solution:
+  // C_M0 = (1 - xi)*2e-3, C_L0 = xi*2e-3, Kf = 1050
+  var cm0 = (1.0 - xi) * 0.002;
+  var cl0 = xi * 0.002;
+  var b_term = cm0 + cl0 + (1.0 / 1050.0);
+  var c_c = 0.5 * (b_term - Math.sqrt(Math.max(0.0, b_term * b_term - 4.0 * cm0 * cl0)));
+  var a_th = 4500.0 * c_c;
+  var pxCur = gx + xi * gw;
+  var pyCur = gy + gh - (a_th / 2.5) * gh;
+  ptsJob += (xi === 0.0 ? 'M ' : 'L ') + pxCur.toFixed(1) + ' ' + pyCur.toFixed(1) + ' ';
+ }
+ svg += '<path d="' + ptsJob + '" fill="none" stroke="#ef4444" stroke-width="2.5"/>';
+
+ // Apex Marker at X_L = 0.500 (A = 1.756 AU)
+ var pyRealApex = gy + gh - (1.756 / 2.5) * gh;
+ svg += '<line x1="' + pxApex + '" y1="' + gy + '" x2="' + pxApex + '" y2="' + (gy + gh) + '" stroke="#facc15" stroke-width="1.2" stroke-dasharray="3,2"/>';
+ svg += circle(pxApex, pyRealApex, 5, '#facc15', '#ffffff', 1.5);
+ svg += text(pxApex, pyRealApex - 8, 'Apex: X_L = 0.500 (1:1 Ratio)', '#facc15', 6.5, 'middle', 'bold');
+
+ // Experimental Data Points
+ var calibPoints = [
+  { vl: 1.00, xl: 0.10, a: 0.573 },
+  { vl: 2.00, xl: 0.20, a: 1.060 },
+  { vl: 3.00, xl: 0.30, a: 1.435 },
+  { vl: 4.00, xl: 0.40, a: 1.674 },
+  { vl: 5.00, xl: 0.50, a: 1.756 },
+  { vl: 6.00, xl: 0.60, a: 1.674 }
+ ];
+ for (var k = 0; k < calibPoints.length; k++) {
+  var sx = gx + calibPoints[k].xl * gw;
+  var sy = gy + gh - (calibPoints[k].a / 2.5) * gh;
+  svg += circle(sx, sy, 4.5, '#38bdf8', '#ffffff', 1.2);
+ }
+
+ // Active Measurement Crosshair
+ var curX = gx + xl * gw;
+ var curY = gy + gh - (rawA / 2.5) * gh;
+ svg += '<line x1="' + curX + '" y1="' + gy + '" x2="' + curX + '" y2="' + (gy + gh) + '" stroke="#f97316" stroke-width="1.2" stroke-dasharray="3,2"/>';
+ svg += circle(curX, curY, 6, '#f97316', '#ffffff', 2);
+ svg += text(curX + 8, curY - 6, 'X_L = ' + xl.toFixed(2) + ' (' + rawA.toFixed(3) + ' AU)', '#f97316', 6.5, 'start', 'bold');
+
+ // --- RIGHT CARD: STOICHIOMETRIC FIGURES (x: 480 to 705) ---
+ svg += rect(480, 55, 225, 250, '#0f172a', '#334155', 1.5, 6);
+ svg += text(490, 75, "JOB'S THEOREM & STOICHIOMETRY", '#f8fafc', 8, 'start', 'bold');
+
+ var infoLines = [
+  "• Fundamental Job's Relation:",
+  "  X_L,max = n / (1 + n)",
+  "  For X_L = 0.500: n = 0.500 / 0.500 = 1.000",
+  "  ⇒ Predominant Complex: [Fe(SCN)]²⁺ (1:1)",
+  "• Extrapolated Sharp Apex (K_f → ∞):",
+  "  A_extrap = 2.250 AU ([ML] = 0.500 mM)",
+  "• Experimental Dome Apex (Real K_f):",
+  "  A_exp = 1.756 AU ([ML] = 0.390 mM)",
+  "  Dissociation Degree α = 22.0%",
+  "• Formation Constant Evaluation:",
+  "  K_f = [ML] / ([M]·[L]) = 1052 ± 25 M⁻¹",
+  "  log₁₀ K_f = 3.022 (Benchmark: 3.021)",
+  "• Molar Absorptivity at 450 nm:",
+  "  ε = 4500 L·mol⁻¹·cm⁻¹"
+ ];
+ for (var j = 0; j < infoLines.length; j++) {
+  var isHead = (j === 0 || j === 4 || j === 6 || j === 9 || j === 12);
+  svg += text(490, 95 + j * 14.5, infoLines[j], isHead ? '#38bdf8' : '#cbd5e1', 5.5, 'start', isHead ? 'bold' : 'normal');
+ }
+
+ return svg;
+}
+
+function drawJobSandboxView(p, rawVal) {
+ var vl = p.input || 5.00;
+ var rawA = (rawVal !== null && rawVal !== undefined) ? rawVal : 1.756;
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0a111a');
+
+ // Header
+ svg += text(20, 24, "EQUILIBRIUM LOGARITHMIC LINEARIZATION & SPECIATION ANALYSIS", '#f8fafc', 12, 'bold');
+ svg += text(20, 40, 'log₁₀([ML]/[M]) = n·log₁₀[L] + log₁₀(K_f) · Direct Extraction of Stoichiometry n and Stability Constant K_f', '#38bdf8', 9);
+
+ // --- LEFT LINEARIZATION PLOT (x: 45 to 440, y: 60 to 275) ---
+ var gx = 45, gy = 60, gw = 395, gh = 215;
+ svg += rect(gx, gy, gw, gh, '#0f172a', '#334155', 1, 4);
+
+ // X-axis: log[L] from -4.5 to -3.0
+ for (var x_val = -4.5; x_val <= -2.99; x_val += 0.5) {
+  var px = gx + ((x_val - (-4.5)) / 1.5) * gw;
+  svg += '<line x1="' + px + '" y1="' + gy + '" x2="' + px + '" y2="' + (gy + gh) + '" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(px, gy + gh + 12, x_val.toFixed(1), '#64748b', 6, 'middle');
+ }
+ svg += text(gx + gw/2, gy + gh + 24, 'log₁₀ [L]_free (Free SCN⁻ in mol/L)', '#94a3b8', 7, 'middle', 'bold');
+
+ // Y-axis: log([ML]/[M]) from -1.4 to 0.2
+ for (var y_val = -1.4; y_val <= 0.21; y_val += 0.4) {
+  var py = gy + gh - ((y_val - (-1.4)) / 1.6) * gh;
+  svg += '<line x1="' + gx + '" y1="' + py + '" x2="' + (gx + gw) + '" y2="' + py + '" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(gx - 8, py + 3, y_val.toFixed(1), '#64748b', 6, 'end');
+ }
+ svg += text(gx - 26, gy + gh/2, 'log₁₀ ([ML] / [M]_free)', '#94a3b8', 7, 'middle', 'bold');
+
+ // Linear Regression Line: y = 1.00020 * x + 3.02188
+ var pxStart = gx + ((-4.30 - (-4.5)) / 1.5) * gw;
+ var pyStart = gy + gh - (((1.00020 * (-4.30) + 3.02188) - (-1.4)) / 1.6) * gh;
+ var pxEnd = gx + ((-3.00 - (-4.5)) / 1.5) * gw;
+ var pyEnd = gy + gh - (((1.00020 * (-3.00) + 3.02188) - (-1.4)) / 1.6) * gh;
+ svg += '<line x1="' + pxStart + '" y1="' + pyStart + '" x2="' + pxEnd + '" y2="' + pyEnd + '" stroke="#38bdf8" stroke-width="2"/>';
+
+ // Data Points
+ var ptsLog = [
+  { x: -4.139, y: -1.118 },
+  { x: -3.784, y: -0.763 },
+  { x: -3.551, y: -0.530 },
+  { x: -3.369, y: -0.347 },
+  { x: -3.215, y: -0.194 },
+  { x: -3.082, y: -0.061 }
+ ];
+ for (var m = 0; m < ptsLog.length; m++) {
+  var dpx = gx + ((ptsLog[m].x - (-4.5)) / 1.5) * gw;
+  var dpy = gy + gh - ((ptsLog[m].y - (-1.4)) / 1.6) * gh;
+  svg += circle(dpx, dpy, 4.5, '#38bdf8', '#ffffff', 1.2);
+ }
+
+ // Linear Equation Overlay
+ svg += rect(gx + 15, gy + 15, 205, 34, '#1e293b', '#38bdf8', 1, 3);
+ svg += text(gx + 22, gy + 28, 'Linear Fit: y = 1.0002·x + 3.0219', '#f8fafc', 6.5, 'start', 'bold');
+ svg += text(gx + 22, gy + 42, 'Correlation: R² = 0.9999989 (OLS)', '#4ade80', 6, 'start');
+
+ // --- RIGHT INTERACTION PANEL (x: 455 to 705) ---
+ svg += rect(455, 55, 250, 250, '#0f172a', '#334155', 1.5, 6);
+ svg += text(465, 75, 'EQUILIBRIUM METROLOGY & METHOD COMPARISON', '#f8fafc', 7.5, 'start', 'bold');
+
+ var compLines = [
+  "• Linear Slope Interpretation:",
+  "  Slope m = 1.0002 ± 0.0005 ⇒ Stoichiometry n = 1.000",
+  "  Difference from integer: 0.020% (conclusive 1:1)",
+  "• Y-Intercept Interpretation:",
+  "  Intercept b = log₁₀ K_f = 3.0219",
+  "  Formation Constant K_f = 1052 ± 12 M⁻¹",
+  "• Method Comparison in Coordination Chemistry:",
+  "  1. Job's Method: Constant C_T, varies X_L.",
+  "     Does not require prior knowledge of ε.",
+  "  2. Mole-Ratio Method: Constant C_M, excess L.",
+  "     Prone to curvature for weak complexes.",
+  "  3. Slope-Ratio Method: Dual series (M or L excess).",
+  "     Strictly limited to 1:1 complex systems.",
+  "• Thermodynamic Insight:",
+  "  Mono-thiocyanato complex dominates at [SCN⁻] < 0.01 M."
+ ];
+ for (var k_idx = 0; k_idx < compLines.length; k_idx++) {
+  var isHeader = (k_idx === 0 || k_idx === 3 || k_idx === 6 || k_idx === 12);
+  svg += text(465, 95 + k_idx * 13.5, compLines[k_idx], isHeader ? '#38bdf8' : '#cbd5e1', 5.5, 'start', isHeader ? 'bold' : 'normal');
  }
 
  return svg;

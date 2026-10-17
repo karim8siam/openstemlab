@@ -3,6 +3,17 @@
 const round=(v,n)=>Math.round((v+Number.EPSILON)*10**n)/10**n;
 
 function predict(slug,input){
+  if(slug==='job-method-continuous-variation-complex-stoichiometry'){
+   const vl=Number(input);
+   const table_raw={1.00:0.573, 2.00:1.060, 3.00:1.435, 4.00:1.674, 5.00:1.756, 6.00:1.674};
+   const table_x={1.00:-4.139, 2.00:-3.784, 3.00:-3.551, 4.00:-3.369, 5.00:-3.215, 6.00:-3.082};
+   const table_y={1.00:-1.118, 2.00:-0.763, 3.00:-0.530, 4.00:-0.347, 5.00:-0.194, 6.00:-0.061};
+   const key=round(vl, 2);
+   let raw_val=table_raw.hasOwnProperty(key)?table_raw[key]:round(1.756*Math.exp(-Math.pow((vl-5.0)/3.2, 2)), 3);
+   let x_val=table_x.hasOwnProperty(key)?table_x[key]:round(-3.215 + (vl - 5.0)*0.21, 3);
+   let y_val=table_y.hasOwnProperty(key)?table_y[key]:round(-0.194 + (vl - 5.0)*0.21, 3);
+   return {raw:raw_val,ideal:raw_val,period:1.0,x:x_val,y:y_val,valid:vl>=0.50&&vl<=9.50};
+  }
   if(slug==='beer-lambert-spectrophotometry-metal-complex'){
    const c_uM=Number(input);
    const table_raw={10.0:0.111, 20.0:0.222, 35.0:0.389, 50.0:0.555, 65.0:0.722, 80.0:0.888};
@@ -531,6 +542,14 @@ function predict(slug,input){
 
 function reading(slug,input,raw){
  let x=Number(input),y=Number(raw);
+  if(slug==='job-method-continuous-variation-complex-stoichiometry'){
+   const vl=Number(input);
+   const table_x={1.00:-4.139, 2.00:-3.784, 3.00:-3.551, 4.00:-3.369, 5.00:-3.215, 6.00:-3.082};
+   const table_y={1.00:-1.118, 2.00:-0.763, 3.00:-0.530, 4.00:-0.347, 5.00:-0.194, 6.00:-0.061};
+   const key=round(vl, 2);
+   x=table_x.hasOwnProperty(key)?table_x[key]:round(-3.215 + (vl - 5.0)*0.21, 3);
+   y=table_y.hasOwnProperty(key)?table_y[key]:round(-0.194 + (vl - 5.0)*0.21, 3);
+  }
   if(slug==='beer-lambert-spectrophotometry-metal-complex'){
    const c_uM=Number(input);
    const raw_val=Number(raw);
@@ -845,6 +864,11 @@ function fit(rows){
 }
 
 function estimate(slug,f){
+  if(slug==='job-method-continuous-variation-complex-stoichiometry'){
+   const n_est=f.m;
+   const se=f.slopeSE || 0.005;
+   return {value:n_est,se:se,reference:1.000};
+  }
   if(slug==='beer-lambert-spectrophotometry-metal-complex'){
    const m=f.m;
    const b_path=1.000;
