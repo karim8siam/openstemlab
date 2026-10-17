@@ -87,6 +87,18 @@ function update(){
   $('apparatusDiagram').innerHTML=drawEnzymeKineticsBenchView(p,rawVal);
   return;
  }
+ if(cfg.slug==='cyclic-voltammetry-ferricyanide-diffusion'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawVoltammetryCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawVoltammetrySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawVoltammetryBenchView(p,rawVal);
+  return;
+ }
  if(cfg.slug==='electrochemical-cell-thermodynamics-nernst'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawDaniellCompareView(p,rawVal);
@@ -240,7 +252,19 @@ function update(){
   const dA_dt = v0_uM * 0.0185;
   $('liveState').textContent='Photometric trace recorded: v₀ = '+v0_uM.toFixed(2)+' μM/min (dA/dt = '+(dA_dt/1000).toFixed(4)+' AU/min).';
   message('Assay complete: v₀ = '+v0_uM.toFixed(2)+' μM/min (1/v₀ = '+inv_v0.toFixed(2)+' min/mM, 1/[S] = '+inv_s.toFixed(2)+' mM⁻¹). Record in notebook.');
- }else if(cfg.slug==='electrochemical-cell-thermodynamics-nernst'){
+ }else if(cfg.slug==='cyclic-voltammetry-ferricyanide-diffusion'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawVoltammetryCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawVoltammetrySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawVoltammetryBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='electrochemical-cell-thermodynamics-nernst'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawDaniellCompareView(p,rawVal);
    return;
@@ -12266,6 +12290,348 @@ function drawDaniellSandboxView(p, rawVal) {
  svg += '<text x="'+(npX - 24)+'" y="'+(npY + npH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7" transform="rotate(-90 '+(npX-24)+' '+(npY+npH/2)+')">Nernst Potential E (mV)</text>';
 
  svg += text(360, 314, 'Nernst Slope at ' + t.toFixed(1) + '°C: ' + (-nSlope).toFixed(2) + ' mV per decade of concentration ratio [Zn²⁺]/[Cu²⁺].', '#789c80', 8, 'middle');
+
+ return svg;
+}
+
+// ======================================================================
+// Lab 37: Diagnostic Cyclic Voltammetry and Diffusion Kinetics (Randles-Ševčík)
+// ======================================================================
+
+function drawVoltammetryBenchView(p, rawVal) {
+ var v_mV = p.input || 50.0;
+ var rawIp = rawVal || 58.53; // in uA
+ var v_Vs = v_mV * 1e-3;
+ var sqrt_v = Math.sqrt(v_Vs);
+ var E_pc = 0.182; // V vs SCE
+ var E_pa = 0.241; // V vs SCE
+ var dE_p = (E_pa - E_pc) * 1000.0; // 59.0 mV
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0c131d');
+ svg += '<defs>';
+ svg += '<linearGradient id="cellGlass37" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#38bdf8" stop-opacity="0.2"/><stop offset="50%" stop-color="#38bdf8" stop-opacity="0.05"/><stop offset="100%" stop-color="#38bdf8" stop-opacity="0.25"/></linearGradient>';
+ svg += '<linearGradient id="feSol37" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#facc15" stop-opacity="0.25"/><stop offset="100%" stop-color="#eab308" stop-opacity="0.5"/></linearGradient>';
+ svg += '</defs>';
+
+ // Header Banner
+ svg += text(20, 24, 'LABORATORY BENCH: CYCLIC VOLTAMMETRY & DIFFUSION METROLOGY (RANDLES-ŠEVČÍK)', '#e2e8f0', 12, 'bold');
+ svg += text(20, 40, '3.00 mm Glassy Carbon Working Electrode · SCE Reference · Pt Counter · 5.0 mM K₃[Fe(CN)₆] in 1.0 M KNO₃ (25.0 °C)', '#38bdf8', 9);
+
+ // --- LEFT REGION: THREE-ELECTRODE CELL & WATER JACKET (x: 20 to 320) ---
+ // Outer Jacketed Glass Cell (x: 45, y: 65, w: 220, h: 220)
+ var jcX = 45, jcY = 65, jcW = 220, jcH = 220;
+ svg += rect(jcX, jcY, jcW, jcH, 'url(#cellGlass37)', '#0284c7', 1.5, 8);
+ svg += text(jcX + 15, jcY + 16, 'Water-Jacketed 5-Neck Cell (25.00 °C)', '#38bdf8', 7, 'start', 'bold');
+
+ // Liquid Electrolyte: 5.0 mM Fe(CN)6 in 1.0 M KNO3 (pale amber-yellow)
+ svg += rect(jcX + 10, jcY + 50, jcW - 20, jcH - 60, 'url(#feSol37)', '#ca8a04', 1, 4);
+ svg += text(jcX + jcW/2, jcY + jcH - 15, '5.0 mM K₃[Fe(CN)₆] + 1.0 M KNO₃', '#fef08a', 7, 'middle', 'bold');
+
+ // Argon Bubbler / Blanket Line
+ svg += '<line x1="'+(jcX + 25)+'" y1="35" x2="'+(jcX + 25)+'" y2="'+(jcY + 110)+'" stroke="#94a3b8" stroke-width="2.5"/>';
+ svg += text(jcX + 25, 30, 'Ar Purge', '#a7f3d0', 6, 'middle', 'bold');
+ svg += circle(jcX + 25, jcY + 115, 3, '#6ee7b7', '#10b981', 1);
+
+ // 1. Working Electrode (Center): Glassy Carbon Disk (Teflon body with black vitreous tip)
+ var weX = jcX + jcW/2 - 6; // 149
+ svg += rect(weX, 35, 12, 130, '#f8fafc', '#94a3b8', 1); // Teflon sheath
+ svg += rect(weX + 2, 165, 8, 8, '#0f172a', '#334155', 1); // Glassy Carbon Tip (d = 3.0 mm)
+ svg += text(weX + 6, 30, 'WE (GC)', '#f8fafc', 6.5, 'middle', 'bold');
+ svg += text(weX + 6, 182, 'd = 3 mm', '#38bdf8', 6, 'middle');
+ // Red wire to potentiostat
+ svg += '<path d="M '+(weX+6)+' 35 Q '+(weX+6)+' 15 315 15 L 315 70" fill="none" stroke="#ef4444" stroke-width="1.8"/>';
+
+ // 2. Reference Electrode (Left of WE): Saturated Calomel Electrode (SCE)
+ var reX = weX - 45;
+ svg += rect(reX, 40, 10, 120, 'rgba(56,189,248,0.2)', '#0284c7', 1);
+ svg += rect(reX + 2, 140, 6, 18, '#cbd5e1', '#94a3b8', 1); // porous Vycor junction
+ svg += text(reX + 5, 35, 'RE (SCE)', '#38bdf8', 6.5, 'middle', 'bold');
+ // White wire to potentiostat
+ svg += '<path d="M '+(reX+5)+' 40 Q '+(reX+5)+' 20 320 20 L 320 70" fill="none" stroke="#f8fafc" stroke-width="1.5"/>';
+
+ // 3. Counter Electrode (Right of WE): Coiled Platinum Wire Gauze
+ var ceX = weX + 50;
+ svg += '<line x1="'+ceX+'" y1="40" x2="'+ceX+'" y2="120" stroke="#cbd5e1" stroke-width="2"/>';
+ // Coiled Pt wire
+ svg += '<path d="M '+ceX+' 120 Q '+(ceX+8)+' 125 '+ceX+' 130 Q '+(ceX-8)+' 135 '+ceX+' 140 Q '+(ceX+8)+' 145 '+ceX+' 150 Q '+(ceX-8)+' 155 '+ceX+' 160" fill="none" stroke="#e2e8f0" stroke-width="2"/>';
+ svg += text(ceX, 35, 'CE (Pt)', '#cbd5e1', 6.5, 'middle', 'bold');
+ // Black wire to potentiostat
+ svg += '<path d="M '+ceX+' 40 Q '+ceX+' 25 325 25 L 325 70" fill="none" stroke="#64748b" stroke-width="1.8"/>';
+
+ // --- RIGHT REGION: POTENTIOSTAT & DUCK-CURVE VOLTAMMOGRAM (x: 310 to 700) ---
+ // Digital Potentiostat Telemetry Header (x: 310, y: 55, w: 185, h: 105)
+ var potX = 310, potY = 55, potW = 185, potH = 105;
+ svg += rect(potX, potY, potW, potH, '#131d2e', '#334155', 1.5, 6);
+ svg += rect(potX + 10, potY + 10, potW - 20, 36, '#09131f', '#0284c7', 1, 4);
+ svg += text(potX + potW/2, potY + 28, rawIp.toFixed(2) + ' μA', '#38bdf8', 16, 'middle', 'bold');
+ svg += text(potX + potW/2, potY + 40, 'PEAK CATHODIC CURRENT i_pc', '#94a3b8', 6, 'middle');
+
+ svg += text(potX + 15, potY + 62, 'Potential Scan Rate ν: ' + v_mV.toFixed(1) + ' mV·s⁻¹', '#facc15', 7, 'start', 'bold');
+ svg += text(potX + 15, potY + 76, 'Square Root ν¹/²: ' + sqrt_v.toFixed(4) + ' (V·s⁻¹)¹/²', '#4ade80', 7);
+ svg += text(potX + 15, potY + 90, 'Peak Separation ΔE_p: 59.2 mV (n = 1)', '#cbd5e1', 7);
+ svg += text(potX + 15, potY + 102, 'Formal Potential E°’: +0.212 V vs SCE', '#7dd3fc', 6.5);
+
+ // Voltammetric Diagnostics Card (x: 310, y: 170, w: 185, h: 120)
+ var diaX = 310, diaY = 170, diaW = 185, diaH = 120;
+ svg += rect(diaX, diaY, diaW, diaH, '#131d2e', '#334155', 1.5, 6);
+ svg += text(diaX + diaW/2, diaY + 16, 'VOLTAMMETRIC DIAGNOSTICS', '#818cf8', 7.5, 'middle', 'bold');
+
+ var cvRows = [
+  ['Cathodic Peak E_pc', '+0.182 V vs SCE'],
+  ['Anodic Peak E_pa', '+0.241 V vs SCE'],
+  ['Peak Ratio |i_pa / i_pc|', '1.000 (Reversible)'],
+  ['Diffusion Coeff D', '7.60 × 10⁻⁶ cm²·s⁻¹'],
+  ['Electrode Area A', '0.07069 cm² (3 mm GC)'],
+  ['Randles Slope m', '261.74 μA·(V/s)⁻¹/²']
+ ];
+
+ for (var k = 0; k < cvRows.length; k++) {
+  var ry = diaY + 34 + k * 14;
+  svg += text(diaX + 12, ry, cvRows[k][0] + ':', '#94a3b8', 6.5, 'start');
+  svg += text(diaX + diaW - 12, ry, cvRows[k][1], '#cbd5e1', 6.5, 'end', 'bold');
+ }
+
+ // Cyclic Voltammogram (Duck Curve) Graph (x: 510, y: 55, w: 195, h: 235)
+ var gX = 545, gY = 75, gW = 150, gH = 175;
+ svg += rect(gX - 35, gY - 20, gW + 45, gH + 50, '#131d2e', '#334155', 1, 6);
+ svg += text(gX + gW/2, gY - 6, 'CYCLIC VOLTAMMOGRAM (DUCK CURVE)', '#38bdf8', 8, 'middle', 'bold');
+
+ // Axes: E vs SCE from +0.60 V (left) to -0.10 V (right)
+ // Current i from -130 uA (top, anodic) to +130 uA (bottom, cathodic)
+ svg += '<line x1="'+gX+'" y1="'+(gY+gH/2)+'" x2="'+(gX+gW)+'" y2="'+(gY+gH/2)+'" stroke="#475569" stroke-width="1"/>';
+ svg += '<line x1="'+(gX+gW/2)+'" y1="'+gY+'" x2="'+(gX+gW/2)+'" y2="'+(gY+gH)+'" stroke="#475569" stroke-width="1"/>';
+
+ function cvMapE(e) { return gX + ((0.60 - e) / 0.70) * gW; }
+ function cvMapI(i) { return (gY + gH/2) + (i / 130.0) * (gH/2); }
+
+ // Draw the smooth Duck Curve for current scan rate
+ // Scale peak current with sqrt_v / 0.4472
+ var scaleFactor = sqrt_v / 0.4472;
+ var ip_cath = 117.06 * scaleFactor;
+ var ip_anod = -117.06 * scaleFactor;
+
+ var cvPath = 'M ' + cvMapE(0.60).toFixed(1) + ' ' + cvMapI(0.5).toFixed(1);
+ // Forward cathodic sweep (0.60 -> -0.10 V)
+ cvPath += ' C ' + cvMapE(0.40).toFixed(1) + ' ' + cvMapI(2.0).toFixed(1)
+         + ' ' + cvMapE(0.28).toFixed(1) + ' ' + cvMapI(15.0 * scaleFactor).toFixed(1)
+         + ' ' + cvMapE(0.182).toFixed(1) + ' ' + cvMapI(ip_cath).toFixed(1);
+ cvPath += ' S ' + cvMapE(0.05).toFixed(1) + ' ' + cvMapI(ip_cath * 0.78).toFixed(1)
+         + ' ' + cvMapE(-0.10).toFixed(1) + ' ' + cvMapI(ip_cath * 0.65).toFixed(1);
+ // Reverse anodic sweep (-0.10 -> 0.60 V)
+ cvPath += ' C ' + cvMapE(0.05).toFixed(1) + ' ' + cvMapI(-5.0 * scaleFactor).toFixed(1)
+         + ' ' + cvMapE(0.15).toFixed(1) + ' ' + cvMapI(-25.0 * scaleFactor).toFixed(1)
+         + ' ' + cvMapE(0.241).toFixed(1) + ' ' + cvMapI(ip_anod).toFixed(1);
+ cvPath += ' S ' + cvMapE(0.40).toFixed(1) + ' ' + cvMapI(ip_anod * 0.45).toFixed(1)
+         + ' ' + cvMapE(0.60).toFixed(1) + ' ' + cvMapI(0.5).toFixed(1);
+
+ svg += '<path d="'+cvPath+'" fill="none" stroke="#38bdf8" stroke-width="2"/>';
+
+ // Cathodic peak point
+ var cpX = cvMapE(0.182), cpY = cvMapI(ip_cath);
+ svg += circle(cpX, cpY, 4.5, '#ef4444', '#facc15', 1.2);
+ svg += text(cpX + 5, cpY + 10, 'i_pc = ' + rawIp.toFixed(1) + ' μA', '#fef08a', 6.5, 'start', 'bold');
+
+ // Anodic peak point
+ var apX = cvMapE(0.241), apY = cvMapI(ip_anod);
+ svg += circle(apX, apY, 4, '#10b981', '#ffffff', 1);
+ svg += text(apX - 5, apY - 6, 'i_pa = −' + rawIp.toFixed(1) + ' μA', '#a7f3d0', 6.5, 'end', 'bold');
+
+ // Axis labels
+ svg += text(gX + gW/2, gY + gH + 20, 'Potential E (V vs SCE)', '#94a3b8', 6.5, 'middle');
+ svg += '<text x="'+(gX - 22)+'" y="'+(gY + gH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="6.5" transform="rotate(-90 '+(gX-22)+' '+(gY+gH/2)+')">Current i (μA) [Cathodic ↓]</text>';
+
+ svg += text(360, 316, 'Randles-Ševčík Invariant: Linear slope i_pc vs ν¹/² = 261.74 μA·(V/s)⁻¹/² isolates diffusion coefficient D = 7.60 × 10⁻⁶ cm²·s⁻¹ with R² = 1.00000.', '#789c80', 8, 'middle');
+
+ return svg;
+}
+
+function drawVoltammetryCompareView(p, rawVal) {
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0c131d');
+
+ svg += text(20, 24, 'COMPARATIVE VOLTAMMETRY: DUCK CURVE OVERLAYS & DIAGNOSTIC SCAN RATE SCALING', '#e2e8f0', 12, 'bold');
+ svg += text(20, 40, 'Multi-Scan Rate Overlay (10 to 200 mV/s) · Stationary E_p Signature · Diagnostic Reversibility Criteria', '#38bdf8', 9);
+
+ // Left: Multi-Scan Rate Voltammogram Overlay (x: 20 to 350)
+ var gX = 55, gY = 65, gW = 280, gH = 225;
+ svg += rect(gX - 35, gY - 15, gW + 45, gH + 45, '#131d2e', '#334155', 1, 6);
+ svg += text(gX + gW/2, gY - 4, 'MULTI-SCAN RATE CV OVERLAY (10, 25, 50, 100, 200 mV·s⁻¹)', '#38bdf8', 7.5, 'middle', 'bold');
+
+ // Axes
+ svg += '<line x1="'+gX+'" y1="'+(gY+gH/2)+'" x2="'+(gX+gW)+'" y2="'+(gY+gH/2)+'" stroke="#475569" stroke-width="1"/>';
+ svg += '<line x1="'+(gX+gW/2)+'" y1="'+gY+'" x2="'+(gX+gW/2)+'" y2="'+(gY+gH)+'" stroke="#475569" stroke-width="1"/>';
+
+ function mE(e) { return gX + ((0.60 - e) / 0.70) * gW; }
+ function mI(i) { return (gY + gH/2) + (i / 130.0) * (gH/2); }
+
+ var scanData = [
+  {v: 10,  col: '#818cf8', ip: 26.18},
+  {v: 25,  col: '#38bdf8', ip: 41.39},
+  {v: 50,  col: '#4ade80', ip: 58.53},
+  {v: 100, col: '#facc15', ip: 82.77},
+  {v: 200, col: '#ef4444', ip: 117.06}
+ ];
+
+ for (var s = 0; s < scanData.length; s++) {
+  var d = scanData[s];
+  var sc = Math.sqrt(d.v * 1e-3) / 0.4472;
+  var ip_c = 117.06 * sc;
+  var ip_a = -117.06 * sc;
+
+  var pth = 'M ' + mE(0.60).toFixed(1) + ' ' + mI(0.5).toFixed(1);
+  pth += ' C ' + mE(0.40).toFixed(1) + ' ' + mI(2.0).toFixed(1)
+       + ' ' + mE(0.28).toFixed(1) + ' ' + mI(15.0 * sc).toFixed(1)
+       + ' ' + mE(0.182).toFixed(1) + ' ' + mI(ip_c).toFixed(1);
+  pth += ' S ' + mE(0.05).toFixed(1) + ' ' + mI(ip_c * 0.78).toFixed(1)
+       + ' ' + mE(-0.10).toFixed(1) + ' ' + mI(ip_c * 0.65).toFixed(1);
+  pth += ' C ' + mE(0.05).toFixed(1) + ' ' + mI(-5.0 * sc).toFixed(1)
+       + ' ' + mE(0.15).toFixed(1) + ' ' + mI(-25.0 * sc).toFixed(1)
+       + ' ' + mE(0.241).toFixed(1) + ' ' + mI(ip_a).toFixed(1);
+  pth += ' S ' + mE(0.40).toFixed(1) + ' ' + mI(ip_a * 0.45).toFixed(1)
+       + ' ' + mE(0.60).toFixed(1) + ' ' + mI(0.5).toFixed(1);
+
+  svg += '<path d="'+pth+'" fill="none" stroke="'+d.col+'" stroke-width="1.5"/>';
+  svg += text(gX + 15 + s * 50, gY + 12, d.v + ' mV/s', d.col, 6.5, 'start', 'bold');
+ }
+
+ svg += text(gX + gW/2, gY + gH + 18, 'Potential E (V vs SCE)', '#94a3b8', 7, 'middle');
+ svg += '<text x="'+(gX - 22)+'" y="'+(gY + gH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7" transform="rotate(-90 '+(gX-22)+' '+(gY+gH/2)+')">Current i (μA) [Cathodic ↓]</text>';
+
+ // Right: Diagnostic Comparison Panels (x: 380 to 700)
+ var rX = 380, rY = 55, rW = 320, rH = 240;
+ svg += rect(rX, rY, rW, rH, '#131d2e', '#334155', 1, 6);
+ svg += text(rX + rW/2, rY + 18, 'ELECTROCHEMICAL MECHANISM CLASSIFICATION', '#facc15', 8, 'middle', 'bold');
+
+ var regimes = [
+  {
+   name: 'Reversible (Nernstian)',
+   badge: 'Observed System',
+   col: '#4ade80',
+   desc: 'k° ≥ 0.3 ν¹/² cm/s · ΔE_p = 59.2 mV (invariant with ν) · i_p ∝ ν¹/² · i_pa/i_pc = 1.000'
+  },
+  {
+   name: 'Quasi-Reversible',
+   badge: 'Kinetically Hindered',
+   col: '#facc15',
+   desc: '10⁻⁵ < k° < 0.3 ν¹/² · ΔE_p > 60 mV and widens with ν · i_p/ν¹/² declines at high scan rates'
+  },
+  {
+   name: 'Irreversible',
+   badge: 'Slow Charge Transfer',
+   col: '#ef4444',
+   desc: 'k° ≤ 10⁻⁵ ν¹/² · Return anodic peak completely absent · E_p shifts 30/(αn) mV per decade ν'
+  }
+ ];
+
+ for (var m = 0; m < regimes.length; m++) {
+  var reg = regimes[m];
+  var ry = rY + 36 + m * 64;
+  svg += rect(rX + 15, ry, rW - 30, 56, '#09131f', reg.col, 1, 4);
+  svg += text(rX + 25, ry + 16, reg.name, reg.col, 8, 'start', 'bold');
+  svg += text(rX + rW - 25, ry + 16, reg.badge, '#94a3b8', 6.5, 'end');
+  svg += text(rX + 25, ry + 36, reg.desc, '#cbd5e1', 6, 'start');
+ }
+
+ svg += text(360, 314, 'Conclusion: Ferricyanide reduction in 1.0 M KNO₃ strictly fulfills all four Nernstian reversibility criteria.', '#789c80', 8, 'middle');
+
+ return svg;
+}
+
+function drawVoltammetrySandboxView(p, rawVal) {
+ var v_mV = p.input || 50.0;
+ var rawIp = rawVal || 58.53;
+ var v_Vs = v_mV * 1e-3;
+ var sqrt_v = Math.sqrt(v_Vs);
+ var D = 7.60e-6; // cm^2/s
+
+ // Diffusion layer thickness delta ≈ sqrt(pi * D * t_scan)
+ // where t_scan = deltaE / nu = 0.70 V / (v_Vs)
+ var t_scan = 0.70 / Math.max(0.005, v_Vs);
+ var delta_um = Math.sqrt(Math.PI * D * t_scan) * 1e4; // in micrometers
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0c131d');
+
+ svg += text(20, 24, 'BUTLER-VOLMER & TRANSIENT NERNST DIFFUSION LAYER SANDBOX', '#e2e8f0', 12, 'bold');
+ svg += text(20, 40, 'Spatial Concentration Gradient c(x, t) · Cottrell Decay Boundary Layer Thickness δ at ν = ' + v_mV.toFixed(1) + ' mV·s⁻¹', '#38bdf8', 9);
+
+ // Left: Concentration Profile c(x) at Electrode Surface (x: 20 to 330)
+ var lX = 20, lY = 55, lW = 310, lH = 240;
+ svg += rect(lX, lY, lW, lH, '#131d2e', '#334155', 1, 6);
+ svg += text(lX + lW/2, lY + 18, 'CONCENTRATION PROFILES c(x) NORMAL TO ELECTRODE', '#facc15', 7.5, 'middle', 'bold');
+
+ var cpX = lX + 45, cpY = lY + 35, cpW = 240, cpH = 145;
+ svg += '<line x1="'+cpX+'" y1="'+(cpY+cpH)+'" x2="'+(cpX+cpW)+'" y2="'+(cpY+cpH)+'" stroke="#475569" stroke-width="1.2"/>';
+ svg += '<line x1="'+cpX+'" y1="'+cpY+'" x2="'+cpX+'" y2="'+(cpY+cpH)+'" stroke="#475569" stroke-width="1.2"/>';
+
+ // Working electrode plane at x = 0 (cpX)
+ svg += rect(cpX - 8, cpY, 8, cpH, '#64748b', '#cbd5e1', 1);
+ svg += text(cpX - 12, cpY + cpH/2, 'GC', '#f8fafc', 7, 'middle');
+
+ // Profile 1: At Peak Potential (steepest gradient, c(0) = 0)
+ var dFrac = Math.min(1.0, delta_um / 250.0);
+ var dPx = cpX + dFrac * cpW;
+
+ svg += '<path d="M '+cpX+' '+(cpY+cpH)+' Q '+(cpX + dPx)/2+' '+(cpY+cpH*0.25)+' '+dPx+' '+cpY+' L '+(cpX+cpW)+' '+cpY+'" fill="none" stroke="#ef4444" stroke-width="2.5"/>';
+ svg += text(dPx + 10, cpY + 15, 'At Peak Potential (E_pc)', '#ef4444', 6.5, 'start', 'bold');
+
+ // Profile 2: Initial State (c = 5.0 mM flat)
+ svg += '<line x1="'+cpX+'" y1="'+cpY+'" x2="'+(cpX+cpW)+'" y2="'+cpY+'" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="3,2"/>';
+ svg += text(cpX + cpW - 10, cpY - 5, 'c_bulk = 5.0 mM', '#38bdf8', 6.5, 'end');
+
+ // Diffusion layer indicator
+ svg += '<line x1="'+dPx+'" y1="'+cpY+'" x2="'+dPx+'" y2="'+(cpY+cpH)+'" stroke="#facc15" stroke-width="1" stroke-dasharray="2,2"/>';
+ svg += text(dPx, cpY + cpH + 12, 'δ ≈ ' + delta_um.toFixed(1) + ' μm', '#facc15', 6.5, 'middle', 'bold');
+
+ svg += text(cpX + cpW/2, cpY + cpH + 24, 'Distance from Electrode Surface x (μm)', '#94a3b8', 6.5, 'middle');
+ svg += '<text x="'+(cpX - 22)+'" y="'+(cpY + cpH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="6.5" transform="rotate(-90 '+(cpX-22)+' '+(cpY+cpH/2)+')">Concentration c (mM)</text>';
+
+ // Right: Randles-Ševčík Interactive Linear Scaling Plot (x: 345 to 700)
+ var rX = 345, rY = 55, rW = 355, rH = 240;
+ svg += rect(rX, rY, rW, rH, '#131d2e', '#334155', 1, 6);
+ svg += text(rX + rW/2, rY + 18, 'RANDLES-ŠEVČÍK LINEARIZATION: i_pc vs ν¹/²', '#38bdf8', 8, 'middle', 'bold');
+
+ var rpX = rX + 45, rpY = rY + 35, rpW = 280, rpH = 155;
+ svg += '<line x1="'+rpX+'" y1="'+(rpY+rpH)+'" x2="'+(rpX+rpW)+'" y2="'+(rpY+rpH)+'" stroke="#475569" stroke-width="1.2"/>';
+ svg += '<line x1="'+rpX+'" y1="'+rpY+'" x2="'+rpX+'" y2="'+(rpY+rpH)+'" stroke="#475569" stroke-width="1.2"/>';
+
+ function rMapX(sqv) { return rpX + (sqv / 0.50) * rpW; }
+ function rMapY(curr) { return (rpY + rpH) - (curr / 130.0) * rpH; }
+
+ for (var qv = 0.1; qv <= 0.5; qv += 0.1) {
+  var qX = rMapX(qv);
+  svg += '<line x1="'+qX+'" y1="'+rpY+'" x2="'+qX+'" y2="'+(rpY+rpH)+'" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(qX, rpY + rpH + 12, qv.toFixed(1), '#94a3b8', 6.5, 'middle');
+ }
+ for (var cr = 25; cr <= 125; cr += 25) {
+  var crY = rMapY(cr);
+  svg += '<line x1="'+rpX+'" y1="'+crY+'" x2="'+(rpX+rpW)+'" y2="'+crY+'" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(rpX - 5, crY + 3, cr.toString(), '#94a3b8', 6.5, 'end');
+ }
+
+ // Linear regression line passing through origin: i_pc = 261.74 * sqrt_v
+ svg += '<line x1="'+rMapX(0.0)+'" y1="'+rMapY(0.0)+'" x2="'+rMapX(0.50)+'" y2="'+rMapY(261.74 * 0.50)+'" stroke="#38bdf8" stroke-width="2"/>';
+
+ // Discrete sample points
+ var sRates = [10.0, 25.0, 50.0, 100.0, 150.0, 200.0];
+ var sIps = [26.18, 41.39, 58.53, 82.77, 101.38, 117.06];
+ for (var n = 0; n < sRates.length; n++) {
+  var sx = rMapX(Math.sqrt(sRates[n] * 1e-3));
+  var sy = rMapY(sIps[n]);
+  svg += circle(sx, sy, 3, '#38bdf8', '#ffffff', 1);
+ }
+
+ // Active current point
+ var actX = rMapX(sqrt_v);
+ var actY = rMapY(rawIp);
+ svg += circle(actX, actY, 5.5, '#ef4444', '#facc15', 1.5);
+ svg += text(actX + 6, actY - 6, v_mV.toFixed(0) + ' mV/s: ' + rawIp.toFixed(1) + ' μA', '#fef08a', 7, 'start', 'bold');
+
+ svg += text(rpX + rpW/2, rpY + rpH + 22, 'Square Root of Scan Rate ν¹/² (V¹/²·s⁻¹/²)', '#94a3b8', 7, 'middle');
+ svg += '<text x="'+(rpX - 22)+'" y="'+(rpY + rpH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7" transform="rotate(-90 '+(rpX-22)+' '+(rpY+rpH/2)+')">Peak Current i_pc (μA)</text>';
+
+ svg += text(360, 314, 'Diffusion Layer: Faster scan rates yield thinner diffusion layers δ, steepening (∂c/∂x) and driving higher peak currents.', '#789c80', 8, 'middle');
 
  return svg;
 }

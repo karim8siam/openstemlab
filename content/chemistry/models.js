@@ -3,6 +3,18 @@
 const round=(v,n)=>Math.round((v+Number.EPSILON)*10**n)/10**n;
 
 function predict(slug,input){
+ if(slug==='cyclic-voltammetry-ferricyanide-diffusion'){
+  const v_mV=Number(input);
+  const v_Vs=v_mV * 1e-3;
+  const sqrt_v=Math.sqrt(v_Vs);
+  const table_raw={10.0:26.18, 25.0:41.39, 50.0:58.53, 100.0:82.77, 150.0:101.38, 200.0:117.06};
+  const table_x={10.0:0.1000, 25.0:0.1581, 50.0:0.2236, 100.0:0.3162, 150.0:0.3873, 200.0:0.4472};
+  const key=round(v_mV, 1);
+  const raw_val=table_raw.hasOwnProperty(key)?table_raw[key]:round(261.75 * sqrt_v, 2);
+  const x=table_x.hasOwnProperty(key)?table_x[key]:round(sqrt_v, 4);
+  const y=raw_val;
+  return {raw:raw_val,ideal:raw_val,period:1.0,x,y,valid:v_mV>=5.0&&v_mV<=250.0};
+ }
  if(slug==='density-mass-volume-precision'){
   const v=Number(input);
   const rho=0.9982;
@@ -458,6 +470,15 @@ function predict(slug,input){
 
 function reading(slug,input,raw){
  let x=Number(input),y=Number(raw);
+ if(slug==='cyclic-voltammetry-ferricyanide-diffusion'){
+  const v_mV=Number(input);
+  const raw_val=Number(raw);
+  const v_Vs=v_mV * 1e-3;
+  const key=round(v_mV, 1);
+  const table_x={10.0:0.1000, 25.0:0.1581, 50.0:0.2236, 100.0:0.3162, 150.0:0.3873, 200.0:0.4472};
+  x=table_x.hasOwnProperty(key)?table_x[key]:round(Math.sqrt(v_Vs), 4);
+  y=raw_val;
+ }
  if(slug==='electrochemical-cell-thermodynamics-nernst'){
   const t=Number(input);
   const raw_val=Number(raw);
@@ -729,6 +750,20 @@ function fit(rows){
 }
 
 function estimate(slug,f){
+ if(slug==='cyclic-voltammetry-ferricyanide-diffusion'){
+  const m=f.m;
+  const n=1;
+  const F=96485.3;
+  const R=8.31446;
+  const T=298.15;
+  const A=0.0706858;
+  const c=5.000e-6;
+  const prefactor=0.4463 * n * F * A * c * Math.sqrt(n * F / (R * T));
+  const D_est=Math.pow((m * 1e-6) / prefactor, 2);
+  const D_scaled=D_est * 1e6;
+  const se=Math.abs(f.slopeSE || 0.05) / prefactor * 2 * Math.sqrt(D_est) * 1e6;
+  return {value:D_scaled,se:se,reference:7.60};
+ }
  if(slug==='electrochemical-cell-thermodynamics-nernst'){
   const m=f.m;
   const b=f.b;

@@ -7713,5 +7713,227 @@
     ],
     "intro": "Electrochemical cells provide an exceptionally direct, elegant, and non-destructive window into chemical thermodynamics. When a galvanic cell operates under reversible open-circuit conditions—measured using an electrometer with virtually infinite input impedance so that no net current flows—the electrical work performed is equal to the decrease in Gibbs free energy: ΔG = -nFE. Furthermore, according to fundamental thermodynamic state equations, the temperature coefficient of the electromotive force (dE/dT) is directly proportional to the standard reaction entropy change: ΔS = nF(dE/dT). By measuring the cell potential of the classic reversible Daniell cell across a controlled temperature envelope (288.15 K to 313.15 K), all key thermodynamic functions—ΔG°, ΔS°, and the reaction enthalpy ΔH°—are simultaneously and rigorously determined without recourse to calorimetry.",
     "modelExtra": "For the Daniell cell reaction Zn(s) + Cu²⁺(aq) ⇌ Zn²⁺(aq) + Cu(s) (n = 2), the standard potential at 298.15 K (25.0 °C) is E° = 1.1000 V (1100.0 mV). Because the tighter electrostrictive hydration shell of Zn²⁺ compared to Cu²⁺ produces a net increase in microscopic solvent ordering, the reaction entropy is negative (ΔS° = -21.47 J·mol⁻¹·K⁻¹), yielding a characteristic negative temperature coefficient dE/dT = -0.1113 mV·K⁻¹. Ordinary least-squares regression of equilibrium EMF against absolute temperature T extracts dE/dT with exceptional precision (R² = 0.99999), yielding standard Gibbs free energy ΔG°(298.15 K) = -212.27 kJ·mol⁻¹ and reaction enthalpy ΔH° = -218.67 kJ·mol⁻¹, confirming the fundamental validity of the Gibbs-Helmholtz relation."
+  },
+  {
+    "id": 37,
+    "slug": "cyclic-voltammetry-ferricyanide-diffusion",
+    "department": "chemistry",
+    "subject_id": 3,
+    "title": "Diagnostic Cyclic Voltammetry and Mass Transport Kinetics via the Randles-Ševčík Equation",
+    "shortTitle": "Cyclic Voltammetry & Diffusion",
+    "page_path": "/chemistry/cyclic-voltammetry-ferricyanide-diffusion/",
+    "aim": "Determine the aqueous diffusion coefficient of the ferricyanide anion [Fe(CN)₆]³⁻ using cyclic voltammetry at a glassy carbon electrode across scan rates from 10.0 mV/s to 200.0 mV/s via the Randles-Ševčík equation.",
+    "fitEquation": "i_{pc} = 0.4463 \\cdot n F A c \\left(\\frac{n F \\nu D}{R T}\\right)^{1/2}  \\implies  i_{pc} = 261.74 \\cdot \\nu^{1/2}  \\implies  D = 7.60 \\times 10^{-6}\\text{ cm}^2\\cdot\\text{s}^{-1}",
+    "gradientUnit": "μA·(V·s⁻¹)⁻¹/²",
+    "interceptUnit": "μA",
+    "target": "7.60",
+    "targetName": "Ferricyanide Aqueous Diffusion Coefficient (D × 10⁶)",
+    "resultUnit": "10⁻⁶ cm²·s⁻¹",
+    "resultScale": 1.0,
+    "resultDecimals": 2,
+    "samples": [
+      10.0,
+      25.0,
+      50.0,
+      100.0,
+      150.0,
+      200.0
+    ],
+    "emptyX": "Square Root of Scan Rate ν¹/² (V¹/²·s⁻¹/²)",
+    "emptyY": "Peak Cathodic Current i_pc (μA)",
+    "measureLabel": "Voltammetric Potential Scan Rate ν (mV·s⁻¹)",
+    "subject": "chemistry",
+    "number": 37,
+    "published": true,
+    "min": 5.0,
+    "max": 250.0,
+    "step": 5.0,
+    "initial": 50.0,
+    "inputLabel": "Voltammetric Potential Scan Rate ν",
+    "shortInput": "ν_scan",
+    "inputUnit": "mV·s⁻¹",
+    "inputDecimals": 1,
+    "rawLabel": "Peak Cathodic Current i_pc",
+    "rawUnit": "μA",
+    "rawDecimals": 2,
+    "angle": false,
+    "timed": false,
+    "observationLabel": "Peak cathodic current i_pc vs square root of scan rate ν¹/²",
+    "xAxis": "Square Root of Scan Rate ν¹/² (V¹/²·s⁻¹/²)",
+    "yAxis": "Peak Cathodic Current i_pc (μA)",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 4,
+    "yDecimals": 2,
+    "settings": [
+      "Working Electrode: Polished Glassy Carbon Disk (d = 3.00 mm, Geometric Area A = 0.07069 cm²)",
+      "Reference & Auxiliary: Saturated Calomel Electrode (SCE) and High-Area Platinum Wire Gauze Counter",
+      "Electroactive Analyte: 5.000 mM Potassium Ferricyanide (K₃[Fe(CN)₆]) in 1.000 M Aqueous KNO₃",
+      "Atmospheric Control: Deaerated with High-Purity Argon (Zero O₂ Reduction Background, 25.0 °C)"
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "activity",
+        "label": "Voltammetry Bench"
+      },
+      {
+        "id": "compare",
+        "icon": "layers",
+        "label": "Duck Curve Matrix"
+      },
+      {
+        "id": "sandbox",
+        "icon": "sliders",
+        "label": "Butler-Volmer Sandbox"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Digital Potentiostat / Galvanostat Workstation",
+        "purpose": "Precision bipotentiostat with sub-picoampere current resolution, 16-bit DAC potential ramps, and active IR-drop compensation."
+      },
+      {
+        "name": "Glassy Carbon Working Electrode (GC)",
+        "purpose": "High-density vitreous carbon disk embedded in Teflon shroud (diameter 3.00 ± 0.01 mm, area A = 0.07069 cm²) mirror-polished with 0.05 μm alumina slurries."
+      },
+      {
+        "name": "Saturated Calomel Reference Electrode (SCE)",
+        "purpose": "Double-junction reference electrode (+0.2412 V vs SHE at 25 °C) featuring a porous Vycor frit that establishes stable reference potential without chloride contamination."
+      },
+      {
+        "name": "Platinum Mesh Auxiliary (Counter) Electrode",
+        "purpose": "Coiled platinum wire gauze (surface area > 2.0 cm²) facilitating unconstrained counter-current flow without polarizing the cell."
+      },
+      {
+        "name": "Thermostated Water-Jacketed Electrochemical Cell",
+        "purpose": "Five-neck glass cell with water jacket maintained at 25.00 ± 0.02 °C, equipped with an argon bubbling tube and gas blanket head."
+      },
+      {
+        "name": "High-Purity Argon Purge & Blanket Gas System",
+        "purpose": "Argon deoxygenation line with presaturator scrubbers to deoxygenate electrolyte solutions for 15 minutes, removing electroactive dissolved O₂."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Working Electrode Polishing & Microscopic Inspection",
+        "text": "Polish the glassy carbon electrode on microcloth pads using aqueous alumina slurries (1.0 μm, 0.3 μm, and 0.05 μm successively) in figure-eight patterns. Sonicate in deionized water and ethanol for 5 minutes each to remove polishing particulates."
+      },
+      {
+        "title": "Electrolyte Formulation & Supporting Salt Addition",
+        "text": "Prepare 50.0 mL of standardized 5.000 mM K₃[Fe(CN)₆] in 1.000 M KNO₃ supporting electrolyte using degassed, triple-distilled deionized water."
+      },
+      {
+        "title": "Cell Assembly & Argon Deoxygenation",
+        "text": "Assemble the three-electrode cell in the 25.00 °C jacketed vessel. Bubble high-purity argon through the solution for 15 minutes to purge dissolved oxygen, then divert argon to create a continuous inert blanket over the headspace."
+      },
+      {
+        "title": "Potential Window Selection & Baseline Verification",
+        "text": "Configure the potentiostat between initial potential E_i = +0.600 V and switching potential E_s = -0.100 V vs SCE. Execute a blank run in 1.0 M KNO₃ to verify that residual background currents remain below 0.1 μA."
+      },
+      {
+        "title": "Multi-Scan Rate Cyclic Voltammetric Acquisition",
+        "text": "Record cyclic voltammograms across scan rates ν = 10.0, 25.0, 50.0, 100.0, 150.0, and 200.0 mV/s. Record the peak cathodic current (i_pc), peak anodic current (i_pa), and peak potential separation (ΔE_p = E_pa - E_pc)."
+      },
+      {
+        "title": "Randles-Ševčík Diagnostic Regression & Diffusion Extraction",
+        "text": "Verify reversibility criteria (ΔE_p ≈ 59 mV, i_pa/i_pc ≈ 1.0). Plot peak cathodic current i_pc against ν¹/² (in (V/s)¹/²). Perform linear least-squares regression to extract the slope and compute the diffusion coefficient D using the Randles-Ševčík equation."
+      }
+    ],
+    "topics": [
+      {
+        "question": "What is the physical principle of cyclic voltammetry, and why does the current-potential curve exhibit a characteristic peak (duck curve)?",
+        "answer": "Cyclic voltammetry (CV) is the preeminent potentiodynamic electroanalytical technique for probing the thermodynamics, kinetics, and mass-transport mechanisms of redox couples in solution. In a standard linear triangular potential sweep, the working electrode potential E(t) is swept linearly from an initial potential E_initial to a switching (reversal) potential E_switch at a constant scan rate ν = dE/dt (in V·s⁻¹), and then immediately reversed back to E_initial at the same scan rate.\n\nFor a reversible outer-sphere reduction reaction such as [Fe(CN)₆]³⁻ + e⁻ ⇌ [Fe(CN)₆]⁴⁻, the characteristic peak-shaped voltammetric response (often referred to affectionately as a 'duck curve') is governed by the dynamic interplay between electrochemical reaction kinetics at the electrode surface and semi-infinite linear diffusion of electroactive species across the adjacent liquid boundary layer:\n\n1. Initial Onset (Sub-Peak Potential):\nAt potentials significantly positive of the formal reduction potential (E >> E°'), no electrochemical reduction occurs because the applied energy is insufficient to drive electron transfer into the LUMO of ferricyanide. Only a small, capacitive charging current flows as the electrical double layer reorganizes.\n\n2. Nernstian Depletion & Exponential Current Growth:\nAs the electrode potential sweeps negative toward E°', the surface concentration ratio [Fe(CN)₆]³⁻ / [Fe(CN)₆]⁴⁻ is constrained by the Nernst equation to decrease exponentially. To maintain this ratio, ferricyanide ions reaching the surface are rapidly reduced. The flux of analyte diffusing from the bulk solution across the concentration gradient increases dramatically, producing a steep exponential rise in cathodic current (i = n F A J_diff = n F A D (∂c/∂x)_x=0).\n\n3. Peak Maximum and Mass-Transport Limitation:\nAt and slightly past E°', the surface concentration of ferricyanide drops to virtually zero (c(0,t) ≈ 0). At this point, the maximum possible concentration gradient is established across the nascent diffusion layer. The peak cathodic current (i_pc) is observed.\n\n4. Post-Peak Cottrell Decay:\nBeyond the peak potential, all ferricyanide arriving at the electrode surface is instantaneously reduced. However, because diffusion is a time-dependent dissipative process, the depleted zone (the Nernst diffusion layer) broadens into the bulk solution with a thickness growing as δ(t) ≈ √(π D t). As the diffusion layer expands, the spatial concentration gradient (∂c/∂x)_x=0 inevitably decreases, causing the current to decay asymptotically following Cottrell's law (i ∝ t⁻¹/²).\n\n5. Reverse Anodic Sweep:\nWhen the potential sweep is reversed, the substantial pool of [Fe(CN)₆]⁴⁻ product that accumulated near the electrode during the forward scan is re-oxidized back to [Fe(CN)₆]³⁻ as the potential approaches and passes E°' from the negative direction, producing a complementary anodic peak (i_pa) with an inverted sign. This cyclic hysteresis loop establishes the complete fingerprint of electrochemical reversibility."
+      },
+      {
+        "question": "What is the theoretical derivation and mathematical formulation of the Randles-Ševčík equation?",
+        "answer": "The mathematical foundation describing peak currents in linear sweep and cyclic voltammetry for a reversible redox process was solved independently by John Edward B. Randles (1948) and Antonín Ševčík (1948) by solving Fick's second law of transient semi-infinite linear diffusion under non-steady-state potentiodynamic boundary conditions.\n\nMathematical Derivation:\nConsider the reversible one-electron reduction O + n e⁻ ⇌ R at a planar electrode of geometric area A. Mass transport in unstirred solution along the coordinate x normal to the electrode plane is governed by Fick's second law:\n\n∂c_O(x,t) / ∂t = D_O · [ ∂²c_O(x,t) / ∂x² ]\n\nwith initial and boundary conditions:\n- Initial condition (t = 0, all x ≥ 0): c_O(x,0) = c_bulk, c_R(x,0) = 0\n- Semi-infinite bulk boundary (t > 0, x → ∞): c_O(∞,t) = c_bulk, c_R(∞,t) = 0\n- Surface condition (x = 0, t > 0): The potential sweeps linearly with time: E(t) = E_i - ν·t. Under reversible (infinitely fast) Nernstian electron transfer kinetics, the surface concentrations are locked to the instantaneous potential:\n\nc_O(0,t) / c_R(0,t) = exp[ (n F / R T) · (E(t) - E°') ] = θ · S(t)\n\nwhere θ = exp[(nF/RT)(E_i - E°')] and S(t) = exp[-(nF/RT)νt].\n\nEquating the diffusion fluxes at the surface (D_O (∂c_O/∂x) = -D_R (∂c_R/∂x)) and applying Laplace transforms or Abel integral transformations reduces the partial differential equation to a dimensionless Volterra integral equation of the first kind:\n\n1 = (1/√π) ∫₀^y [ χ(z) / √(y - z) ] dz + [ 1 / (1 + θ e⁻ʸ) ]\n\nwhere y = (nF/RT)νt and χ(y) is a dimensionless current function. Numerical evaluation of the function χ(y) by Nicholson and Olmstead revealed a universal maximum at y_max = (nF/RT)(E_pc - E°') = -1.109, where the maximum value of the function is:\n\nχ(y)_max = 0.4463\n\nExpressing the peak cathodic current i_pc in terms of dimensional physical variables yields the immortal Randles-Ševčík Equation:\n\ni_pc = 0.4463 · n · F · A · c_bulk · √( (n · F · ν · D) / (R · T) )\n\nAt 25.0 °C (T = 298.15 K, where F/RT = 38.92 V⁻¹):\n\ni_pc = (2.686 × 10⁵) · n³/² · A · c_bulk · D¹/² · ν¹/²\n\nwhere:\n- i_pc is the peak current in Amperes (A)\n- n is the number of transferred electrons (n = 1 for ferricyanide)\n- F is the Faraday constant (96,485.3 C·mol⁻¹)\n- A is electrode area (cm²)\n- c_bulk is analyte concentration in mol·cm⁻³ (mol·L⁻¹ / 1000)\n- D is diffusion coefficient in cm²·s⁻¹\n- ν is potential scan rate in V·s⁻¹\n\nThis equation proves that for a diffusion-controlled reversible couple, peak current i_pc is strictly proportional to concentration c and to the square root of scan rate ν¹/²."
+      },
+      {
+        "question": "What are the four diagnostic criteria for electrochemical reversibility in cyclic voltammetry?",
+        "answer": "In modern electrochemistry, determining whether a redox reaction is reversible, quasi-reversible, or irreversible requires evaluating four strict diagnostic criteria derived from the Nernstian solution of the Randles-Ševčík problem:\n\n1. Peak Potential Separation (ΔE_p):\nFor a reversible, Nernstian electron transfer, the separation between the anodic and cathodic peak potentials is theoretically independent of scan rate and inversely proportional to the number of electrons transferred n:\n\nΔE_p = |E_pa - E_pc| = 2.218 · (R T / n F) = 59.2 mV / n    (at 25.0 °C)\n\nFor the ferricyanide/ferrocyanide couple (n = 1), the ideal separation is ΔE_p = 59.2 mV. In experimental laboratory practice with uncompensated solution resistance (R_u ~ 20 to 50 Ω), ΔE_p typically ranges between 60 mV and 70 mV at moderate scan rates (< 200 mV/s).\n\n2. Peak Potential Scan-Rate Invariance:\nThe individual peak potentials E_pc and E_pa must remain completely stationary as the scan rate ν is varied across multiple orders of magnitude. The formal potential E°' is extracted directly as the midpoint potential:\n\nE°' = (E_pa + E_pc) / 2\n\nIf E_pc shifts cathodically (more negative) and E_pa shifts anodically (more positive) as scan rate increases such that ΔE_p expands significantly with ν, the system exhibits quasi-reversible kinetics limited by finite heterogeneous charge transfer rates (k°).\n\n3. Current Ratio Invariance (i_pa / i_pc = 1.000):\nFor an ideal reversible couple where both the oxidized and reduced forms are chemically stable in solution and do not engage in follow-up chemical reactions (EC mechanisms), the ratio of peak currents is strictly unity:\n\n|i_pa / i_pc| = 1.000\n\nNote that measuring i_pa requires establishing the true decaying baseline from the forward scan (Nicholson's baseline correction method: i_pa,corr = (i_pa)_meas / (i_pc)_meas + 0.485 (i_sp)_meas / (i_pc)_meas + 0.086).\n\n4. Linear Randles-Ševčík Scaling Passing Through the Origin:\nA plot of peak cathodic current i_pc against the square root of scan rate ν¹/² must yield a straight line with a correlation coefficient R² ≥ 0.999 that intercepts the origin (Y-intercept b = 0 within experimental uncertainty). If the plot curves downward at high scan rates, the system is quasi-reversible; if it curves upward, surface adsorption of electroactive species is present."
+      },
+      {
+        "question": "Why is an inert supporting electrolyte (1.0 M KNO₃) required in large excess during cyclic voltammetry?",
+        "answer": "In an electrochemical cell, ions experience transport via three distinct physical mechanisms: diffusion (concentration gradients), convection (fluid flow), and migration (electrostatic force exerted by the electric field gradient):\n\nFlux J_i = -D_i ∇c_i + c_i v - (z_i F D_i / R T) c_i ∇Φ\n\nThe Randles-Ševčík equation assumes strictly that mass transport occurs solely by semi-infinite linear diffusion. If the electroactive species ([Fe(CN)₆]³⁻, charge z = -3) were forced to carry the ionic conduction current through the solution, electrostatic migration would alter the flux of ions to the electrode:\n- Anions diffusing to a negative cathode would experience electrostatic repulsion, artificially suppressing cathodic current.\n- Cations diffusing to a negative cathode would experience electrostatic attraction, artificially inflating cathodic current.\n\nTo eliminate this artifact, a non-electroactive supporting electrolyte (such as 1.000 M potassium nitrate, KNO₃, or KCl) is added in 100- to 200-fold excess over the electroactive analyte (5.0 mM [Fe(CN)₆]³⁻). The supporting electrolyte performs three crucial metrological functions:\n1. Suppression of Migration: The transference number of the analyte t_i = |z_i| u_i c_i / ∑ |z_k| u_k c_k drops to less than 0.5%. Over 99.5% of the electric field gradient is neutralized by the abundant K⁺ and NO₃⁻ ions, restricting analyte transport purely to diffusion.\n2. Minimization of Ohmic Solution Resistance (IR Drop): High ionic strength (I ≈ 1.0 M) elevates solution conductivity, reducing cell resistance R_u to a few tens of Ohms. This suppresses uncompensated IR potential drop (V_meas = E_true + i·R_u), preventing artificial peak broadening.\n3. Compression of the Electrical Double Layer: High ionic strength compresses the Gouy-Chapman diffuse double-layer thickness from several nanometers down to less than 0.3 nm, eliminating double-layer polarization effects (Frumkin effect)."
+      },
+      {
+        "question": "How do you distinguish reversible, quasi-reversible, and irreversible electron transfer in voltammetry?",
+        "answer": "Electrochemical electron transfer processes at electrode interfaces are classified into three kinetic regimes depending upon the relative magnitude of the standard heterogeneous charge-transfer rate constant k° (in cm·s⁻¹) compared to the mass-transport velocity v_mass = √(D n F ν / R T):\n\n1. Reversible (Nernstian) Regime (k° ≥ 0.3 ν¹/² cm·s⁻¹):\n- Characteristic: Charge transfer is much faster than mass transport. Equilibrium is maintained at the electrode surface at all times.\n- Voltammetric features: ΔE_p = 59.2 mV / n (invariant with scan rate); i_p ∝ ν¹/²; E_p is independent of scan rate; i_pa / i_pc = 1.000.\n- Ferricyanide in 1.0 M KNO₃ has k° ≈ 0.2 to 0.4 cm·s⁻¹, placing it firmly in the reversible regime for scan rates below 250 mV/s.\n\n2. Quasi-Reversible Regime (2 × 10⁻⁵ ν¹/² < k° < 0.3 ν¹/² cm·s⁻¹):\n- Characteristic: The rate of electron transfer is of comparable magnitude to the rate of mass transport. Current is controlled jointly by kinetics and diffusion.\n- Voltammetric features: ΔE_p > 59.2 mV and increases monotonically with scan rate ν; i_pc is not strictly linear with ν¹/² at high scan rates; cathodic peak shifts negative and anodic peak shifts positive.\n- Extraction of k°: The Nicholson dimensionless kinetic parameter ψ = (k° / √(π D_O (nF/RT) ν)) · (D_O/D_R)^(α/2) is mapped to experimental ΔE_p values to extract the charge transfer rate constant k°.\n\n3. Irreversible Regime (k° ≤ 2 × 10⁻⁵ ν¹/² cm·s⁻¹):\n- Characteristic: Electron transfer is much slower than diffusion. The reverse reaction is negligible because the overpotential required to drive reduction is so large that the reverse reaction is completely shut down.\n- Voltammetric features: No return peak on the reverse sweep; peak cathodic potential E_pc shifts cathodically by 30 mV / (α n_a) per decade increase in scan rate; peak current is reduced by the factor √(α n_a):\ni_pc,irrev = 0.4958 · n · F · A · c · √( (α n_a F ν D) / (R T) )\n\nCyclic voltammetry across multiple scan rates thus serves as a definitive diagnostic tool to classify electron-transfer kinetics."
+      },
+      {
+        "question": "How is the geometric and electroactive surface area of a working electrode calibrated?",
+        "answer": "Accurate determination of diffusion coefficients D using the Randles-Ševčík equation requires rigorous metrological knowledge of the working electrode surface area A, because any percentage error in A propagates as a two-fold percentage error in D (since D ∝ 1/A²).\n\n1. Geometric Surface Area (A_geo):\nThe physical macroscopic surface area is calculated from the mechanical diameter of the glassy carbon disk measured using an optical toolmaker's microscope or high-precision digital vernier caliper. For our standard GC-30 disk with certified diameter d = 3.000 ± 0.005 mm (radius r = 0.1500 cm):\n\nA_geo = π · r² = π · (0.1500 cm)² = 0.070686 cm²\n\n2. Electroactive Surface Area (A_real):\nAt the microscopic and atomic level, all solid electrode surfaces exhibit microscopic roughness, scratches, and grain boundaries. The actual electroactive area is related to the geometric area through the roughness factor f_r = A_real / A_geo (typically 1.05 to 1.20 for freshly polished mirror-finish glassy carbon).\n\nTo calibrate A_real experimentally, electrochemists use two authoritative methods:\n- Primary Standard Voltammetry: Record cyclic voltammograms in a standardized solution of an electroactive probe whose diffusion coefficient has been established via independent non-electrochemical methods (such as pulsed-field gradient NMR or Taylor dispersion). Ferrocenecarboxylic acid or potassium ferricyanide in 1.0 M KCl is commonly employed.\n- Chronoamperometric Cottrell Stepping: Apply a large potential step into the diffusion-limited plateau (E = -0.200 V vs SCE) and record the current decay i(t) versus t⁻¹/². According to Cottrell's equation:\ni(t) = (n F A c √D) / (√π √t)\nThe slope of i versus t⁻¹/² yields A_real with high precision, completely free of potential sweep dynamics.\n\nBy polishing the glassy carbon disk through 0.05 μm alumina slurries, mirror optical planarity is achieved, ensuring that the electroactive area matches the certified geometric area A = 0.07069 cm² within ±0.8%."
+      },
+      {
+        "question": "How are cyclic voltammetry data reduced via least-squares regression, and what is the full uncertainty budget?",
+        "answer": "In precision diffusion metrology, peak cathodic currents i_pc are recorded across N discrete scan rates ν_i (10.0 to 200.0 mV/s). The data are linearized by transforming scan rate into its square root x_i = √(ν_i / 1000) in (V/s)¹/² and plotting against y_i = i_pc (in μA):\n\n1. Ordinary Least-Squares Linear Regression:\nm = [ N ∑(x_i y_i) - (∑x_i)(∑y_i) ] / [ N ∑(x_i²) - (∑x_i)² ]\nb = ȳ - m x̄\n\nFor our standardized six-point dataset across ν = 10.0 to 200.0 mV/s:\n- Fitted slope: m = 261.744 ± 0.025 μA·(V·s⁻¹)⁻¹/²\n- Fitted intercept: b = 0.004 ± 0.008 μA (confirming origin alignment within ±0.01 μA)\n- Coefficient of determination: R² = 0.99999999\n\n2. Extraction of Diffusion Coefficient D:\nRearranging the Randles-Ševčík equation at 25.00 °C (298.15 K):\nD = [ (m · 10⁻⁶ A) / (0.4463 · n · F · A · c · √(n F / R T)) ]²\nSubstituting: n = 1, F = 96485.3 C·mol⁻¹, R = 8.31446 J·mol⁻¹·K⁻¹, T = 298.15 K, A = 0.070686 cm², c = 5.000 × 10⁻⁶ mol·cm⁻³:\nConstant prefactor = 0.4463 · (1) · (96485.3) · (0.070686) · (5.000 × 10⁻⁶) · √(38.920) = 9.4975 × 10⁻⁵ A·(cm²·s⁻¹)⁻¹/²·(V·s⁻¹)⁻¹/²\nD = [ (261.744 × 10⁻⁶) / (9.4975 × 10⁻⁵) ]² = [ 2.75592 ]² × 10⁻⁶ = 7.595 × 10⁻⁶ cm²·s⁻¹\n\n3. Metrological Uncertainty Budget:\n- Regression slope standard error: s_m / m = 0.025 / 261.74 = 0.010%\n- Working electrode diameter calibration: u(d) = 0.005 mm ==> u(A)/A = 2 u(d)/d = 0.33%\n- Volumetric concentration of ferricyanide: u(c)/c = 0.12%\n- Potentiostat scan rate timebase accuracy: u(ν)/ν = 0.02%\n- Thermostatic water bath temperature: u(T) = 0.02 K ==> u(T)/T = 0.007%\n\nPropagation of standard uncertainties in quadrature:\nu_r(D) = √[ 4·(u(m)/m)² + 4·(u(A)/A)² + 4·(u(c)/c)² + (u(T)/T)² ]\nu_r(D) = √[ 4(0.0001)² + 4(0.0033)² + 4(0.0012)² + (0.00007)² ] = 0.70%\n\nFor D = 7.60 × 10⁻⁶ cm²·s⁻¹, the standard uncertainty is u(D) = 0.053 × 10⁻⁶ cm²·s⁻¹. At the 95% confidence level (coverage factor k = 2), the expanded uncertainty is:\nU(D) = ±0.11 × 10⁻⁶ cm²·s⁻¹ (1.4%)\n\nThe empirical value D = 7.60 × 10⁻⁶ cm²·s⁻¹ exhibits near-perfect concordance with the authoritative literature benchmark (7.60 ± 0.05 × 10⁻⁶ cm²·s⁻¹), confirming sub-0.01% deviation."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What is the theoretical peak potential separation (ΔE_p = |E_pa - E_pc|) for a reversible 1-electron redox reaction at 25 °C?",
+        "answer": "59.2 mV",
+        "options": [
+          "59.2 mV",
+          "29.6 mV",
+          "118.4 mV",
+          "0.0 mV"
+        ],
+        "correct": 0,
+        "explanation": "According to Nernstian theory, the ideal peak separation for a reversible soluble-soluble couple is ΔE_p = 2.218 RT / nF = 59.2 mV / n. For ferricyanide (n = 1), ΔE_p = 59.2 mV."
+      },
+      {
+        "question": "What does a strictly linear plot of peak current i_pc versus the square root of scan rate (ν¹/²) indicate?",
+        "answer": "The electrochemical reaction is controlled strictly by semi-infinite linear molecular diffusion without adsorption or coupled chemical reactions.",
+        "options": [
+          "The electrochemical reaction is controlled strictly by semi-infinite linear molecular diffusion without adsorption or coupled chemical reactions.",
+          "The electrode surface is completely blocked by passivating oxide layers.",
+          "The supporting electrolyte is undergoing irreversible thermal decomposition.",
+          "The reaction mechanism involves a gaseous phase change."
+        ],
+        "correct": 0,
+        "explanation": "The Randles-Ševčík equation predicts i_p ∝ ν¹/² strictly when mass transport is governed by Fickian semi-infinite linear diffusion."
+      },
+      {
+        "question": "Why is an inert supporting electrolyte (e.g. 1.0 M KNO₃) added in large excess relative to the electroactive analyte?",
+        "answer": "To eliminate electrostatic migration of the analyte in the electric field and minimize solution resistance (IR drop).",
+        "options": [
+          "To eliminate electrostatic migration of the analyte in the electric field and minimize solution resistance (IR drop).",
+          "To chemically oxidize the ferricyanide into ferrocyanide before scanning.",
+          "To increase the viscosity of water so the diffusion layer freezes.",
+          "To make the solution luminous for optical tracking."
+        ],
+        "correct": 0,
+        "explanation": "An excess of supporting electrolyte screens the electric field so that analyte transport occurs purely by diffusion (migration transference number t_analyte < 0.5%) and suppresses ohmic IR potential drops."
+      },
+      {
+        "question": "In the Randles-Ševčík equation i_pc = 0.4463 · n F A c · √(n F ν D / R T), what happens to peak current if electrode diameter is doubled?",
+        "answer": "The peak current quadruples (increases by a factor of 4).",
+        "options": [
+          "The peak current quadruples (increases by a factor of 4).",
+          "The peak current doubles (increases by a factor of 2).",
+          "The peak current is halved.",
+          "The peak current remains unchanged."
+        ],
+        "correct": 0,
+        "explanation": "Peak current is directly proportional to electrode geometric area A. Because area is proportional to the square of diameter (A = πd²/4), doubling the diameter increases area and peak current by a factor of 2² = 4."
+      }
+    ],
+    "precautions": [
+      "Mirror-polish the glassy carbon electrode with 0.05 μm alumina slurry and sonicate thoroughly to eliminate carbon particulates and surface contaminants.",
+      "Bubble high-purity argon through the electrolyte for at least 15 minutes prior to scanning to completely purge dissolved oxygen, which exhibits a broad cathodic reduction wave at -0.2 V vs SCE.",
+      "Maintain the water-jacketed cell at 25.00 ± 0.02 °C to eliminate thermal convection and stabilize the diffusion coefficient.",
+      "Position the reference electrode Luggin capillary tip close to the working electrode face (within 2 mm) to minimize uncompensated solution resistance (R_u).",
+      "Ensure zero mechanical vibration or acoustic disturbance of the cell during scanning, which would induce convective fluid motion and disrupt the stagnant Nernst diffusion layer.",
+      "Do not exceed the electrochemical potential window of the solvent (+0.8 V to -0.3 V vs SCE in 1 M KNO₃) to prevent solvent electrolysis."
+    ],
+    "limitations": [
+      "The simple Randles-Ševčík equation assumes planar semi-infinite linear diffusion; at extremely slow scan rates (< 1 mV/s), spherical edge diffusion at microelectrodes causes positive deviations.",
+      "At very high scan rates (> 1000 mV/s), finite heterogeneous electron transfer kinetics (quasi-reversibility) and uncompensated cell resistance (iR_u) induce peak broadening and current attenuation.",
+      "Alumina polishing particles can become embedded in softer electrode matrices if excessive polishing pressure is applied, altering the electroactive surface area."
+    ],
+    "intro": "Cyclic voltammetry (CV) is the cornerstone diagnostic technique of modern electroanalytical chemistry, providing quantitative access to redox potentials, electron transfer kinetics, and diffusion transport phenomena. In a cyclic voltammetric experiment, the potential of a stationary working electrode is swept linearly back and forth between two switching limits while the resulting current is recorded. For a reversible, diffusion-controlled electron-transfer reaction—such as the outer-sphere reduction of the ferricyanide anion [Fe(CN)₆]³⁻ to ferrocyanide [Fe(CN)₆]⁴⁻—the peak cathodic current i_pc scales directly with the square root of the potential scan rate ν¹/² according to the Randles-Ševčík equation. By measuring peak currents across systematic scan rates from 10.0 mV/s to 200.0 mV/s at a polished glassy carbon electrode, the aqueous diffusion coefficient D of ferricyanide is determined with sub-1% metrological precision.",
+    "modelExtra": "The Randles-Ševčík equation for a reversible soluble redox couple at 25.00 °C (298.15 K) is i_pc = (2.686 × 10⁵) · n³/² · A · c · D¹/² · ν¹/², where n = 1, A = 0.07069 cm² (3.00 mm diameter glassy carbon disk), and c = 5.000 × 10⁻⁶ mol·cm⁻³ (5.000 mM K₃[Fe(CN)₆] in 1.000 M KNO₃). Across scan rates from 10.0 mV/s to 200.0 mV/s, peak cathodic currents increase from 26.18 μA to 117.06 μA while peak potential separation remains strictly constant at ΔE_p = 59.2 ± 0.5 mV. Linear least-squares regression of i_pc against ν¹/² yields a slope of 261.74 μA·(V·s⁻¹)⁻¹/² with R² = 0.99999999, extracting an aqueous ferricyanide diffusion coefficient D = 7.60 × 10⁻⁶ cm²·s⁻¹, in complete agreement with authoritative electrochemical literature benchmarks."
   }
 ]

@@ -159,6 +159,19 @@ def observation(c,value):
   v0_mM=raw / 1000.0
   y=rnd(1.0 / v0_mM, 2)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='cyclic-voltammetry-ferricyanide-diffusion':
+  v_mV=float(value)
+  v_Vs=v_mV * 1e-3
+  table_raw={10.0:26.18, 25.0:41.39, 50.0:58.53, 100.0:82.77, 150.0:101.38, 200.0:117.06}
+  table_x={10.0:0.1000, 25.0:0.1581, 50.0:0.2236, 100.0:0.3162, 150.0:0.3873, 200.0:0.4472}
+  key=round(v_mV, 1)
+  if key in table_raw:
+   raw=table_raw[key]
+  else:
+   raw=round(261.75 * math.sqrt(v_Vs), 2)
+  x=table_x.get(key, rnd(math.sqrt(v_Vs), 4))
+  y=raw
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='electrochemical-cell-thermodynamics-nernst':
   t_val=float(value)
   table_raw={15.0:1101.13, 20.0:1100.58, 25.0:1100.02, 30.0:1099.46, 35.0:1098.91, 40.0:1098.35}
@@ -513,6 +526,19 @@ def estimate(c,f):
   dG298= -n * F * (E298 * 0.001) * 0.001
   se=abs(f.get('slopeSE', 0.0005)) * 298.15 * n * F * 1e-6
   return dG298, se, -212.27
+ elif slug=='cyclic-voltammetry-ferricyanide-diffusion':
+  m=f['m']
+  n=1
+  F=96485.3
+  R=8.31446
+  T=298.15
+  A=0.0706858
+  c=5.000e-6
+  prefactor=0.4463 * n * F * A * c * math.sqrt(n * F / (R * T))
+  D_est=((m * 1e-6) / prefactor)**2
+  D_scaled=D_est * 1e6
+  se=abs(f.get('slopeSE', 0.05)) / prefactor * 2.0 * math.sqrt(D_est) * 1e6
+  return D_scaled, se, 7.60
  elif slug=='solubility-product-conductometric-silver-halides':
   R=8.31446
   dH = -f['m'] * R
@@ -680,6 +706,19 @@ def formula(c,f):
   dS298= n * F * (m * 0.001)
   dH298= dG298 + 298.15 * (dS298 * 0.001)
   return f"Gibbs-Helmholtz Linear Fit: E(T) = {fmt(m,5)}·T + {fmt(b,2)} mV; dE/dT = {fmt(m,5)} mV·K⁻¹; ΔG°(298K) = {fmt(dG298,2)} kJ·mol⁻¹; ΔS° = {fmt(dS298,2)} J·mol⁻¹·K⁻¹; ΔH° = {fmt(dH298,2)} kJ·mol⁻¹"
+ elif slug=='cyclic-voltammetry-ferricyanide-diffusion':
+  m=f['m']
+  b=f['b']
+  n=1
+  F=96485.3
+  R=8.31446
+  T=298.15
+  A=0.0706858
+  c=5.000e-6
+  prefactor=0.4463 * n * F * A * c * math.sqrt(n * F / (R * T))
+  D_est=((m * 1e-6) / prefactor)**2
+  D_scaled=D_est * 1e6
+  return f"Randles-Ševčík Fit: i_pc = {fmt(m,2)}·ν¹/² + {fmt(b,3)} μA; Diffusion Coefficient D = {fmt(D_scaled,2)} × 10⁻⁶ cm²·s⁻¹; Peak Separation ΔE_p = 59.2 mV"
  elif slug=='solubility-product-conductometric-silver-halides':
   R=8.31446
   dH = -f['m'] * R
@@ -1174,6 +1213,48 @@ def worked(c,row):
    f"   Standard Reaction Enthalpy: ΔH° = ΔG° + T·ΔS° = {fmt(dG298, 2)} + (298.15)({fmt(dS298*0.001, 5)}) = {fmt(dH298, 2)} kJ·mol⁻¹.\n"
    f"   Reversible Thermal Heat: q_rev = T·ΔS° = (298.15)({fmt(dS298*0.001, 5)}) = {fmt(298.15*dS298*0.001, 2)} kJ·mol⁻¹.\n"
    f"   Thermodynamic Efficiency: η_rev = ΔG° / ΔH° = {fmt(dG298/dH298*100.0, 2)}% of chemical enthalpy converts to electrical work."
+  )
+ elif slug=='cyclic-voltammetry-ferricyanide-diffusion':
+  v_val=row['input']
+  raw=row['raw']
+  x=row['x']
+  y=row['y']
+  n=1
+  F=96485.3
+  R=8.31446
+  T=298.15
+  A=0.0706858
+  c=5.000e-6
+  m_slope=261.7436
+  b_int=0.0040
+  prefactor=0.4463 * n * F * A * c * math.sqrt(n * F / (R * T))
+  D_est=((m_slope * 1e-6) / prefactor)**2
+  D_scaled=D_est * 1e6
+  return (
+   f"1. Raw Voltammetric Observables & Potential Scan Settings:\n"
+   f"   Potential scan rate ν = {fmt(v_val,1)} mV·s⁻¹ = {fmt(v_val*1e-3, 4)} V·s⁻¹.\n"
+   f"   Abscissa coordinate: x = ν¹/² = √({fmt(v_val*1e-3, 4)} V·s⁻¹) = {fmt(x, 4)} V¹/²·s⁻¹/².\n"
+   f"   Measured peak cathodic current: y = i_pc = {fmt(raw,2)} μA = {fmt(raw*1e-6, 7)} A.\n"
+   f"   Peak potential coordinates: E_pc = +0.182 V vs SCE, E_pa = +0.241 V vs SCE (ΔE_p = 59.2 mV).\n"
+   f"\n"
+   f"2. Electrode Geometry & Electrolyte Stoichiometry:\n"
+   f"   Working electrode: Polished glassy carbon disk (diameter d = 3.00 mm, geometric area A = {fmt(A, 5)} cm²).\n"
+   f"   Analyte concentration: Potassium ferricyanide c = 5.000 mM = {fmt(c, 7)} mol·cm⁻³ in 1.000 M KNO₃.\n"
+   f"   Electron stoichiometry: Fe(CN)₆³⁻ + e⁻ ⇌ Fe(CN)₆⁴⁻ (n = 1 electron).\n"
+   f"   Faraday constant F = 96,485.3 C·mol⁻¹; Gas constant R = 8.31446 J·mol⁻¹·K⁻¹; T = 298.15 K.\n"
+   f"\n"
+   f"3. Multi-Point Randles-Ševčík Linear Least-Squares Regression:\n"
+   f"   Linearized theoretical equation: i_pc = m · ν¹/² + b.\n"
+   f"   Regression slope: m = {fmt(m_slope, 4)} μA·(V·s⁻¹)⁻¹/² = {fmt(m_slope*1e-6, 8)} A·(V·s⁻¹)⁻¹/².\n"
+   f"   Regression Y-intercept: b = {fmt(b_int, 4)} μA (consistent with zero current at zero scan rate within ±0.01 μA).\n"
+   f"   Coefficient of determination: R² = 1.00000.\n"
+   f"\n"
+   f"4. Extraction of Aqueous Ferricyanide Diffusion Coefficient D:\n"
+   f"   Randles-Ševčík constant prefactor = 0.4463 · n · F · A · c · √(n F / R T) = {fmt(prefactor, 8)} A·(cm²·s⁻¹)⁻¹/²·(V·s⁻¹)⁻¹/².\n"
+   f"   Diffusion coefficient: D = [ (m · 10⁻⁶) / prefactor ]² = [ {fmt(m_slope*1e-6, 8)} / {fmt(prefactor, 8)} ]² = {fmt(D_est, 10)} cm²·s⁻¹.\n"
+   f"   Scaled diffusion coefficient: D = {fmt(D_scaled, 2)} × 10⁻⁶ cm²·s⁻¹.\n"
+   f"   Literature reference benchmark at 25.00 °C: D = 7.60 × 10⁻⁶ cm²·s⁻¹ (percentage difference = {fmt(abs(D_scaled - 7.60)/7.60*100.0, 4)}%).\n"
+   f"   Transient Nernst diffusion layer thickness at ν = {fmt(v_val,1)} mV/s: δ ≈ √(π·D·t) = {fmt(math.sqrt(math.pi * D_est * (0.70/(v_val*1e-3)))*1e4, 1)} μm."
   )
  elif slug=='solubility-product-conductometric-silver-halides':
   t=row['input']
@@ -1942,6 +2023,28 @@ def uncertainty_text(c):
    "u(ΔG°) = 0.04 kJ·mol⁻¹, u(ΔS°) = 0.03 J·mol⁻¹·K⁻¹, and u(ΔH°) = 0.05 kJ·mol⁻¹. "
    "At the 95% confidence level (coverage factor k = 2), the expanded uncertainties are U(ΔG°) = ±0.08 kJ·mol⁻¹ (0.04%) and "
    "U(ΔH°) = ±0.10 kJ·mol⁻¹ (0.05%), confirming sub-0.1% experimental agreement with accepted NIST Standard Reference values."
+  )
+ elif slug=='cyclic-voltammetry-ferricyanide-diffusion':
+  return (
+   "In the high-precision determination of ionic diffusion coefficients via cyclic voltammetry and the Randles-Ševčík equation, "
+   "metrological uncertainties and physical electroanalytical boundary conditions are rigorously quantified across electrochemical, "
+   "geometric, thermostatic, and mass-transport domains: "
+   "(1) Potentiostat Current Metrology & Analog-Digital Conversion: Voltammetric currents are digitized using an advanced 16-bit analog-to-digital "
+   "converter with a current sensitivity range of 100 nA to 1 mA. Baseline noise is maintained below 0.05 μA. The instrument calibration "
+   "traceability yields an absolute current measurement uncertainty u(i_p)/i_p = 0.08%. "
+   "(2) Working Electrode Geometric Area Calibration: The glassy carbon disk electrode was calibrated by precision optical toolmaker microscopy, "
+   "measuring diameter d = 3.000 ± 0.005 mm (relative uncertainty 0.17%). Because area A = πd²/4, the relative uncertainty in electrode area is "
+   "u(A)/A = 2 u(d)/d = 0.33%. Mirror polishing with 0.05 μm alumina slurries achieves an electroactive roughness factor f_r = 1.02 ± 0.02. "
+   "(3) Supporting Electrolyte & Deoxygenation Fidelity: The 1.000 M KNO₃ supporting electrolyte suppresses migration transference numbers "
+   "below 0.4% (t_analyte < 0.004), confirming that mass transport occurs strictly by Fickian molecular diffusion. Continuous high-purity argon "
+   "sparging for 15 minutes reduces dissolved oxygen background below 0.05 μA across the +0.60 V to -0.10 V vs SCE potential envelope. "
+   "(4) Multi-Point Least-Squares Regression & Covariance Propagation: The Randles-Ševčík slope m = 261.744 μA·(V/s)⁻¹/² is extracted from "
+   "six discrete scan rate coordinates (10.0 to 200.0 mV/s). The standard error of the slope is s_m = 0.025 μA·(V/s)⁻¹/² (relative uncertainty 0.010%), "
+   "yielding an ideal coefficient of determination R² = 0.99999999. "
+   "(5) Uncertainty Propagation through the Randles-Ševčík Equation: Because D is proportional to (m / A·c)², relative standard uncertainties "
+   "propagate as u_r(D) = √[ 4(u(m)/m)² + 4(u(A)/A)² + 4(u(c)/c)² + (u(T)/T)² ] = √[ 4(0.0001)² + 4(0.0033)² + 4(0.0012)² + (0.00007)² ] = 0.70%. "
+   "For an empirical diffusion coefficient D = 7.60 × 10⁻⁶ cm²·s⁻¹, the expanded uncertainty at the 95% confidence level (coverage factor k = 2) "
+   "is U(D) = ±0.11 × 10⁻⁶ cm²·s⁻¹ (1.4%), confirming exceptional concordance with the authoritative literature benchmark (7.60 ± 0.05 × 10⁻⁶ cm²·s⁻¹)."
   )
  elif slug=='solubility-product-conductometric-silver-halides':
   return (
@@ -3290,6 +3393,68 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"The measured values agree with authoritative NIST thermochemical reference data within {fmt(abs(dG_val - (-212.27))/212.27*100.0, 4)}% relative deviation, "
    f"providing rigorous experimental validation of the Nernst and Gibbs-Helmholtz equations and demonstrating the power of zero-current potentiometry "
    f"for precise thermodynamic metrology."
+  )
+  
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='cyclic-voltammetry-ferricyanide-diffusion':
+  m_val=f['m']
+  b_val=f['b']
+  D_val=value
+  r2_val=f['r2']
+  
+  abstract=(
+   f"The electrochemical reversibility and mass-transport diffusion kinetics of the potassium ferricyanide redox couple, "
+   f"[Fe(CN)₆]³⁻ + e⁻ ⇌ [Fe(CN)₆]⁴⁻ (5.000 mM in 1.000 M KNO₃), were quantitatively investigated at 25.00 ± 0.02 °C using cyclic voltammetry "
+   f"at a polished glassy carbon working electrode (diameter d = 3.00 mm, geometric area A = 0.07069 cm²) versus a saturated calomel reference electrode (SCE). "
+   f"Voltammetric potential sweeps were recorded across six systematically varied scan rates from 10.0 mV·s⁻¹ to 200.0 mV·s⁻¹ over the potential window "
+   f"+0.600 V to -0.100 V vs SCE. Peak cathodic current i_pc increased monotonically from 26.18 μA at 10.0 mV·s⁻¹ to 117.06 μA at 200.0 mV·s⁻¹, "
+   f"while the peak-to-peak potential separation remained invariant at ΔE_p = 59.2 ± 0.4 mV and the current ratio |i_pa / i_pc| remained equal to 1.000 ± 0.005, "
+   f"confirming ideal Nernstian electrochemical reversibility. Linear least-squares regression of peak cathodic current i_pc against the square root of "
+   f"scan rate ν¹/² yielded an exceptional linear fit (i_pc = {fmt(m_val, 2)}·ν¹/² + {fmt(b_val, 3)} μA) with R² = {fmt(r2_val, 6)}. Application of the "
+   f"Randles-Ševčík equation extracted an aqueous ferricyanide diffusion coefficient D = ({fmt(D_val, 2)} ± 0.11) × 10⁻⁶ cm²·s⁻¹, demonstrating "
+   f"near-perfect agreement with the accepted literature benchmark value (7.60 × 10⁻⁶ cm²·s⁻¹) with a percentage difference of only "
+   f"{fmt(abs(D_val - 7.60)/7.60*100.0, 4)}%."
+  )
+  
+  graph_choice=(
+   f"The primary analytical visualization presents the peak cathodic current i_pc (in μA) as a function of the square root of the potential scan rate "
+   f"ν¹/² (in (V·s⁻¹)¹/²). A linear Cartesian coordinate system is selected based directly on the first-principles Randles-Ševčík boundary value solution "
+   f"to Fick's second law for a reversible soluble-soluble redox process: i_pc = 0.4463 · n F A c · (n F ν D / R T)¹/². Under diffusion-controlled mass "
+   f"transport, this theoretical governing equation requires that peak current scale strictly linearly with ν¹/² and pass through the origin. Linear "
+   f"least-squares regression across all six experimental points reveals near-perfect linearity (R² = {fmt(r2_val, 6)}) with an empirical Y-intercept "
+   f"b = {fmt(b_val, 3)} μA (indistinguishable from zero within experimental uncertainty). The slope m = {fmt(m_val, 2)} μA·(V·s⁻¹)⁻¹/² enables direct, "
+   f"unbiased extraction of the diffusion coefficient D without requiring baseline empirical corrections."
+  )
+  
+  discussion=(
+   f"The experimental cyclic voltammograms exhibit all four canonical diagnostic signatures of an ideal Nernstian reversible electron-transfer mechanism. "
+   f"First, the peak-to-peak potential separation ΔE_p = |E_pa - E_pc| = 59.2 ± 0.4 mV matches the theoretical prediction ΔE_p = 2.218 RT / nF = 59.2 mV "
+   f"for a one-electron transfer (n = 1) at 25.0 °C. Second, both the cathodic peak potential E_pc (+0.182 V vs SCE) and anodic peak potential E_pa (+0.241 V vs SCE) "
+   f"remain completely stationary across the entire 20-fold increase in scan rate from 10 mV/s to 200 mV/s, yielding an invariant formal reduction potential "
+   f"E°' = (E_pa + E_pc)/2 = +0.212 V vs SCE (+0.453 V vs SHE). Third, the anodic-to-cathodic peak current ratio |i_pa / i_pc| is exactly 1.000 ± 0.005, "
+   f"proving that the electrochemically generated ferrocyanide product is chemically stable and undergoes no coupled homogenous decomposition reactions "
+   f"within the voltammetric timescale.\n\n"
+   f"Fourth, the strictly linear scaling of i_pc with ν¹/² (R² = {fmt(r2_val, 6)}) definitively proves that the reaction is controlled by semi-infinite linear "
+   f"molecular diffusion without kinetic limitation or surface adsorption. In unstirred solution, the application of a negative potential ramp depletes "
+   f"ferricyanide at the electrode surface, creating an expanding Nernst diffusion layer whose transient thickness scales as δ ≈ √(π·D·t). At faster scan rates, "
+   f"the electrolysis duration is shorter, restricting the diffusion layer to a much thinner zone adjacent to the electrode (δ ≈ 9.2 μm at 200 mV/s versus "
+   f"δ ≈ 41.2 μm at 10 mV/s). Consequently, the concentration gradient (∂c/∂x)_x=0 is much steeper at high scan rates, driving a substantially larger "
+   f"diffusional flux of analyte to the electrode face and generating proportionately higher peak currents.\n\n"
+   f"The presence of 1.000 M KNO₃ supporting electrolyte in 200-fold excess over the 5.0 mM electroactive analyte was critical in preserving pure diffusion. "
+   f"By providing a massive reservoir of mobile K⁺ and NO₃⁻ ions, the supporting electrolyte reduced the migration transference number of the ferricyanide anion "
+   f"to under 0.4%, ensuring that electrostatic attraction or repulsion by the electrode field was negligible. Furthermore, the high ionic conductivity of the "
+   f"solution suppressed uncompensated resistance to R_u < 25 Ω, eliminating ohmic potential distortion (iR_u < 3 mV even at the highest current of 117 μA). "
+   f"The extracted aqueous diffusion coefficient D = ({fmt(D_val, 2)} ± 0.11) × 10⁻⁶ cm²·s⁻¹ agrees with the Stokes-Einstein relation for a hydrated "
+   f"octahedral complex (hydrodynamic radius r_h ≈ 0.32 nm in water at 25 °C), corroborating the rigor of modern electroanalytical metrology."
+  )
+  
+  conclusion=(
+   f"The aqueous diffusion coefficient of the ferricyanide anion [Fe(CN)₆]³⁻ in 1.000 M KNO₃ at 25.00 °C was successfully determined as "
+   f"D = ({fmt(D_val, 2)} ± 0.11) × 10⁻⁶ cm²·s⁻¹ using cyclic voltammetry at a polished glassy carbon electrode. The experimental peak cathodic "
+   f"currents scaled strictly linearly with the square root of scan rate (R² = {fmt(r2_val, 6)}) across the 10.0 to 200.0 mV·s⁻¹ window, with an "
+   f"invariant peak potential separation ΔE_p = 59.2 mV and current ratio |i_pa / i_pc| = 1.000 confirming ideal Nernstian reversibility. The extracted "
+   f"diffusion coefficient agrees with authoritative electrochemistry literature benchmarks within {fmt(abs(D_val - 7.60)/7.60*100.0, 4)}% relative deviation, "
+   f"demonstrating the high metrological precision of the Randles-Ševčík formulation for diagnostic electrochemistry."
   )
   
   return abstract, graph_choice, discussion, conclusion
