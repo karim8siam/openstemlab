@@ -59,7 +59,29 @@ function update(){
  }else if(cfg.slug==='gibbs-free-energy-solubility-van-t-hoff'){
   $('liveState').textContent='Ready to equilibrate saturated borax slurry at '+p.input.toFixed(1)+' °C.';
   message('Equilibrate borax flask, pre-warm filter pipette, draw 5.00 mL aliquot & titrate with 0.50 M HCl.');
- }else if(cfg.slug==='heat-capacity-ratio-gases-clement-desormes'){
+ }else if(cfg.slug==='partial-molar-volume-binary-mixtures'){
+  $('liveState').textContent='Ready to equilibrate pycnometer with m = '+p.input.toFixed(2)+' mol/kg ethanol.';
+  message('Fill 25 mL pycnometer, seat capillary stopper, equilibrate in 25.00 °C bath & weigh on balance.');
+ }else if(cfg.slug==='partial-molar-volume-binary-mixtures'){
+  const m = p.input;
+  const m_liq = raw - 18.4250;
+  const rho = m_liq / 25.0;
+  const phi = ((1000.0 + m * 46.069) / rho - 1000.0 / 0.997047) / m;
+  $('liveState').textContent='Pycnometer weighed: m_filled = '+raw.toFixed(4)+' g (ρ = '+rho.toFixed(5)+' g/cm³).';
+  message('Pycnometric weighing complete: m_filled = '+raw.toFixed(4)+' g (ρ = '+rho.toFixed(5)+' g/cm³, φ_V = '+phi.toFixed(3)+' cm³/mol). Record in notebook.');
+ }else if(cfg.slug==='partial-molar-volume-binary-mixtures'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawPycCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawPycSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawPycBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='heat-capacity-ratio-gases-clement-desormes'){
   $('liveState').textContent='Ready to pressurize 15 L carboy with dry air to h₁ = '+p.input.toFixed(1)+' cm.';
   message('Pressurize carboy with bellows pump, pre-equilibrate temperature, vent for 0.8 s & record h₂.');
  }else{
@@ -97,6 +119,7 @@ $('measure').onclick=async()=>{
  if(cfg.slug==='heat-solution-crystallization-calorimetry') msgStart='Pouring KNO3 crystals into Dewar, motorized stirring at 200 rpm, endothermic cooling plunge & logging ΔT_drop…';
  if(cfg.slug==='vapor-pressure-liquid-clausius-clapeyron') msgStart='Regulating water bath, throttling air-bleed needle valve, nulling U-tube menisci & reading transducer…';
  if(cfg.slug==='gibbs-free-energy-solubility-van-t-hoff') msgStart='Filtering 5.00 mL saturated borax aliquot, adding bromocresol green, titrating dropwise to yellow endpoint…';
+ if(cfg.slug==='partial-molar-volume-binary-mixtures') msgStart='Immersing pycnometer in 25.00 °C bath (20 min), blotting capillary rim, weighing on analytical balance…';
  if(cfg.slug==='heat-capacity-ratio-gases-clement-desormes') msgStart='Triggering quick-release valve, rapid adiabatic expansion (0.80 s), isochoric thermal re-warming…';
  message(msgStart);
  await new Promise(resolve=>setTimeout(resolve,400));
@@ -165,7 +188,29 @@ $('measure').onclick=async()=>{
   const ln_Ksp = Math.log(Ksp);
   $('liveState').textContent='Titration endpoint reached: V_HCl = '+raw.toFixed(2)+' mL at '+p.input.toFixed(1)+' °C.';
   message('Titration complete: V_HCl = '+raw.toFixed(2)+' mL (s = '+s.toFixed(4)+' M, K_sp = '+Ksp.toExponential(3)+', ln K_sp = '+ln_Ksp.toFixed(3)+'). Record in notebook.');
- }else if(cfg.slug==='heat-capacity-ratio-gases-clement-desormes'){
+ }else if(cfg.slug==='partial-molar-volume-binary-mixtures'){
+  $('liveState').textContent='Ready to equilibrate pycnometer with m = '+p.input.toFixed(2)+' mol/kg ethanol.';
+  message('Fill 25 mL pycnometer, seat capillary stopper, equilibrate in 25.00 °C bath & weigh on balance.');
+ }else if(cfg.slug==='partial-molar-volume-binary-mixtures'){
+  const m = p.input;
+  const m_liq = raw - 18.4250;
+  const rho = m_liq / 25.0;
+  const phi = ((1000.0 + m * 46.069) / rho - 1000.0 / 0.997047) / m;
+  $('liveState').textContent='Pycnometer weighed: m_filled = '+raw.toFixed(4)+' g (ρ = '+rho.toFixed(5)+' g/cm³).';
+  message('Pycnometric weighing complete: m_filled = '+raw.toFixed(4)+' g (ρ = '+rho.toFixed(5)+' g/cm³, φ_V = '+phi.toFixed(3)+' cm³/mol). Record in notebook.');
+ }else if(cfg.slug==='partial-molar-volume-binary-mixtures'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawPycCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawPycSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawPycBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='heat-capacity-ratio-gases-clement-desormes'){
   const gamma_calc = p.input / (p.input - raw);
   $('liveState').textContent='Cycle complete: h₂ = '+raw.toFixed(2)+' cm for h₁ = '+p.input.toFixed(1)+' cm.';
   message('Clément-Desormes expansion complete: h₂ = '+raw.toFixed(2)+' cm (γ = '+gamma_calc.toFixed(3)+'). Record in notebook.');
@@ -458,6 +503,18 @@ function draw(t){
    return;
   }
   $('apparatusDiagram').innerHTML=drawHoffBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='partial-molar-volume-binary-mixtures'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawPycCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawPycSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawPycBenchView(p,rawVal);
   return;
  }
  if(cfg.slug==='heat-capacity-ratio-gases-clement-desormes'){
@@ -4967,5 +5024,280 @@ function drawClementSandboxView(p, rawVal){
  });
 
  svg += text(360, 305, 'Thermodynamic Invariant: Slope m = 0.2857 yields γ = 1.400 with zero baseline offset.', '#789c80', 8.5);
+ return svg;
+}
+
+
+// ======================================================================
+// LAB 18: PARTIAL MOLAR VOLUME OF BINARY MIXTURES
+// ======================================================================
+
+function drawPycBenchView(p, rawVal){
+ const m = p.input;
+ const m_tare = 18.4250;
+ const V_pyc = 25.0000;
+ const M2 = 46.069;
+ const rho0 = 0.997047;
+ const phi_calc = 54.20 + 0.25 * m;
+ const rho_soln = (1000.0 + m * M2) / (1000.0 / rho0 + m * phi_calc);
+ const m_liq = rho_soln * V_pyc;
+ const m_filled = rawVal || (m_tare + m_liq);
+ const V2_bar = phi_calc + 2.0 * 0.25 * m;
+
+ let svg = header('Gay-Lussac Pycnometry & Constant-Temperature Bath (25.00 °C)');
+
+ // Background Lab Bench
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // --- LEFT: THERMOSTATIC CIRCULATING BATH (x: 40, y: 65, w: 220, h: 220) ---
+ const bX = 40, bY = 65, bW = 210, bH = 210;
+ svg += '<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(bX+8)+'" y="'+(bY+8)+'" width="'+(bW-16)+'" height="22" rx="4" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(bX+bW/2)+'" y="'+(bY+22)+'" text-anchor="middle" fill="#86efac" font-size="9" font-weight="bold">THERMOSTATIC BATH (25.00 ± 0.01 °C)</text>';
+
+ // Water Tank
+ const tX = bX + 15, tY = bY + 38, tW = bW - 30, tH = 120;
+ svg += '<rect x="'+tX+'" y="'+tY+'" width="'+tW+'" height="'+tH+'" rx="4" fill="#04121a" stroke="#0284c7" stroke-width="1.2"/>';
+ // Water Fill
+ svg += '<rect x="'+(tX+2)+'" y="'+(tY+15)+'" width="'+(tW-4)+'" height="'+(tH-17)+'" fill="#0369a1" fill-opacity="0.3"/>';
+ // Waves
+ svg += '<path d="M '+(tX+4)+' '+(tY+16)+' Q '+(tX+35)+' '+(tY+11)+', '+(tX+70)+' '+(tY+16)+' T '+(tX+140)+' '+(tY+16)+' T '+(tX+tW-4)+' '+(tY+16)+'" fill="none" stroke="#38bdf8" stroke-width="1"/>';
+
+ // Digital Bath Controller
+ svg += '<rect x="'+(bX+15)+'" y="'+(bY+165)+'" width="'+(bW-30)+'" height="36" rx="4" fill="#020804" stroke="#163824"/>';
+ svg += '<rect x="'+(bX+25)+'" y="'+(bY+170)+'" width="80" height="25" rx="3" fill="#061208" stroke="#22c55e" stroke-width="0.8"/>';
+ svg += '<text x="'+(bX+65)+'" y="'+(bY+187)+'" text-anchor="middle" fill="#4ade80" font-size="12" font-family="monospace" font-weight="bold">25.00°C</text>';
+ svg += '<circle cx="'+(bX+125)+'" cy="'+(bY+178)+'" r="4" fill="#22c55e"/>';
+ svg += '<text x="'+(bX+135)+'" y="'+(bY+181)+'" fill="#86efac" font-size="7">HEATING OK</text>';
+ svg += '<circle cx="'+(bX+125)+'" cy="'+(bY+191)+'" r="4" fill="#38bdf8"/>';
+ svg += '<text x="'+(bX+135)+'" y="'+(bY+194)+'" fill="#38bdf8" font-size="7">CIRCULATOR</text>';
+
+ // Pycnometer inside Bath (Immersed)
+ const pyX = tX + 70, pyY = tY + 40;
+ // Flask body (pear-shaped)
+ svg += '<path d="M '+(pyX-18)+' '+(pyY+50)+' C '+(pyX-28)+' '+(pyY+30)+', '+(pyX-14)+' '+(pyY+12)+', '+(pyX-6)+' '+(pyY)+' L '+(pyX+6)+' '+(pyY)+' C '+(pyX+14)+' '+(pyY+12)+', '+(pyX+28)+' '+(pyY+30)+', '+(pyX+18)+' '+(pyY+50)+' Z" fill="#0ea5e9" fill-opacity="0.25" stroke="#38bdf8" stroke-width="1.2"/>';
+ // Liquid inside pycnometer
+ svg += '<path d="M '+(pyX-17)+' '+(pyY+49)+' C '+(pyX-26)+' '+(pyY+30)+', '+(pyX-13)+' '+(pyY+13)+', '+(pyX-5)+' '+(pyY+2)+' L '+(pyX+5)+' '+(pyY+2)+' C '+(pyX+13)+' '+(pyY+13)+', '+(pyX+26)+' '+(pyY+30)+', '+(pyX+17)+' '+(pyY+49)+' Z" fill="#22c55e" fill-opacity="0.35"/>';
+ // Capillary Stopper neck
+ svg += '<rect x="'+(pyX-5)+'" y="'+(pyY-20)+'" width="10" height="20" fill="#0284c7" fill-opacity="0.2" stroke="#38bdf8" stroke-width="1"/>';
+ // Central capillary bore
+ svg += '<line x1="'+pyX+'" y1="'+(pyY-25)+'" x2="'+pyX+'" y2="'+(pyY+35)+'" stroke="#4ade80" stroke-width="1.2"/>';
+ // Meniscus at ground flat tip
+ svg += '<ellipse cx="'+pyX+'" cy="'+(pyY-25)+'" rx="2.5" ry="1.2" fill="#4ade80"/>';
+ svg += '<text x="'+pyX+'" y="'+(pyY+32)+'" text-anchor="middle" fill="#ffffff" font-size="6.5" font-weight="bold">25 mL</text>';
+ svg += '<text x="'+pyX+'" y="'+(pyY+62)+'" text-anchor="middle" fill="#a7f3d0" font-size="6.8">m = '+m.toFixed(2)+' mol/kg</text>';
+
+
+ // --- CENTER: METTLER TOLEDO ANALYTICAL BALANCE (x: 270, y: 65, w: 220, h: 220) ---
+ const aX = 270, aY = 65, aW = 210, aH = 210;
+ svg += '<rect x="'+aX+'" y="'+aY+'" width="'+aW+'" height="'+aH+'" rx="8" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(aX+8)+'" y="'+(aY+8)+'" width="'+(aW-16)+'" height="22" rx="4" fill="#132e1f" stroke="#1e4d31"/>';
+ svg += '<text x="'+(aX+aW/2)+'" y="'+(aY+22)+'" text-anchor="middle" fill="#86efac" font-size="9" font-weight="bold">METTLER TOLEDO XPE205 (±0.0001 g)</text>';
+
+ // Glass Draft Chamber
+ const dX = aX + 25, dY = aY + 38, dW = aW - 50, dH = 100;
+ svg += '<rect x="'+dX+'" y="'+dY+'" width="'+dW+'" height="'+dH+'" rx="3" fill="#030d07" stroke="#38bdf8" stroke-width="1" stroke-dasharray="4,2"/>';
+ svg += '<text x="'+(dX+dW/2)+'" y="'+(dY+12)+'" text-anchor="middle" fill="#38bdf8" font-size="6.5">Air-Draft Glass Shield</text>';
+
+ // Weighing Pan & Stand
+ const pPanX = dX + dW/2, pPanY = dY + dH - 12;
+ svg += '<rect x="'+(pPanX-35)+'" y="'+pPanY+'" width="70" height="4" rx="2" fill="#94a3b8" stroke="#cbd5e1" stroke-width="0.8"/>';
+ svg += '<rect x="'+(pPanX-6)+'" y="'+(pPanY+4)+'" width="12" height="8" fill="#64748b"/>';
+
+ // Pycnometer on Pan (Weighed)
+ const bPyX = pPanX, bPyY = pPanY - 48;
+ svg += '<path d="M '+(bPyX-15)+' '+(bPyY+45)+' C '+(bPyX-24)+' '+(bPyY+27)+', '+(bPyX-12)+' '+(bPyY+10)+', '+(bPyX-5)+' '+(bPyY)+' L '+(bPyX+5)+' '+(bPyY)+' C '+(bPyX+12)+' '+(bPyY+10)+', '+(bPyX+24)+' '+(bPyY+27)+', '+(bPyX+15)+' '+(bPyY+45)+' Z" fill="#0ea5e9" fill-opacity="0.3" stroke="#38bdf8" stroke-width="1.2"/>';
+ svg += '<path d="M '+(bPyX-14)+' '+(bPyY+44)+' C '+(bPyX-22)+' '+(bPyY+27)+', '+(bPyX-11)+' '+(bPyY+11)+', '+(bPyX-4)+' '+(bPyY+2)+' L '+(bPyX+4)+' '+(bPyY+2)+' C '+(bPyX+11)+' '+(bPyY+11)+', '+(bPyX+22)+' '+(bPyY+27)+', '+(bPyX+14)+' '+(bPyY+44)+' Z" fill="#10b981" fill-opacity="0.45"/>';
+ svg += '<rect x="'+(bPyX-4)+'" y="'+(bPyY-18)+'" width="8" height="18" fill="#38bdf8" fill-opacity="0.25" stroke="#38bdf8" stroke-width="1"/>';
+ svg += '<line x1="'+bPyX+'" y1="'+(bPyY-22)+'" x2="'+bPyX+'" y2="'+(bPyY+30)+'" stroke="#a7f3d0" stroke-width="1.2"/>';
+ svg += '<ellipse cx="'+bPyX+'" cy="'+(bPyY-22)+'" rx="2" ry="1" fill="#4ade80"/>';
+
+ // Digital Display Panel
+ const dpX = aX + 20, dpY = aY + 148, dpW = aW - 40, dpH = 48;
+ svg += '<rect x="'+dpX+'" y="'+dpY+'" width="'+dpW+'" height="'+dpH+'" rx="4" fill="#020804" stroke="#163824"/>';
+ svg += '<rect x="'+(dpX+10)+'" y="'+(dpY+8)+'" width="'+(dpW-20)+'" height="32" rx="3" fill="#041208" stroke="#22c55e" stroke-width="0.8"/>';
+ svg += '<text x="'+(dpX+dpW-20)+'" y="'+(dpY+30)+'" text-anchor="end" fill="#4ade80" font-size="16" font-family="monospace" font-weight="bold">'+m_filled.toFixed(4)+' g</text>';
+ svg += '<text x="'+(dpX+16)+'" y="'+(dpY+22)+'" fill="#86efac" font-size="6.8" font-family="monospace">STABLE</text>';
+ svg += '<text x="'+(dpX+16)+'" y="'+(dpY+32)+'" fill="#22c55e" font-size="6.8" font-family="monospace">NET</text>';
+
+
+ // --- RIGHT: THERMODYNAMIC CALCULATOR & INVARIANTS (x: 500, y: 65, w: 185, h: 220) ---
+ const cX = 500, cY = 65, cW = 185, cH = 220;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="8" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(cX+8)+'" y="'+(cY+8)+'" width="'+(cW-16)+'" height="22" rx="4" fill="#132e1f" stroke="#1e4d31"/>';
+ svg += '<text x="'+(cX+cW/2)+'" y="'+(cY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">THERMODYNAMIC VALUES</text>';
+
+ const statItems = [
+  {label: 'Solute Molality m', val: m.toFixed(2)+' mol/kg', col: '#a7f3d0'},
+  {label: 'Empty Pycnometer m₀', val: m_tare.toFixed(4)+' g', col: '#94a3b8'},
+  {label: 'Liquid Mass m_liq', val: m_liq.toFixed(4)+' g', col: '#38bdf8'},
+  {label: 'Solution Density ρ', val: rho_soln.toFixed(5)+' g/cm³', col: '#facc15'},
+  {label: 'Apparent Volume φ_V', val: phi_calc.toFixed(3)+' cm³/mol', col: '#4ade80'},
+  {label: 'Partial Molar V̄₂', val: V2_bar.toFixed(3)+' cm³/mol', col: '#38bdf8'},
+  {label: 'Infinite Dilution V̄₂^∞', val: '54.20 cm³/mol', col: '#4ade80'}
+ ];
+
+ statItems.forEach((it, idx)=>{
+  const sy = cY + 36 + idx * 24;
+  svg += '<rect x="'+(cX+8)+'" y="'+sy+'" width="'+(cW-16)+'" height="20" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg += '<text x="'+(cX+14)+'" y="'+(sy+13)+'" fill="#94a3b8" font-size="7">'+it.label+'</text>';
+  svg += '<text x="'+(cX+cW-14)+'" y="'+(sy+13)+'" text-anchor="end" fill="'+it.col+'" font-size="7.5" font-family="monospace" font-weight="bold">'+it.val+'</text>';
+ });
+
+ svg += '<rect x="'+(cX+8)+'" y="'+(cY+204)+'" width="'+(cW-16)+'" height="12" rx="2" fill="#022c22"/>';
+ svg += '<text x="'+(cX+cW/2)+'" y="'+(cY+213)+'" text-anchor="middle" fill="#86efac" font-size="6.5" font-weight="bold">Contraction: ΔV_dil = −4.48 cm³/mol</text>';
+
+ svg += text(360, 312, 'High-precision Gay-Lussac pycnometry at 25.00 °C: m₀ = 18.4250 g, V_pyc = 25.000 cm³.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawPycCompareView(p, rawVal){
+ let svg = header('Excess Molar Volume & Hydrophobic Hydration Comparison');
+
+ // Background
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // 4 Comparative Stages
+ const cols = [
+  {title: 'Pure Solvent H₂O', m: 0.0, rho: 0.99705, phi: 18.068, v2: 18.068, desc: 'Open tetrahedral ice-like hydrogen cage network', col: '#38bdf8'},
+  {title: 'Dilute EtOH (0.50 m)', m: 0.50, rho: 0.99312, phi: 54.325, v2: 54.450, desc: 'Interstitial ethyl packing in clathrate water cavities', col: '#4ade80'},
+  {title: 'Moderate EtOH (2.0 m)', m: 2.00, rho: 0.98182, phi: 54.700, v2: 55.700, desc: 'Hydration shell overlap & hydrophobic contact', col: '#facc15'},
+  {title: 'Pure Liquid EtOH', m: 'Pure', rho: 0.78520, phi: 58.680, v2: 58.680, desc: 'Bulk ethanol liquid with open linear hydrogen chains', col: '#f87171'}
+ ];
+
+ cols.forEach((c, idx)=>{
+  const cx = 35 + idx * 165;
+  const cy = 60, cw = 155, ch = 225;
+  svg += '<rect x="'+cx+'" y="'+cy+'" width="'+cw+'" height="'+ch+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.2"/>';
+  svg += '<rect x="'+(cx+6)+'" y="'+(cy+6)+'" width="'+(cw-12)+'" height="20" rx="3" fill="#132e1f"/>';
+  svg += '<text x="'+(cx+cw/2)+'" y="'+(cy+19)+'" text-anchor="middle" fill="'+c.col+'" font-size="8" font-weight="bold">'+c.title+'</text>';
+
+  // Visual Flask representation
+  const flX = cx + cw/2, flY = cy + 40;
+  svg += '<path d="M '+(flX-18)+' '+(flY+45)+' C '+(flX-28)+' '+(flY+25)+', '+(flX-12)+' '+(flY+8)+', '+(flX-5)+' '+(flY)+' L '+(flX+5)+' '+(flY)+' C '+(flX+12)+' '+(flY+8)+', '+(flX+28)+' '+(flY+25)+', '+(flX+18)+' '+(flY+45)+' Z" fill="'+c.col+'" fill-opacity="0.25" stroke="'+c.col+'" stroke-width="1.2"/>';
+
+  // Molecular Representation Diagram
+  if(idx === 0){
+   // Pure water tetrahedral
+   svg += '<circle cx="'+(flX)+' " cy="'+(flY+25)+'" r="4" fill="#38bdf8"/>';
+   svg += '<circle cx="'+(flX-10)+'" cy="'+(flY+35)+'" r="3" fill="#e2e8f0"/>';
+   svg += '<circle cx="'+(flX+10)+'" cy="'+(flY+35)+'" r="3" fill="#e2e8f0"/>';
+   svg += '<line x1="'+flX+'" y1="'+(flY+25)+'" x2="'+(flX-10)+'" y2="'+(flY+35)+'" stroke="#38bdf8" stroke-dasharray="1,1"/>';
+   svg += '<line x1="'+flX+'" y1="'+(flY+25)+'" x2="'+(flX+10)+'" y2="'+(flY+35)+'" stroke="#38bdf8" stroke-dasharray="1,1"/>';
+  }else if(idx === 1){
+   // Interstitial cavity
+   svg += '<rect x="'+(flX-7)+'" y="'+(flY+22)+'" width="14" height="8" rx="3" fill="#4ade80"/>';
+   svg += '<circle cx="'+(flX-14)+'" cy="'+(flY+26)+'" r="3" fill="#38bdf8" fill-opacity="0.6"/>';
+   svg += '<circle cx="'+(flX+14)+'" cy="'+(flY+26)+'" r="3" fill="#38bdf8" fill-opacity="0.6"/>';
+   svg += '<circle cx="'+flX+'" cy="'+(flY+14)+'" r="3" fill="#38bdf8" fill-opacity="0.6"/>';
+   svg += '<circle cx="'+flX+'" cy="'+(flY+38)+'" r="3" fill="#38bdf8" fill-opacity="0.6"/>';
+  }else if(idx === 2){
+   // Cluster
+   svg += '<rect x="'+(flX-12)+'" y="'+(flY+20)+'" width="12" height="7" rx="2" fill="#facc15"/>';
+   svg += '<rect x="'+(flX)+'" y="'+(flY+24)+'" width="12" height="7" rx="2" fill="#facc15"/>';
+  }else{
+   // Pure ethanol chains
+   svg += '<rect x="'+(flX-14)+'" y="'+(flY+16)+'" width="12" height="6" rx="2" fill="#f87171"/>';
+   svg += '<rect x="'+(flX-2)+'" y="'+(flY+26)+'" width="12" height="6" rx="2" fill="#f87171"/>';
+   svg += '<rect x="'+(flX-12)+'" y="'+(flY+36)+'" width="12" height="6" rx="2" fill="#f87171"/>';
+  }
+
+  // Quantitative Stats
+  const infoY = cy + 100;
+  svg += '<rect x="'+(cx+8)+'" y="'+infoY+'" width="'+(cw-16)+'" height="55" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg += '<text x="'+(cx+14)+'" y="'+(infoY+13)+'" fill="#94a3b8" font-size="6.8">Density ρ: <tspan fill="'+c.col+'" font-weight="bold">'+c.rho.toFixed(4)+' g/cm³</tspan></text>';
+  svg += '<text x="'+(cx+14)+'" y="'+(infoY+26)+'" fill="#94a3b8" font-size="6.8">φ_V: <tspan fill="'+c.col+'" font-weight="bold">'+(typeof c.phi==='number'?c.phi.toFixed(2):c.phi)+' cm³/mol</tspan></text>';
+  svg += '<text x="'+(cx+14)+'" y="'+(infoY+39)+'" fill="#94a3b8" font-size="6.8">Partial V̄₂: <tspan fill="'+c.col+'" font-weight="bold">'+(typeof c.v2==='number'?c.v2.toFixed(2):c.v2)+' cm³/mol</tspan></text>';
+  svg += '<text x="'+(cx+14)+'" y="'+(infoY+50)+'" fill="#a7f3d0" font-size="6">ΔV_dil: '+(typeof c.v2==='number'?(c.v2-58.68).toFixed(2):'0.00')+' cm³/mol</text>';
+
+  // Textual description
+  svg += '<rect x="'+(cx+8)+'" y="'+(cy+162)+'" width="'+(cw-16)+'" height="55" rx="3" fill="#030805"/>';
+  svg += '<text x="'+(cx+12)+'" y="'+(cy+174)+'" fill="#cbd5e1" font-size="6.5" width="'+(cw-24)+'">'+c.desc+'</text>';
+ });
+
+ svg += text(360, 312, 'Hydrophobic Hydration Invariant: V̄₂^∞ (54.20 cm³/mol) is 4.48 cm³/mol less than pure ethanol (58.68 cm³/mol).', '#789c80', 8.5);
+ return svg;
+}
+
+function drawPycSandboxView(p, rawVal){
+ let svg = header('Thermodynamic Indicator & Excess Volume Diagram ΔV^E');
+
+ // Background
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // --- LEFT: EXCESS MOLAR VOLUME & GIBBS-DUHEM CURVE (x: 35, y: 55, w: 370, h: 235) ---
+ const lX = 35, lY = 55, lW = 370, lH = 235;
+ svg += '<rect x="'+lX+'" y="'+lY+'" width="'+lW+'" height="'+lH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+18)+'" text-anchor="middle" fill="#86efac" font-size="9" font-weight="bold">EXCESS MOLAR VOLUME ΔV^E & PARTIAL VOLUMES V̄_i</text>';
+
+ // Plot Axes
+ const gX = lX + 45, gY = lY + 35, gW = lW - 65, gH = lH - 80;
+ svg += '<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#051009" stroke="#162e1e"/>';
+
+ // Grid lines
+ for(let i=1; i<5; i++){
+  const gy = gY + (gH * i / 5);
+  svg += '<line x1="'+gX+'" y1="'+gy+'" x2="'+(gX+gW)+'" y2="'+gy+'" stroke="#162e1e" stroke-width="0.8" stroke-dasharray="2,2"/>';
+  const gx = gX + (gW * i / 5);
+  svg += '<line x1="'+gx+'" y1="'+gY+'" x2="'+gx+'" y2="'+(gY+gH)+'" stroke="#162e1e" stroke-width="0.8" stroke-dasharray="2,2"/>';
+ }
+
+ // Labels
+ svg += '<text x="'+(gX+gW/2)+'" y="'+(gY+gH+14)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5">Ethanol Mole Fraction x₂</text>';
+ svg += '<text x="'+(gX-8)+'" y="'+(gY+gH/2)+'" text-anchor="middle" transform="rotate(-90 '+(gX-8)+' '+(gY+gH/2)+')" fill="#94a3b8" font-size="7.5">Molar Volume (cm³/mol)</text>';
+
+ // Zero line (Ideal mixing line for excess volume)
+ const zeroY = gY + gH - 30;
+ svg += '<line x1="'+gX+'" y1="'+zeroY+'" x2="'+(gX+gW)+'" y2="'+zeroY+'" stroke="#64748b" stroke-width="1" stroke-dasharray="3,2"/>';
+ svg += '<text x="'+(gX+gW-5)+'" y="'+(zeroY-3)+'" text-anchor="end" fill="#64748b" font-size="6.5">ΔV_ideal = 0</text>';
+
+ // Negative Excess Volume Curve ΔV^E = x1*x2 * [-4.48 ...]
+ // Minimum at x2 ≈ 0.38, depth ΔV^E ≈ -1.1 cm³/mol
+ const curveP = 'M '+gX+' '+zeroY+' Q '+(gX+gW*0.38)+' '+(zeroY+25)+' '+(gX+gW)+' '+zeroY;
+ svg += '<path d="'+curveP+'" fill="none" stroke="#ef4444" stroke-width="2.2"/>';
+ svg += '<text x="'+(gX+gW*0.38)+'" y="'+(zeroY+22)+'" text-anchor="middle" fill="#ef4444" font-size="7" font-weight="bold">Excess Volume ΔV^E < 0 (Contraction)</text>';
+
+ // Ethanol Partial Molar Volume Curve V2_bar(x)
+ // Starts at 54.20 (x=0) and rises to 58.68 (x=1)
+ const v2_0_y = gY + 80; // corresponds to 54.20
+ const v2_1_y = gY + 30; // corresponds to 58.68
+ svg += '<path d="M '+gX+' '+v2_0_y+' Q '+(gX+gW*0.4)+' '+(v2_0_y-5)+' '+(gX+gW)+' '+v2_1_y+'" fill="none" stroke="#38bdf8" stroke-width="2"/>';
+ svg += '<text x="'+(gX+10)+'" y="'+(v2_0_y-6)+'" fill="#38bdf8" font-size="7" font-weight="bold">V̄₂^∞ = 54.20 cm³/mol</text>';
+ svg += '<text x="'+(gX+gW-10)+'" y="'+(v2_1_y-6)+'" text-anchor="end" fill="#38bdf8" font-size="7" font-weight="bold">V₂* = 58.68</text>';
+
+ // Water Partial Molar Volume Curve V1_bar(x)
+ // Starts at 18.07 (x=0) and drops slightly
+ const v1_0_y = gY + 120;
+ const v1_1_y = gY + 135;
+ svg += '<path d="M '+gX+' '+v1_0_y+' Q '+(gX+gW*0.6)+' '+(v1_0_y+2)+' '+(gX+gW)+' '+v1_1_y+'" fill="none" stroke="#4ade80" stroke-width="1.8"/>';
+ svg += '<text x="'+(gX+10)+'" y="'+(v1_0_y-6)+'" fill="#4ade80" font-size="7">V̄₁(H₂O) = 18.07 cm³/mol</text>';
+
+ // Invariant badge at bottom
+ svg += '<rect x="'+(lX+15)+'" y="'+(lY+195)+'" width="'+(lW-30)+'" height="32" rx="3" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+215)+'" text-anchor="middle" fill="#86efac" font-size="7.8" font-family="monospace" font-weight="bold">Gibbs-Duhem Invariant: n₁ dV̄₁ + n₂ dV̄₂ = 0 across all compositions</text>';
+
+
+ // --- RIGHT: SYSTEM AUDIT & PRECISION PYCNOMETRY CRITERIA ---
+ const rX = 420, rY = 55, rW = 280, rH = 235;
+ svg += '<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<text x="'+(rX+rW/2)+'" y="'+(rY+18)+'" text-anchor="middle" fill="#86efac" font-size="9" font-weight="bold">PRECISION PYCNOMETRY & AUDIT</text>';
+
+ const auditItems = [
+  {label: '±0.01 °C Thermal Stability', desc: 'Circulating water bath eliminates thermal expansion density drift', val: 'δρ < 7×10⁻⁶ g/cm³', col: '#4ade80'},
+  {label: 'Lint-Free Meniscus Blotting', desc: 'Capillary flush wiping prevents interior suction wicking', val: 'δV < 0.08 μL', col: '#38bdf8'},
+  {label: 'Dual Glass Counterpoise', desc: 'Symmetric tare vessel cancels air buoyancy & electrostatic drift', val: 'δm = ±0.0001 g', col: '#86efac'},
+  {label: 'Vacuum Degassed Millipore', desc: 'Zero microbubble nucleations on internal pycnometer walls', val: 'No wall voids', col: '#facc15'},
+  {label: 'Linear OLS Dilute Molality', desc: 'φ_V = φ_V° + b_V·m extrapolation eliminates random tare bias', val: 'R² = 0.99998', col: '#4ade80'}
+ ];
+
+ auditItems.forEach((it, idx)=>{
+  const ay = rY + 30 + idx * 39;
+  svg += '<rect x="'+(rX+8)+'" y="'+ay+'" width="'+(rW-16)+'" height="33" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg += '<text x="'+(rX+14)+'" y="'+(ay+12)+'" fill="'+it.col+'" font-size="7.5" font-weight="bold">'+it.label+'</text>';
+  svg += '<text x="'+(rX+14)+'" y="'+(ay+24)+'" fill="#94a3b8" font-size="6.8">'+it.desc+'</text>';
+  svg += '<text x="'+(rX+rW-14)+'" y="'+(ay+12)+'" text-anchor="end" fill="'+it.col+'" font-size="7.2" font-family="monospace">'+it.val+'</text>';
+ });
+
+ svg += text(360, 312, 'Thermodynamic Invariant: Limiting partial molar volume V̄₂^∞ = 54.20 cm³/mol with R² = 0.99998.', '#789c80', 8.5);
  return svg;
 }

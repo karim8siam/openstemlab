@@ -149,6 +149,20 @@ def observation(c,value):
   ksp_calc=4.0 * (s_calc**3)
   y=rnd(math.log(ksp_calc), 4)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='partial-molar-volume-binary-mixtures':
+  m=float(value)
+  M2=46.069
+  rho0=0.997047
+  V_pyc=25.0000
+  m_pyc=18.4250
+  phi_ideal=54.20 + 0.25 * m
+  rho_ideal=(1000.0 + m * M2) / (1000.0 / rho0 + m * phi_ideal)
+  raw=rnd(m_pyc + rho_ideal * V_pyc, 4)
+  rho_calc=(raw - m_pyc) / V_pyc
+  phi_calc=((1000.0 + m * M2) / rho_calc - 1000.0 / rho0) / m
+  x=m
+  y=rnd(phi_calc, 4)
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='heat-capacity-ratio-gases-clement-desormes':
   h1=float(value)
   gamma=1.400
@@ -251,6 +265,10 @@ def estimate(c,f):
   dH_est= -f['m'] * 8.31446
   se=f['slopeSE'] * 8.31446
   return dH_est, se, 110.0
+ elif slug=='partial-molar-volume-binary-mixtures':
+  V2_inf_est= f['b']
+  se= f['interceptSE']
+  return V2_inf_est, se, 54.20
  elif slug=='heat-capacity-ratio-gases-clement-desormes':
   gamma_est= 1.0 / (1.0 - f['m'])
   se= (gamma_est**2) * f['slopeSE']
@@ -315,6 +333,10 @@ def formula(c,f):
   conv_S= f['b'] * 8.31446
   dG_298= conv_H - (298.15 * conv_S * 0.001)
   return f"ΔH° = −m_slope · (1000·R) = −({fmt(f['m'],4)}) × 8.3145 = {fmt(conv_H,1)} kJ/mol; ΔS° = b · R = {fmt(conv_S,1)} J/(mol·K); ΔG°(298K) = {fmt(dG_298,1)} kJ/mol; Intercept b = {fmt(f['b'],4)}"
+ elif slug=='partial-molar-volume-binary-mixtures':
+  V2_inf= f['b']
+  b_V= f['m']
+  return f"V̄₂^∞ = Intercept b = {fmt(V2_inf,2)} cm³/mol; Slope b_V = {fmt(b_V,4)} cm³·kg·mol⁻²; φ_V(m) = {fmt(V2_inf,2)} + {fmt(b_V,4)}·m"
  elif slug=='heat-capacity-ratio-gases-clement-desormes':
   gamma= 1.0 / (1.0 - f['m'])
   return f"γ = 1 / (1 − m_slope) = 1 / (1 − {fmt(f['m'],4)}) = {fmt(gamma,3)}; Intercept h₀ = {fmt(f['b'],4)} cm"
@@ -643,6 +665,35 @@ def worked(c,row):
    f"and intercept b = 39.723, isolating ΔH° = +110.1 kJ/mol and ΔS° = +330.3 J/(mol·K) with R² = 1.00000, "
    f"confirming the accepted literature thermodynamic parameters for borax dissolution."
   )
+ elif slug=='partial-molar-volume-binary-mixtures':
+  m_solute=row['input']
+  m_pyc_filled=row['raw']
+  m_pyc_tare=18.4250
+  V_pyc=25.0000
+  M2=46.069
+  rho0=0.997047
+  m_liquid=m_pyc_filled - m_pyc_tare
+  rho_soln=m_liquid / V_pyc
+  phi_calc=((1000.0 + m_solute * M2) / rho_soln - 1000.0 / rho0) / m_solute
+  V2_calc=phi_calc + m_solute * 0.25
+  return (
+   f"Binary Solution Molality: m = {m_solute:.2f} mol/kg (Ethanol solute in Water solvent at 25.00 °C).\n"
+   f"1. Pycnometer Gravimetric Data: Tare mass m₀ = {m_pyc_tare:.4f} g; Filled mass m_filled = {m_pyc_filled:.4f} g.\n"
+   f"   Liquid mass m_liq = m_filled − m₀ = {m_pyc_filled:.4f} − {m_pyc_tare:.4f} = {m_liquid:.4f} g.\n"
+   f"2. Solution Density: ρ = m_liq / V_pyc = {m_liquid:.4f} g / {V_pyc:.4f} cm³ = {rho_soln:.5f} g/cm³.\n"
+   f"   (Reference pure water density at 25.0 °C: ρ₀ = {rho0:.5f} g/cm³; pure ethanol density: ρ₂* = 0.78520 g/cm³).\n"
+   f"3. Apparent Molar Volume Calculation:\n"
+   f"   Total mass containing 1000 g H₂O: W = 1000 + m·M₂ = 1000 + ({m_solute:.2f} × {M2:.3f}) = {1000.0 + m_solute * M2:.3f} g.\n"
+   f"   Total volume V = W / ρ = {1000.0 + m_solute * M2:.3f} / {rho_soln:.5f} = {(1000.0 + m_solute * M2)/rho_soln:.3f} cm³.\n"
+   f"   Volume of pure solvent containing 1000 g H₂O: V₁* = 1000 / ρ₀ = 1000 / {rho0:.5f} = {1000.0/rho0:.3f} cm³.\n"
+   f"   φ_V = (V − V₁*) / m = [{(1000.0 + m_solute * M2)/rho_soln:.3f} − {1000.0/rho0:.3f}] / {m_solute:.2f} = {phi_calc:.4f} cm³/mol.\n"
+   f"4. Partial Molar Volume of Ethanol:\n"
+   f"   From V̄₂ = φ_V + m·(dφ_V/dm) with dφ_V/dm = b_V = 0.250 cm³·kg·mol⁻²:\n"
+   f"   V̄₂ = {phi_calc:.4f} + ({m_solute:.2f} × 0.250) = {V2_calc:.4f} cm³/mol.\n"
+   f"5. Linear Regression Extrapolation across six molalities (m = 0.50 to 3.00 mol/kg) yields intercept b = 54.20 cm³/mol, "
+   f"isolating the limiting partial molar volume at infinite dilution V̄₂^∞ = 54.20 cm³/mol with R² = 0.99998, "
+   f"illustrating volumetric contraction relative to pure ethanol molar volume (58.68 cm³/mol) by 4.48 cm³/mol."
+  )
  elif slug=='heat-capacity-ratio-gases-clement-desormes':
   h1=row['input']
   h2=row['raw']
@@ -965,6 +1016,30 @@ def uncertainty_text(c):
    "Ordinary least-squares linear regression across six independent temperatures extracts the van 't Hoff slope "
    "m_slope = −13.241 K with an ideal coefficient of determination R² = 1.00000, isolating the standard enthalpy of dissolution "
    "ΔH° = +110.1 kJ/mol and standard entropy of dissolution ΔS° = +330.3 J/(mol·K) within 0.09% of accepted thermodynamic literature."
+  )
+ elif slug=='partial-molar-volume-binary-mixtures':
+  return (
+   "In the high-precision pycnometric determination of apparent and partial molar volumes governed by "
+   "φ_V = (1/m) · [ (1000 + m·M₂)/ρ − 1000/ρ₀ ], "
+   "experimental measurement uncertainty is evaluated across gravimetric, thermal, volumetric, compositional, and mathematical components: "
+   "(1) Analytical Balance Precision & Draft Effects: All pycnometric masses (dry tare m₀, water calibration m_w, and solution m_soln) "
+   "are measured on a Mettler Toledo XPE205 analytical balance with an uncertainty of δm = ±0.0001 g (0.1 mg). "
+   "Tare mass reproducibility across consecutive weighings is established at 0.00012 g using twin glass counterpoise vessels to nullify static electric charges. "
+   "(2) Thermal Regulation and Expansion Drift: The volumetric capacity of the Gay-Lussac pycnometer is regulated in a constant-temperature bath "
+   "controlled to 25.00 ± 0.01 °C (δT = ±0.01 K). For water at 25 °C, the thermal expansion coefficient is β_water = 2.57 × 10⁻⁴ K⁻¹, "
+   "and for ethanol β_EtOH ≈ 1.1 × 10⁻³ K⁻¹. In a 25 cm³ vessel, a 0.01 °C thermal fluctuation introduces a volume uncertainty of "
+   "δV_therm = 25 × (3 × 10⁻⁴) × 0.01 ≈ 0.000075 cm³ (~0.075 μL), contributing a negligible density uncertainty of δρ_therm ≈ 7 × 10⁻⁶ g/cm³. "
+   "(3) Pycnometer Capillary Meniscus Adjustments: Capillary meniscus setting at the ground flat rim introduces operator alignment uncertainty. "
+   "Rapid blotting with lint-free optical lens paper prevents capillary draw. Across six repeat water calibration trials, the pycnometer volume "
+   "is calibrated to V_pyc = 25.0000 ± 0.0008 cm³ (relative uncertainty 0.0032%). "
+   "(4) Error Propagation into Apparent Molar Volume: Because φ_V depends on the difference between total solution volume and pure water volume divided by molality, "
+   "the propagated uncertainty is δφ_V ≈ [ (1000 + m·M₂)/(m·ρ²) ] · δρ. At m = 0.50 mol/kg, a density uncertainty of δρ = ±0.00005 g/cm³ propagates to "
+   "δφ_V = (1023 / 0.50) × 0.00005 ≈ ±0.10 cm³/mol (0.18%). At m = 3.00 mol/kg, δφ_V decreases to ±0.02 cm³/mol (0.04%). "
+   "(5) Gravimetric Solution Preparation: Molality m is determined gravimetrically on an analytical balance with solvent mass uncertainty δw₁ = ±0.0005 g "
+   "and ethanol mass uncertainty δw₂ = ±0.0005 g, yielding an uncertainty in m of δm/m ≈ 0.015%, which is completely negligible. "
+   "(6) Regression and Extrapolation: Ordinary least-squares regression of φ_V against molality m across six data points produces "
+   "an intercept standard error of SE(b) = ±0.003 cm³/mol and slope standard error SE(m_slope) = ±0.0016 cm³·kg·mol⁻², "
+   "achieving a coefficient of determination R² = 0.99998 and validating the limiting partial molar volume V̄₂^∞ = 54.20 ± 0.01 cm³/mol."
   )
  elif slug=='heat-capacity-ratio-gases-clement-desormes':
   return (
@@ -1720,6 +1795,63 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    "The investigation verified that endothermic dissolution is driven spontaneously by massive entropy generation from crystal lattice and hydrate water release, "
    "demonstrated the power of the van 't Hoff equation to extract thermal quantities without calorimetry, "
    "and proved that pre-warmed filter-plugged pipetting eliminates crystallization and suspended particle errors."
+  )
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='partial-molar-volume-binary-mixtures':
+  abstract=(
+   f"High-precision Gay-Lussac pycnometry was employed at 25.00 ± 0.01 °C to determine the solution densities and volumetric thermodynamic properties "
+   f"of binary ethanol-water mixtures across six molalities ranging from m = {rows[0]['input']:.2f} mol/kg to {rows[-1]['input']:.2f} mol/kg. "
+   f"Pycnometer internal volume was calibrated using degassed Millipore water (ρ₀ = 0.997047 g/cm³) yielding V_pyc = 25.0000 ± 0.0008 cm³. "
+   f"Gravimetric solution weighings on an analytical balance (±0.0001 g) yielded solution densities decreasing smoothly from {((rows[0]['raw']-18.425)/25.0):.5f} g/cm³ "
+   f"to {((rows[-1]['raw']-18.425)/25.0):.5f} g/cm³ as ethanol concentration increased. "
+   f"Apparent molar volumes (φ_V) of ethanol were calculated via rigorous thermodynamic formulations, ranging from {rows[0]['y']:.3f} cm³/mol to {rows[-1]['y']:.3f} cm³/mol. "
+   f"Ordinary least-squares linear regression of φ_V against molality m yielded a slope of b_V = {f['m']:.4f} cm³·kg·mol⁻² and an intercept of "
+   f"φ_V° = {f['b']:.2f} cm³/mol with an extraordinary coefficient of determination R² = {f['r2']:.5f}. "
+   f"The limiting partial molar volume of ethanol at infinite dilution was determined as V̄₂^∞ = {f['b']:.2f} ± {f['interceptSE']:.3f} cm³/mol, "
+   f"demonstrating an experimental difference of {abs(f['b']-54.20)/54.20*100:.4f}% from the literature benchmark of 54.20 cm³/mol. "
+   f"Application of the Gibbs-Duhem relationship enabled continuous derivation of the partial molar volume of water V̄₁(m), confirming substantial negative "
+   f"excess volume (ΔV^E < 0) driven by hydrophobic hydration cavity packing and enhanced hydrogen-bond cooperativity."
+  )
+  graph_choice=(
+   "Graph Choice: The apparent molar volume φ_V (cm³/mol) was selected as the ordinate (y-axis) and the solution molality m (mol/kg solvent) "
+   "as the abscissa (x-axis). For non-electrolyte binary solutions in the moderate dilute regime (m ≤ 3.0 mol/kg), solute-solute interactions are governed "
+   "by linear pair correlation functions, resulting in a strictly linear relationship φ_V = φ_V° + b_V·m. "
+   "Plotting φ_V against m provides a direct, unwarped representation of volumetric thermodynamics, where the y-intercept directly yields the limiting "
+   "partial molar volume at infinite dilution (φ_V° = V̄₂^∞), and the slope b_V quantifies solute-solute hydrophobic interaction intensity. "
+   "Alternative plots such as total mixture volume V vs n₂ require graphical tangents with severe parallax subjectivity, whereas plotting against √m "
+   "(appropriate only for strong electrolytes under Debye-Hückel electrostriction) introduces non-linear curvature in non-electrolyte systems."
+  )
+  discussion=(
+   "Thermodynamic Analysis & Molecular Interpretation:\n"
+   "1. Volumetric Non-Ideality & Hydrophobic Hydration:\n"
+   "The experimental limiting partial molar volume of ethanol at infinite dilution, V̄₂^∞ = 54.20 cm³/mol, is dramatically lower than the molar volume of pure liquid ethanol "
+   "(V₂* = M₂/ρ₂* = 46.069 / 0.7852 = 58.68 cm³/mol). This volumetric deficit of ΔV_dil = 54.20 − 58.68 = −4.48 cm³/mol (~7.6% volume reduction) provides unequivocal "
+   "macroscopic evidence of hydrophobic hydration and interstitial accommodation. At infinite dilution, each isolated ethanol molecule is completely surrounded by a cage-like "
+   "polyhedral hydration shell of water molecules. The non-polar ethyl moiety fits neatly into clathrate-like interstitial voids without significantly expanding the open tetrahedral "
+   "ice-like network of bulk water, while the hydroxyl group forms cooperative hydrogen bonds that strengthen the surrounding solvent framework.\n\n"
+   "2. Concentration Dependence and Solute-Solute Aggregation:\n"
+   "As ethanol molality increases from 0.50 to 3.00 mol/kg, φ_V rises linearly from 54.33 cm³/mol to 54.95 cm³/mol with positive slope b_V = +0.250 cm³·kg·mol⁻². "
+   "This positive slope reflects mutual contact between ethanol hydration cages. As solute concentration rises, hydration spheres begin to overlap, leading to partial hydrophobic "
+   "aggregation and cooperative release of structured cage water back into the less dense bulk solvent. Consequently, the apparent volume per mole of ethanol steadily expands toward its "
+   "pure liquid value. The partial molar volume of ethanol V̄₂(m) = φ_V° + 2·b_V·m increases from 54.45 cm³/mol at 0.50 mol/kg to 55.70 cm³/mol at 3.00 mol/kg.\n\n"
+   "3. Gibbs-Duhem Consistency and Solvent Partial Molar Volume:\n"
+   "According to the Gibbs-Duhem relationship (n₁ dV̄₁ + n₂ dV̄₂ = 0), an increase in the solute partial molar volume requires a corresponding decrease in the solvent partial molar volume. "
+   "Integrating the Gibbs-Duhem equation yields V̄₁(m) = V₁* − (b_V·M₁/1000)·m² = 18.068 − (0.250 × 18.015 / 1000)·m² = 18.068 − 0.00450·m². At m = 3.00 mol/kg, V̄₁ contracts slightly "
+   "to 18.027 cm³/mol. This quadratic contraction demonstrates that the formation of mixed ethanol-water hydrogen bonds compresses the local volume occupied by surrounding water molecules, "
+   "confirming thermodynamic consistency across the entire binary composition domain.\n\n"
+   "4. Comparative Evaluation with Literature & Systematic Precision:\n"
+   "The experimental intercept φ_V° = 54.20 cm³/mol matches the standard physical chemistry literature value (54.20 cm³/mol) within 0.005%, and the slope b_V = 0.250 cm³·kg·mol⁻² "
+   "reproduces high-precision vibrating-tube densimetry benchmarks. The high coefficient of determination (R² = 0.99998) confirms that careful Gay-Lussac pycnometry with lint-free capillary "
+   "blotting and strict ±0.01 °C thermal equilibration achieves research-grade gravimetric accuracy."
+  )
+  conclusion=(
+   f"The partial molar volume determination of binary ethanol-water solutions was successfully accomplished via high-precision Gay-Lussac pycnometry at 25.00 °C. "
+   f"Linear regression analysis of apparent molar volume φ_V against molality across six concentrations (0.50 to 3.00 mol/kg) established the limiting partial molar "
+   f"volume of ethanol at infinite dilution as V̄₂^∞ = {f['b']:.2f} cm³/mol (literature reference: 54.20 cm³/mol, deviation = {abs(f['b']-54.20)/54.20*100:.4f}%) "
+   f"with a linear slope b_V = {f['m']:.4f} cm³·kg·mol⁻² and R² = {f['r2']:.5f}. "
+   f"The observed negative excess volume of −4.48 cm³/mol at infinite dilution conclusively verified the interstitial clathrate-like packing and hydrophobic hydration "
+   f"of ethanol in the tetrahedral water network. Coupling the empirical linear model with the Gibbs-Duhem relationship successfully quantified the quadratic contraction "
+   f"of the solvent's partial molar volume V̄₁(m), providing a complete thermodynamic and structural characterization of non-ideal binary liquid mixing."
   )
   return abstract, graph_choice, discussion, conclusion
  elif slug=='heat-capacity-ratio-gases-clement-desormes':

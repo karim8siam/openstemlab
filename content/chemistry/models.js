@@ -160,6 +160,21 @@ function predict(slug,input){
   const y=round(Math.log(ksp_calc), 4);
   return {raw,ideal:raw,period:1.0,x,y,valid:t>=30.0&&t<=55.0};
  }
+ if(slug==='partial-molar-volume-binary-mixtures'){
+  const m=Number(input);
+  const M2=46.069;
+  const rho0=0.997047;
+  const V_pyc=25.0000;
+  const m_pyc=18.4250;
+  const phi_ideal=54.20 + 0.25 * m;
+  const rho_ideal=(1000.0 + m * M2) / (1000.0 / rho0 + m * phi_ideal);
+  const raw=round(m_pyc + rho_ideal * V_pyc, 4);
+  const rho_calc=(raw - m_pyc) / V_pyc;
+  const phi_calc=((1000.0 + m * M2) / rho_calc - 1000.0 / rho0) / m;
+  const x=m;
+  const y=round(phi_calc, 4);
+  return {raw,ideal:raw,period:1.0,x,y,valid:m>=0.5&&m<=3.0};
+ }
  if(slug==='heat-capacity-ratio-gases-clement-desormes'){
   const h1=Number(input);
   const gamma=1.400;
@@ -247,6 +262,18 @@ function reading(slug,input,raw){
   const s_calc=V / 20.0;
   const ksp_calc=4.0 * Math.pow(s_calc, 3);
   y=round(Math.log(ksp_calc), 4);
+ }
+ if(slug==='partial-molar-volume-binary-mixtures'){
+  const m=Number(input);
+  const M2=46.069;
+  const rho0=0.997047;
+  const V_pyc=25.0000;
+  const m_pyc=18.4250;
+  const raw_val=Number(raw);
+  const rho_calc=(raw_val - m_pyc) / V_pyc;
+  const phi_calc=((1000.0 + m * M2) / rho_calc - 1000.0 / rho0) / m;
+  x=m;
+  y=round(phi_calc, 4);
  }
  if(slug==='heat-capacity-ratio-gases-clement-desormes'){
   x=Number(input);
@@ -372,6 +399,11 @@ function estimate(slug,f){
   const dH_est= -f.m * 8.31446;
   const se= f.slopeSE * 8.31446;
   return {value:dH_est,se:se,reference:110.0};
+ }
+ if(slug==='partial-molar-volume-binary-mixtures'){
+  const V2_inf_est= f.b;
+  const se= f.interceptSE;
+  return {value:V2_inf_est,se:se,reference:54.20};
  }
  if(slug==='heat-capacity-ratio-gases-clement-desormes'){
   const gamma_est= 1.0 / (1.0 - f.m);

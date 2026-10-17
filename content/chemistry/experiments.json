@@ -3604,5 +3604,222 @@
       "Maintain the laboratory at a stable ambient temperature away from direct drafts, radiators, or sunlight during the measurement series."
     ],
     "limitations": "The Clément-Desormes formula assumes ideal gas behavior, strictly adiabatic expansion of the bulk gas without acoustic wave dissipation, negligible heat transfer during the 0.8 s valve release, and valid first-order Taylor expansion ln(1 + h/P0) ≈ h/P0 for small excess pressures (h/P0 < 0.03). At h = 40 cm DBP (~4 kPa), the second-order Taylor term contributes <0.2% error, which is effectively minimized by multi-point linear regression."
+  },
+  {
+    "id": 18,
+    "slug": "partial-molar-volume-binary-mixtures",
+    "title": "Determination of Apparent and Partial Molar Volumes in Binary Ethanol-Water Mixtures via Precision Pycnometry",
+    "subtitle": "Precision Pycnometric Analysis of Apparent and Partial Molar Volumes in Aqueous Ethanol Solutions",
+    "measureLabel": "Equilibrate pycnometer at 25.00 °C, blot capillary rim & record mass m_filled",
+    "gradientUnit": "cm³·kg·mol⁻²",
+    "fitEquation": "φ_V = φ_V° + b_V · m  ==>  φ_V = 54.20 + 0.25 · m",
+    "initial": 1.5,
+    "min": 0.5,
+    "max": 3.0,
+    "step": 0.1,
+    "samples": [
+      0.5,
+      1.0,
+      1.5,
+      2.0,
+      2.5,
+      3.0
+    ],
+    "reference": 54.2,
+    "unit": "cm³/mol",
+    "symbol": "\\bar{V}_2^\\infty",
+    "aim": "To determine the density of a series of binary ethanol-water mixtures using high-precision Gay-Lussac pycnometry at 25.0 °C, compute the apparent molar volume (\\phi_V) of ethanol as a function of molality, and evaluate the limiting partial molar volume of ethanol at infinite dilution (\\bar{V}_2^\\infty) and excess thermodynamic properties via linearized extrapolation.",
+    "intro": "In non-ideal binary liquid solutions, the total volume of mixing is fundamentally non-additive due to differences in molecular geometry, packing efficiency, steric hindrances, and asymmetric intermolecular hydrogen bonding networks. In classical thermodynamics, extensive properties such as volume, enthalpy, entropy, and Gibbs free energy depend directly on the quantity of each chemical species present. When two dissimilar pure liquids mix, the local molecular environment of each component is drastically altered from its pure homogeneous state to an inhomogeneous solvation matrix. Partial molar quantities, first formulated by J. Willard Gibbs, represent the exact differential change in an extensive thermodynamic property upon the infinitesimal addition of one mole of a given component at constant temperature, pressure, and remaining mixture composition. For a binary mixture composed of solvent (water, component 1) and solute (ethanol, component 2), the total solution volume satisfies Euler's theorem for homogeneous functions of degree one: V = n₁ V̄₁ + n₂ V̄₂, where V̄₁ and V̄₂ are the partial molar volumes. By measuring high-precision solution densities across a concentration series with a calibrated Gay-Lussac pycnometer at 25.00 °C, apparent molar volumes (φ_V) are calculated. Extrapolating φ_V to infinite dilution (m → 0) yields the limiting partial molar volume (V̄₂^∞ = φ_V°), reflecting the volumetric accommodation of isolated ethanol molecules within the structured tetrahedral hydrogen-bonded network of water.",
+    "modelExtra": "The physical simulation calculates binary solution densities and apparent molar volumes at 25.00 °C governed by φ_V = (1/m) · [ (1000 + m·M₂)/ρ − 1000/ρ₀ ], where solvent is Millipore water (M₁ = 18.015 g/mol, ρ₀ = 0.997047 g/cm³) and solute is anhydrous ethanol (M₂ = 46.069 g/mol, pure molar volume V₂* = 58.68 cm³/mol). In the dilute regime (m = 0.50 to 3.00 mol/kg), non-electrolyte hydrophobic hydration dictates linear apparent volume expansion: φ_V(m) = φ_V° + b_V·m, with limiting partial molar volume at infinite dilution φ_V° = V̄₂^∞ = 54.20 cm³/mol and slope b_V = +0.250 cm³·kg·mol⁻². For a calibrated 25.000 cm³ Gay-Lussac pycnometer with dry tare mass m₀ = 18.4250 g, filled pycnometer masses span 43.2529 g (m = 0.50 mol/kg, ρ = 0.99312 g/cm³) down to 42.7912 g (m = 3.00 mol/kg, ρ = 0.97465 g/cm³). Ordinary least-squares linear regression extracts the intercept b = 54.20 cm³/mol with R² = 0.99998, validating limiting partial molar volume without bias and demonstrating volumetric contraction of 4.48 cm³/mol due to interstitial cavity accommodation.",
+    "apparatus": [
+      {
+        "name": "Gay-Lussac Calibrated Pycnometer (25.000 cm³)",
+        "purpose": "Precision borosilicate glassware featuring ground glass capillary stopper designed to maintain an invariant volumetric capacity of 25.000 ± 0.003 cm³ under controlled thermal equilibrium."
+      },
+      {
+        "name": "Analytical Balance (Mettler Toledo XPE205)",
+        "purpose": "Dual-range electronic analytical balance with 0.0001 g resolution, automated internal calibration, and draft-shielded pan for gravimetric measurement of pycnometer tare and filled masses."
+      },
+      {
+        "name": "Thermostatic Circulating Water Bath",
+        "purpose": "Constant-temperature bath regulated to 25.00 ± 0.01 °C with continuous fluid circulation to equilibrate pycnometers and eliminate thermal expansion density drift."
+      },
+      {
+        "name": "Gravimetric Solution Prep Flasks & Syringes",
+        "purpose": "Set of 100 mL airtight borosilicate volumetric and glass flasks with PTFE stopcocks used to synthesize precise binary ethanol-water solutions across 0.5 to 3.0 mol/kg."
+      },
+      {
+        "name": "Capillary Meniscus Wiper & Lint-Free Lens Paper",
+        "purpose": "Specialized lintless optical paper used to wipe external pycnometer surfaces and blot meniscus overflow at the capillary tip without wicking interior liquid."
+      },
+      {
+        "name": "Reagents: Absolute Ethanol (≥ 99.8%) & Degassed Millipore Water",
+        "purpose": "High-purity anhydrous ethanol (M₂ = 46.069 g/mol) and vacuum-degassed Type 1 deionized water (M₁ = 18.015 g/mol, ρ₀ = 0.997047 g/cm³ at 25.0 °C)."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Pycnometer Cleaning, Drying, and Tare Weighing",
+        "text": "Thoroughly clean the 25 mL Gay-Lussac pycnometer with chromic acid substitute, rinse repeatedly with deionized water and acetone, dry with warm filtered nitrogen, and record the dry tare mass m₀ on the analytical balance to ±0.0001 g."
+      },
+      {
+        "title": "Pycnometer Volume Calibration with Pure Water",
+        "text": "Fill pycnometer with freshly boiled, degassed deionized water, seat capillary stopper allowing excess to overflow, equilibrate in the 25.00 °C bath for 20 minutes, wipe dry, weigh (m_water), and calculate exact internal volume V_pyc = (m_water - m₀) / ρ₀."
+      },
+      {
+        "title": "Gravimetric Preparation of Ethanol-Water Standards",
+        "text": "Prepare six binary solutions of exact ethanol molalities m = 0.50, 1.00, 1.50, 2.00, 2.50, and 3.00 mol/kg solvent by weighing degassed water into flasks followed by anhydrous ethanol, sealing promptly to prevent volatile evaporation."
+      },
+      {
+        "title": "Pycnometer Loading and Constant-Temperature Equilibration",
+        "text": "Rinse pycnometer twice with 3 mL aliquots of the test solution, fill to the brim, insert capillary stopper firmly, and immerse in the 25.00 °C water bath for 20 minutes to reach thermal and volumetric equilibrium."
+      },
+      {
+        "title": "Meniscus Adjustment, Exterior Drying, and Analytical Weighing",
+        "text": "Carefully remove pycnometer from bath, swiftly touch capillary apex with lint-free paper to bring meniscus flush with the ground rim without capillary draw, wipe exterior dry, and record mass m_soln on the analytical balance to ±0.0001 g."
+      },
+      {
+        "title": "Repetition, Density Computation, and Apparent Molar Volume Calculation",
+        "text": "Repeat duplicate trials for each concentration, compute solution density ρ = (m_soln - m₀) / V_pyc, determine apparent molar volume φ_V = [M₂/ρ − 1000(ρ − ρ₀)/(m·ρ·ρ₀)], and perform linear regression to obtain limiting partial molar volume."
+      }
+    ],
+    "topics": [
+      {
+        "question": "What is the thermodynamic definition of a partial molar quantity, and why is volume non-additive upon mixing?",
+        "answer": "In thermodynamics, an extensive property X (such as total volume V, internal energy U, enthalpy H, entropy S, or Gibbs free energy G) depends on temperature T, pressure P, and the molar amounts of all constituent chemical species n₁, n₂, ..., n_k. The partial molar property of component i, denoted X̄_i, is defined as the partial derivative of X with respect to the mole number n_i while holding temperature, pressure, and the amounts of all other components constant: X̄_i = (∂X/∂n_i)_{T, P, n_{j ≠ i}}. In the specific case of volume, the partial molar volume V̄_i represents the rate of change in total solution volume per mole of component i added to an essentially infinite reservoir of the solution so that composition remains unchanged.\n\nBecause volume V(T, P, n₁, n₂) is a homogeneous function of degree one in the mole numbers n_i (doubling all amounts at constant T and P exactly doubles the total volume), Euler's theorem of homogeneous functions requires that V = ∑ n_i V̄_i = n₁ V̄₁ + n₂ V̄₂. In an ideal solution, intermolecular forces between unlike molecules (1-2) are energetically and sterically identical to those between like molecules (1-1 and 2-2). Consequently, the partial molar volume of each component equals its molar volume in the pure liquid state: V̄_i^ideal = V_i* = M_i / ρ_i*, and the volume of mixing ΔV_mix is identically zero.\n\nIn real binary mixtures such as ethanol and water, severe non-ideality arises. Water molecules form a highly cohesive, open, three-dimensional tetrahedral hydrogen-bonded network with significant interstitial void spaces between cages. Ethanol molecules possess both a polar hydrophilic hydroxyl group (−OH) capable of donating and accepting hydrogen bonds and a non-polar hydrophobic ethyl group (−C₂H₅). When ethanol is introduced into water, two competing phenomena occur: (1) the hydrophobic ethyl tails are accommodated within the existing open cages of the water lattice without causing proportional expansion, and (2) water molecules reorganize into tighter, more rigid clathrate-like solvation shells around the alkyl groups (hydrophobic hydration). Furthermore, the strong cooperative hydrogen bonds formed between water and the ethanol hydroxyl group compress the local intermolecular distances. These combined effects lead to a net contraction upon mixing (negative excess molar volume, ΔV^E < 0), causing the total solution volume to be significantly less than the sum of the pure component volumes (V < n₁V₁* + n₂V₂*)."
+      },
+      {
+        "question": "How is the apparent molar volume φ_V defined, and what physical meaning does it convey?",
+        "answer": "In experimental physical chemistry and solution thermodynamics, directly measuring the partial molar volume of a solute V̄₂ is challenging because it requires differentiating experimental volume data with respect to composition. To circumvent numerical differentiation instability, Lewis and Randall introduced the concept of the apparent molar property. For a binary solution containing n₁ moles of solvent (water) and n₂ moles of solute (ethanol), the apparent molar volume of the solute, denoted φ_V, is defined by attributing the entire volume of the solvent as if it remained in its pure liquid state (n₁ V₁*), and assigning all deviations from additivity entirely to the solute:\n\nV = n₁ V₁* + n₂ φ_V  ==>  φ_V = (V − n₁ V₁*) / n₂\n\nwhere V is the experimentally observed total volume of the solution, n₁ is the moles of solvent, V₁* = M₁ / ρ₀ is the molar volume of pure liquid solvent (for water at 25.00 °C, V₁* = 18.015 / 0.997047 = 18.068 cm³/mol), and n₂ is the moles of solute. In practice, solutions are prepared gravimetrically on a molality basis m (moles of solute per 1000 g of solvent). In a solution containing 1000 g of water, the solvent mole number is fixed at n₁ = 1000 / M₁, and n₂ = m. The total mass of this solution is W = 1000 + m·M₂, and its volume is V = W / ρ, where ρ is the measured solution density. The volume occupied by 1000 g of pure water is V_solv = 1000 / ρ₀. Substituting these relations into the definition of φ_V yields the fundamental working equation:\n\nφ_V = (1/m) · [ (1000 + m·M₂) / ρ − 1000 / ρ₀ ] = (M₂ / ρ) − [ 1000·(ρ − ρ₀) / (m·ρ·ρ₀) ]\n\nThe physical meaning of φ_V is profound: it represents the effective volume contributed by one mole of ethanol when dissolved in the solvent at a given concentration. Because φ_V subtracts the unperturbed pure solvent volume (1000/ρ₀), any difference between φ_V and the pure solute molar volume V₂* = M₂/ρ₂* directly measures the solvation-induced volume contraction or expansion. If the solution were ideal, φ_V would be independent of concentration and equal to pure V₂* (58.68 cm³/mol). In aqueous ethanol, φ_V is substantially smaller than 58.68 cm³/mol (~54.2 cm³/mol at low m), confirming that ethanol molecules occupy significantly less space in water than in pure liquid ethanol."
+      },
+      {
+        "question": "Why does the apparent molar volume of ethanol increase with increasing molality?",
+        "answer": "The concentration dependence of the apparent molar volume φ_V provides a direct window into the transition from solute-solvent interactions to solute-solute interactions. At very high dilution (m → 0), every ethanol molecule is completely isolated from other ethanol molecules, surrounded entirely by a vast excess of water molecules. Under these conditions, hydrophobic hydration dominates: the water molecules form a highly structured, ice-like cage around the hydrophobic ethyl group (−CH₂CH₃). Because these cages utilize the natural cavities and interstitial spaces inherent in liquid water's tetrahedral network, the effective volume occupied by the ethanol molecule reaches its absolute minimum, yielding the limiting value φ_V° = V̄₂^∞ ≈ 54.20 cm³/mol.\n\nAs the molality m of ethanol is increased from 0.50 mol/kg to 3.00 mol/kg, the average distance between ethanol molecules decreases substantially. Solute molecules begin to experience mutual interactions: their hydrophobic hydration spheres start to overlap and coalesce, a process known as hydrophobic interaction or solute aggregation. When two ethyl groups come into contact, part of the rigid, clathrate-like hydration cage surrounding each alkyl tail is disrupted and expelled back into the bulk water matrix. Because bulk water in the disordered liquid state has a larger molar volume and less cooperative rigidity than the tightly structured hydration cage, this cage breakdown releases space, causing the apparent molar volume of ethanol to increase.\n\nFurthermore, as more ethanol enters the solution, the capacity of the water network to provide interstitial cavities becomes saturated. Ethanol-ethanol dipole interactions and self-association through hydrogen-bonded oligomers begin to resemble the structure of pure liquid ethanol. Consequently, φ_V increases monotonically with molality, rising from 54.33 cm³/mol at 0.50 mol/kg toward pure ethanol's molar volume of 58.68 cm³/mol. In the dilute non-electrolyte regime (m ≤ 3.0 mol/kg), this increase is governed by pairwise solute-solute encounters, resulting in an exquisitely linear dependence: φ_V = φ_V° + b_V·m, where the positive slope b_V (+0.250 cm³·kg·mol⁻²) represents the volumetric pairwise interaction coefficient."
+      },
+      {
+        "question": "What is the mathematical relationship between apparent molar volume φ_V and partial molar volume V̄₂?",
+        "answer": "To extract the true thermodynamic partial molar volume of the solute V̄₂ from experimental apparent molar volume data φ_V, we perform a rigorous mathematical differentiation. Recall the defining relation for total volume in terms of apparent molar volume: V = n₁ V₁* + n₂ φ_V. By definition, the partial molar volume of component 2 is the partial derivative of total volume V with respect to n₂ at constant temperature T, pressure P, and solvent moles n₁:\n\nV̄₂ = (∂V/∂n₂)_{T, P, n₁} = ∂/∂n₂ [ n₁ V₁* + n₂ φ_V ]\n\nBecause n₁ and V₁* are held constant during this differentiation, the first term vanishes, and applying the product rule to the second term yields:\n\nV̄₂ = φ_V + n₂ · (∂φ_V/∂n₂)_{T, P, n₁}\n\nTo express this in terms of molality m, we consider a solution containing 1000 g of solvent. For this fixed mass of solvent, n₁ = 1000 / M₁ is invariant, and n₂ is numerically equal to the molality m (n₂ = m). Therefore, dn₂ = dm, and the partial derivative becomes an ordinary total derivative with respect to molality:\n\nV̄₂(m) = φ_V + m · (dφ_V / dm)\n\nThis is the fundamental bridge connecting apparent and partial molar volumes. For non-electrolyte solutions in the dilute regime, the apparent molar volume is linear in molality: φ_V = φ_V° + b_V · m. Differentiating this linear model with respect to m gives dφ_V/dm = b_V. Substituting this into our expression yields:\n\nV̄₂(m) = (φ_V° + b_V · m) + m · b_V = φ_V° + 2 · b_V · m\n\nThis demonstrates two vital mathematical facts: (1) at infinite dilution (m → 0), the second term vanishes completely, proving that the limiting partial molar volume is identically equal to the intercept of the apparent molar volume plot: V̄₂^∞ = φ_V°; and (2) at any finite concentration, the partial molar volume V̄₂ increases at exactly twice the rate of the apparent molar volume (slope 2·b_V vs b_V), reflecting the differential impact of adding an extra mole of solute into an already crowded solution."
+      },
+      {
+        "question": "How does the Gibbs-Duhem equation allow the determination of the solvent's partial molar volume V̄₁?",
+        "answer": "The Gibbs-Duhem equation is one of the most powerful relations in chemical thermodynamics, establishing that intensive thermodynamic variables and partial molar quantities cannot vary independently in a mixture. At constant temperature and pressure, the Gibbs-Duhem equation for volume states:\n\nn₁ dV̄₁ + n₂ dV̄₂ = 0  ==>  dV̄₁ = −(n₂ / n₁) dV̄₂\n\nThis differential relation proves that any change in the partial molar volume of the solute (dV̄₂) is inextricably linked to a simultaneous and opposite change in the partial molar volume of the solvent (dV̄₁). In our molality-based system with 1000 g of water, n₁ = 1000 / M₁ and n₂ = m. Thus, the ratio of mole numbers is n₂ / n₁ = m·M₁ / 1000, giving:\n\ndV̄₁ = − (m · M₁ / 1000) · dV̄₂\n\nEarlier, we established that for our linear apparent molar volume model, V̄₂(m) = φ_V° + 2·b_V·m. Differentiating V̄₂ with respect to m yields dV̄₂ = 2·b_V dm. Substituting dV̄₂ into the Gibbs-Duhem differential equation produces:\n\ndV̄₁ = − (m · M₁ / 1000) · (2 · b_V dm) = − (2 · b_V · M₁ / 1000) · m dm\n\nTo find the solvent partial molar volume V̄₁(m) at any molality m, we integrate this differential equation from pure water (where m = 0 and V̄₁ equals the molar volume of pure water V₁* = M₁ / ρ₀ = 18.068 cm³/mol) up to molality m:\n\n∫_{V₁*}^{V̄₁(m)} dV̄₁ = − (2 · b_V · M₁ / 1000) ∫₀^m m' dm'\n\nV̄₁(m) − V₁* = − (b_V · M₁ / 1000) · m²  ==>  V̄₁(m) = V₁* − (b_V · M₁ / 1000) · m²\n\nSubstituting the experimental constants b_V = 0.250 cm³·kg·mol⁻¹ and M₁ = 18.015 g/mol yields:\nV̄₁(m) = 18.068 − (0.250 × 18.015 / 1000) · m² = 18.068 − 0.00450 · m²\n\nThis quadratic relationship demonstrates that as ethanol is added and V̄₂ expands, the partial molar volume of water V̄₁ contracts slightly (e.g., at m = 3.00 mol/kg, V̄₁ = 18.068 − 0.00450 × 9 = 18.027 cm³/mol). This physical contraction occurs because ethanol's hydroxyl groups pull adjacent water molecules closer through strong directional hydrogen bonds, electrostrictively condensing the solvent lattice."
+      },
+      {
+        "question": "Why is strict temperature control to ±0.01 °C critical in pycnometric volume measurements?",
+        "answer": "Liquid density is exquisitely sensitive to temperature due to thermal expansion, described by the isobaric volumetric thermal expansion coefficient β = (1/V)(∂V/∂T)_P = −(1/ρ)(∂ρ/∂T)_P. At 25.00 °C, pure liquid water has a thermal expansion coefficient of β_water ≈ 2.57 × 10⁻⁴ K⁻¹, while pure ethanol has a substantially larger expansion coefficient of β_EtOH ≈ 1.12 × 10⁻³ K⁻¹. For binary ethanol-water mixtures in the 0.5 to 3.0 mol/kg range, β varies between 3.0 × 10⁻⁴ K⁻¹ and 4.5 × 10⁻⁴ K⁻¹.\n\nIn a 25.000 cm³ Gay-Lussac pycnometer, an uncorrected temperature fluctuation of just ΔT = 0.1 °C causes an internal volumetric liquid expansion of:\nΔV = V_pyc · β · ΔT ≈ 25.000 × (3.5 × 10⁻⁴) × 0.1 ≈ 0.00088 cm³ = 0.88 μL.\nBecause a pycnometer has a rigid borosilicate glass body (borosilicate glass expansion coefficient is tiny: α_glass ≈ 1.0 × 10⁻⁵ K⁻¹), this expanding liquid is forced out through the narrow capillary stopper and overflows onto the external glass rim. If the pycnometer cools slightly before weighing, the liquid contracts down into the capillary, leaving an unfilled headspace. A 0.88 μL loss represents a gravimetric error of approximately δm ≈ 0.87 mg (0.00087 g), which is nearly an order of magnitude larger than the balance resolution (±0.0001 g).\n\nThe catastrophic consequence of temperature instability appears when computing the apparent molar volume φ_V. Recall that φ_V involves the density difference term [ (1000 + m·M₂)/ρ − 1000/ρ₀ ] divided by molality m. At low concentrations (m = 0.50 mol/kg), the difference between solution density (0.99312 g/cm³) and water density (0.99705 g/cm³) is only 0.00393 g/cm³. An error of 0.0001 g in mass causes a density error of δρ = 0.0001 / 25 = 0.000004 g/cm³, which propagates into φ_V as:\nδφ_V ≈ [ (1000 + m·M₂) / (m · ρ²) ] · δρ ≈ [ 1023 / (0.50 × 0.993²) ] × 0.000004 ≈ ±0.008 cm³/mol.\nHowever, if temperature drifts by 0.1 °C, δρ increases to ~0.000035 g/cm³, producing a massive scatter in φ_V of ±0.07 cm³/mol (~18% of the total slope effect!). Therefore, maintaining a precision circulating bath at 25.00 ± 0.01 °C is essential to ensure that gravimetric readings reflect true thermodynamic equilibrium."
+      },
+      {
+        "question": "How does the concentration dependence of φ_V differ between non-electrolytes and strong electrolytes?",
+        "answer": "The functional dependence of apparent molar volume φ_V on concentration reflects the fundamental nature of the intermolecular forces operating between solute species in solution. A profound distinction exists between neutral non-electrolyte solutes (such as ethanol, urea, sucrose, or methanol) and strong electrolyte solutes (such as NaCl, KCl, or MgSO₄).\n\n1. Non-Electrolyte Systems (Ethanol in Water):\nIn non-electrolyte solutions, solute molecules are electrically neutral. Intermolecular interactions between solute molecules are governed by short-range potentials, including London dispersion forces, dipole-dipole interactions, and hydrophobic hydration-shell overlap. According to McMillan-Mayer solution theory, the thermodynamic excess functions can be expanded as a power series in solute number density or molality m. In dilute solutions, three-body and higher-order solute clusters are negligible, and pairwise solute-solute interactions dominate completely. Consequently, the apparent molar volume depends strictly linearly on molality:\n\nφ_V = φ_V° + b_V · m\n\nwhere φ_V° is the limiting partial molar volume at infinite dilution, and b_V is the volumetric second virial coefficient reflecting pairwise solute-solute interactions. Plotting φ_V versus m produces an exact straight line across 0 < m ≤ 3 mol/kg.\n\n2. Strong Electrolyte Systems (Masson's Rule & Debye-Hückel Theory):\nIn contrast, when a strong electrolyte dissolves, it dissociates completely into charged ions (e.g., Na⁺ and Cl⁻). Long-range Coulombic forces (varying as 1/r) dominate ion-ion interactions. Furthermore, the intense electric field surrounding each ion electrostrictively compresses neighboring water dipoles, dramatically reducing their local volume. According to the Debye-Hückel limiting law for electrolytes, the ion-atmosphere screening length is inversely proportional to the square root of ionic strength I = 1/2 ∑ z_i² c_i. D. O. Masson empirically discovered in 1929, and Redlich and Meyer theoretically proved in 1964 from Debye-Hückel theory, that the apparent molar volume of an electrolyte follows a square-root dependence on concentration:\n\nφ_V = φ_V° + S_V · √c  ≈  φ_V° + S_V* · √m\n\nwhere S_V is the theoretical Debye-Hückel limiting slope (for 1:1 electrolytes in water at 25 °C, S_V = 1.868 cm³·L^{1/2}·mol^{-3/2}). If an investigator incorrectly plotted ethanol data against √m, the resulting graph would display an artificial logarithmic-like curvature at low concentrations, distorting the extrapolated intercept. Conversely, plotting an electrolyte against m produces non-linear downward curvature. Understanding this distinction is fundamental to choosing the correct regression coordinate system."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What is the limiting partial molar volume of ethanol at infinite dilution in water (25.0 °C) compared to pure ethanol molar volume?",
+        "options": [
+          "54.20 cm³/mol, which is smaller than pure ethanol (58.68 cm³/mol) due to interstitial cavity packing and hydrophobic hydration",
+          "58.68 cm³/mol, exactly identical to pure ethanol because mixing is ideal at infinite dilution",
+          "65.40 cm³/mol, which is larger than pure ethanol due to steric repulsion between water and ethyl groups",
+          "18.07 cm³/mol, identical to the molar volume of pure liquid water"
+        ],
+        "correct": 0,
+        "explanation": "At infinite dilution, ethanol molecules are completely encased by the hydrogen-bonded water structure, fitting into tetrahedral cavities and inducing hydrophobic hydration. This results in a limiting partial molar volume V̄₂^∞ = 54.20 cm³/mol, noticeably smaller than pure ethanol's molar volume of 58.68 cm³/mol."
+      },
+      {
+        "question": "Given apparent molar volume φ_V = φ_V° + b_V·m, what is the exact expression for the solute partial molar volume V̄₂?",
+        "options": [
+          "V̄₂ = φ_V° + 2·b_V·m",
+          "V̄₂ = φ_V° + b_V·m",
+          "V̄₂ = φ_V° + 0.5·b_V·m",
+          "V̄₂ = φ_V° − b_V·m²"
+        ],
+        "correct": 0,
+        "explanation": "By definition, V = n₁V₁* + n₂φ_V. Differentiating with respect to n₂ at constant n₁ (where n₂ = m) gives V̄₂ = ∂V/∂n₂ = φ_V + m(dφ_V/dm). Since φ_V = φ_V° + b_V·m and dφ_V/dm = b_V, we obtain V̄₂ = (φ_V° + b_V·m) + m·b_V = φ_V° + 2·b_V·m."
+      },
+      {
+        "question": "If an empty pycnometer weighs 18.4250 g and weighs 43.3512 g when filled with pure water (ρ₀ = 0.997047 g/cm³), what is its calibrated volume?",
+        "options": [
+          "25.0000 cm³",
+          "24.9262 cm³",
+          "25.0740 cm³",
+          "24.8500 cm³"
+        ],
+        "correct": 0,
+        "explanation": "The mass of water inside the pycnometer is m_water = 43.3512 g − 18.4250 g = 24.9262 g. The volume is V = m_water / ρ₀ = 24.9262 / 0.997047 = 25.0000 cm³."
+      },
+      {
+        "question": "According to the Gibbs-Duhem relationship, if the solute partial molar volume V̄₂ increases as solute is added (dV̄₂/dm > 0), how does the solvent partial molar volume V̄₁ behave?",
+        "options": [
+          "V̄₁ must decrease with increasing solute concentration",
+          "V̄₁ must increase proportionally with solute concentration",
+          "V̄₁ remains strictly constant at 18.07 cm³/mol",
+          "V̄₁ becomes zero at moderate concentrations"
+        ],
+        "correct": 0,
+        "explanation": "The Gibbs-Duhem equation requires n₁ dV̄₁ + n₂ dV̄₂ = 0 at constant T and P. Consequently, dV̄₁ = −(n₂/n₁) dV̄₂. Because n₁ and n₂ are positive, an increase in V̄₂ (dV̄₂ > 0) strictly demands a decrease in V̄₁ (dV̄₁ < 0)."
+      }
+    ],
+    "precautions": [
+      "Maintain the circulating water bath strictly at 25.00 ± 0.01 °C; density changes by ~0.00025 g/cm³ per degree Celsius.",
+      "Never touch the calibrated pycnometer body with bare hands; skin oils and body warmth alter tare mass and liquid volume.",
+      "Blot capillary meniscus overflow swiftly with optical lint-free paper flush with the ground rim without touching the internal bore to prevent capillary suction.",
+      "Seal all ethanol-water stock solutions with airtight ground glass stoppers wrapped in Parafilm to prevent preferential ethanol evaporation.",
+      "Degas deionized water under vacuum or ultrasonic bath prior to use to prevent microbubble nucleations on pycnometer glass walls.",
+      "Ensure the external pycnometer glass is completely dry and thermally equilibrated to the draft shield before recording balance weights."
+    ],
+    "limitations": "Gay-Lussac pycnometry assumes that ambient room temperature does not diverge significantly from the bath setpoint (25.00 °C) during the brief weighing period, minimizing capillary expansion overflow. At higher ethanol concentrations (> 3 mol/kg or > 15 wt%), non-linear higher-order solute-solute clustering effects require quadratic terms in the molality expansion.",
+    "number": 18,
+    "published": true,
+    "subject": "chemistry",
+    "shortTitle": "Partial Molar Volume of Binary Mixtures",
+    "inputLabel": "Ethanol molality m (mol/kg solvent)",
+    "shortInput": "ethanol molality",
+    "inputUnit": "mol/kg",
+    "inputDecimals": 2,
+    "rawLabel": "Filled pycnometer total mass m_filled",
+    "rawUnit": "g",
+    "rawDecimals": 4,
+    "angle": false,
+    "timed": false,
+    "observationLabel": "Precision pycnometric gravimetric measurement",
+    "xAxis": "Ethanol molality m (mol/kg)",
+    "yAxis": "Apparent molar volume φ_V (cm³/mol)",
+    "xScale": 1,
+    "yScale": 1,
+    "target": "LimitingPartialMolarVolume_Ethanol",
+    "resultUnit": "cm³/mol",
+    "resultScale": 1,
+    "resultDecimals": 2,
+    "emptyX": [
+      0,
+      3.5
+    ],
+    "emptyY": [
+      53.5,
+      55.5
+    ],
+    "settings": [
+      "Gay-Lussac 25.000 cm³ precision borosilicate pycnometer with ground capillary stopper and polished flat rim.",
+      "High-stability circulating thermostatic water bath maintaining liquid samples at 25.00 ± 0.01 °C.",
+      "Mettler Toledo XPE205 analytical balance with 0.0001 g resolution, anti-static ionizer, and draft shield.",
+      "Gravimetrically prepared binary ethanol-water standards (0.50 to 3.00 mol/kg) using degassed deionized water."
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "⚖️",
+        "label": "1. Gay-Lussac Pycnometer & Thermostatic Bath"
+      },
+      {
+        "id": "compare",
+        "icon": "🧪",
+        "label": "2. Hydrophobic Contraction & Excess Molar Volumes"
+      },
+      {
+        "id": "sandbox",
+        "icon": "📊",
+        "label": "3. Gibbs-Duhem Molar Volume Curve & Interstitial Voids"
+      }
+    ]
   }
 ]
