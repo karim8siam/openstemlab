@@ -28,6 +28,15 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:1.0,x,y,valid:v>=4.0&&v<=24.0};
  }
+ if(slug==='molar-volume-ideal-gas'){
+  const m_mg=Number(input);
+  const M_Mg=24.305;
+  const Vm_ref=22.414;
+  const raw=round((m_mg / 1000.0 / M_Mg) * Vm_ref * 1000.0, 3);
+  const x=m_mg;
+  const y=raw;
+  return {raw,ideal:raw,period:1.0,x,y,valid:m_mg>=10.0&&m_mg<=35.0};
+ }
  throw Error('Unknown Chemistry experiment predict: '+slug);
 }
 
@@ -44,6 +53,10 @@ function reading(slug,input,raw){
   y=r;
  }
  if(slug==='limiting-reactant-precipitation'){
+  x=Number(input);
+  y=Number(raw);
+ }
+ if(slug==='molar-volume-ideal-gas'){
   x=Number(input);
   y=Number(raw);
  }
@@ -83,6 +96,11 @@ function estimate(slug,f){
   const M_est=f.m * 10000.0;
   const se=f.slopeSE * 10000.0;
   return {value:M_est,se:se,reference:233.390};
+ }
+ if(slug==='molar-volume-ideal-gas'){
+  const Vm_est=f.m * 24.305;
+  const se=f.slopeSE * 24.305;
+  return {value:Vm_est,se:se,reference:22.414};
  }
  throw Error('Unknown Chemistry experiment estimate: '+slug);
 }

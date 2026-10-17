@@ -20,6 +20,9 @@ function update(){
  }else if(cfg.slug==='limiting-reactant-precipitation'){
   $('liveState').textContent='Ready to deliver '+p.input.toFixed(1)+' mL of 0.1000 M Na₂SO₄ into excess BaCl₂.';
   message('Adjust sulfate volume V, then precipitate, digest, filter & weigh.');
+ }else if(cfg.slug==='molar-volume-ideal-gas'){
+  $('liveState').textContent='Ready to react '+p.input.toFixed(1)+' mg magnesium ribbon in eudiometer.';
+  message('Set magnesium mass m_Mg, then react, equilibrate meniscus & convert to STP.');
  }else{
   $('liveState').textContent='Ready to dispense '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+' of liquid.';
   message('Adjust '+cfg.shortInput+' V, then weigh the dispensed aliquot.');
@@ -42,6 +45,7 @@ $('measure').onclick=async()=>{
  let msgStart='Dispensing '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+' into tared beaker…';
  if(cfg.slug==='hydrate-stoichiometric-composition') msgStart='Heating crucible at 250 °C and evolving steam…';
  if(cfg.slug==='limiting-reactant-precipitation') msgStart='Adding Na₂SO₄ dropwise at 85 °C, digesting, filtering through Gooch crucible, drying to constant mass…';
+ if(cfg.slug==='molar-volume-ideal-gas') msgStart='Inverting eudiometer, diffusing 6 M HCl, evolving H₂ gas, leveling menisci…';
  message(msgStart);
  await new Promise(resolve=>setTimeout(resolve,400));
  const raw=prediction.raw;
@@ -54,6 +58,9 @@ $('measure').onclick=async()=>{
  }else if(cfg.slug==='limiting-reactant-precipitation'){
   $('liveState').textContent='Isolated dry BaSO₄ precipitate: '+raw.toFixed(4)+' g.';
   message('Gravimetric precipitation complete: isolated '+raw.toFixed(4)+' g BaSO₄ from '+p.input.toFixed(1)+' mL sulfate. Record in notebook.');
+ }else if(cfg.slug==='molar-volume-ideal-gas'){
+  $('liveState').textContent='Eudiometric gas volume at STP: '+raw.toFixed(3)+' mL H₂.';
+  message('Reaction complete: generated '+raw.toFixed(3)+' mL H₂ at STP from '+p.input.toFixed(1)+' mg Mg. Record in notebook.');
  }else{
   $('liveState').textContent='Analytical balance stabilized: '+raw.toFixed(cfg.rawDecimals)+' g net mass.';
   message('Gravimetric measurement complete: '+raw.toFixed(cfg.rawDecimals)+' '+cfg.rawUnit+' for '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+'. Record in notebook.');
@@ -187,6 +194,18 @@ function draw(t){
    return;
   }
   $('apparatusDiagram').innerHTML=drawLimitingBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='molar-volume-ideal-gas'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawGasCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawGasSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawGasBenchView(p,rawVal);
   return;
  }
  if(currentSimMode==='compare'){
@@ -921,6 +940,289 @@ function drawLimitingSandboxView(p,rawVal){
  svg+='<foreignObject x="'+(sX+10)+'" y="'+(sY+154)+'" width="'+(sW-20)+'" height="60"><p xmlns="http://www.w3.org/1999/xhtml" style="font-size:7px;color:#a0aec0;line-height:1.3;margin:0">BaSO₄ crystallizes in the orthorhombic baryte structure where each Ba²⁺ cation is coordinated by 12 oxygen atoms from neighboring tetrahedral SO₄²⁻ anions, providing immense thermodynamic lattice enthalpy (ΔH_lat = −2469 kJ/mol) and insoluble stability.</p></foreignObject>';
 
  svg+=text(360,305,'Sandbox: Beyond 30.0 mL, Ba²⁺ becomes limiting and precipitate mass plateaus at 0.7002 g.','#789c80',9);
+ return svg;
+}
+
+// ======================================================================
+// CHEMISTRY LAB 04: MOLAR VOLUME OF AN IDEAL GAS (EUDIOMETRY)
+// ======================================================================
+function drawGasBenchView(p,rawVal){
+ const m_mg=p.input;
+ const v_stp=rawVal;
+ // Raw experimental volume at 20 C and P_H2 = 742.46 mmHg
+ const v_exp=(v_stp * (760.0 / 742.46) * (293.15 / 273.15));
+
+ let svg='<defs>';
+ svg+='<linearGradient id="eudioGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#bae6fd" stop-opacity=".35"/><stop offset="30%" stop-color="#ffffff" stop-opacity=".1"/><stop offset="70%" stop-color="#38bdf8" stop-opacity=".15"/><stop offset="100%" stop-color="#bae6fd" stop-opacity=".4"/></linearGradient>';
+ svg+='<linearGradient id="waterCyl" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#0284c7" stop-opacity=".25"/><stop offset="50%" stop-color="#38bdf8" stop-opacity=".12"/><stop offset="100%" stop-color="#0284c7" stop-opacity=".3"/></linearGradient>';
+ svg+='<linearGradient id="gasZone" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f8fafc" stop-opacity=".25"/><stop offset="100%" stop-color="#38bdf8" stop-opacity=".08"/></linearGradient>';
+ svg+='<linearGradient id="copperCage" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f59e0b"/><stop offset="50%" stop-color="#b45309"/><stop offset="100%" stop-color="#78350f"/></linearGradient>';
+ svg+='</defs>';
+
+ // Background bench layout
+ svg+='<rect x="0" y="0" width="720" height="320" fill="#08140c"/>';
+ svg+='<line x1="20" y1="280" x2="700" y2="280" stroke="#1f3b28" stroke-width="2"/>';
+
+ // Header banner
+ svg+=text(360,20,'EUDIOMETRIC GAS DISPLACEMENT: Mg(s) + 2 HCl(aq) ⟶ MgCl₂(aq) + H₂(g)↑','#86efac',11);
+
+ // -------------------------------------------------------------
+ // 1. LEFT STATION: Microbalance & Magnesium Ribbon Preparation
+ // -------------------------------------------------------------
+ const mbX=40,mbY=135,mbW=140,mbH=140;
+ svg+='<rect x="'+mbX+'" y="'+mbY+'" width="'+mbW+'" height="'+mbH+'" rx="4" fill="#0f172a" fill-opacity=".7" stroke="#334155" stroke-width="1.2"/>';
+ svg+='<rect x="'+(mbX+5)+'" y="'+(mbY+5)+'" width="'+(mbW-10)+'" height="75" fill="#ffffff" fill-opacity=".04" stroke="#475569" stroke-width="1"/>';
+
+ // Weighing pan & boat
+ const panX=mbX+mbW/2;
+ svg+='<rect x="'+(panX-22)+'" y="'+(mbY+62)+'" width="44" height="3.5" fill="#e2e8f0" stroke="#94a3b8"/>';
+ svg+='<rect x="'+(panX-2.5)+'" y="'+(mbY+65)+'" width="5" height="15" fill="#64748b"/>';
+ // Polished Magnesium Ribbon in Copper Cage
+ svg+='<path d="M'+(panX-12)+' '+(mbY+52)+' Q'+(panX-6)+' '+(mbY+44)+' '+panX+' '+(mbY+52)+' Q'+(panX+6)+' '+(mbY+60)+' '+(panX+12)+' '+(mbY+52)+'" fill="none" stroke="#f59e0b" stroke-width="2"/>';
+ svg+='<rect x="'+(panX-6)+'" y="'+(mbY+48)+'" width="12" height="6" rx="1.5" fill="#e2e8f0" stroke="#94a3b8"/>'; // Mg strip
+
+ // Balance console
+ const cY=mbY+86;
+ svg+='<rect x="'+(mbX+8)+'" y="'+cY+'" width="'+(mbW-16)+'" height="46" rx="3" fill="#020617" stroke="#1e293b"/>';
+ svg+='<rect x="'+(mbX+14)+'" y="'+(cY+6)+'" width="'+(mbW-28)+'" height="20" rx="2" fill="#061c10" stroke="#14532d"/>';
+ svg+='<text x="'+(mbX+mbW-18)+'" y="'+(cY+20)+'" text-anchor="end" fill="#4ade80" font-size="11" font-family="monospace" font-weight="bold">'+(m_mg/1000.0).toFixed(5)+' g</text>';
+ svg+='<text x="'+(mbX+18)+'" y="'+(cY+13)+'" fill="#15803d" font-size="6">Mg TARE</text>';
+ svg+='<text x="'+panX+'" y="'+(cY+38)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5">m_Mg = '+m_mg.toFixed(1)+' mg</text>';
+
+ svg+='<text x="'+panX+'" y="295" text-anchor="middle" fill="#94a3b8" font-size="9" font-weight="bold">1. MICROBALANCE (±0.01 mg)</text>';
+
+ // -------------------------------------------------------------
+ // 2. CENTER STATION: Tall-Form Leveling Cylinder & Eudiometer
+ // -------------------------------------------------------------
+ const eX=340,eY=35;
+ // Tall-Form Water Leveling Cylinder (1000 mL)
+ const cylX=eX-60,cylY=70,cylW=120,cylH=205;
+ svg+='<rect x="'+cylX+'" y="'+cylY+'" width="'+cylW+'" height="'+cylH+'" rx="4" fill="url(#waterCyl)" stroke="#38bdf8" stroke-width="1.5"/>';
+ svg+='<rect x="'+(cylX-8)+'" y="'+(cylY+cylH-6)+'" width="'+(cylW+16)+'" height="10" rx="3" fill="#1e293b" stroke="#475569"/>'; // base
+ // Water in leveling jar
+ const waterLevelY=cylY+45;
+ svg+='<rect x="'+(cylX+2)+'" y="'+waterLevelY+'" width="'+(cylW-4)+'" height="'+(cylH-47)+'" fill="#0284c7" fill-opacity=".2"/>';
+ svg+='<line x1="'+cylX+'" y1="'+waterLevelY+'" x2="'+(cylX+cylW)+'" y2="'+waterLevelY+'" stroke="#38bdf8" stroke-width="1.5"/>';
+
+ // Eudiometer Tube (Inverted 50 mL burette)
+ const eudW=26,eudH=220;
+ const eudTop=eY+10;
+ // Outer glass wall
+ svg+='<rect x="'+(eX-eudW/2)+'" y="'+eudTop+'" width="'+eudW+'" height="'+eudH+'" rx="6" fill="url(#eudioGrad)" stroke="#7dd3fc" stroke-width="1.2"/>';
+
+ // Gas space at top of inverted tube (proportional to v_exp)
+ const gasH=20+(v_exp/50.0)*135;
+ const gasBottom=eudTop+gasH;
+ svg+='<rect x="'+(eX-eudW/2+1)+'" y="'+eudTop+'" width="'+(eudW-2)+'" height="'+gasH+'" fill="url(#gasZone)" rx="5"/>';
+ // Inverted meniscus (concave downward)
+ svg+='<path d="M'+(eX-eudW/2+1)+' '+gasBottom+' Q'+eX+' '+(gasBottom-4)+' '+(eX+eudW/2-1)+' '+gasBottom+'" fill="#0284c7" fill-opacity=".3" stroke="#38bdf8" stroke-width="1.5"/>';
+
+ // Leveling indicator line showing Δh = 0 (Internal Meniscus == External Meniscus)
+ svg+='<line x1="'+(cylX-25)+'" y1="'+gasBottom+'" x2="'+(cylX+cylW+25)+'" y2="'+gasBottom+'" stroke="#4ade80" stroke-width="1.2" stroke-dasharray="3,2"/>';
+ svg+='<text x="'+(cylX+cylW+28)+'" y="'+(gasBottom+3)+'" fill="#4ade80" font-size="7.5" font-weight="bold">MENISCUS LEVEL (Δh = 0)</text>';
+
+ // Eudiometer graduations
+ for(let gy=eudTop+15;gy<eudTop+eudH-30;gy+=8){
+  svg+='<line x1="'+(eX+eudW/2-6)+'" y1="'+gy+'" x2="'+(eX+eudW/2-1)+'" y2="'+gy+'" stroke="#ffffff" stroke-opacity=".7" stroke-width="0.8"/>';
+ }
+ svg+='<text x="'+(eX+eudW/2-8)+'" y="'+(gasBottom-6)+'" text-anchor="end" fill="#f8fafc" font-size="8" font-family="monospace">'+v_exp.toFixed(1)+' mL</text>';
+
+ // Effervescent bubbles ascending if busy
+ if(busy){
+  for(let bi=0;bi<12;bi++){
+   const bx=eX-6+(bi*7)%12;
+   const by=gasBottom+10+(bi*15);
+   svg+='<circle cx="'+bx+'" cy="'+by+'" r="1.8" fill="#f8fafc" fill-opacity=".9"/>';
+  }
+ }
+
+ // Copper wire cage at bottom orifice of eudiometer
+ const cageY=eudTop+eudH-25;
+ svg+='<path d="M'+(eX-8)+' '+cageY+' Q'+eX+' '+(cageY-6)+' '+(eX+8)+' '+cageY+' Q'+eX+' '+(cageY+6)+' '+(eX-8)+' '+cageY+'" fill="none" stroke="url(#copperCage)" stroke-width="2"/>';
+ svg+='<rect x="'+(eX-4)+'" y="'+(cageY-3)+'" width="8" height="6" rx="1" fill="#cbd5e1"/>'; // dissolving Mg strip
+ svg+='<line x1="'+eX+'" y1="'+(cageY+6)+'" x2="'+eX+'" y2="'+(eudTop+eudH+5)+'" stroke="#b45309" stroke-width="1.5"/>'; // copper tail
+
+ // One-hole rubber stopper at tube mouth
+ svg+='<polygon points="'+(eX-eudW/2-2)+','+(eudTop+eudH)+' '+(eX+eudW/2+2)+','+(eudTop+eudH)+' '+(eX+eudW/2-1)+','+(eudTop+eudH+15)+' '+(eX-eudW/2+1)+','+(eudTop+eudH+15)+'" fill="#020617" stroke="#334155"/>';
+
+ svg+='<text x="'+eX+'" y="295" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">2. LEVELING CYLINDER (Δh = 0)</text>';
+
+ // -------------------------------------------------------------
+ // 3. RIGHT STATION: Fortin Barometer & NIST Thermometer Station
+ // -------------------------------------------------------------
+ const barX=520,barY=60,barW=175,barH=215;
+ svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barW+'" height="'+barH+'" rx="5" fill="#101e14" stroke="#254d33" stroke-width="1.5"/>';
+ svg+='<text x="'+(barX+barW/2)+'" y="'+(barY+18)+'" text-anchor="middle" fill="#86efac" font-size="9.5" font-weight="bold">GAS METROLOGY TELEMETRY</text>';
+ svg+='<line x1="'+(barX+12)+'" y1="'+(barY+25)+'" x2="'+(barX+barW-12)+'" y2="'+(barY+25)+'" stroke="#1f3b28"/>';
+
+ svg+='<text x="'+(barX+14)+'" y="'+(barY+44)+'" fill="#94a3b8" font-size="8">Barometer P_atm:</text>';
+ svg+='<text x="'+(barX+barW-14)+'" y="'+(barY+44)+'" text-anchor="end" fill="#f8fafc" font-size="8.5" font-family="monospace">760.00 mmHg</text>';
+
+ svg+='<text x="'+(barX+14)+'" y="'+(barY+60)+'" fill="#94a3b8" font-size="8">Bath Temp T_water:</text>';
+ svg+='<text x="'+(barX+barW-14)+'" y="'+(barY+60)+'" text-anchor="end" fill="#f8fafc" font-size="8.5" font-family="monospace">20.00 °C (293.15 K)</text>';
+
+ svg+='<text x="'+(barX+14)+'" y="'+(barY+76)+'" fill="#38bdf8" font-size="8">P_H₂O* (Antoine):</text>';
+ svg+='<text x="'+(barX+barW-14)+'" y="'+(barY+76)+'" text-anchor="end" fill="#38bdf8" font-size="8.5" font-family="monospace">17.54 mmHg</text>';
+
+ svg+='<text x="'+(barX+14)+'" y="'+(barY+92)+'" fill="#4ade80" font-size="8">P_dry (H₂):</text>';
+ svg+='<text x="'+(barX+barW-14)+'" y="'+(barY+92)+'" text-anchor="end" fill="#4ade80" font-size="8.5" font-family="monospace">742.46 mmHg</text>';
+
+ svg+='<line x1="'+(barX+12)+'" y1="'+(barY+102)+'" x2="'+(barX+barW-12)+'" y2="'+(barY+102)+'" stroke="#1f3b28"/>';
+
+ svg+='<text x="'+(barX+14)+'" y="'+(barY+118)+'" fill="#94a3b8" font-size="8">Raw Volume V_exp:</text>';
+ svg+='<text x="'+(barX+barW-14)+'" y="'+(barY+118)+'" text-anchor="end" fill="#f8fafc" font-size="8.5" font-family="monospace">'+v_exp.toFixed(2)+' mL</text>';
+
+ svg+='<rect x="'+(barX+10)+'" y="'+(barY+128)+'" width="'+(barW-20)+'" height="32" rx="3" fill="#061209" stroke="#1f3b28"/>';
+ svg+='<text x="'+(barX+barW/2)+'" y="'+(barY+142)+'" text-anchor="middle" fill="#86efac" font-size="7.5">Standardized Volume at STP:</text>';
+ svg+='<text x="'+(barX+barW/2)+'" y="'+(barY+154)+'" text-anchor="middle" fill="#4ade80" font-size="9" font-family="monospace" font-weight="bold">'+v_stp.toFixed(3)+' mL H₂</text>';
+
+ svg+='<text x="'+(barX+14)+'" y="'+(barY+176)+'" fill="#94a3b8" font-size="7.5">Moles Generated n(H₂):</text>';
+ const n_moles=(m_mg/1000.0/24.305);
+ svg+='<text x="'+(barX+barW-14)+'" y="'+(barY+176)+'" text-anchor="end" fill="#86efac" font-size="8" font-family="monospace">'+(n_moles*1000).toFixed(3)+' mmol</text>';
+
+ svg+='<text x="'+(barX+14)+'" y="'+(barY+192)+'" fill="#94a3b8" font-size="7.5">Instantaneous V_m:</text>';
+ const inst_vm=v_stp/1000.0/n_moles;
+ svg+='<text x="'+(barX+barW-14)+'" y="'+(barY+192)+'" text-anchor="end" fill="#fde047" font-size="8" font-family="monospace">'+inst_vm.toFixed(3)+' L/mol</text>';
+
+ svg+='<text x="'+(barX+barW/2)+'" y="295" text-anchor="middle" fill="#4ade80" font-size="9" font-weight="bold">3. STP REDUCTION TELEMETRY</text>';
+
+ svg+=text(360,312,'Dalton Gas Law: P_dry = P_atm − P_H₂O*(T). Internal and external water surfaces leveled to eliminate Δh head.','#789c80',8.5);
+ return svg;
+}
+
+function drawGasCompareView(p,rawVal){
+ let svg='<rect x="0" y="0" width="720" height="320" fill="#08140c"/>';
+ svg+=text(360,24,'COMPARATIVE ANALYTICAL METROLOGY: GAS VOLUME & MOLAR MASS DETERMINATION','#86efac',12);
+
+ const cards=[
+  {
+   title:'1. Eudiometry Displacement',
+   sub:'Acid-Metal Gas Evolution over Water',
+   color:'#86efac',
+   border:'#254d33',
+   items:[
+    'Principle: Stoichiometric metal dissolution (Mg + 2HCl ⟶ H₂)',
+    'Measurement: Gas volume collected in Class A eudiometer',
+    'Corrections: Dalton vapor pressure + hydrostatic head',
+    'Precision: ±0.05 mL (±0.2% relative volumetric error)',
+    'Dynamic Range: 5 to 50 mL gas evolution',
+    'Primary advantage: Simple direct absolute stoichiometry',
+    'Limitation: Saturated water vapor, trace gas solubility'
+   ]
+  },
+  {
+   title:'2. Dumas Vapor Density',
+   sub:'Condensation of Vaporized Volatiles',
+   color:'#38bdf8',
+   border:'#1e3a5f',
+   items:[
+    'Principle: Volatilization in boiling water bath (100 °C)',
+    'Measurement: Mass of condensed vapor filling bulb of volume V',
+    'Formula: M = (m · R · T) / (P · V)',
+    'Precision: ±0.5% to ±1.5% molar mass accuracy',
+    'Applicability: Volatile liquids (bp 40 °C to 90 °C)',
+    'Primary advantage: Determines unknown molecular weight',
+    'Limitation: Premature condensation, vapor non-ideality'
+   ]
+  },
+  {
+   title:'3. Gas Chromatography (TCD)',
+   sub:'Thermal Conductivity Gas Analysis',
+   color:'#fde047',
+   border:'#5a4814',
+   items:[
+    'Principle: Differential thermal conductivity detector (TCD)',
+    'Helium/Argon carrier gas across heated tungsten filament',
+    'Calibration: Multi-point certified calibration gas mixtures',
+    'Precision: ±0.1% to ±0.5% RSD',
+    'Detection Limits: 10 ppm to 100% composition',
+    'Primary advantage: Simultaneous multi-gas separation',
+    'Limitation: Expensive capital equipment, carrier gases'
+   ]
+  }
+ ];
+
+ cards.forEach((c,idx)=>{
+  const x=25+idx*230,y=46,w=210,h=242;
+  svg+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="6" fill="#0d1f14" stroke="'+c.border+'" stroke-width="1.5"/>';
+  svg+='<rect x="'+(x+8)+'" y="'+(y+8)+'" width="'+(w-16)+'" height="32" rx="4" fill="#051009"/>';
+  svg+='<text x="'+(x+w/2)+'" y="'+(y+22)+'" text-anchor="middle" fill="'+c.color+'" font-size="9.5" font-weight="bold">'+c.title+'</text>';
+  svg+='<text x="'+(x+w/2)+'" y="'+(y+34)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5">'+c.sub+'</text>';
+
+  c.items.forEach((item,ii)=>{
+   const iy=y+54+ii*26;
+   svg+='<circle cx="'+(x+16)+'" cy="'+(iy-3)+'" r="2" fill="'+c.color+'"/>';
+   svg+='<foreignObject x="'+(x+24)+'" y="'+(iy-10)+'" width="'+(w-32)+'" height="26"><p xmlns="http://www.w3.org/1999/xhtml" style="font-size:7.5px;color:#cbd5e1;line-height:1.2;margin:0">'+item+'</p></foreignObject>';
+  });
+ });
+
+ svg+=text(360,305,'Comparison: Eudiometry directly connects macroscopic reactant mass to microscopic Avogadro mole volume.','#789c80',9);
+ return svg;
+}
+
+function drawGasSandboxView(p,rawVal){
+ const m_mg=p.input;
+ const v_stp=rawVal;
+ let svg='<rect x="0" y="0" width="720" height="320" fill="#08140c"/>';
+ svg+=text(360,22,'GAS THERMODYNAMICS & REAL-GAS INTERMOLECULAR FORCES','#86efac',12);
+
+ // Left Plot: STP Volume vs Magnesium Mass (0 to 40 mg)
+ const pX=55,pY=48,pW=400,pH=225;
+ svg+='<rect x="'+pX+'" y="'+pY+'" width="'+pW+'" height="'+pH+'" fill="#061209" stroke="#1f3b28" rx="4"/>';
+
+ const mapX=m=>pX+(m/40.0)*pW;
+ const mapY=v=>pY+pH-(v/40.0)*pH;
+
+ // Linear ideal gas response line
+ const x0=mapX(0),y0=mapY(0);
+ const xEnd=mapX(40.0),yEnd=mapY(40.0*0.922197);
+ svg+='<line x1="'+x0+'" y1="'+y0+'" x2="'+xEnd+'" y2="'+yEnd+'" stroke="#38bdf8" stroke-width="2.5"/>';
+
+ // Grid lines & labels
+ [10,20,30,40].forEach(m=>{
+  svg+='<line x1="'+mapX(m)+'" y1="'+pY+'" x2="'+mapX(m)+'" y2="'+(pY+pH)+'" stroke="#16291c" stroke-width="1"/>';
+  svg+='<text x="'+mapX(m)+'" y="'+(pY+pH+14)+'" text-anchor="middle" fill="#789c80" font-size="8.5">'+m+' mg</text>';
+ });
+ [10,20,30,40].forEach(v=>{
+  svg+='<line x1="'+pX+'" y1="'+mapY(v)+'" x2="'+(pX+pW)+'" y2="'+mapY(v)+'" stroke="#16291c" stroke-width="1"/>';
+  svg+='<text x="'+(pX-6)+'" y="'+(mapY(v)+3)+'" text-anchor="end" fill="#789c80" font-size="8.5">'+v+' mL</text>';
+ });
+
+ // Current operating point
+ const curX=mapX(m_mg);
+ const curY=mapY(v_stp);
+ svg+='<circle cx="'+curX+'" cy="'+curY+'" r="6" fill="#4ade80" stroke="#08140c" stroke-width="2"/>';
+ svg+='<circle cx="'+curX+'" cy="'+curY+'" r="9" fill="none" stroke="#4ade80" stroke-width="1.2" stroke-opacity=".6"/>';
+ svg+='<line x1="'+curX+'" y1="'+curY+'" x2="'+curX+'" y2="'+(pY+pH)+'" stroke="#4ade80" stroke-dasharray="2,2"/>';
+ svg+='<text x="'+(curX+10)+'" y="'+(curY-8)+'" fill="#86efac" font-size="8.5" font-family="monospace">V_STP = '+v_stp.toFixed(3)+' mL</text>';
+
+ // Right Sidebar: Real Gas Virial / van der Waals Comparison
+ const sX=475,sY=48,sW=220,sH=225;
+ svg+='<rect x="'+sX+'" y="'+sY+'" width="'+sW+'" height="'+sH+'" rx="5" fill="#101e14" stroke="#254d33" stroke-width="1.5"/>';
+ svg+='<text x="'+(sX+sW/2)+'" y="'+(sY+18)+'" text-anchor="middle" fill="#86efac" font-size="9.5" font-weight="bold">REAL GAS NON-IDEALITY</text>';
+ svg+='<line x1="'+(sX+15)+'" y1="'+(sY+25)+'" x2="'+(sX+sW-15)+'" y2="'+(sY+25)+'" stroke="#1f3b28"/>';
+
+ svg+='<text x="'+(sX+12)+'" y="'+(sY+42)+'" fill="#38bdf8" font-size="8.5" font-weight="bold">Hydrogen (H₂): Z = 1.0006</text>';
+ svg+='<text x="'+(sX+12)+'" y="'+(sY+55)+'" fill="#94a3b8" font-size="7.5">a = 0.248 L²·bar/mol², b = 0.0266 L/mol</text>';
+ svg+='<text x="'+(sX+12)+'" y="'+(sY+67)+'" fill="#94a3b8" font-size="7.5">Real V_m = 22.428 L/mol (+0.06% offset)</text>';
+
+ svg+='<line x1="'+(sX+12)+'" y1="'+(sY+76)+'" x2="'+(sX+sW-12)+'" y2="'+(sY+76)+'" stroke="#1f3b28"/>';
+
+ svg+='<text x="'+(sX+12)+'" y="'+(sY+92)+'" fill="#fde047" font-size="8.5" font-weight="bold">Carbon Dioxide (CO₂): Z = 0.9950</text>';
+ svg+='<text x="'+(sX+12)+'" y="'+(sY+105)+'" fill="#94a3b8" font-size="7.5">a = 3.640 L²·bar/mol², b = 0.0427 L/mol</text>';
+ svg+='<text x="'+(sX+12)+'" y="'+(sY+117)+'" fill="#94a3b8" font-size="7.5">Real V_m = 22.302 L/mol (−0.50% offset)</text>';
+
+ svg+='<line x1="'+(sX+12)+'" y1="'+(sY+126)+'" x2="'+(sX+sW-12)+'" y2="'+(sY+126)+'" stroke="#1f3b28"/>';
+
+ svg+='<text x="'+(sX+12)+'" y="'+(sY+142)+'" fill="#ef4444" font-size="8.5" font-weight="bold">Ammonia (NH₃): Z = 0.9880</text>';
+ svg+='<text x="'+(sX+12)+'" y="'+(sY+155)+'" fill="#94a3b8" font-size="7.5">a = 4.225 L²·bar/mol², b = 0.0371 L/mol</text>';
+ svg+='<text x="'+(sX+12)+'" y="'+(sY+167)+'" fill="#94a3b8" font-size="7.5">Real V_m = 22.145 L/mol (−1.20% offset)</text>';
+
+ svg+='<rect x="'+(sX+10)+'" y="'+(sY+178)+'" width="'+(sW-20)+'" height="36" rx="3" fill="#061209" stroke="#1f3b28"/>';
+ svg+='<text x="'+(sX+sW/2)+'" y="'+(sY+192)+'" text-anchor="middle" fill="#86efac" font-size="7.5">Conclusion: H₂ is the closest of all</text>';
+ svg+='<text x="'+(sX+sW/2)+'" y="'+(sY+205)+'" text-anchor="middle" fill="#38bdf8" font-size="8" font-family="monospace">gases to ideal Avogadro behavior.</text>';
+
+ svg+=text(360,305,'Thermodynamics: Repulsive excluded volume slightly exceeds attractive dispersion for H₂ at STP.','#789c80',9);
  return svg;
 }
 

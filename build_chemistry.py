@@ -30,6 +30,14 @@ def observation(c,value):
   x=v
   y=raw
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='molar-volume-ideal-gas':
+  m_mg=float(value)
+  M_Mg=24.305
+  Vm_ref=22.414
+  raw=rnd((m_mg / 1000.0 / M_Mg) * Vm_ref * 1000.0, 3)
+  x=m_mg
+  y=raw
+  return {'input':value,'raw':raw,'x':x,'y':y}
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fit(rows):
@@ -60,6 +68,8 @@ def estimate(c,f):
   return f['m']*mult, f['slopeSE']*mult, 5.0000
  elif slug=='limiting-reactant-precipitation':
   return f['m']*10000.0, f['slopeSE']*10000.0, 233.390
+ elif slug=='molar-volume-ideal-gas':
+  return f['m']*24.305, f['slopeSE']*24.305, 22.414
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fmt(v,n=5):
@@ -74,6 +84,8 @@ def formula(c,f):
   return f"x_hydrate = m_slope · (M_CuSO₄ / M_H₂O) = {fmt(f['m'],6)} × (159.609 / 18.0154) = {fmt(f['m']*mult,4)} mol H₂O / mol CuSO₄; Intercept b = {fmt(f['b'],6)} g"
  elif slug=='limiting-reactant-precipitation':
   return f"M_BaSO₄ = m_slope · (1000 / C_SO₄) = {fmt(f['m'],6)} × 10000 = {fmt(f['m']*10000.0,2)} g/mol; Baseline intercept b = {fmt(f['b'],6)} g"
+ elif slug=='molar-volume-ideal-gas':
+  return f"V_m,STP = m_slope · M_Mg = {fmt(f['m'],6)} × 24.305 = {fmt(f['m']*24.305,3)} L/mol; Intercept V₀ = {fmt(f['b'],4)} mL"
  return ""
 
 def worked(c,row):
@@ -135,6 +147,25 @@ def worked(c,row):
    f"Verification: Multi-point ordinary least-squares regression across all six sulfate additions yields an empirical slope m_slope = 0.023336 g/mL, "
    f"extracting an experimental formula weight of M(BaSO₄) = 233.36 g/mol with R² = 1.00000, confirming quantitative 1:1 reaction stoichiometry."
   )
+ elif slug=='molar-volume-ideal-gas':
+  m_mg=row['input']
+  v_stp=row['raw']
+  M_Mg=24.305
+  n_Mg=(m_mg/1000.0)/M_Mg
+  Vm_calc=(v_stp/1000.0)/n_Mg
+  T_exp=20.0 + 273.15
+  P_atm=760.0
+  P_H2O=17.54
+  P_dry=P_atm - P_H2O
+  return (
+   f"Reacted Magnesium Ribbon Mass: m_Mg = {m_mg:.1f} mg = {m_mg/1000.0:.5f} g.\n"
+   f"Stoichiometric Moles of Hydrogen Produced: n(H₂) = n(Mg) = {m_mg/1000.0:.5f} g / 24.305 g/mol = {n_Mg:.6f} mol.\n"
+   f"Dalton's Partial Pressure Correction: P_dry = P_atm − P_H2O*(20 °C) = 760.0 − 17.54 = {P_dry:.2f} mmHg.\n"
+   f"STP Reduction Volume (273.15 K, 760.0 mmHg): V_STP = {v_stp:.3f} mL = {v_stp/1000.0:.6f} L.\n"
+   f"Single-Trial Molar Volume Calculation: V_m = V_STP / n(H₂) = {v_stp/1000.0:.6f} L / {n_Mg:.6f} mol = {Vm_calc:.3f} L/mol.\n"
+   f"Verification: Across the full six-point series from 10.0 to 35.0 mg of Mg, ordinary least-squares regression "
+   f"extracts the slope m_slope = 0.92220 mL/mg, multiplying by M(Mg) = 24.305 g/mol to yield V_m,STP = 22.414 L/mol with R² = 1.00000."
+  )
  return ""
 
 def uncertainty_text(c):
@@ -195,6 +226,23 @@ def uncertainty_text(c):
    "promotes Ostwald ripening and desorbs impurities, confirmed by negative silver nitrate spot tests on the filtrate. "
    "Ordinary least-squares linear regression across six independent volumetric settings (4.0 to 24.0 mL) extracts the empirical slope m_slope = 0.0233364 g/mL with a standard error "
    "SE(m) < 4.0 × 10⁻⁶ and an ideal coefficient of determination R² = 1.00000, isolating the experimental molar mass M(BaSO₄) = 233.36 g/mol within 0.011% of the theoretical reference."
+  )
+ elif slug=='molar-volume-ideal-gas':
+  return (
+   "In eudiometric gas metrology, the determination of molar volume at STP is governed by V_STP = (V_m,STP / M_Mg) · m_Mg. "
+   "A complete analytical uncertainty budget partitions random and systematic variance into distinct components: "
+   "(1) Volumetric Reading Uncertainty: The Class A eudiometer tube features graduations every 0.10 mL with an interpolation uncertainty "
+   "of ±0.03 mL. For a mid-range hydrogen volume of 23.05 mL, the relative volumetric uncertainty is δV / V = 0.03 / 23.05 ≈ 0.13%. "
+   "(2) Micro-Gravimetric Mass Uncertainty: The five-place analytical balance provides readability to ±0.01 mg (0.00001 g) and repeatability of ±0.015 mg. "
+   "For a 25.0 mg magnesium strip, the relative weighing uncertainty is δm / m = 0.015 / 25.0 = 0.060%. "
+   "(3) Meniscus Leveling & Hydrostatic Pressure: Aligning the internal and external water menisci inside the tall leveling cylinder eliminates the hydrostatic "
+   "head (Δh = 0). A residual alignment error of ±2.0 mm of water corresponds to a mercury-equivalent pressure error of δP_head = 2.0 / 13.57 ≈ ±0.15 mmHg, "
+   "contributing less than 0.020% relative error in dry gas pressure. "
+   "(4) Vapor Pressure and Temperature Measurement: Water bath temperature is recorded to ±0.05 °C with a calibrated thermistor. At 20.0 °C, ∂P_H2O*/∂T ≈ 1.1 mmHg/°C; "
+   "hence, a ±0.05 °C drift shifts vapor pressure by only ±0.055 mmHg (<0.007% of barometric pressure). "
+   "(5) Oxide Coating Bias: Thorough abrasion of magnesium ribbon with 600-grit emery paper eliminates surface MgO, which would otherwise lead to a negative gas yield error. "
+   "Ordinary least-squares linear regression across six independent magnesium loadings (10.0 to 35.0 mg) extracts the empirical slope m_slope = 0.92220 mL/mg with a standard error "
+   "SE(m) < 1.0 × 10⁻⁵ and an ideal coefficient of determination R² = 1.00000, isolating the standard molar volume V_m,STP = 22.414 L/mol with zero residual offset."
   )
  return ""
 
@@ -361,6 +409,47 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"The experimental value agrees with the theoretical chemical formula weight (233.390 g/mol) to within {percent:.4f}% error. "
    "The investigation verified von Weimarn's law of supersaturation, demonstrated the thermodynamic necessity of Ostwald ripening during thermal digestion, "
    "and proved that multi-point ordinary least-squares regression provides an exceptionally robust analytical methodology for stoichiometric verification."
+  )
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='molar-volume-ideal-gas':
+  abstract=(
+   f"Six eudiometric hydrogen displacement trials were performed by reacting polished magnesium ribbon strips (masses m_Mg = {rows[0]['input']:.1f} mg to {rows[-1]['input']:.1f} mg) "
+   f"with excess 6.0 M hydrochloric acid over an aqueous column (yielding dry STP hydrogen volumes from {rows[0]['raw']:.3f} mL to {rows[-1]['raw']:.3f} mL). "
+   f"An ordinary least-squares linear regression of standardized volume V_STP against magnesium mass m_Mg yielded an empirical slope of "
+   f"{fmt(f['m'],5)} mL/mg, which scales by the atomic weight of magnesium (M = 24.305 g/mol) to extract an experimental molar volume of "
+   f"V_m,STP = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} and an intercept of {fmt(f['b'],c['resultDecimals'])} mL, "
+   f"achieving exact agreement with the ideal gas reference value of 22.414 L/mol (difference = {percent:.4f}%). "
+   f"Dalton vapor pressure subtraction (P_H2O* = 17.54 mmHg) and meniscus hydrostatic leveling eliminated systematic pressure biases."
+  )
+  graph_choice=(
+   f"The mathematical regression fits the stoichiometric gas model V_STP = [V_m,STP / M_Mg] · m_Mg + V₀, where m_Mg represents "
+   f"the mass of reacted magnesium in mg, V_STP represents the dry hydrogen volume at STP in mL, and V₀ represents the baseline intercept in mL "
+   f"(theoretically V₀ = 0.000 mL). Multiplying the regression slope m_slope by the molar mass of magnesium (24.305 g/mol) directly isolates the "
+   f"molar volume of hydrogen at STP in {c['resultUnit']}, while constant meniscus calibration offsets or bubble entrapment artifacts are absorbed into V₀."
+  )
+  discussion=(
+   "The experimental observations provide rigorous quantitative verification of Avogadro's Hypothesis, Dalton's Law of Partial Pressures, and Ideal Gas Stoichiometry. "
+   "The single displacement reaction between metallic magnesium and hydrochloric acid, Mg (s) + 2 HCl (aq) ---> MgCl₂ (aq) + H₂ (g), proceeds rapidly and quantitatively to completion. "
+   "Because the reaction exhibits a strict 1:1 stoichiometric mole ratio, each mole of magnesium consumed liberates exactly one mole of diatomic hydrogen gas. "
+   "Throughout the six trials across reactant masses from 10.0 mg to 35.0 mg, the dry gas volume converted to STP scaled in strict linear proportion to magnesium mass. "
+   "The ordinary least-squares regression line V_STP = 0.92220 · m_Mg + 0.000 mL achieved an ideal coefficient of determination R² = 1.00000. "
+   "Scaling the slope by M(Mg) = 24.305 g/mol yielded an experimental molar volume of V_m,STP = 22.414 L/mol, matching the universal ideal gas constant prediction to within 0.0003%. "
+   "Two critical thermodynamic and physical corrections were essential for achieving this degree of precision: "
+   "First, Dalton's law of partial pressures: hydrogen gas collected over water is saturated with water vapor at ambient bath temperature (20.0 °C). "
+   "Subtracting the equilibrium saturation vapor pressure P_H2O* = 17.54 mmHg from total barometric pressure (760.0 mmHg) isolated the true dry hydrogen partial pressure (742.46 mmHg), "
+   "eliminating a 2.3% positive volume error. "
+   "Second, hydrostatic leveling: by submerging the eudiometer in a 1000 mL leveling cylinder and matching internal and external water levels, the downward gravitational pull "
+   "of the suspended water column was eliminated, ensuring P_total = P_atm exactly. "
+   "The copper wire cage effectively prevented premature floating of magnesium fragments and formed a sacrificial galvanic couple that accelerated the reaction rate, "
+   "while pre-polishing the ribbon with 600-grit emery paper removed passivating oxide crusts."
+  )
+  conclusion=(
+   "This laboratory investigation successfully demonstrated the quantitative determination of the molar volume of an ideal gas using eudiometric gas collection techniques. "
+   f"Through systematic acid displacement across magnesium masses from {rows[0]['input']:.1f} mg to {rows[-1]['input']:.1f} mg, we extracted an experimental molar volume of "
+   f"V_m,STP = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with a standard error of {fmt(se*c['resultScale'])} {c['resultUnit']} and an ideal R² = 1.00000. "
+   f"The empirical result confirms the theoretical IUPAC STP molar volume of an ideal gas (22.414 L/mol) with a percentage difference of {percent:.4f}%. "
+   "The investigation validated Dalton's law of partial pressures, demonstrated the fluid mechanics of hydrostatic head neutralization, "
+   "and established multi-point linear regression as an indispensable method for high-accuracy gas metrology."
   )
   return abstract, graph_choice, discussion, conclusion
  return "","","",""
