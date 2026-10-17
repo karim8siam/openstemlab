@@ -81,6 +81,18 @@ function update(){
   $('apparatusDiagram').innerHTML=drawEnzymeKineticsBenchView(p,rawVal);
   return;
  }
+ if(cfg.slug==='homogeneous-catalysis-hydrogen-peroxide-decomposition'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawPeroxideCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawPeroxideSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawPeroxideBenchView(p,rawVal);
+  return;
+ }
  if(cfg.slug==='photochemical-decomposition-uranyl-oxalate'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawUranylCompareView(p,rawVal);
@@ -126,6 +138,11 @@ function update(){
   const dA_dt = v0_uM * 0.0185;
   $('liveState').textContent='Photometric trace recorded: v₀ = '+v0_uM.toFixed(2)+' μM/min (dA/dt = '+(dA_dt/1000).toFixed(4)+' AU/min).';
   message('Assay complete: v₀ = '+v0_uM.toFixed(2)+' μM/min (1/v₀ = '+inv_v0.toFixed(2)+' min/mM, 1/[S] = '+inv_s.toFixed(2)+' mM⁻¹). Record in notebook.');
+ }else if(cfg.slug==='homogeneous-catalysis-hydrogen-peroxide-decomposition'){
+  const c_ki = p.input;
+  const k_obs = raw;
+  $('liveState').textContent='Gas evolution steady: [I⁻] = '+c_ki.toFixed(3)+' M, k_obs = '+k_obs.toFixed(4)+' min⁻¹.';
+  message('Gas burette leveled: k_obs = '+k_obs.toFixed(4)+' min⁻¹ for [I⁻] = '+c_ki.toFixed(3)+' M. Record in notebook.');
  }else if(cfg.slug==='photochemical-decomposition-uranyl-oxalate'){
   $('liveState').textContent='Ready to irradiate uranyl oxalate cell for exposure time t = '+p.input.toFixed(1)+' min.';
   message('Expose actinometer cell to 365 nm UV arc at 25.00 °C, withdraw aliquot & titrate with 0.0100 M KMnO₄ at 70 °C.');
@@ -9345,5 +9362,621 @@ function drawSaponificationSandboxView(p, rawVal){
  svg += '<text x="'+(sX+25)+'" y="'+(sY+203)+'" fill="#facc15" font-size="8" font-family="monospace" font-weight="bold">ΔG° ≈ −63 kJ/mol (Irreversible proton transfer to ethoxide)</text>';
 
  svg += text(360, 312, 'Metrological Invariant: 1/c_t scales linearly with time t, directly isolating the second-order rate constant k = 6.60 L/(mol·min).', '#789c80', 8.5);
+ return svg;
+}
+
+
+// ======================================================================
+// LAB 25: ENZYME KINETICS (MICHAELIS-MENTEN SPECTROPHOTOMETRY)
+// ======================================================================
+function drawEnzymeKineticsBenchView(p, rawVal){
+ const s_val = p.input;
+ const raw = measurement ? measurement.raw : (busy ? rawVal * 0.8 : (rawVal || 22.22));
+ const v0 = raw;
+ const dA_dt = (v0 * 0.0185).toFixed(4);
+
+ let svg = header('Michaelis-Menten Steady-State Spectrophotometry Bench', '405 nm Photometric Tracking of 4-Nitrophenyl Phosphate Hydrolysis');
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // Left: Spectrophotometer Chamber (x: 35, y: 60, w: 320, h: 225)
+ const cX = 35, cY = 60, cW = 320, cH = 225;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(cX+8)+'" y="'+(cY+8)+'" width="'+(cW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(cX+cW/2)+'" y="'+(cY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">UV-VIS OPTICAL COMPARTMENT (λ = 405 nm)</text>';
+
+ // Light Source & Slit
+ svg += '<rect x="'+(cX+20)+'" y="'+(cY+60)+'" width="35" height="40" rx="4" fill="#1e293b" stroke="#334155"/>';
+ svg += '<circle cx="'+(cX+37)+'" cy="'+(cY+80)+'" r="7" fill="#facc15"/>';
+ svg += '<text x="'+(cX+37)+'" y="'+(cY+115)+'" text-anchor="middle" fill="#94a3b8" font-size="6.5">Tungsten Arc</text>';
+
+ // Beam path (405 nm violet-blue)
+ svg += '<line x1="'+(cX+55)+'" y1="'+(cY+80)+'" x2="'+(cX+130)+'" y2="'+(cY+80)+'" stroke="#818cf8" stroke-width="3" stroke-dasharray="4,2"/>';
+
+ // Quartz Cuvette (10 mm pathlength)
+ const cuvX = cX + 130, cuvY = cY + 45, cuvW = 40, cuvH = 70;
+ svg += '<rect x="'+cuvX+'" y="'+cuvY+'" width="'+cuvW+'" height="'+cuvH+'" rx="2" fill="#0284c7" fill-opacity="0.2" stroke="#38bdf8" stroke-width="1.5"/>';
+ // Yellow p-nitrophenol product developing
+ const yellowAlpha = Math.min(0.85, 0.15 + (v0 / 40.0) * 0.65);
+ svg += '<rect x="'+(cuvX+2)+'" y="'+(cuvY+10)+'" width="'+(cuvW-4)+'" height="'+(cuvH-12)+'" fill="#eab308" fill-opacity="'+yellowAlpha+'"/>';
+ svg += '<text x="'+(cuvX+cuvW/2)+'" y="'+(cuvY+cuvH+14)+'" text-anchor="middle" fill="#38bdf8" font-size="6.5">10 mm Quartz</text>';
+
+ // Attenuated transmitted beam
+ svg += '<line x1="'+(cuvX+cuvW)+'" y1="'+(cY+80)+'" x2="'+(cX+240)+'" y2="'+(cY+80)+'" stroke="#818cf8" stroke-width="1.8" stroke-opacity="0.6"/>';
+
+ // Photodiode Detector
+ svg += '<rect x="'+(cX+240)+'" y="'+(cY+60)+'" width="35" height="40" rx="4" fill="#1e293b" stroke="#334155"/>';
+ svg += '<rect x="'+(cX+245)+'" y="'+(cY+68)+'" width="8" height="24" rx="1" fill="#22c55e"/>';
+ svg += '<text x="'+(cX+257)+'" y="'+(cY+115)+'" text-anchor="middle" fill="#94a3b8" font-size="6.5">Si Photodiode</text>';
+
+ // Digital Readout Telemetry Display
+ svg += '<rect x="'+(cX+20)+'" y="'+(cY+135)+'" width="280" height="75" rx="4" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(cX+30)+'" y="'+(cY+155)+'" fill="#94a3b8" font-size="7.5">Substrate [S]₀: <tspan fill="#38bdf8" font-weight="bold">'+s_val.toFixed(3)+' mM</tspan></text>';
+ svg += '<text x="'+(cX+30)+'" y="'+(cY+175)+'" fill="#94a3b8" font-size="7.5">Initial Rate v₀: <tspan fill="#4ade80" font-weight="bold">'+v0.toFixed(2)+' μM/min</tspan></text>';
+ svg += '<text x="'+(cX+30)+'" y="'+(cY+195)+'" fill="#94a3b8" font-size="7.5">Photometric Slope ΔA/Δt: <tspan fill="#facc15" font-weight="bold">'+dA_dt+' AU/min</tspan></text>';
+
+ // Right: Michaelis-Menten Hyperbolic Trajectory (x: 365, y: 60, w: 320, h: 225)
+ const rX = 365, rY = 60, rW = 320, rH = 225;
+ svg += '<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(rX+8)+'" y="'+(rY+8)+'" width="'+(rW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(rX+rW/2)+'" y="'+(rY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">STEADY-STATE ENZYME SATURATION CURVE</text>';
+
+ // Plot axes
+ const pX = rX + 40, pY = rY + 45, pW = 245, pH = 135;
+ svg += '<line x1="'+pX+'" y1="'+(pY+pH)+'" x2="'+(pX+pW)+'" y2="'+(pY+pH)+'" stroke="#334155" stroke-width="1.2"/>';
+ svg += '<line x1="'+pX+'" y1="'+pY+'" x2="'+pX+'" y2="'+(pY+pH)+'" stroke="#334155" stroke-width="1.2"/>';
+
+ // Asymptote Vmax
+ svg += '<line x1="'+pX+'" y1="'+(pY+15)+'" x2="'+(pX+pW)+'" y2="'+(pY+15)+'" stroke="#ef4444" stroke-width="1" stroke-dasharray="3,3"/>';
+ svg += '<text x="'+(pX+pW-10)+'" y="'+(pY+11)+'" text-anchor="end" fill="#ef4444" font-size="6.5">V_max = 40.0 μM/min</text>';
+
+ // Hyperbolic curve: v = (40 * S) / (0.5 + S)
+ let pathD = 'M ' + pX + ' ' + (pY + pH);
+ for(let step = 1; step <= 25; step++){
+  const curS = (step / 25.0) * 4.0;
+  const curV = (40.0 * curS) / (0.500 + curS);
+  const px = pX + (curS / 4.0) * pW;
+  const py = (pY + pH) - (curV / 45.0) * pH;
+  pathD += ' L ' + px.toFixed(1) + ' ' + py.toFixed(1);
+ }
+ svg += '<path d="'+pathD+'" fill="none" stroke="#38bdf8" stroke-width="2.2"/>';
+
+ // Active operating point
+ const ptX = pX + (s_val / 4.0) * pW;
+ const ptY = (pY + pH) - (v0 / 45.0) * pH;
+ svg += '<circle cx="'+ptX.toFixed(1)+'" cy="'+ptY.toFixed(1)+'" r="4.5" fill="#facc15" stroke="#ef4444" stroke-width="1.5"/>';
+
+ svg += '<text x="'+(pX+pW/2)+'" y="'+(pY+pH+18)+'" text-anchor="middle" fill="#94a3b8" font-size="7">Substrate Concentration [S] (mM)</text>';
+ svg += '<text x="'+(pX-12)+'" y="'+(pY+pH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7" transform="rotate(-90 '+(pX-12)+' '+(pY+pH/2)+')">v₀ (μM/min)</text>';
+
+ svg += text(360, 312, 'Steady-State Invariant: K_M = 0.500 mM (substrate affinity), V_max = 40.0 μM/min (catalytic capacity).', '#789c80', 8.5);
+ return svg;
+}
+
+function drawEnzymeKineticsCompareView(p, rawVal){
+ let svg = header('Kinetic Transformations Comparison', 'Lineweaver-Burk vs Eadie-Hofstee vs Hanes-Woolf Linearizations');
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ const panels = [
+  {title: 'Lineweaver-Burk (1/v vs 1/[S])', eq: '1/v₀ = (K_M/V_max)·(1/[S]) + 1/V_max', xLabel: '1/[S] (mM⁻¹)', yLabel: '1/v₀ (min/mM)', col: '#38bdf8', x: 35},
+  {title: 'Eadie-Hofstee (v vs v/[S])', eq: 'v₀ = −K_M·(v₀/[S]) + V_max', xLabel: 'v₀/[S] (min⁻¹)', yLabel: 'v₀ (μM/min)', col: '#4ade80', x: 260},
+  {title: 'Hanes-Woolf ([S]/v vs [S])', eq: '[S]/v₀ = (1/V_max)·[S] + K_M/V_max', xLabel: '[S] (mM)', yLabel: '[S]/v₀ (mM·min/μM)', col: '#facc15', x: 485}
+ ];
+
+ panels.forEach(pnl => {
+  svg += '<rect x="'+pnl.x+'" y="60" width="200" height="225" rx="6" fill="#0a1a12" stroke="#22422c" stroke-width="1.2"/>';
+  svg += '<rect x="'+(pnl.x+6)+'" y="66" width="188" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+  svg += '<text x="'+(pnl.x+100)+'" y="80" text-anchor="middle" fill="'+pnl.col+'" font-size="7.5" font-weight="bold">'+pnl.title+'</text>';
+
+  const axX = pnl.x + 30, axY = 100, axW = 150, axH = 120;
+  svg += '<line x1="'+axX+'" y1="'+(axY+axH)+'" x2="'+(axX+axW)+'" y2="'+(axY+axH)+'" stroke="#334155" stroke-width="1"/>';
+  svg += '<line x1="'+axX+'" y1="'+axY+'" x2="'+axX+'" y2="'+(axY+axH)+'" stroke="#334155" stroke-width="1"/>';
+
+  // Linear fit line
+  svg += '<line x1="'+(axX+10)+'" y1="'+(axY+axH-15)+'" x2="'+(axX+axW-15)+'" y2="'+(axY+25)+'" stroke="'+pnl.col+'" stroke-width="2"/>';
+
+  svg += '<text x="'+(pnl.x+100)+'" y="'+(axY+axH+18)+'" text-anchor="middle" fill="#94a3b8" font-size="6.5">'+pnl.xLabel+'</text>';
+  svg += '<text x="'+(axX-8)+'" y="'+(axY+axH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="6.5" transform="rotate(-90 '+(axX-8)+' '+(axY+axH/2)+')">'+pnl.yLabel+'</text>';
+  svg += '<text x="'+(pnl.x+100)+'" y="255" text-anchor="middle" fill="#94a3b8" font-size="6">'+pnl.eq+'</text>';
+ });
+
+ svg += text(360, 312, 'Metrological Robustness: Hanes-Woolf minimizes low-[S] distortion; Lineweaver-Burk is IUPAC standard.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawEnzymeKineticsSandboxView(p, rawVal){
+ let svg = header('Enzyme-Substrate Saturation & Reversible Inhibition Sandbox', 'Substrate Saturation Curve & Competitive vs Non-Competitive Inhibition');
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ const gX = 35, gY = 60, gW = 650, gH = 225;
+ svg += '<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+
+ const pX = gX + 60, pY = gY + 30, pW = 520, pH = 145;
+ svg += '<line x1="'+pX+'" y1="'+(pY+pH)+'" x2="'+(pX+pW)+'" y2="'+(pY+pH)+'" stroke="#334155" stroke-width="1.2"/>';
+ svg += '<line x1="'+pX+'" y1="'+pY+'" x2="'+pX+'" y2="'+(pY+pH)+'" stroke="#334155" stroke-width="1.2"/>';
+
+ // Uninhibited: KM = 0.5, Vmax = 40
+ let d1 = 'M ' + pX + ' ' + (pY + pH);
+ // Competitive (Ki = 0.5, [I] = 0.5 => KM_app = 1.0, Vmax = 40)
+ let d2 = 'M ' + pX + ' ' + (pY + pH);
+ // Non-competitive ([I] = 0.5 => Vmax_app = 20, KM = 0.5)
+ let d3 = 'M ' + pX + ' ' + (pY + pH);
+
+ for(let step = 1; step <= 50; step++){
+  const s = (step / 50.0) * 4.0;
+  const v1 = (40.0 * s) / (0.500 + s);
+  const v2 = (40.0 * s) / (1.000 + s);
+  const v3 = (20.0 * s) / (0.500 + s);
+
+  const x = pX + (s / 4.0) * pW;
+  const y1 = (pY + pH) - (v1 / 45.0) * pH;
+  const y2 = (pY + pH) - (v2 / 45.0) * pH;
+  const y3 = (pY + pH) - (v3 / 45.0) * pH;
+
+  d1 += ' L ' + x.toFixed(1) + ' ' + y1.toFixed(1);
+  d2 += ' L ' + x.toFixed(1) + ' ' + y2.toFixed(1);
+  d3 += ' L ' + x.toFixed(1) + ' ' + y3.toFixed(1);
+ }
+
+ svg += '<path d="'+d1+'" fill="none" stroke="#4ade80" stroke-width="2.5"/>';
+ svg += '<path d="'+d2+'" fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="4,2"/>';
+ svg += '<path d="'+d3+'" fill="none" stroke="#ef4444" stroke-width="2" stroke-dasharray="3,3"/>';
+
+ // Legend
+ svg += '<circle cx="'+(pX+20)+'" cy="'+(pY+20)+'" r="4" fill="#4ade80"/>';
+ svg += '<text x="'+(pX+30)+'" y="'+(pY+23)+'" fill="#4ade80" font-size="7.5" font-weight="bold">Uninhibited: K_M = 0.50 mM, V_max = 40.0 μM/min</text>';
+
+ svg += '<circle cx="'+(pX+20)+'" cy="'+(pY+38)+'" r="4" fill="#38bdf8"/>';
+ svg += '<text x="'+(pX+30)+'" y="'+(pY+41)+'" fill="#38bdf8" font-size="7.5" font-weight="bold">Competitive Inhibitor: K_M(app) = 1.00 mM, V_max = 40.0 μM/min</text>';
+
+ svg += '<circle cx="'+(pX+20)+'" cy="'+(pY+56)+'" r="4" fill="#ef4444"/>';
+ svg += '<text x="'+(pX+30)+'" y="'+(pY+59)+'" fill="#ef4444" font-size="7.5" font-weight="bold">Non-Competitive Inhibitor: K_M = 0.50 mM, V_max(app) = 20.0 μM/min</text>';
+
+ svg += '<text x="'+(pX+pW/2)+'" y="'+(pY+pH+18)+'" text-anchor="middle" fill="#94a3b8" font-size="7">Substrate Concentration [S] (mM)</text>';
+ svg += '<text x="'+(pX-15)+'" y="'+(pY+pH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7" transform="rotate(-90 '+(pX-15)+' '+(pY+pH/2)+')">v₀ (μM/min)</text>';
+
+ svg += text(360, 312, 'Inhibition Diagnostic: Competitive inhibitors preserve V_max; Non-competitive inhibitors depress V_max.', '#789c80', 8.5);
+ return svg;
+}
+
+// ======================================================================
+// LAB 26: LANDOLT CLOCK (IODATE-SULFITE INDUCTION DYNAMICS)
+// ======================================================================
+function drawLandoltBenchView(p, rawVal){
+ const io3 = p.input;
+ const raw = measurement ? measurement.raw : (busy ? rawVal * 0.75 : (rawVal || 25.00));
+ const dt = raw;
+ const inv_dt = (1.0 / dt).toFixed(4);
+
+ let svg = header('Landolt Iodate-Sulfite Clock Reaction Bench', 'Photometric Induction Time Tracking & Starch-Triiodide Flash Transition');
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // Left: Reaction Vessel with Magnetic Stirrer (x: 35, y: 60, w: 320, h: 225)
+ const bX = 35, bY = 60, bW = 320, bH = 225;
+ svg += '<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(bX+8)+'" y="'+(bY+8)+'" width="'+(bW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(bX+bW/2)+'" y="'+(bY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">ISOTHERMAL REACTION FLASK (T = 298.15 K)</text>';
+
+ // Magnetic Stirrer Base
+ svg += '<rect x="'+(bX+60)+'" y="'+(bY+160)+'" width="200" height="30" rx="4" fill="#1e293b" stroke="#334155"/>';
+ svg += '<circle cx="'+(bX+90)+'" cy="'+(bY+175)+'" r="5" fill="#22c55e"/>';
+ svg += '<text x="'+(bX+105)+'" y="'+(bY+178)+'" fill="#94a3b8" font-size="6.5">Stirrer: 400 RPM</text>';
+
+ // Glass Beaker
+ const bkX = bX + 90, bkY = bY + 50, bkW = 140, bkH = 110;
+ svg += '<rect x="'+bkX+'" y="'+bkY+'" width="'+bkW+'" height="'+bkH+'" rx="4" fill="#0284c7" fill-opacity="0.1" stroke="#38bdf8" stroke-width="1.5"/>';
+
+ // Solution Color: switches to deep midnight blue upon induction flash
+ const isTriggered = (measurement !== null);
+ const solCol = isTriggered ? '#1e1b4b' : '#fef08a';
+ const solOpacity = isTriggered ? 0.9 : 0.35;
+ svg += '<rect x="'+(bkX+4)+'" y="'+(bkY+30)+'" width="'+(bkW-8)+'" height="'+(bkH-34)+'" rx="2" fill="'+solCol+'" fill-opacity="'+solOpacity+'"/>';
+
+ // PTFE Stir bar
+ svg += '<rect x="'+(bkX+bkW/2-15)+'" y="'+(bkY+bkH-12)+'" width="30" height="6" rx="3" fill="#ffffff" stroke="#94a3b8"/>';
+
+ // Burettes dropping IO3- and HSO3-
+ svg += '<rect x="'+(bkX+25)+'" y="'+(bkY-25)+'" width="12" height="30" rx="1" fill="#475569"/>';
+ svg += '<rect x="'+(bkX+bkW-37)+'" y="'+(bkY-25)+'" width="12" height="30" rx="1" fill="#475569"/>';
+ svg += '<text x="'+(bkX+31)+'" y="'+(bkY-30)+'" text-anchor="middle" fill="#38bdf8" font-size="6">IO₃⁻</text>';
+ svg += '<text x="'+(bkX+bkW-31)+'" y="'+(bkY-30)+'" text-anchor="middle" fill="#facc15" font-size="6">HSO₃⁻</text>';
+
+ // Right: Telemetry and Digital Chronometer (x: 365, y: 60, w: 320, h: 225)
+ const tX = 365, tY = 60, tW = 320, tH = 225;
+ svg += '<rect x="'+tX+'" y="'+tY+'" width="'+tW+'" height="'+tH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(tX+8)+'" y="'+(tY+8)+'" width="'+(tW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(tX+tW/2)+'" y="'+(tY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">CLOCK REACTION TELEMETRY</text>';
+
+ // Digital Timer Display
+ svg += '<rect x="'+(tX+30)+'" y="'+(tY+45)+'" width="260" height="65" rx="6" fill="#051009" stroke="#22c55e" stroke-width="1.5"/>';
+ svg += '<text x="'+(tX+160)+'" y="'+(tY+75)+'" text-anchor="middle" fill="#22c55e" font-family="monospace" font-size="20" font-weight="bold">'+dt.toFixed(2)+' s</text>';
+ svg += '<text x="'+(tX+160)+'" y="'+(tY+98)+'" text-anchor="middle" fill="#86efac" font-size="7">INDUCTION TIME (Δt)</text>';
+
+ // Kinetic Telemetry Box
+ svg += '<rect x="'+(tX+30)+'" y="'+(tY+125)+'" width="260" height="80" rx="4" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(tX+40)+'" y="'+(tY+145)+'" fill="#94a3b8" font-size="7.5">Initial Iodate [IO₃⁻]₀: <tspan fill="#38bdf8" font-weight="bold">'+io3.toFixed(2)+' mM</tspan></text>';
+ svg += '<text x="'+(tX+40)+'" y="'+(tY+165)+'" fill="#94a3b8" font-size="7.5">Initial Bisulfite [HSO₃⁻]₀: <tspan fill="#facc15" font-weight="bold">2.00 mM</tspan></text>';
+ svg += '<text x="'+(tX+40)+'" y="'+(tY+185)+'" fill="#94a3b8" font-size="7.5">Reciprocal Clock Rate (1/Δt): <tspan fill="#4ade80" font-weight="bold">'+inv_dt+' s⁻¹</tspan></text>';
+
+ svg += text(360, 312, 'Metrological Invariant: 1/Δt scales strictly linearly with [IO₃⁻]₀, yielding k = 5.000 L·mol⁻¹·s⁻¹.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawLandoltCompareView(p, rawVal){
+ let svg = header('Landolt Clock Induction Dynamics', 'Induction Period Δt vs Initial Reactant Concentrations');
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ const cX = 35, cY = 60, cW = 650, cH = 225;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+
+ const pX = cX + 60, pY = cY + 30, pW = 520, pH = 145;
+ svg += '<line x1="'+pX+'" y1="'+(pY+pH)+'" x2="'+(pX+pW)+'" y2="'+(pY+pH)+'" stroke="#334155" stroke-width="1.2"/>';
+ svg += '<line x1="'+pX+'" y1="'+pY+'" x2="'+pX+'" y2="'+(pY+pH)+'" stroke="#334155" stroke-width="1.2"/>';
+
+ // Linear plot: 1/Δt vs [IO3-] (from 4 mM to 20 mM)
+ // 1/Δt = 0.005 * [IO3-] => at 4 mM, 1/Δt = 0.02; at 20 mM, 1/Δt = 0.10
+ const ptX1 = pX + (4.0 / 22.0) * pW, ptY1 = (pY + pH) - (0.020 / 0.12) * pH;
+ const ptX2 = pX + (20.0 / 22.0) * pW, ptY2 = (pY + pH) - (0.100 / 0.12) * pH;
+
+ svg += '<line x1="'+ptX1+'" y1="'+ptY1+'" x2="'+ptX2+'" y2="'+ptY2+'" stroke="#38bdf8" stroke-width="2.5"/>';
+
+ const pts = [
+  {x: 4.0, y: 0.0200}, {x: 6.0, y: 0.0300}, {x: 8.0, y: 0.0400},
+  {x: 10.0, y: 0.0500}, {x: 14.0, y: 0.0700}, {x: 20.0, y: 0.1000}
+ ];
+ pts.forEach(pt => {
+  const px = pX + (pt.x / 22.0) * pW;
+  const py = (pY + pH) - (pt.y / 0.12) * pH;
+  svg += '<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="4" fill="#facc15" stroke="#ef4444" stroke-width="1.2"/>';
+ });
+
+ svg += '<text x="'+(pX+pW/2)+'" y="'+(pY+pH+18)+'" text-anchor="middle" fill="#94a3b8" font-size="7">Initial Iodate Concentration [IO₃⁻]₀ (mM)</text>';
+ svg += '<text x="'+(pX-15)+'" y="'+(pY+pH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7" transform="rotate(-90 '+(pX-15)+' '+(pY+pH/2)+')">1/Δt (s⁻¹)</text>';
+
+ svg += text(360, 312, 'Linear Induction Model: Slope k\' = 0.00500 s⁻¹·mM⁻¹ ⟹ Second-Order Rate Constant k = 5.000 L·mol⁻¹·s⁻¹.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawLandoltSandboxView(p, rawVal){
+ let svg = header('Landolt Intermediate Reaction Network Sandbox', 'Coupled Dushman and Roebuck-Type Redox Pathways');
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ const cX = 35, cY = 60, cW = 650, cH = 225;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+
+ const pX = cX + 60, pY = cY + 30, pW = 520, pH = 145;
+ svg += '<line x1="'+pX+'" y1="'+(pY+pH)+'" x2="'+(pX+pW)+'" y2="'+(pY+pH)+'" stroke="#334155" stroke-width="1.2"/>';
+ svg += '<line x1="'+pX+'" y1="'+pY+'" x2="'+pX+'" y2="'+(pY+pH)+'" stroke="#334155" stroke-width="1.2"/>';
+
+ // Bisulfite depletion curve: linear descent to induction time t_ind
+ const t_ind_x = pX + 0.65 * pW;
+ svg += '<line x1="'+pX+'" y1="'+(pY+20)+'" x2="'+t_ind_x+'" y2="'+(pY+pH)+'" stroke="#facc15" stroke-width="2.5"/>';
+ svg += '<line x1="'+t_ind_x+'" y1="'+(pY+pH)+'" x2="'+(pX+pW)+'" y2="'+(pY+pH)+'" stroke="#facc15" stroke-width="2.5"/>';
+
+ // Starch-I3- flash curve: 0 until t_ind, then sudden exponential spike
+ svg += '<line x1="'+pX+'" y1="'+(pY+pH)+'" x2="'+t_ind_x+'" y2="'+(pY+pH)+'" stroke="#38bdf8" stroke-width="2.5"/>';
+ svg += '<path d="M '+t_ind_x+' '+(pY+pH)+' Q '+(t_ind_x+15)+' '+(pY+20)+' '+(pX+pW)+' '+(pY+20)+'" fill="none" stroke="#38bdf8" stroke-width="2.5"/>';
+
+ svg += '<circle cx="'+t_ind_x+'" cy="'+(pY+pH)+'" r="4.5" fill="#ef4444"/>';
+ svg += '<text x="'+t_ind_x+'" y="'+(pY+pH-10)+'" text-anchor="middle" fill="#ef4444" font-size="7" font-weight="bold">Clock Flash Point (Δt)</text>';
+
+ svg += '<text x="'+(pX+80)+'" y="'+(pY+40)+'" fill="#facc15" font-size="7">[HSO₃⁻] scavenger consumption</text>';
+ svg += '<text x="'+(t_ind_x+35)+'" y="'+(pY+35)+'" fill="#38bdf8" font-size="7">[I₃⁻·Starch] sudden flash</text>';
+
+ svg += '<text x="'+(pX+pW/2)+'" y="'+(pY+pH+18)+'" text-anchor="middle" fill="#94a3b8" font-size="7">Reaction Elapsed Time t (s)</text>';
+ svg += '<text x="'+(pX-15)+'" y="'+(pY+pH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7" transform="rotate(-90 '+(pX-15)+' '+(pY+pH/2)+')">Concentration</text>';
+
+ svg += text(360, 312, 'Mechanistic Landmark: Exhaustion of bisulfite scavenger unleashes rapid Dushman iodide oxidation.', '#789c80', 8.5);
+ return svg;
+}
+
+// ======================================================================
+// LAB 27: URANYL OXALATE (PHOTOCHEMICAL QUANTUM YIELD ACTINOMETRY)
+// ======================================================================
+function drawUranylBenchView(p, rawVal){
+ const t = p.input;
+ const raw = measurement ? measurement.raw : (busy ? rawVal * 0.85 : (rawVal || 16.58));
+ const Vt = raw;
+ const delta_V = 20.00 - Vt;
+ const delta_n = (25.0 * delta_V).toFixed(2);
+
+ let svg = header('Uranyl Oxalate Photochemical Actinometer Bench', 'Monochromatic 365 nm UV Photolysis Chamber & Permanganometric Redox Titration');
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // Left: UV Photolysis Reaction Chamber (x: 35, y: 60, w: 320, h: 225)
+ const pX = 35, pY = 60, pW = 320, pH = 225;
+ svg += '<rect x="'+pX+'" y="'+pY+'" width="'+pW+'" height="'+pH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(pX+8)+'" y="'+(pY+8)+'" width="'+(pW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(pX+pW/2)+'" y="'+(pY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">MONOCHROMATIC UV ARC (λ = 365 nm, q₀ = 10.0 μE/min)</text>';
+
+ // UV Arc Lamp Housing
+ svg += '<rect x="'+(pX+20)+'" y="'+(pY+50)+'" width="45" height="55" rx="4" fill="#1e293b" stroke="#334155"/>';
+ svg += '<circle cx="'+(pX+42)+'" cy="'+(pY+77)+'" r="12" fill="#a855f7" stroke="#c084fc" stroke-width="2"/>';
+ svg += '<text x="'+(pX+42)+'" y="'+(pY+120)+'" text-anchor="middle" fill="#c084fc" font-size="6.5">Hg Arc 365 nm</text>';
+
+ // UV Beam Path (Purple-UV radiation)
+ svg += '<polygon points="'+(pX+65)+','+(pY+65)+' '+(pX+135)+','+(pY+50)+' '+(pX+135)+','+(pY+105)+' '+(pX+65)+','+(pY+90)+'" fill="#a855f7" fill-opacity="0.35"/>';
+
+ // Planar Quartz Actinometer Cell (1.000 cm)
+ const cellX = pX + 135, cellY = pY + 45, cellW = 35, cellH = 65;
+ svg += '<rect x="'+cellX+'" y="'+cellY+'" width="cellW" height="cellH" rx="2" fill="#0284c7" fill-opacity="0.15" stroke="#38bdf8" stroke-width="1.5"/>';
+ // Fluorescent green glow of Uranyl complex under UV
+ svg += '<rect x="'+(cellX+2)+'" y="'+(cellY+5)+'" width="'+(cellW-4)+'" height="'+(cellH-10)+'" fill="#84cc16" fill-opacity="0.6"/>';
+ svg += '<text x="'+(cellX+cellW/2)+'" y="'+(cellY+cellH+14)+'" text-anchor="middle" fill="#84cc16" font-size="6.5">UO₂²⁺ Cell</text>';
+
+ // Telemetry Box
+ svg += '<rect x="'+(pX+20)+'" y="'+(pY+135)+'" width="280" height="75" rx="4" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(pX+30)+'" y="'+(pY+155)+'" fill="#94a3b8" font-size="7.5">Exposure Time t: <tspan fill="#38bdf8" font-weight="bold">'+t.toFixed(1)+' min</tspan></text>';
+ svg += '<text x="'+(pX+30)+'" y="'+(pY+175)+'" fill="#94a3b8" font-size="7.5">KMnO₄ Titrant Volume V_t: <tspan fill="#ec4899" font-weight="bold">'+Vt.toFixed(2)+' mL</tspan></text>';
+ svg += '<text x="'+(pX+30)+'" y="'+(pY+195)+'" fill="#94a3b8" font-size="7.5">Photolyzed Oxalate Δn: <tspan fill="#4ade80" font-weight="bold">'+delta_n+' μmol</tspan></text>';
+
+ // Right: Titration Station (x: 365, y: 60, w: 320, h: 225)
+ const rX = 365, rY = 60, rW = 320, rH = 225;
+ svg += '<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(rX+8)+'" y="'+(rY+8)+'" width="'+(rW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(rX+rW/2)+'" y="'+(rY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">HOT REDOX PERMANGANOMETRY (70 °C, 0.0100 M KMnO₄)</text>';
+
+ // Class A Burette
+ const brX = rX + 65, brY = rY + 45;
+ svg += '<rect x="'+brX+'" y="'+brY+'" width="14" height="110" rx="2" fill="#0284c7" fill-opacity="0.15" stroke="#38bdf8" stroke-width="1.2"/>';
+ // Purple KMnO4 titrant inside burette
+ const bFillH = Math.max(10, (Vt / 25.0) * 90);
+ svg += '<rect x="'+(brX+2)+'" y="'+(brY+100-bFillH)+'" width="10" height="'+bFillH+'" fill="#ec4899" fill-opacity="0.8"/>';
+ svg += '<line x1="'+(brX+1)+'" y1="'+(brY+100-bFillH)+'" x2="'+(brX+13)+'" y2="'+(brY+100-bFillH)+'" stroke="#f43f5e" stroke-width="1.5"/>';
+
+ // Titration Flask on Hotplate (70 °C)
+ const flkX = rX + 45, flkY = rY + 165;
+ svg += '<rect x="'+(flkX-10)+'" y="'+(flkY+30)+'" width="74" height="15" rx="3" fill="#1e293b" stroke="#334155"/>';
+ svg += '<text x="'+(flkX+27)+'" y="'+(flkY+41)+'" text-anchor="middle" fill="#ef4444" font-size="6">Hotplate 70 °C</text>';
+ svg += '<polygon points="'+flkX+','+(flkY+30)+' '+(flkX+54)+','+(flkY+30)+' '+(flkX+35)+','+flkY+' '+(flkX+19)+','+flkY+'" fill="#0284c7" fill-opacity="0.2" stroke="#38bdf8" stroke-width="1.2"/>';
+
+ // Explanatory annotation
+ svg += '<rect x="'+(rX+140)+'" y="'+(rY+60)+'" width="165" height="135" rx="6" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(rX+150)+'" y="'+(rY+80)+'" fill="#86efac" font-size="7.5" font-weight="bold">Actinometric Equations:</text>';
+ svg += '<text x="'+(rX+150)+'" y="'+(rY+100)+'" fill="#94a3b8" font-size="6.5">Δn = 2.50 · c(KMnO₄) · (V₀ − V_t)</text>';
+ svg += '<text x="'+(rX+150)+'" y="'+(rY+118)+'" fill="#94a3b8" font-size="6.5">Slope m = Δn / t = 5.700 μmol/min</text>';
+ svg += '<text x="'+(rX+150)+'" y="'+(rY+136)+'" fill="#94a3b8" font-size="6.5">Quantum Yield Φ = m / q₀</text>';
+ svg += '<text x="'+(rX+150)+'" y="'+(rY+156)+'" fill="#facc15" font-size="7.5" font-weight="bold">Φ = 0.570 mol/einstein</text>';
+ svg += '<text x="'+(rX+150)+'" y="'+(rY+174)+'" fill="#4ade80" font-size="6.5">Standard: IUPAC Certified</text>';
+
+ svg += text(360, 312, 'Stark-Einstein Invariant: Primary photolysis rate m = 5.700 μmol/min at q₀ = 10.00 μE/min ⟹ Φ = 0.570.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawUranylCompareView(p, rawVal){
+ let svg = header('Photochemical Actinometry Benchmarks', 'Uranyl Oxalate vs Potassium Ferrioxalate vs Reinecke Salt');
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ const cX = 35, cY = 60, cW = 650, cH = 225;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+
+ const pX = cX + 60, pY = cY + 30, pW = 520, pH = 145;
+ svg += '<line x1="'+pX+'" y1="'+(pY+pH)+'" x2="'+(pX+pW)+'" y2="'+(pY+pH)+'" stroke="#334155" stroke-width="1.2"/>';
+ svg += '<line x1="'+pX+'" y1="'+pY+'" x2="'+pX+'" y2="'+(pY+pH)+'" stroke="#334155" stroke-width="1.2"/>';
+
+ // Curves across wavelength (250 nm to 450 nm)
+ // Uranyl Oxalate (green): stable around 0.57 - 0.60
+ svg += '<line x1="'+pX+'" y1="'+(pY+pH - (0.57/1.5)*pH)+'" x2="'+(pX+pW)+'" y2="'+(pY+pH - (0.57/1.5)*pH)+'" stroke="#84cc16" stroke-width="2.5"/>';
+ // Potassium Ferrioxalate (orange): ~1.20 across UV
+ svg += '<line x1="'+pX+'" y1="'+(pY+pH - (1.21/1.5)*pH)+'" x2="'+(pX+pW)+'" y2="'+(pY+pH - (1.21/1.5)*pH)+'" stroke="#f97316" stroke-width="2" stroke-dasharray="4,2"/>';
+ // Reinecke salt (pink): ~0.30
+ svg += '<line x1="'+pX+'" y1="'+(pY+pH - (0.30/1.5)*pH)+'" x2="'+(pX+pW)+'" y2="'+(pY+pH - (0.30/1.5)*pH)+'" stroke="#ec4899" stroke-width="2" stroke-dasharray="3,3"/>';
+
+ // Legend
+ svg += '<circle cx="'+(pX+30)+'" cy="'+(pY+20)+'" r="4" fill="#84cc16"/>';
+ svg += '<text x="'+(pX+40)+'" y="'+(pY+23)+'" fill="#84cc16" font-size="7.5" font-weight="bold">Uranyl Oxalate: Φ ≈ 0.570 (High precision, UV-stable)</text>';
+
+ svg += '<circle cx="'+(pX+30)+'" cy="'+(pY+38)+'" r="4" fill="#f97316"/>';
+ svg += '<text x="'+(pX+40)+'" y="'+(pY+41)+'" fill="#f97316" font-size="7.5" font-weight="bold">Potassium Ferrioxalate: Φ ≈ 1.21 (High sensitivity standard)</text>';
+
+ svg += '<circle cx="'+(pX+30)+'" cy="'+(pY+56)+'" r="4" fill="#ec4899"/>';
+ svg += '<text x="'+(pX+40)+'" y="'+(pY+59)+'" fill="#ec4899" font-size="7.5" font-weight="bold">Reinecke Salt: Φ ≈ 0.30 (Visible range actinometer)</text>';
+
+ svg += '<text x="'+(pX+pW/2)+'" y="'+(pY+pH+18)+'" text-anchor="middle" fill="#94a3b8" font-size="7">Irradiation Wavelength λ (nm)</text>';
+ svg += '<text x="'+(pX-15)+'" y="'+(pY+pH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7" transform="rotate(-90 '+(pX-15)+' '+(pY+pH/2)+')">Quantum Yield Φ (mol/einstein)</text>';
+
+ svg += text(360, 312, 'Metrological Distinction: Uranyl oxalate maintains flat spectral quantum yield between 254 nm and 436 nm.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawUranylSandboxView(p, rawVal){
+ let svg = header('Uranyl Ion Excited-State Quenching Sandbox', 'Stark-Einstein Photophysical Pathways & Oxalate Photo-Oxidation Cycle');
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ const cX = 35, cY = 60, cW = 650, cH = 225;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+
+ // Jablonski Photophysical Energy Diagram
+ const jX = cX + 40, jY = cY + 30, jW = 560, jH = 150;
+ // Ground state UO2(2+)
+ svg += '<line x1="'+jX+'" y1="'+(jY+jH)+'" x2="'+(jX+180)+'" y2="'+(jY+jH)+'" stroke="#38bdf8" stroke-width="3"/>';
+ svg += '<text x="'+(jX+90)+'" y="'+(jY+jH+16)+'" text-anchor="middle" fill="#38bdf8" font-size="7.5" font-weight="bold">Ground State UO₂²⁺ (¹Σ_g⁺)</text>';
+
+ // Excited state UO2(2+)*
+ svg += '<line x1="'+jX+'" y1="'+jY+'" x2="'+(jX+180)+'" y2="'+jY+'" stroke="#a855f7" stroke-width="3"/>';
+ svg += '<text x="'+(jX+90)+'" y="'+(jY-8)+'" text-anchor="middle" fill="#a855f7" font-size="7.5" font-weight="bold">Excited State (UO₂²⁺)* (³Δ_g)</text>';
+
+ // Photon Absorption h*nu (365 nm)
+ svg += '<line x1="'+(jX+50)+'" y1="'+(jY+jH)+'" x2="'+(jX+50)+'" y2="'+jY+'" stroke="#facc15" stroke-width="2.5" stroke-dasharray="4,2"/>';
+ svg += '<text x="'+(jX+42)+'" y="'+(jY+jH/2)+'" text-anchor="end" fill="#facc15" font-size="7">hν (365 nm)</text>';
+
+ // Fluorescence emission / non-radiative decay
+ svg += '<line x1="'+(jX+130)+'" y1="'+jY+'" x2="'+(jX+130)+'" y2="'+(jY+jH)+'" stroke="#84cc16" stroke-width="2"/>';
+ svg += '<text x="'+(jX+138)+'" y="'+(jY+jH/2)+'" fill="#84cc16" font-size="6.5">k_f + k_nr</text>';
+
+ // Chemical Quenching Channel with Oxalate
+ svg += '<path d="M '+(jX+180)+' '+jY+' Q '+(jX+260)+' '+(jY+30)+' '+(jX+340)+' '+(jY+jH/2)+'" fill="none" stroke="#ef4444" stroke-width="2.5"/>';
+ svg += '<text x="'+(jX+270)+'" y="'+(jY+20)+'" fill="#ef4444" font-size="7" font-weight="bold">+ C₂O₄²⁻ (k_ET)</text>';
+
+ // Products Box
+ svg += '<rect x="'+(jX+340)+'" y="'+(jY+jH/2-30)+'" width="200" height="60" rx="6" fill="#051009" stroke="#22c55e"/>';
+ svg += '<text x="'+(jX+350)+'" y="'+(jY+jH/2-10)+'" fill="#22c55e" font-size="7.5" font-weight="bold">Photolysis Products:</text>';
+ svg += '<text x="'+(jX+350)+'" y="'+(jY+jH/2+8)+'" fill="#facc15" font-size="7">UO₂²⁺ (sensitizer regenerated)</text>';
+ svg += '<text x="'+(jX+350)+'" y="'+(jY+jH/2+24)+'" fill="#86efac" font-size="7">CO(g) + CO₂(g) + H₂O</text>';
+
+ svg += text(360, 312, 'Quantum Efficiency: Φ = k_ET / (k_f + k_nr + k_ET) = 0.570 under saturating oxalate concentration.', '#789c80', 8.5);
+ return svg;
+}
+
+// ======================================================================
+// LAB 28: HOMOGENEOUS CATALYSIS (H2O2 DECOMPOSITION KINETICS)
+// ======================================================================
+function drawPeroxideBenchView(p, rawVal){
+ const c_ki = p.input;
+ const raw = measurement ? measurement.raw : (busy ? rawVal * 0.75 : (rawVal || 0.2160));
+ const k_obs = raw;
+
+ let svg = header('Homogeneous Catalytic H₂O₂ Decomposition Bench', 'Gas-Volumetric Oxygen Evolution Reactor & Leveling Bulb Manometry');
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // Left: Thermostatted Reactor Flask (x: 35, y: 60, w: 320, h: 225)
+ const rX = 35, rY = 60, rW = 320, rH = 225;
+ svg += '<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(rX+8)+'" y="'+(rY+8)+'" width="'+(rW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(rX+rW/2)+'" y="'+(rY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">JACKETED REACTOR & STIRRER (T = 298.15 K)</text>';
+
+ // Magnetic Stirrer Base
+ svg += '<rect x="'+(rX+60)+'" y="'+(rY+155)+'" width="200" height="30" rx="4" fill="#1e293b" stroke="#334155"/>';
+ svg += '<circle cx="'+(rX+90)+'" cy="'+(rY+170)+'" r="5" fill="#22c55e"/>';
+ svg += '<text x="'+(rX+105)+'" y="'+(rY+173)+'" fill="#94a3b8" font-size="6.5">Stirrer: 600 RPM</text>';
+
+ // Glass Reaction Flask
+ const flkX = rX + 90, flkY = rY + 55, flkW = 140, flkH = 100;
+ svg += '<rect x="'+flkX+'" y="'+flkY+'" width="'+flkW+'" height="'+flkH+'" rx="6" fill="#0284c7" fill-opacity="0.1" stroke="#38bdf8" stroke-width="1.5"/>';
+
+ // Liquid solution with bubbles
+ svg += '<rect x="'+(flkX+4)+'" y="'+(flkY+30)+'" width="'+(flkW-8)+'" height="'+(flkH-34)+'" rx="3" fill="#fef08a" fill-opacity="0.25"/>';
+
+ // Oxygen bubbles rising
+ const numBubbles = Math.min(12, Math.max(3, Math.floor(c_ki * 80)));
+ for(let b = 0; b < numBubbles; b++){
+  const bx = flkX + 20 + (b * 10) % (flkW - 40);
+  const by = flkY + 80 - (b * 7) % 50;
+  svg += '<circle cx="'+bx+'" cy="'+by+'" r="2.5" fill="#ffffff" fill-opacity="0.7" stroke="#38bdf8" stroke-width="0.8"/>';
+ }
+
+ // Stir bar
+ svg += '<rect x="'+(flkX+flkW/2-15)+'" y="'+(flkY+flkH-10)+'" width="30" height="6" rx="3" fill="#ffffff" stroke="#94a3b8"/>';
+
+ // Delivery Tube leading out
+ svg += '<path d="M '+(flkX+flkW/2)+' '+flkY+' L '+(flkX+flkW/2)+' '+(flkY-15)+' L '+(rX+rW-15)+' '+(flkY-15)+'" fill="none" stroke="#38bdf8" stroke-width="3"/>';
+ svg += '<text x="'+(flkX+flkW/2)+'" y="'+(flkY-20)+'" text-anchor="middle" fill="#38bdf8" font-size="6">O₂(g) gas train</text>';
+
+ // Telemetry Box
+ svg += '<rect x="'+(rX+20)+'" y="'+(rY+190)+'" width="280" height="25" rx="3" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(rX+30)+'" y="'+(rY+206)+'" fill="#94a3b8" font-size="7">Catalyst [I⁻]: <tspan fill="#38bdf8" font-weight="bold">'+c_ki.toFixed(3)+' M</tspan> | [H₂O₂]₀: <tspan fill="#facc15" font-weight="bold">0.100 M</tspan></text>';
+
+ // Right: Water-Jacketed Gas Burette & Leveling Bulb (x: 365, y: 60, w: 320, h: 225)
+ const gX = 365, gY = 60, gW = 320, gH = 225;
+ svg += '<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(gX+8)+'" y="'+(gY+8)+'" width="'+(gW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(gX+gW/2)+'" y="'+(gY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">GAS BURETTE & LEVELING BULB (P = 1.00 atm)</text>';
+
+ // Gas Burette (vertical tube)
+ const buX = gX + 60, buY = gY + 45, buW = 22, buH = 145;
+ svg += '<rect x="'+buX+'" y="'+buY+'" width="'+buW+'" height="'+buH+'" rx="3" fill="#0284c7" fill-opacity="0.1" stroke="#38bdf8" stroke-width="1.5"/>';
+
+ // Evolving gas meniscus (drops as gas accumulates)
+ const meniscusH = Math.min(120, Math.max(20, k_obs * 250));
+ svg += '<rect x="'+(buX+2)+'" y="'+(buY+meniscusH)+'" width="'+(buW-4)+'" height="'+(buH-meniscusH-2)+'" fill="#0284c7" fill-opacity="0.5"/>';
+ svg += '<line x1="'+buX+'" y1="'+(buY+meniscusH)+'" x2="'+(buX+buW)+'" y2="'+(buY+meniscusH)+'" stroke="#38bdf8" stroke-width="2"/>';
+
+ // Leveling Bulb
+ const lbX = gX + 160, lbY = buY + meniscusH - 25, lbW = 35, lbH = 50;
+ svg += '<rect x="'+lbX+'" y="'+lbY+'" width="'+lbW+'" height="'+lbH+'" rx="8" fill="#0284c7" fill-opacity="0.2" stroke="#38bdf8" stroke-width="1.5"/>';
+ svg += '<rect x="'+(lbX+2)+'" y="'+(lbY+25)+'" width="'+(lbW-4)+'" height="'+(lbH-27)+'" rx="4" fill="#0284c7" fill-opacity="0.5"/>';
+
+ // Flexible connecting tubing between burette and leveling bulb
+ svg += '<path d="M '+(buX+buW/2)+' '+(buY+buH)+' Q '+(buX+buW/2+40)+' '+(buY+buH+20)+' '+(lbX+lbW/2)+' '+(lbY+lbH)+'" fill="none" stroke="#94a3b8" stroke-width="3"/>';
+ svg += '<text x="'+(lbX+lbW/2)+'" y="'+(lbY-8)+'" text-anchor="middle" fill="#94a3b8" font-size="6.5">Leveling Bulb</text>';
+
+ // Rate constant display box
+ svg += '<rect x="'+(gX+210)+'" y="'+(gY+60)+'" width="95" height="120" rx="4" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(gX+257)+'" y="'+(gY+85)+'" text-anchor="middle" fill="#86efac" font-size="7" font-weight="bold">Observed Rate:</text>';
+ svg += '<text x="'+(gX+257)+'" y="'+(gY+115)+'" text-anchor="middle" fill="#22c55e" font-family="monospace" font-size="12" font-weight="bold">'+k_obs.toFixed(4)+'</text>';
+ svg += '<text x="'+(gX+257)+'" y="'+(gY+130)+'" text-anchor="middle" fill="#94a3b8" font-size="7">min⁻¹</text>';
+ svg += '<text x="'+(gX+257)+'" y="'+(gY+160)+'" text-anchor="middle" fill="#facc15" font-size="6.5">V_∞ ≈ 56.5 mL</text>';
+
+ svg += text(360, 312, 'Metrological Invariant: Pseudo-first-order k_obs scales linearly with [I⁻], isolating k_cat = 3.600 L·mol⁻¹·min⁻¹.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawPeroxideCompareView(p, rawVal){
+ let svg = header('Catalytic Activation Barrier Comparison', 'Uncatalyzed vs Iodide Homogeneous vs Catalase Enzymatic Decomposition');
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ const cX = 35, cY = 60, cW = 650, cH = 225;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+
+ const pX = cX + 60, pY = cY + 30, pW = 520, pH = 145;
+ svg += '<line x1="'+pX+'" y1="'+(pY+pH)+'" x2="'+(pX+pW)+'" y2="'+(pY+pH)+'" stroke="#334155" stroke-width="1.2"/>';
+ svg += '<line x1="'+pX+'" y1="'+pY+'" x2="'+pX+'" y2="'+(pY+pH)+'" stroke="#334155" stroke-width="1.2"/>';
+
+ // Potential Energy Curves: Reactants (left, E=60) -> TS -> Products (right, E=20)
+ const rEnergy = pY + 70;
+ const pEnergy = pY + pH - 15;
+
+ // Uncatalyzed barrier: E_a = 75 kJ/mol (peaking high)
+ svg += '<path d="M '+pX+' '+rEnergy+' Q '+(pX+pW/2)+' '+(pY+5)+' '+(pX+pW)+' '+pEnergy+'" fill="none" stroke="#ef4444" stroke-width="2.5"/>';
+
+ // Iodide catalyzed: E_a = 56 kJ/mol (moderate peak)
+ svg += '<path d="M '+pX+' '+rEnergy+' Q '+(pX+pW/3)+' '+(pY+35)+' '+(pX+pW/2)+' '+(pY+50)+' Q '+(pX+2*pW/3)+' '+(pY+38)+' '+(pX+pW)+' '+pEnergy+'" fill="none" stroke="#38bdf8" stroke-width="2.5"/>';
+
+ // Catalase enzyme: E_a = 8 kJ/mol (minimal peak)
+ svg += '<path d="M '+pX+' '+rEnergy+' Q '+(pX+pW/2)+' '+(rEnergy-15)+' '+(pX+pW)+' '+pEnergy+'" fill="none" stroke="#4ade80" stroke-width="2.5"/>';
+
+ // Legend
+ svg += '<circle cx="'+(pX+25)+'" cy="'+(pY+15)+'" r="4" fill="#ef4444"/>';
+ svg += '<text x="'+(pX+35)+'" y="'+(pY+18)+'" fill="#ef4444" font-size="7.5" font-weight="bold">Uncatalyzed: E_a ≈ 75 kJ/mol (k ~ 10⁻⁷ min⁻¹)</text>';
+
+ svg += '<circle cx="'+(pX+25)+'" cy="'+(pY+32)+'" r="4" fill="#38bdf8"/>';
+ svg += '<text x="'+(pX+35)+'" y="'+(pY+35)+'" fill="#38bdf8" font-size="7.5" font-weight="bold">Iodide Homogeneous: E_a ≈ 56 kJ/mol (k_cat = 3.60 L·mol⁻¹·min⁻¹)</text>';
+
+ svg += '<circle cx="'+(pX+25)+'" cy="'+(pY+49)+'" r="4" fill="#4ade80"/>';
+ svg += '<text x="'+(pX+35)+'" y="'+(pY+52)+'" fill="#4ade80" font-size="7.5" font-weight="bold">Catalase Enzyme: E_a ≈ 8 kJ/mol (k_cat/K_M ~ 10⁷ M⁻¹·s⁻¹)</text>';
+
+ svg += '<text x="'+(pX+pW/2)+'" y="'+(pY+pH+18)+'" text-anchor="middle" fill="#94a3b8" font-size="7">Reaction Coordinate (2 H₂O₂ ⟶ 2 H₂O + O₂)</text>';
+ svg += '<text x="'+(pX-15)+'" y="'+(pY+pH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7" transform="rotate(-90 '+(pX-15)+' '+(pY+pH/2)+')">Potential Energy G</text>';
+
+ svg += text(360, 312, 'Catalytic Principle: Catalysts accelerate rates by lowering transition state free energy ΔG‡ without altering ΔG°.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawPeroxideSandboxView(p, rawVal){
+ let svg = header('Two-Step Nucleophilic Halogen Catalytic Cycle Sandbox', 'Hypoiodite Intermediate Kinetics & Steady-State Approximation');
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ const cX = 35, cY = 60, cW = 650, cH = 225;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+
+ // Reaction Cycle Diagram
+ const midX = cX + cW/2, midY = cY + cH/2;
+
+ // Box 1: Reactants H2O2 + I-
+ svg += '<rect x="'+(midX-240)+'" y="'+(midY-45)+'" width="130" height="45" rx="6" fill="#051009" stroke="#38bdf8" stroke-width="1.5"/>';
+ svg += '<text x="'+(midX-175)+'" y="'+(midY-25)+'" text-anchor="middle" fill="#38bdf8" font-size="7.5" font-weight="bold">H₂O₂ + I⁻</text>';
+ svg += '<text x="'+(midX-175)+'" y="'+(midY-10)+'" text-anchor="middle" fill="#94a3b8" font-size="6.5">Initial Substrate & Catalyst</text>';
+
+ // Box 2: Intermediate Hypoiodite IO-
+ svg += '<rect x="'+(midX-65)+'" y="'+(midY-45)+'" width="130" height="45" rx="6" fill="#051009" stroke="#facc15" stroke-width="1.5"/>';
+ svg += '<text x="'+midX+'" y="'+(midY-25)+'" text-anchor="middle" fill="#facc15" font-size="7.5" font-weight="bold">IO⁻ + H₂O</text>';
+ svg += '<text x="'+midX+'" y="'+(midY-10)+'" text-anchor="middle" fill="#94a3b8" font-size="6.5">Reactive Intermediate (ss)</text>';
+
+ // Box 3: Products H2O + O2 + I-
+ svg += '<rect x="'+(midX+110)+'" y="'+(midY-45)+'" width="130" height="45" rx="6" fill="#051009" stroke="#4ade80" stroke-width="1.5"/>';
+ svg += '<text x="'+(midX+175)+'" y="'+(midY-25)+'" text-anchor="middle" fill="#4ade80" font-size="7.5" font-weight="bold">2 H₂O + O₂ + I⁻</text>';
+ svg += '<text x="'+(midX+175)+'" y="'+(midY-10)+'" text-anchor="middle" fill="#94a3b8" font-size="6.5">Catalyst I⁻ Regenerated</text>';
+
+ // Arrows
+ svg += '<line x1="'+(midX-110)+'" y1="'+(midY-22)+'" x2="'+(midX-65)+'" y2="'+(midY-22)+'" stroke="#38bdf8" stroke-width="2.5"/>';
+ svg += '<text x="'+(midX-87)+'" y="'+(midY-30)+'" text-anchor="middle" fill="#ef4444" font-size="7" font-weight="bold">k₁ (slow)</text>';
+
+ svg += '<line x1="'+(midX+65)+'" y1="'+(midY-22)+'" x2="'+(midX+110)+'" y2="'+(midY-22)+'" stroke="#facc15" stroke-width="2.5"/>';
+ svg += '<text x="'+(midX+87)+'" y="'+(midY-30)+'" text-anchor="middle" fill="#22c55e" font-size="7" font-weight="bold">k₂ (fast)</text>';
+
+ // Loop arrow regenerating I- back to start
+ svg += '<path d="M '+(midX+175)+' '+(midY+2)+'" Q "'+midX+' '+(midY+65)+' '+(midX-175)+' '+(midY+2)+'" fill="none" stroke="#4ade80" stroke-width="2" stroke-dasharray="4,2"/>';
+ svg += '<text x="'+midX+'" y="'+(midY+45)+'" text-anchor="middle" fill="#4ade80" font-size="7">Catalytic Regeneration Loop: [I⁻]_net = constant</text>';
+
+ svg += text(360, 312, 'Steady-State Rate Law: d[IO⁻]/dt = 0 ⟹ −d[H₂O₂]/dt = 2k₁[H₂O₂][I⁻] = k_cat[H₂O₂][I⁻].', '#789c80', 8.5);
  return svg;
 }

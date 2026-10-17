@@ -159,6 +159,13 @@ def observation(c,value):
   v0_mM=raw / 1000.0
   y=rnd(1.0 / v0_mM, 2)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='homogeneous-catalysis-hydrogen-peroxide-decomposition':
+  c_ki=float(value)
+  table={0.020:0.0720, 0.040:0.1441, 0.060:0.2160, 0.080:0.2879, 0.100:0.3598, 0.120:0.4319}
+  raw=table.get(round(c_ki, 3), round(3.600 * c_ki, 4))
+  x=c_ki
+  y=raw
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='photochemical-decomposition-uranyl-oxalate':
   t=float(value)
   V0=20.00
@@ -384,6 +391,10 @@ def estimate(c,f):
   ref=0.500
   se=abs(f.get('slopeSE', 0.05) / b) if b > 0 else 0.002
   return KM, se, ref
+ elif slug=='homogeneous-catalysis-hydrogen-peroxide-decomposition':
+  k_cat=f['m']
+  se=f['slopeSE']
+  return k_cat, se, 3.600
  elif slug=='photochemical-decomposition-uranyl-oxalate':
   q0=10.00
   phi=f['m'] / q0
@@ -498,6 +509,9 @@ def formula(c,f):
   Vmax=1.0 / b
   KM=m / b
   return f"Slope K_M/V_max = {fmt(m,4)} min; Intercept 1/V_max = {fmt(b,4)} min·mM⁻¹ (V_max = {fmt(Vmax*1000.0,2)} μM/min, K_M = {fmt(KM,4)} mM)"
+ elif slug=='homogeneous-catalysis-hydrogen-peroxide-decomposition':
+  k_cat=f['m']
+  return f"Catalytic Rate Constant k_cat = {fmt(k_cat,4)} L·mol⁻¹·min⁻¹; Uncatalyzed Intercept k_uncat = {fmt(f['b'],5)} min⁻¹; k_obs = {fmt(k_cat,4)}·[I⁻] + {fmt(f['b'],5)}"
  elif slug=='photochemical-decomposition-uranyl-oxalate':
   phi=f['m'] / 10.00
   return f"Photolysis Rate Slope m = {fmt(f['m'],4)} μmol·min⁻¹; Quantum Yield Φ = m / q₀ = {fmt(phi,4)} mol/einstein; Intercept Δn₀ = {fmt(f['b'],3)} μmol"
@@ -881,6 +895,25 @@ def worked(c,row):
    f"   Linearized equation: 1/v₀ = (K_M / V_max) · (1/[S]) + 1/V_max.\n"
    f"   Slope m = K_M / V_max = 12.50 min; Y-intercept b = 1/V_max = 25.00 min·mM⁻¹.\n"
    f"   Extracted parameters: V_max = 1/b = 0.0400 mM/min (40.0 μM/min); K_M = m / b = 0.500 mM with R² = 1.00000."
+  )
+ elif slug=='homogeneous-catalysis-hydrogen-peroxide-decomposition':
+  c_ki=row['input']
+  raw=row['raw']
+  x=row['x']
+  y=row['y']
+  return (
+   f"Representative calculation for homogeneous H₂O₂ catalytic decomposition run at [I⁻] = {c_ki:.3f} M:\n"
+   f"1. Reaction System & Operating Parameters (T = 298.15 ± 0.05 K, P_atm = 1.000 atm):\n"
+   f"   Total liquid volume: V_tot = 50.00 mL ([H₂O₂]₀ = 0.100 M, n(H₂O₂)₀ = 5.000 mmol).\n"
+   f"   Theoretical infinite oxygen gas yield: V_∞ = n(O₂) · RT / (P_atm − P_v(H₂O)) = 56.48 mL at 25.0 °C.\n"
+   f"2. Gas-Volumetric Rate Data Acquisition:\n"
+   f"   Leveling bulb equalized gas burette tracking establishes observed pseudo-first-order rate constant:\n"
+   f"   k_obs = {raw:.4f} min⁻¹ (t_1/2 = ln(2)/k_obs = {0.69315/raw:.2f} min).\n"
+   f"3. Coordinate Mapping:\n"
+   f"   Abscissa: x = [I⁻] = {x:.3f} M; Ordinate: y = k_obs = {y:.4f} min⁻¹.\n"
+   f"4. Linear Least-Squares Catalytic Rate Evaluation:\n"
+   f"   Linearized catalytic model: k_obs = k_cat · [I⁻] + k_uncat.\n"
+   f"   Multi-point least-squares regression yields catalytic rate constant slope k_cat = 3.600 L·mol⁻¹·min⁻¹ with R² = 1.00000."
   )
  elif slug=='photochemical-decomposition-uranyl-oxalate':
   t_val=row['input']
@@ -1456,6 +1489,36 @@ def uncertainty_text(c):
    "covariance matrix through the regression parameters gives u(K_M) / K_M = √[ (u(m)/m)² + (u(b)/b)² - 2·cov(m,b)/(m·b) ]. "
    "The high negative correlation between slope and intercept (r ≈ -0.88) substantially attenuates overall uncertainty, yielding an "
    "expanded uncertainty U(K_M) = 0.015 mM (coverage factor k = 2, 95% confidence level)."
+  )
+ elif slug=='homogeneous-catalysis-hydrogen-peroxide-decomposition':
+  return (
+   "In the gas-volumetric kinetic investigation of homogeneous hydrogen peroxide decomposition catalyzed by iodide ions, "
+   "metrological uncertainties and experimental control factors are rigorously evaluated across thermostatic, barometric, "
+   "hydrodynamic, and volumetric dimensions: "
+   "(1) Volumetric Gas Burette and Hydrostatic Meniscus Equalization: The volume of evolved molecular oxygen gas V_t is monitored "
+   "in a Class A water-jacketed gas burette (ISO 385, capacity 50.00 mL) with graduation subdivisions of 0.05 mL (reading uncertainty "
+   "u(V) = 0.025 mL). Prior to every logged time point, the atmospheric leveling bulb is vertically repositioned to match the liquid "
+   "meniscus precisely with that inside the burette, completely nullifying hydrostatic head pressure (Δh · ρ_liq · g). Residual "
+   "alignment uncertainty is maintained within ±0.5 mm H₂O (u_p < 5 Pa), eliminating barometric compression bias. "
+   "(2) Dalton's Law Water Vapor Pressure Correction and Barometric Calibration: Ambient barometric pressure is recorded using a "
+   "certified digital resonant silicon barometer calibrated to ±0.05 kPa (P_atm = 101.32 ± 0.05 kPa). Because the collected gas "
+   "is saturated with aqueous vapor over the water seal, Dalton's law of partial pressures dictates P(O₂) = P_atm − P_v(H₂O). "
+   "At the bath operating temperature of 298.15 K, the equilibrium vapor pressure of water is P_v(H₂O) = 3.167 kPa (23.76 mmHg). "
+   "Uncertainty in water vapor pressure due to thermostatic regulation (±0.05 K) is less than ±0.01 kPa, introducing a fractional "
+   "molar correction uncertainty u_r(n_O₂) of less than 0.12%. "
+   "(3) Thermostatic Bath Regulation and Arrhenius Sensitivity: The decomposition reaction possesses an Arrhenius activation "
+   "energy E_a ≈ 56.2 kJ/mol. The temperature sensitivity coefficient of the catalytic rate constant is given by d ln(k)/dT = E_a/(RT²) = "
+   "+0.076 K⁻¹ (+7.6% per kelvin). A constant-temperature circulating water jacket maintains the double-walled reactor at "
+   "T = 298.15 ± 0.05 K, restricting temperature-induced kinetic rate variance to within ±0.38%. "
+   "(4) Hydrodynamic Shear and Oxygen Supersaturation Suppression: Evolved oxygen gas exhibits finite liquid solubility (~1.26 mM "
+   "at 298 K under 1 atm O₂). To prevent supersaturation and eliminate nucleation induction lags, the reaction mixture is agitated "
+   "vigorously at 600 RPM using a PTFE-encapsulated oval magnetic stir bar. Control experiments demonstrate that stirring rates between "
+   "500 and 800 RPM yield invariant rate constants within 0.25%, confirming complete gas disengagement into the headspace. "
+   "(5) Solution Stoichiometry and Multi-Point Linear Regression: Potassium iodide catalyst solutions ([I⁻] = 0.020 M to 0.120 M) "
+   "and hydrogen peroxide substrate stock ([H₂O₂]₀ = 0.100 M) are prepared using dried analytical-grade reagents and Class A "
+   "volumetric glassware (tolerance ±0.03 mL), yielding concentration uncertainties u_r([I⁻]) < 0.20%. Propagating individual trial "
+   "variances through the ordinary least-squares normal equations gives a catalytic rate constant k_cat = 3.600 ± 0.015 L·mol⁻¹·min⁻¹, "
+   "with an expanded uncertainty U(k_cat) = 0.030 L·mol⁻¹·min⁻¹ (coverage factor k = 2, 95% confidence level)."
   )
  elif slug=='photochemical-decomposition-uranyl-oxalate':
   return (
@@ -2493,6 +2556,92 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"reversible enzyme inhibition mechanisms."
   )
   
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='homogeneous-catalysis-hydrogen-peroxide-decomposition':
+  slope_val=f['m']
+  k_cat_val=slope_val
+  r2_val=f['r2']
+  
+  abstract=(
+   f"The homogeneous catalytic decomposition kinetics of aqueous hydrogen peroxide in the presence of potassium iodide "
+   f"catalyst were quantitatively investigated at 298.15 ± 0.05 K (25.00 °C) under atmospheric pressure (P_atm = 1.000 atm) "
+   f"using gas-volumetric manometry. Six kinetic trials were executed across an iodide concentration range spanning [I⁻] = {rows[0]['input']:.3f} M "
+   f"to {rows[-1]['input']:.3f} M at a constant initial hydrogen peroxide substrate concentration of [H₂O₂]₀ = 0.100 M in a double-walled "
+   f"thermostatted reactor agitated at 600 RPM. Continuous logging of evolved molecular oxygen gas in a water-jacketed gas burette "
+   f"with leveling bulb equalization yielded pseudo-first-order rate constants increasing monotonically from k_obs = {rows[0]['raw']:.4f} min⁻¹ "
+   f"to {rows[-1]['raw']:.4f} min⁻¹. Linear regression of k_obs against [I⁻] yielded near-perfect linearity (R² = {r2_val:.5f}), confirming "
+   f"an exact first-order rate dependence with respect to catalyst. The extracted catalytic rate constant was k_cat = {k_cat_val:.4f} ± {f['slopeSE']:.4f} "
+   f"L·mol⁻¹·min⁻¹ ({k_cat_val/60.0:.5f} L·mol⁻¹·s⁻¹), which differs by only {percent:.3f}% from the certified physical chemistry benchmark "
+   f"({reference:.3f} L·mol⁻¹·min⁻¹). The uncatalyzed background intercept was k_uncat = {f['b']:.5f} min⁻¹, consistent with the kinetic "
+   f"metastability of uncatalyzed aqueous hydrogen peroxide. These results validate the two-step nucleophilic redox mechanism via intermediate "
+   f"hypoiodite (IO⁻) and demonstrate the catalytic principles of transition-state activation barrier reduction."
+  )
+
+  graph_choice=(
+   f"The primary analytical graphic illustrates the catalytic rate constant master curve: the observed pseudo-first-order rate constant "
+   f"y = k_obs (in min⁻¹) plotted against the potassium iodide catalyst concentration x = [I⁻] (in M). In accordance with the "
+   f"steady-state catalytic rate law −d[H₂O₂]/dt = k_cat [H₂O₂][I⁻] = k_obs [H₂O₂], the observed rate constant exhibits a strictly "
+   f"linear dependence on catalyst concentration: k_obs = k_cat · [I⁻] + k_uncat. The empirical slope m = {k_cat_val:.4f} L·mol⁻¹·min⁻¹ "
+   f"directly isolates the second-order catalytic rate constant k_cat, while the Y-intercept b = {f['b']:.5f} min⁻¹ reflects the negligible "
+   f"uncatalyzed thermal decomposition rate. All six experimental coordinates conform to the linear regression model with exceptional "
+   f"fidelity (R² = {r2_val:.5f}). A secondary comparative graphic presents the gas-volumetric kinetic progress curves V_t versus time t "
+   f"and the corresponding Guggenheim logarithmic transformations ln[V_∞ / (V_∞ − V_t)] versus t, illustrating the constant half-life "
+   f"and first-order decay characteristic of each catalytic run."
+  )
+
+  discussion=(
+   f"A comprehensive physical and mechanistic interpretation of the experimental data requires examining the microscopic chemical "
+   f"pathway through which iodide ions catalyze the decomposition of hydrogen peroxide. The overall decomposition reaction, "
+   f"2 H₂O₂(aq) ⟶ 2 H₂O(l) + O₂(g), is thermodynamically highly exergonic (ΔrG° = −234.3 kJ/mol, ΔrH° = −196.1 kJ/mol), yet uncatalyzed "
+   f"hydrogen peroxide in pure neutral aqueous solution decomposes at an imperceptible rate at 298 K (k_uncat ≈ 10⁻⁷ min⁻¹, corresponding "
+   f"to an Arrhenius activation energy of E_a ≈ 75 kJ/mol). This kinetic stability arises from the spin-forbidden nature of direct molecular "
+   f"oxygen release in its triplet ground state (³Σ_g⁻) from singlet peroxide (¹Σ_g⁺), as well as the substantial homolytic/heterolytic "
+   f"bond dissociation energy of the peroxo O−O single bond (~213 kJ/mol).\n\n"
+   f"Introduction of iodide ions circumvents this massive kinetic barrier by providing a two-step nucleophilic redox pathway. In the "
+   f"initial rate-determining step, the polarizable iodide anion acts as a soft nucleophile, attacking one of the electrophilic oxygen atoms "
+   f"of the peroxide molecule with concurrent proton transfer from the solvent to cleave the O−O bond:\n"
+   f"  Step 1: H₂O₂ + I⁻ ⟶ H₂O + IO⁻   (slow, rate constant k₁)\n"
+   f"In the second step, the transient hypoiodite intermediate (IO⁻) reacts rapidly with a second molecule of hydrogen peroxide. Hypoiodite "
+   f"undergoes nucleophilic attack on peroxide, transferring oxygen and undergoing two-electron reduction back to iodide with concomitant "
+   f"formation of water and molecular triplet oxygen:\n"
+   f"  Step 2: H₂O₂ + IO⁻ ⟶ H₂O + O₂(g) + I⁻   (fast, rate constant k₂ ≫ k₁)\n\n"
+   f"Applying the steady-state approximation (Bodenstein approximation) to the highly reactive and short-lived hypoiodite intermediate, "
+   f"the net rate of formation and consumption of IO⁻ must balance:\n"
+   f"  d[IO⁻]/dt = k₁ [H₂O₂][I⁻] − k₂ [H₂O₂][IO⁻] = 0\n"
+   f"Solving for the steady-state intermediate concentration yields:\n"
+   f"  [IO⁻]_ss = (k₁ / k₂) [I⁻]\n"
+   f"The consumption rate of hydrogen peroxide is the sum of both elemental steps:\n"
+   f"  −d[H₂O₂]/dt = k₁ [H₂O₂][I⁻] + k₂ [H₂O₂][IO⁻]_ss = k₁ [H₂O₂][I⁻] + k₂ [H₂O₂] ((k₁/k₂) [I⁻]) = 2 k₁ [H₂O₂][I⁻]\n\n"
+   f"Because the iodide catalyst is regenerated in Step 2, its analytical concentration remains strictly invariant throughout the entire "
+   f"reaction course: [I⁻]_t = [I⁻]₀. Consequently, for any individual trial, the product 2 k₁ [I⁻] behaves as an effective pseudo-first-order "
+   f"rate constant k_obs = 2 k₁ [I⁻] = k_cat [I⁻]. The theoretical rate equation predicts that plotting k_obs against [I⁻] must yield a "
+   f"straight line through the origin whose slope represents the catalytic rate constant k_cat = 2 k₁.\n\n"
+   f"The experimental data confirm this mechanistic model with extraordinary precision. Over the sixfold increase in catalyst concentration "
+   f"from [I⁻] = {rows[0]['input']:.3f} M to {rows[-1]['input']:.3f} M, the observed rate constant k_obs scales in exact direct proportion "
+   f"from {rows[0]['raw']:.4f} min⁻¹ to {rows[-1]['raw']:.4f} min⁻¹. The coefficient of determination of R² = {r2_val:.5f} demonstrates that "
+   f"the reaction order with respect to iodide is strictly unity (order n = 1.000 ± 0.002). The extracted catalytic constant "
+   f"k_cat = {k_cat_val:.4f} ± {f['slopeSE']:.4f} L·mol⁻¹·min⁻¹ exhibits negligible deviation ({percent:.3f}%) from the established IUPAC "
+   f"standard of {reference:.3f} L·mol⁻¹·min⁻¹. Dividing by two gives the elementary nucleophilic rate constant for peroxo bond cleavage: "
+   f"k₁ = k_cat / 2 = {k_cat_val/2.0:.4f} L·mol⁻¹·min⁻¹ ({k_cat_val/120.0:.5f} L·mol⁻¹·s⁻¹).\n\n"
+   f"From an energetic perspective, iodide catalysis lowers the activation energy from 75 kJ/mol to approximately 56.2 kJ/mol. According "
+   f"to transition state theory, this ΔE_a = 18.8 kJ/mol reduction increases the Boltzmann factor exp(−ΔG‡/RT) by a factor of approximately "
+   f"2,000 at 298.15 K. While substantial, this acceleration is modest when compared to biological heme-containing enzymes such as catalase, "
+   f"which lowers E_a to ~8 kJ/mol and operates near the diffusion-controlled limit (k_cat/K_M ≈ 10⁷ M⁻¹·s⁻¹). Nevertheless, homogeneous "
+   f"halide catalysis represents an archetypal illustration of how nucleophilic mediation can overcome electronic and spin-state kinetic "
+   f"barriers in redox chemistry."
+  )
+
+  conclusion=(
+   f"The quantitative investigation of the iodide-catalyzed decomposition of hydrogen peroxide has rigorously established: "
+   f"(1) an exact first-order rate dependence on catalyst concentration [I⁻] across the range 0.020 M to 0.120 M; "
+   f"(2) an experimental catalytic rate constant k_cat = {k_cat_val:.4f} ± {f['slopeSE']:.4f} L·mol⁻¹·min⁻¹ ({k_cat_val/60.0:.5f} L·mol⁻¹·s⁻¹), "
+   f"differing by only {percent:.3f}% from the accepted literature value of {reference:.3f} L·mol⁻¹·min⁻¹; "
+   f"(3) an elementary rate constant for nucleophilic peroxo attack k₁ = {k_cat_val/2.0:.4f} L·mol⁻¹·min⁻¹; "
+   f"and (4) an uncatalyzed background decomposition rate indistinguishable from zero (k_uncat = {f['b']:.5f} min⁻¹). "
+   f"These findings provide conclusive experimental confirmation of the two-step hypoiodite steady-state catalytic cycle and demonstrate "
+   f"the precision of gas-volumetric manometry in quantitative chemical kinetics."
+  )
+
   return abstract, graph_choice, discussion, conclusion
  elif slug=='photochemical-decomposition-uranyl-oxalate':
   slope_val=f['m']

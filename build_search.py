@@ -92,6 +92,7 @@ def experiment_index(experiments):
     'liquid-vapor-phase-equilibrium-azeotrope':'liquid vapor equilibrium phase diagram azeotropic distillation azeotrope ethanol water othmer still cottrell pump abbe refractometer margules activity coefficient relative volatility',
     'three-component-liquid-liquid-ternary-phase':'three component ternary liquid phase equilibrium liquid extraction binodal curve tie lines plait point water acetic acid chloroform nernst christian distribution dimerization constant',
     'enzyme-kinetics-michaelis-menten-spectrophotometry': 'enzyme kinetics michaelis menten lineweaver burk alkaline phosphatase 4-nitrophenyl phosphate km vmax substrate inhibition double reciprocal spectrophotometry',
+    'homogeneous-catalysis-hydrogen-peroxide-decomposition': 'homogeneous catalysis hydrogen peroxide decomposition iodide catalyst gas burette leveling bulb oxygen evolution pseudo first order catalytic rate constant chemical kinetics',
     'photochemical-decomposition-uranyl-oxalate': 'uranyl oxalate actinometry photochemistry quantum yield photolysis stark einstein leighton forbes uv 365 nm permanganate titration',
     'clock-reaction-landolt-iodate-sulfite': 'landolt iodine clock reaction potassium iodate sodium bisulfite starch induction period autocatalysis reaction orders rate constant',
     'second-order-saponification-conductivity': 'second order ester saponification ethyl acetate conductivity kohlrausch ionic mobility half life impedance',

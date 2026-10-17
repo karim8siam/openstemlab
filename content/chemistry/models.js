@@ -172,6 +172,16 @@ function predict(slug,input){
   const y=round(1.0 / v0_mM, 2);
   return {raw,ideal:raw,period:1.0,x,y,valid:s_val>=0.10&&s_val<=4.00};
  }
+ if(slug==='homogeneous-catalysis-hydrogen-peroxide-decomposition'){
+  const c_ki=Number(input);
+  const k_cat=3.600;
+  const table={0.020:0.0720, 0.040:0.1441, 0.060:0.2160, 0.080:0.2879, 0.100:0.3598, 0.120:0.4319};
+  const key=round(c_ki, 3);
+  const raw=table.hasOwnProperty(key)?table[key]:round(k_cat * c_ki, 4);
+  const x=c_ki;
+  const y=raw;
+  return {raw,ideal:raw,period:1.0,x,y,valid:c_ki>=0.010&&c_ki<=0.200};
+ }
  if(slug==='photochemical-decomposition-uranyl-oxalate'){
   const t=Number(input);
   const V0=20.00;
@@ -402,6 +412,12 @@ function reading(slug,input,raw){
   const v0_mM=raw_val / 1000.0;
   y=round(1.0 / v0_mM, 2);
  }
+ if(slug==='homogeneous-catalysis-hydrogen-peroxide-decomposition'){
+  const c_ki=Number(input);
+  const raw_val=Number(raw);
+  x=c_ki;
+  y=raw_val;
+ }
  if(slug==='photochemical-decomposition-uranyl-oxalate'){
   const t=Number(input);
   const raw_val=Number(raw);
@@ -618,6 +634,11 @@ function estimate(slug,f){
   const KM=f.m / f.b;
   const se=Math.abs(f.slopeSE / f.b);
   return {value:KM,se:se,reference:0.500};
+ }
+ if(slug==='homogeneous-catalysis-hydrogen-peroxide-decomposition'){
+  const k_cat=f.m;
+  const se=f.slopeSE;
+  return {value:k_cat,se:se,reference:3.600};
  }
  if(slug==='photochemical-decomposition-uranyl-oxalate'){
   const q0=10.00; // ueinstein/min
