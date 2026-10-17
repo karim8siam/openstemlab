@@ -172,6 +172,31 @@ function predict(slug,input){
   const y=round(1.0 / v0_mM, 2);
   return {raw,ideal:raw,period:1.0,x,y,valid:s_val>=0.10&&s_val<=4.00};
  }
+ if(slug==='solubility-product-conductometric-silver-halides'){
+  const t=Number(input);
+  const table_raw={20.0:1.352, 25.0:1.890, 30.0:2.594, 35.0:3.506, 40.0:4.672, 45.0:6.148};
+  const table_y={20.0:-22.905, 25.0:-22.454, 30.0:-22.019, 35.0:-21.597, 40.0:-21.189, 45.0:-20.794};
+  const key=round(t, 1);
+  let raw_val;
+  if(table_raw.hasOwnProperty(key)){
+   raw_val=table_raw[key];
+  } else {
+   const T=t + 273.15;
+   const R=8.31446;
+   const dH=65500.0;
+   const dS=32.991;
+   const ln_Ksp= -dH / (R * T) + dS / R;
+   const Ksp=Math.exp(ln_Ksp);
+   const s=Math.sqrt(Ksp);
+   const Lambda_0=138.25 * (1.0 + 0.022 * (t - 25.0));
+   const kappa_w=0.045 + 0.001 * (t - 20.0);
+   raw_val=round(s * Lambda_0 * 1000.0 + kappa_w, 3);
+  }
+  const T=t + 273.15;
+  const x=round(1000.0 / T, 4);
+  const y=table_y.hasOwnProperty(key)?table_y[key]:round(-65.50 / (8.31446 * 0.001 * T) + 32.991 / 8.31446, 3);
+  return {raw:raw_val,ideal:raw_val,period:1.0,x,y,valid:t>=15.0&&t<=50.0};
+ }
  if(slug==='debye-huckel-onsager-strong-electrolytes'){
   const c_conc=Number(input);
   const table_raw={0.50:73.87, 1.00:146.86, 2.00:291.25, 4.00:575.49, 8.00:1131.18, 12.00:1673.98};
@@ -487,6 +512,23 @@ function reading(slug,input,raw){
   const v0_mM=raw_val / 1000.0;
   y=round(1.0 / v0_mM, 2);
  }
+ if(slug==='solubility-product-conductometric-silver-halides'){
+  const t=Number(input);
+  const raw_val=Number(raw);
+  const key=round(t, 1);
+  const table_y={20.0:-22.905, 25.0:-22.454, 30.0:-22.019, 35.0:-21.597, 40.0:-21.189, 45.0:-20.794};
+  const T=t + 273.15;
+  x=round(1000.0 / T, 4);
+  if(table_y.hasOwnProperty(key)){
+   y=table_y[key];
+  } else {
+   const Lambda_0=138.25 * (1.0 + 0.022 * (t - 25.0));
+   const kappa_w=0.045 + 0.001 * (t - 20.0);
+   const s_calc=(raw_val - kappa_w) / (1000.0 * Lambda_0);
+   const Ksp_calc=s_calc * s_calc;
+   y=round(Math.log(Ksp_calc), 3);
+  }
+ }
  if(slug==='debye-huckel-onsager-strong-electrolytes'){
   const c_conc=Number(input);
   const raw_val=Number(raw);
@@ -746,6 +788,12 @@ function estimate(slug,f){
   const KM=f.m / f.b;
   const se=Math.abs(f.slopeSE / f.b);
   return {value:KM,se:se,reference:0.500};
+ }
+ if(slug==='solubility-product-conductometric-silver-halides'){
+  const R=8.31446;
+  const dH= -f.m * R;
+  const se=Math.abs(f.slopeSE || 0.015) * R;
+  return {value:dH,se:se,reference:65.50};
  }
  if(slug==='debye-huckel-onsager-strong-electrolytes'){
   const Lambda0=f.b;

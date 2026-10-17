@@ -81,6 +81,18 @@ function update(){
   $('apparatusDiagram').innerHTML=drawEnzymeKineticsBenchView(p,rawVal);
   return;
  }
+ if(cfg.slug==='solubility-product-conductometric-silver-halides'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawSolubilityCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawSolubilitySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawSolubilityBenchView(p,rawVal);
+  return;
+ }
  if(cfg.slug==='debye-huckel-onsager-strong-electrolytes'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawOnsagerCompareView(p,rawVal);
@@ -198,6 +210,17 @@ function update(){
   const dA_dt = v0_uM * 0.0185;
   $('liveState').textContent='Photometric trace recorded: v₀ = '+v0_uM.toFixed(2)+' μM/min (dA/dt = '+(dA_dt/1000).toFixed(4)+' AU/min).';
   message('Assay complete: v₀ = '+v0_uM.toFixed(2)+' μM/min (1/v₀ = '+inv_v0.toFixed(2)+' min/mM, 1/[S] = '+inv_s.toFixed(2)+' mM⁻¹). Record in notebook.');
+ }else if(cfg.slug==='solubility-product-conductometric-silver-halides'){
+  const t = p.input;
+  const rawKappa = raw;
+  const T = t + 273.15;
+  const invT = (1000.0 / T).toFixed(4);
+  const Lambda_0 = 138.25 * (1.0 + 0.022 * (t - 25.0));
+  const kappa_w = 0.045 + 0.001 * (t - 20.0);
+  const s = ((rawKappa - kappa_w) / (1000.0 * Lambda_0)).toExponential(3);
+  const Ksp = Math.pow(Number(s), 2).toExponential(3);
+  $('liveState').textContent='Dissolution equilibrium reached: T = '+t.toFixed(1)+' °C, κ_sat = '+rawKappa.toFixed(3)+' μS/cm, K_sp = '+Ksp+'.';
+  message('Conductivity logged: κ_sat = '+rawKappa.toFixed(3)+' μS/cm, s = '+s+' M, K_sp = '+Ksp+' at 1000/T = '+invT+' K⁻¹. Record in notebook.');
  }else if(cfg.slug==='debye-huckel-onsager-strong-electrolytes'){
   const c = p.input;
   const rawKappa = raw;
@@ -11236,6 +11259,317 @@ function drawOnsagerSandboxView(p, rawVal) {
 
  // Regression summary text
  svg += text(300, 312, 'Walden Invariant Product: Λ_m° · η = 149.85 × 0.8904 = 133.4 S·cm²·mPa·s·mol⁻¹.', '#789c80', 8);
+
+ return svg;
+}
+
+
+// ======================================================================
+// Lab 34: Conductometric Solubility Product of Sparingly Soluble Salts
+// ======================================================================
+
+function drawSolubilityBenchView(p, rawVal) {
+ var t = p.input || 25.0;
+ var rawKappa = rawVal || 1.890;
+ var T = t + 273.15;
+ var invT = 1000.0 / T;
+ var Lambda_0 = 138.25 * (1.0 + 0.022 * (t - 25.0));
+ var kappa_w = 0.045 + 0.001 * (t - 20.0);
+ var s_val = (rawKappa - kappa_w) / (1000.0 * Lambda_0);
+ var Ksp_val = s_val * s_val;
+ var lnKsp = Math.log(Ksp_val);
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0c131d');
+ svg += '<defs>';
+ svg += '<linearGradient id="amberGlass34" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#b45309" stop-opacity="0.35"/><stop offset="50%" stop-color="#d97706" stop-opacity="0.15"/><stop offset="100%" stop-color="#b45309" stop-opacity="0.4"/></linearGradient>';
+ svg += '<linearGradient id="agclSlurry34" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e2e8f0" stop-opacity="0.2"/><stop offset="100%" stop-color="#94a3b8" stop-opacity="0.5"/></linearGradient>';
+ svg += '</defs>';
+
+ // Header Banner
+ svg += text(20, 24, 'LABORATORY BENCH: CONDUCTOMETRIC SOLUBILITY PRODUCT K_sp (AgCl IN WATER)', '#e2e8f0', 12, 'bold');
+ svg += text(20, 40, 'Light-Shielded Reaction Cell · Platinized Platinum Dip Cell (K_cell = 1.000 cm⁻¹) · 1.0 kHz AC Bridge', '#38bdf8', 9);
+
+ // --- LEFT REGION: APPARATUS & AMBER REACTION CELL (x: 20 to 320) ---
+ // Lab Stand & Base
+ svg += rect(35, 290, 140, 14, '#334155', '#1e293b', 1.5);
+ svg += rect(55, 60, 8, 230, '#64748b');
+ svg += rect(59, 140, 50, 6, '#475569');
+
+ // Amber-Jacketed Dissolution Vessel (protects from photolysis)
+ svg += rect(85, 150, 115, 135, 'url(#amberGlass34)', '#d97706', 1.5, 6);
+ // Water jacket ports
+ svg += rect(75, 175, 12, 10, '#f59e0b', '#b45309', 1);
+ svg += text(69, 183, 'IN', '#fef3c7', 7, 'bold');
+ svg += rect(198, 245, 12, 10, '#f59e0b', '#b45309', 1);
+ svg += text(212, 253, 'OUT', '#fef3c7', 7, 'bold');
+
+ // Saturated AgCl Solution Slurry
+ svg += rect(92, 180, 101, 100, 'url(#agclSlurry34)', '#94a3b8', 1, 3);
+ svg += text(142, 195, 'Saturated AgCl Solution', '#f8fafc', 7.5, 'bold', 'middle');
+
+ // Undissolved AgCl solid precipitate at bottom
+ svg += '<path d="M 92 272 Q 115 266 142 270 Q 170 267 193 272 L 193 280 L 92 280 Z" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>';
+ svg += text(142, 277, 'Solid AgCl(s) Excess', '#475569', 6, 'bold', 'middle');
+
+ // Platinized Platinum Dip Cell
+ svg += rect(122, 105, 10, 105, '#94a3b8', '#64748b', 1); // stem
+ svg += rect(110, 210, 34, 40, 'rgba(56,189,248,0.15)', '#38bdf8', 1);
+ // Platinum plates (Pt black)
+ svg += rect(116, 218, 5, 24, '#0f172a', '#334155', 1);
+ svg += rect(133, 218, 5, 24, '#0f172a', '#334155', 1);
+ svg += '<line x1="121" y1="230" x2="133" y2="230" stroke="#38bdf8" stroke-dasharray="1,2" stroke-width="1.5"/>';
+ svg += text(127, 258, 'Pt Black Plates', '#cbd5e1', 5.5, 'normal', 'middle');
+
+ // Thermistor Probe
+ svg += rect(168, 130, 4, 125, '#f1f5f9', '#94a3b8', 0.8);
+ svg += circle(170, 255, 5, '#ef4444');
+ svg += text(170, 125, t.toFixed(1) + '°C', '#f87171', 6.5, 'bold', 'middle');
+
+ // Leads to AC Bridge
+ svg += '<path d="M 124 105 Q 124 85 190 75 T 235 75" stroke="#ef4444" stroke-width="1.5" fill="none"/>';
+ svg += '<path d="M 130 105 Q 135 90 200 80 T 235 80" stroke="#000000" stroke-width="1.5" fill="none"/>';
+
+ // Digital AC Bridge Meter Console (x: 220, y: 65, w: 110, h: 90)
+ svg += rect(220, 65, 110, 90, '#1e293b', '#38bdf8', 1.5, 5);
+ svg += rect(227, 72, 96, 32, '#021e28', '#0ea5e9', 1, 3);
+ svg += text(275, 93, rawKappa.toFixed(3) + ' μS/cm', '#38bdf8', 12, 'bold', 'middle');
+ svg += text(275, 117, 's = ' + (s_val*1e6).toFixed(2) + ' μM', '#34d399', 7, 'bold', 'middle');
+ svg += text(275, 130, 'K_sp = ' + Ksp_val.toExponential(2) + ' M²', '#f59e0b', 6.5, 'bold', 'middle');
+ svg += text(275, 143, '1.0 kHz · K_cell = 1.00', '#cbd5e1', 6.5, 'normal', 'middle');
+
+ // Heterogeneous Dissolution Diagram Inset (x: 220, y: 165, w: 110, h: 120)
+ svg += rect(220, 165, 110, 120, '#131d2e', '#334155', 1, 5);
+ svg += text(275, 180, 'DISSOLUTION EQUILIBRIUM', '#38bdf8', 6.5, 'bold', 'middle');
+ svg += text(275, 195, 'AgCl(s) ⇄ Ag⁺(aq) + Cl⁻(aq)', '#e2e8f0', 6.5, 'bold', 'middle');
+ // Crystal lattice schematic
+ svg += rect(240, 210, 70, 35, '#334155', '#64748b', 1);
+ svg += circle(250, 220, 4.5, '#94a3b8'); svg += text(250, 222, 'Ag⁺', '#0f172a', 5, 'bold', 'middle');
+ svg += circle(265, 220, 5.5, '#22c55e'); svg += text(265, 222, 'Cl⁻', '#0f172a', 5, 'bold', 'middle');
+ svg += circle(280, 220, 4.5, '#94a3b8'); svg += text(280, 222, 'Ag⁺', '#0f172a', 5, 'bold', 'middle');
+ svg += circle(295, 220, 5.5, '#22c55e'); svg += text(295, 222, 'Cl⁻', '#0f172a', 5, 'bold', 'middle');
+ svg += circle(250, 233, 5.5, '#22c55e'); svg += text(250, 235, 'Cl⁻', '#0f172a', 5, 'bold', 'middle');
+ svg += circle(265, 233, 4.5, '#94a3b8'); svg += text(265, 235, 'Ag⁺', '#0f172a', 5, 'bold', 'middle');
+ svg += circle(280, 233, 5.5, '#22c55e'); svg += text(280, 235, 'Cl⁻', '#0f172a', 5, 'bold', 'middle');
+ svg += circle(295, 233, 4.5, '#94a3b8'); svg += text(295, 235, 'Ag⁺', '#0f172a', 5, 'bold', 'middle');
+ svg += text(275, 260, 'Endothermic Dissolution:', '#cbd5e1', 6, 'normal', 'middle');
+ svg += text(275, 272, 'ΔH°_sol = +65.50 kJ/mol', '#f87171', 6.5, 'bold', 'middle');
+
+ // --- RIGHT REGION: VAN 'T HOFF MASTER PLOT (x: 350 to 700) ---
+ var pX = 380, pY = 65, pW = 310, pH = 220;
+ svg += rect(pX - 30, pY - 15, pW + 40, pH + 45, '#131d2e', '#334155', 1, 6);
+
+ svg += text(pX + pW/2 - 10, pY - 2, 'VAN ’T HOFF SOLUBILITY PRODUCT MASTER PLOT', '#38bdf8', 8.5, 'bold', 'middle');
+
+ // Grid: x in [3.10, 3.45], y in [-23.5, -20.5]
+ for (var i = 0; i <= 6; i++) {
+  var gy = pY + (pH / 6) * i;
+  svg += '<line x1="'+pX+'" y1="'+gy+'" x2="'+(pX+pW)+'" y2="'+gy+'" stroke="#1e293b" stroke-width="1"/>';
+  var valY = (-20.5 - (i * 3.0 / 6)).toFixed(1);
+  svg += text(pX - 8, gy + 3, valY, '#64748b', 6.5, 'normal', 'end');
+ }
+ for (var j = 0; j <= 7; j++) {
+  var gx = pX + (pW / 7) * j;
+  svg += '<line x1="'+gx+'" y1="'+pY+'" x2="'+gx+'" y2="'+(pY+pH)+'" stroke="#1e293b" stroke-width="1"/>';
+  var valX = (3.10 + j * 0.05).toFixed(2);
+  svg += text(gx, pY + pH + 12, valX, '#64748b', 6.5, 'normal', 'middle');
+ }
+
+ function vMapX(ix) { return pX + ((ix - 3.10) / 0.35) * pW; }
+ function vMapY(ly) { return pY + pH - ((ly - (-23.5)) / 3.0) * pH; }
+
+ // Theoretical Line: ln(Ksp) = -7.877 * (1000/T) + 3.966
+ var vx0 = vMapX(3.12), vy0 = vMapY(-7.877 * 3.12 + 3.966);
+ var vx1 = vMapX(3.43), vy1 = vMapY(-7.877 * 3.43 + 3.966);
+
+ svg += '<line x1="'+vx0+'" y1="'+vy0+'" x2="'+vx1+'" y2="'+vy1+'" stroke="#38bdf8" stroke-width="2.5"/>';
+
+ // Experimental sample points
+ var expPts = [
+  {t: 20.0, ix: 3.4112, ly: -22.905},
+  {t: 25.0, ix: 3.3540, ly: -22.454},
+  {t: 30.0, ix: 3.2987, ly: -22.019},
+  {t: 35.0, ix: 3.2452, ly: -21.597},
+  {t: 40.0, ix: 3.1934, ly: -21.189},
+  {t: 45.0, ix: 3.1432, ly: -20.794}
+ ];
+
+ for (var k = 0; k < expPts.length; k++) {
+  var px = vMapX(expPts[k].ix);
+  var py = vMapY(expPts[k].ly);
+  svg += circle(px, py, 3.5, '#f59e0b', '#ffffff', 1);
+ }
+
+ // 25 C reference callout
+ var p25x = vMapX(3.3540), p25y = vMapY(-22.454);
+ svg += circle(p25x, p25y, 4.5, '#f59e0b', '#fff', 1.5);
+ svg += text(p25x + 8, p25y - 6, '25°C: K_sp = 1.77×10⁻¹⁰ M²', '#38bdf8', 6.5, 'bold');
+
+ // Current Active Sample Point
+ var curX = vMapX(invT);
+ var curY = vMapY(lnKsp);
+ svg += circle(curX, curY, 6, '#10b981', '#ffffff', 2);
+ svg += '<circle cx="'+curX+'" cy="'+curY+'" r="9" stroke="#10b981" stroke-width="1" fill="none" opacity="0.6"/>';
+
+ // Axis Labels
+ svg += text(pX + pW/2, pY + pH + 24, 'Inverse Absolute Temperature 1000/T (K⁻¹)', '#94a3b8', 7.5, 'normal', 'middle');
+ svg += '<text x="'+(pX - 22)+'" y="'+(pY + pH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5" transform="rotate(-90 '+(pX-22)+' '+(pY+pH/2)+')">Logarithmic Solubility Product ln(K_sp)</text>';
+
+ // Summary Statistics Callout
+ svg += text(360, 318, 'van ’t Hoff Fit: Slope = -7.877 K · Intercept = 3.966 · ΔH°_sol = 65.50 kJ·mol⁻¹ (R² = 1.00000)', '#a7f3d0', 7.5);
+
+ return svg;
+}
+
+function drawSolubilityCompareView(p, rawVal) {
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0c131d');
+
+ svg += text(20, 24, 'COMPARATIVE SILVER HALIDE SOLUBILITY: AgCl vs AgBr vs AgI', '#e2e8f0', 12, 'bold');
+ svg += text(20, 40, 'Illustrating Fajans’ polarization rules and the 7-order-of-magnitude drop in solubility product', '#38bdf8', 9);
+
+ var panels = [
+  {title: 'A. SILVER CHLORIDE (AgCl)', ksp: '1.77 × 10⁻¹⁰ M²', sol: '1.33 × 10⁻⁵ M (1.91 mg/L)', col: '#e2e8f0', x: 20, w: 215},
+  {title: 'B. SILVER BROMIDE (AgBr)', ksp: '5.35 × 10⁻¹³ M²', sol: '7.31 × 10⁻⁷ M (0.137 mg/L)', col: '#fef08a', x: 250, w: 215},
+  {title: 'C. SILVER IODIDE (AgI)', ksp: '8.52 × 10⁻¹⁷ M²', sol: '9.23 × 10⁻⁹ M (2.1 μg/L)', col: '#fef08a', x: 480, w: 220}
+ ];
+
+ for (var idx = 0; idx < panels.length; idx++) {
+  var pan = panels[idx];
+  svg += rect(pan.x, 55, pan.w, 235, '#131d2e', '#334155', 1, 6);
+  svg += text(pan.x + 12, 75, pan.title, '#38bdf8', 8.5, 'bold');
+  svg += text(pan.x + 12, 90, 'K_sp(25°C) = ' + pan.ksp, '#f59e0b', 7.5, 'bold');
+  svg += text(pan.x + 12, 103, 'Solubility s = ' + pan.sol, '#34d399', 7);
+
+  var bx = pan.x + 20, by = 115, bw = pan.w - 40, bh = 120;
+  svg += rect(bx, by, bw, bh, '#0f172a', '#1e293b', 1);
+
+  if (idx === 0) {
+   // AgCl
+   svg += rect(bx + 15, by + 15, 60, 60, '#334155', '#64748b', 1);
+   svg += circle(bx + 30, by + 30, 8, '#94a3b8'); svg += text(bx + 30, by + 33, 'Ag⁺', '#0f172a', 6, 'bold', 'middle');
+   svg += circle(bx + 60, by + 30, 11, '#22c55e'); svg += text(bx + 60, by + 33, 'Cl⁻', '#0f172a', 6, 'bold', 'middle');
+   svg += circle(bx + 30, by + 60, 11, '#22c55e'); svg += text(bx + 30, by + 63, 'Cl⁻', '#0f172a', 6, 'bold', 'middle');
+   svg += circle(bx + 60, by + 60, 8, '#94a3b8'); svg += text(bx + 60, by + 63, 'Ag⁺', '#0f172a', 6, 'bold', 'middle');
+   svg += text(bx + 90, by + 35, 'Rocksalt Lattice', '#cbd5e1', 7, 'bold');
+   svg += text(bx + 90, by + 50, 'r(Cl⁻) = 181 pm', '#94a3b8', 6.5);
+   svg += text(bx + 90, by + 65, 'κ ≈ 1.89 μS/cm', '#38bdf8', 7, 'bold');
+   svg += text(pan.x + 12, by + bh + 18, 'Gold-standard salt for conductometry.', '#94a3b8', 6.5);
+  } else if (idx === 1) {
+   // AgBr
+   svg += rect(bx + 15, by + 15, 60, 60, '#422006', '#ca8a04', 1);
+   svg += circle(bx + 30, by + 30, 8, '#94a3b8'); svg += text(bx + 30, by + 33, 'Ag⁺', '#0f172a', 6, 'bold', 'middle');
+   svg += circle(bx + 60, by + 30, 13, '#eab308'); svg += text(bx + 60, by + 33, 'Br⁻', '#0f172a', 6, 'bold', 'middle');
+   svg += circle(bx + 30, by + 60, 13, '#eab308'); svg += text(bx + 30, by + 63, 'Br⁻', '#0f172a', 6, 'bold', 'middle');
+   svg += circle(bx + 60, by + 60, 8, '#94a3b8'); svg += text(bx + 60, by + 63, 'Ag⁺', '#0f172a', 6, 'bold', 'middle');
+   svg += text(bx + 90, by + 35, 'Polarized Lattice', '#cbd5e1', 7, 'bold');
+   svg += text(bx + 90, by + 50, 'r(Br⁻) = 196 pm', '#94a3b8', 6.5);
+   svg += text(bx + 90, by + 65, 'κ ≈ 0.09 μS/cm', '#f59e0b', 7, 'bold');
+   svg += text(pan.x + 12, by + bh + 18, 'Near solvent background threshold.', '#94a3b8', 6.5);
+  } else {
+   // AgI
+   svg += rect(bx + 15, by + 15, 60, 60, '#422006', '#a16207', 1);
+   svg += circle(bx + 30, by + 30, 8, '#94a3b8'); svg += text(bx + 30, by + 33, 'Ag⁺', '#0f172a', 6, 'bold', 'middle');
+   svg += circle(bx + 60, by + 30, 15, '#ca8a04'); svg += text(bx + 60, by + 33, 'I⁻', '#0f172a', 6, 'bold', 'middle');
+   svg += circle(bx + 30, by + 60, 15, '#ca8a04'); svg += text(bx + 30, by + 63, 'I⁻', '#0f172a', 6, 'bold', 'middle');
+   svg += circle(bx + 60, by + 60, 8, '#94a3b8'); svg += text(bx + 60, by + 63, 'Ag⁺', '#0f172a', 6, 'bold', 'middle');
+   svg += text(bx + 90, by + 35, 'Covalent Network', '#cbd5e1', 7, 'bold');
+   svg += text(bx + 90, by + 50, 'r(I⁻) = 220 pm', '#94a3b8', 6.5);
+   svg += text(bx + 90, by + 65, 'κ ≈ 0.001 μS/cm', '#ef4444', 7, 'bold');
+   svg += text(pan.x + 12, by + bh + 18, 'Sub-background: requires potentiometry.', '#fca5a5', 6.5, 'bold');
+  }
+ }
+
+ svg += text(20, 312, 'Fajans’ Rule: Increasing halide polarizability (Cl⁻ < Br⁻ < I⁻) induces strong covalent stabilization, driving K_sp down by 10⁷.', '#94a3b8', 8);
+ return svg;
+}
+
+function drawSolubilitySandboxView(p, rawVal) {
+ var t = p.input || 25.0;
+ var rawKappa = rawVal || 1.890;
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0c131d');
+
+ svg += text(20, 24, 'CONDUCTOMETRIC SOLUBILITY MULTI-PARAMETER SIMULATION SANDBOX', '#e2e8f0', 12, 'bold');
+ svg += text(20, 40, 'Explore thermodynamic parameter sensitivity: common ion suppression, ionic strength, and complexation', '#38bdf8', 9);
+
+ // --- LEFT CONTROL PANEL (x: 20 to 250) ---
+ svg += rect(20, 55, 230, 240, '#131d2e', '#334155', 1, 6);
+ svg += text(32, 75, 'THERMODYNAMIC PARAMETERS', '#38bdf8', 9, 'bold');
+
+ var params = [
+  {name: 'Dissolution Enthalpy (ΔH°_sol)', val: '+65.50 kJ/mol', desc: 'Endothermic lattice cleavage'},
+  {name: 'Dissolution Entropy (ΔS°_sol)', val: '+32.99 J/mol·K', desc: 'Hydration disordering'},
+  {name: 'Gibbs Free Energy (ΔG°_298)', val: '+55.66 kJ/mol', desc: 'Thermodynamic non-spontaneity'},
+  {name: 'Solubility Product (K_sp,298)', val: '1.77 × 10⁻¹⁰ M²', desc: 'Standard equilibrium constant'},
+  {name: 'Molar Solubility (s_298)', val: '13.31 μM', desc: 'Saturated Ag⁺/Cl⁻ concentration'},
+  {name: 'Limiting Conductivity (Λ_m°)', val: '138.25 S·cm²/mol', desc: 'λ°(Ag⁺) + λ°(Cl⁻)'}
+ ];
+
+ for (var i = 0; i < params.length; i++) {
+  var py = 95 + i * 24;
+  svg += text(32, py, params[i].name + ':', '#94a3b8', 7);
+  svg += text(235, py, params[i].val, '#e2e8f0', 7, 'bold', 'end');
+ }
+
+ svg += rect(28, 242, 214, 45, '#1e293b', '#0284c7', 1, 4);
+ svg += text(36, 256, 'THERMODYNAMIC STOCHIOMETRY:', '#38bdf8', 7.5, 'bold');
+ svg += text(36, 268, '• Lattice Enthalpy: ΔH_latt = +916 kJ/mol', '#f87171', 6.5);
+ svg += text(36, 278, '• Total Hydration Enthalpy: ΔH_hyd = -850 kJ/mol', '#34d399', 6.5);
+
+ // --- RIGHT INTERACTIVE DIAGNOSTIC PLOT (x: 270 to 700) ---
+ var pX = 300, pY = 65, pW = 390, pH = 210;
+ svg += rect(pX - 25, pY - 12, pW + 35, pH + 42, '#131d2e', '#334155', 1, 6);
+ svg += text(pX + pW/2, pY - 1, 'TEMPERATURE-SOLUBILITY CURVE & DISSOLUTION REGIME', '#38bdf8', 8.5, 'bold', 'middle');
+
+ // Grid
+ for (var k = 0; k <= 6; k++) {
+  var gy = pY + (pH / 6) * k;
+  svg += '<line x1="'+pX+'" y1="'+gy+'" x2="'+(pX+pW)+'" y2="'+gy+'" stroke="#1e293b" stroke-width="1"/>';
+  var valS = (35.0 - k * 5.0).toFixed(0);
+  svg += text(pX - 8, gy + 3, valS, '#64748b', 6.5, 'normal', 'end');
+ }
+ for (var m = 0; m <= 6; m++) {
+  var gx = pX + (pW / 6) * m;
+  svg += '<line x1="'+gx+'" y1="'+pY+'" x2="'+gx+'" y2="'+(pY+pH)+'" stroke="#1e293b" stroke-width="1"/>';
+  var valT = (15.0 + m * 5.0).toFixed(0);
+  svg += text(gx, pY + pH + 12, valT, '#64748b', 6.5, 'normal', 'middle');
+ }
+
+ function sbMapX(temp) { return pX + ((temp - 15.0) / 30.0) * pW; }
+ function sbMapY(sol) { return pY + pH - (sol / 35.0) * pH; }
+
+ // Non-linear solubility curve: s(T) = sqrt( exp(-65500 / (R*(T+273.15)) + 32.991/R) ) * 1e6 uM
+ var pathD = '';
+ for (var step = 0; step <= 30; step++) {
+  var curTemp = 15.0 + step * 1.0;
+  var curTK = curTemp + 273.15;
+  var curLnKsp = -65500.0 / (8.31446 * curTK) + 32.991 / 8.31446;
+  var curS = Math.sqrt(Math.exp(curLnKsp)) * 1e6; // in uM
+  var cx = sbMapX(curTemp);
+  var cy = sbMapY(curS);
+  if (step === 0) pathD += 'M ' + cx + ' ' + cy;
+  else pathD += ' L ' + cx + ' ' + cy;
+ }
+
+ svg += '<path d="'+pathD+'" fill="none" stroke="#38bdf8" stroke-width="2.5"/>';
+
+ // Active Point
+ var activeTK = t + 273.15;
+ var activeLnKsp = -65500.0 / (8.31446 * activeTK) + 32.991 / 8.31446;
+ var activeS = Math.sqrt(Math.exp(activeLnKsp)) * 1e6;
+ var curPX = sbMapX(t);
+ var curPY = sbMapY(activeS);
+ svg += circle(curPX, curPY, 6, '#10b981', '#ffffff', 2);
+ svg += text(curPX + 8, curPY - 8, t.toFixed(1) + '°C: s = ' + activeS.toFixed(2) + ' μM', '#a7f3d0', 7, 'bold');
+
+ // Axis labels
+ svg += text(pX + pW/2, pY + pH + 24, 'Solution Temperature T (°C)', '#94a3b8', 7.5, 'normal', 'middle');
+ svg += '<text x="'+(pX - 22)+'" y="'+(pY + pH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7.5" transform="rotate(-90 '+(pX-22)+' '+(pY+pH/2)+')">Molar Solubility s (μmol·L⁻¹)</text>';
+
+ // Summary
+ svg += text(300, 312, 'Le Chatelier Shift: Molar solubility triples from 10.6 μM at 20 °C to 30.5 μM at 45 °C due to endothermic dissolution.', '#789c80', 8);
 
  return svg;
 }

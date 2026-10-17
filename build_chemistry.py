@@ -159,6 +159,28 @@ def observation(c,value):
   v0_mM=raw / 1000.0
   y=rnd(1.0 / v0_mM, 2)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='solubility-product-conductometric-silver-halides':
+  t=float(value)
+  table_raw={20.0:1.352, 25.0:1.890, 30.0:2.594, 35.0:3.506, 40.0:4.672, 45.0:6.148}
+  table_y={20.0:-22.905, 25.0:-22.454, 30.0:-22.019, 35.0:-21.597, 40.0:-21.189, 45.0:-20.794}
+  key=round(t, 1)
+  if key in table_raw:
+   raw=table_raw[key]
+  else:
+   T=t + 273.15
+   R=8.31446
+   dH=65500.0
+   dS=32.991
+   ln_Ksp= -dH / (R * T) + dS / R
+   Ksp=math.exp(ln_Ksp)
+   s=math.sqrt(Ksp)
+   Lambda_0=138.25 * (1.0 + 0.022 * (t - 25.0))
+   kappa_w=0.045 + 0.001 * (t - 20.0)
+   raw=round(s * Lambda_0 * 1000.0 + kappa_w, 3)
+  T=t + 273.15
+  x=rnd(1000.0 / T, 4)
+  y=table_y.get(key, rnd(-65.50 / (8.31446 * 0.001 * T) + 32.991 / 8.31446, 3))
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='debye-huckel-onsager-strong-electrolytes':
   c_conc=float(value)
   table_raw={0.50:73.87, 1.00:146.86, 2.00:291.25, 4.00:575.49, 8.00:1131.18, 12.00:1673.98}
@@ -448,6 +470,11 @@ def estimate(c,f):
   ref=0.500
   se=abs(f.get('slopeSE', 0.05) / b) if b > 0 else 0.002
   return KM, se, ref
+ elif slug=='solubility-product-conductometric-silver-halides':
+  R=8.31446
+  dH = -f['m'] * R
+  se = abs(f.get('slopeSE', 0.015)) * R
+  return dH, se, 65.50
  elif slug=='debye-huckel-onsager-strong-electrolytes':
   Lambda0=f['b']
   se=f.get('interceptSE', f.get('slopeSE', 0.05))
@@ -591,6 +618,12 @@ def formula(c,f):
   Vmax=1.0 / b
   KM=m / b
   return f"Slope K_M/V_max = {fmt(m,4)} min; Intercept 1/V_max = {fmt(b,4)} min·mM⁻¹ (V_max = {fmt(Vmax*1000.0,2)} μM/min, K_M = {fmt(KM,4)} mM)"
+ elif slug=='solubility-product-conductometric-silver-halides':
+  R=8.31446
+  dH = -f['m'] * R
+  slope=f['m']
+  b=f['b']
+  return f"van 't Hoff Fit: ln(K_sp) = {fmt(slope,3)}·(1000/T) + {fmt(b,3)}; Standard Enthalpy of Solution ΔH°_sol = {fmt(dH,2)} kJ·mol⁻¹; 25°C K_sp = 1.77×10⁻¹⁰ M²"
  elif slug=='debye-huckel-onsager-strong-electrolytes':
   Lambda0=f['b']
   slope=f['m']
@@ -996,6 +1029,33 @@ def worked(c,row):
    f"   Linearized equation: 1/v₀ = (K_M / V_max) · (1/[S]) + 1/V_max.\n"
    f"   Slope m = K_M / V_max = 12.50 min; Y-intercept b = 1/V_max = 25.00 min·mM⁻¹.\n"
    f"   Extracted parameters: V_max = 1/b = 0.0400 mM/min (40.0 μM/min); K_M = m / b = 0.500 mM with R² = 1.00000."
+  )
+ elif slug=='solubility-product-conductometric-silver-halides':
+  t=row['input']
+  raw=row['raw']
+  x=row['x']
+  y=row['y']
+  T=t + 273.15
+  Lambda_0=138.25 * (1.0 + 0.022 * (t - 25.0))
+  kappa_w=0.045 + 0.001 * (t - 20.0)
+  s=(raw - kappa_w) / (1000.0 * Lambda_0)
+  Ksp=s * s
+  return (
+   f"Representative calculation for conductometric silver chloride solubility run at T = {t:.1f} °C ({T:.2f} K):\n"
+   f"1. Conductance Acquisition & Solvent Background Subtraction:\n"
+   f"   Measured specific electrolytic conductivity of saturated AgCl slurry: κ_sat = {raw:.3f} μS/cm = {raw*1e-6:.6e} S/cm.\n"
+   f"   Ultrapure water background conductivity at {t:.1f} °C: κ_w = {kappa_w:.3f} μS/cm.\n"
+   f"   Net dissolved AgCl conductivity: κ_AgCl = κ_sat − κ_w = {raw:.3f} − {kappa_w:.3f} = {raw-kappa_w:.3f} μS/cm.\n"
+   f"2. Temperature-Corrected Limiting Molar Conductivity & Solubility Extraction:\n"
+   f"   Composite limiting molar conductivity: Λ_m°({t:.1f} °C) = 138.25 × [1 + 0.0220 × ({t:.1f} − 25.0)] = {Lambda_0:.2f} S·cm²·mol⁻¹.\n"
+   f"   Molar solubility: s = (1000 × κ_AgCl) / Λ_m° = (1000 × {raw-kappa_w:.3f} × 10⁻⁶) / {Lambda_0:.2f} = {s:.3e} M ({s*1e6:.2f} μM).\n"
+   f"   Thermodynamic solubility product: K_sp = s² = ({s:.3e})² = {Ksp:.3e} M².\n"
+   f"3. Coordinate Mapping for van 't Hoff Plot:\n"
+   f"   Abscissa: x = 1000 / T = 1000 / {T:.2f} = {x:.4f} K⁻¹.\n"
+   f"   Ordinate: y = ln(K_sp) = ln({Ksp:.3e}) = {y:.3f}.\n"
+   f"4. Linear Least-Squares Enthalpy Extraction:\n"
+   f"   van 't Hoff model: ln(K_sp) = -(ΔH°_sol / 1000 R) · (1000/T) + ΔS°_sol / R.\n"
+   f"   Linear regression across six temperatures yields empirical slope m = -7.877 K, confirming ΔH°_sol = -m × R = 65.50 kJ/mol (R² = 1.00000)."
   )
  elif slug=='debye-huckel-onsager-strong-electrolytes':
   c=row['input']
@@ -1686,6 +1746,30 @@ def uncertainty_text(c):
    "covariance matrix through the regression parameters gives u(K_M) / K_M = √[ (u(m)/m)² + (u(b)/b)² - 2·cov(m,b)/(m·b) ]. "
    "The high negative correlation between slope and intercept (r ≈ -0.88) substantially attenuates overall uncertainty, yielding an "
    "expanded uncertainty U(K_M) = 0.015 mM (coverage factor k = 2, 95% confidence level)."
+  )
+ elif slug=='solubility-product-conductometric-silver-halides':
+  return (
+   "In the high-precision conductometric determination of solubility products and dissolution thermodynamics for silver chloride, "
+   "metrological uncertainties and physical electroanalytical boundary factors are rigorously quantified across electrochemical, "
+   "thermostatic, gravimetric, and linear van 't Hoff regression domains: "
+   "(1) High-Sensitivity Audio-Frequency AC Impedance Bridge: Conductance measurements are recorded using an advanced microprocessor-controlled "
+   "alternating-current bridge operating at 1.0 kHz (V_rms = 0.50 V). The instrument provides an ultra-fine conductance resolution of 0.001 μS/cm "
+   "with a basic accuracy of ±0.05% of reading. High-frequency excitation eliminates Faradaic electrolysis of the aqueous solvent and suppresses "
+   "capacitive double-layer polarization at the platinized platinum electrode plates. "
+   "(2) Cell Constant Metrology and Calibration Traceability: The dip-type conductivity cell is calibrated against certified 0.0100 M KCl "
+   "primary reference standard solution (κ_std = 1408.7 μS/cm at 25.00 °C, traceable to NIST Standard Reference Material 3193). The experimental "
+   "cell constant K_cell = 1.000 ± 0.004 cm⁻¹ carries an expanded relative uncertainty u_r(K_cell) = 0.40% (coverage factor k = 2). "
+   "(3) Solvent Background Conductivity Correction and Carbon Dioxide Protection: Freshly boiled, nitrogen-sparged ultrapure Milli-Q water "
+   "exhibiting background conductivity κ_w = 0.045 to 0.070 μS/cm was employed. Solvent background conductivities were measured independently "
+   "at each temperature and subtracted directly from saturated slurry readings (κ_AgCl = κ_sat − κ_w), eliminating dissolved carbonic acid artifacts. "
+   "(4) Light Shielding and Photolytic Stability: Silver chloride is photosensitive and decomposes under ambient illumination into metallic silver "
+   "and chlorine. The entire reaction vessel and washing equipment were shrouded in amber borosilicate glass under dim red safety darkroom illumination, "
+   "preventing photolytic chloride release. Precipitated AgCl was digested and washed six times with boiling ultrapure water to eliminate trace ionic precursors. "
+   "(5) Thermostatic Regulation and Van 't Hoff Linear Regression: The double-walled dissolution cell was regulated at each temperature coordinate "
+   "to within ±0.02 °C via an external circulating bath. Ordinary linear least-squares regression of ln(K_sp) against 1000/T across six temperatures "
+   "(20.0 °C to 45.0 °C) yields an empirical slope m = -7.877 ± 0.015 K and intercept b = 3.966 ± 0.048 (R² = 1.00000). Propagating into the "
+   "van 't Hoff relation yields standard enthalpy of solution ΔH°_sol = 65.49 ± 0.12 kJ·mol⁻¹, with an expanded uncertainty U(ΔH°_sol) = 0.25 kJ·mol⁻¹ "
+   "(coverage factor k = 2, 95% confidence level), agreeing with the literature benchmark (65.50 kJ·mol⁻¹)."
   )
  elif slug=='debye-huckel-onsager-strong-electrolytes':
   return (
@@ -2877,6 +2961,71 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"reversible enzyme inhibition mechanisms."
   )
   
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='solubility-product-conductometric-silver-halides':
+  slope_val=f['m']
+  dH_val=value
+  r2_val=f['r2']
+  
+  abstract=(
+   f"The solubility product constant (K_sp) and dissolution thermodynamics of silver chloride (AgCl) in ultrapure water were quantitatively "
+   f"investigated across the temperature range 293.15 K to 318.15 K (20.00 °C to 45.00 °C) using a platinized platinum dip cell "
+   f"(cell constant K_cell = 1.000 cm⁻¹) connected to an audio-frequency (1.0 kHz) precision alternating-current impedance bridge. "
+   f"Freshly precipitated, thoroughly washed AgCl solid was equilibrated in an amber-jacketed reaction cell protected from photolytic "
+   f"decomposition under continuous 300 RPM magnetic stirring. Specific electrolytic conductivities κ_sat increased monotonically from "
+   f"{rows[0]['raw']:.3f} μS/cm at 20.0 °C to {rows[-1]['raw']:.3f} μS/cm at 45.0 °C. Following subtraction of the ultrapure water background "
+   f"and application of temperature-corrected limiting molar conductivities (Λ_m°(T) = 138.25 [1 + 0.0220(T - 25.0)] S·cm²·mol⁻¹), molar "
+   f"solubilities rose from 10.62 μM to 30.53 μM, corresponding to solubility products spanning K_sp = 1.128 × 10⁻¹⁰ M² to 9.321 × 10⁻¹⁰ M². "
+   f"A van 't Hoff plot of ln(K_sp) against 1000/T demonstrated strict thermodynamic linearity (R² = {r2_val:.6f}). The extracted standard "
+   f"enthalpy of dissolution was ΔH°_sol = {dH_val:.2f} ± {se:.2f} kJ·mol⁻¹, differing by only {percent:.3f}% from the certified thermodynamic "
+   f"benchmark ({reference:.2f} kJ·mol⁻¹). At the standard reference state (298.15 K, 25.00 °C), the evaluated solubility product was "
+   f"K_sp = 1.771 × 10⁻¹⁰ M² (pK_sp = 9.75), establishing the exceptional sensitivity and fidelity of conductometry for sparingly soluble salt metrology."
+  )
+
+  graph_choice=(
+   f"The primary analytical graphic presents the thermodynamic van 't Hoff master plot: the natural logarithm of the solubility product "
+   f"y = ln(K_sp) plotted against the reciprocal absolute temperature x = 1000/T (in K⁻¹) across the range 3.10 K⁻¹ to 3.45 K⁻¹ (20 °C to 45 °C). "
+   f"In accordance with the integrated van 't Hoff equation ln(K_sp) = -(ΔH°_sol / 1000 R)·(1000/T) + ΔS°_sol / R, the experimental coordinates "
+   f"conform strictly to a straight line (R² = {r2_val:.6f}). The empirical slope m = {slope_val:.4f} K directly isolates the standard enthalpy of "
+   f"dissolution ΔH°_sol = -m × R = {dH_val:.2f} kJ·mol⁻¹, while the Y-intercept b = {f['b']:.3f} yields the standard entropy of dissolution "
+   f"ΔS°_sol = +32.98 J·mol⁻¹·K⁻¹. A secondary comparative graphic illustrates the seven-order-of-magnitude solubility product disparity across "
+   f"the silver halide triad (AgCl: 1.77×10⁻¹⁰ M², AgBr: 5.35×10⁻¹³ M², AgI: 8.52×10⁻¹⁷ M²), visually linking thermodynamic solubility to Fajans' "
+   f"rules of covalent polarization."
+  )
+
+  discussion=(
+   f"The quantitative dissolution of sparingly soluble salts is governed by heterogeneous chemical thermodynamics and electrolyte conduction theory. "
+   f"When crystalline silver chloride is placed in pure water, dynamic equilibrium is established between the solid lattice and solvated ions:\n"
+   f"  AgCl(s) ⇄ Ag⁺(aq) + Cl⁻(aq)\n"
+   f"The thermodynamic equilibrium constant is the solubility product K_sp = a(Ag⁺) · a(Cl⁻) = [Ag⁺][Cl⁻] γ_±² = s² γ_±².\n\n"
+   f"A fundamental physical feature of the AgCl system is its extreme insolubility: at 25.0 °C, the saturated concentration is only s = 1.33 × 10⁻⁵ M. "
+   f"At such ultra-trace concentrations, the ionic strength is negligible (I ≈ 1.33 × 10⁻⁵ M), and the mean ionic activity coefficient computed via "
+   f"the Debye-Hückel limiting law is γ_± = 0.9957—deviating from unity by less than 0.43%. Consequently, the solution behaves as a thermodynamically "
+   f"ideal system at infinite dilution. In this regime, interionic relaxation and electrophoretic drag forces vanish, meaning the experimental "
+   f"molar conductivity is strictly equal to the limiting molar conductivity at infinite dilution: Λ_m = Λ_m° = λ°(Ag⁺) + λ°(Cl⁻) = 138.25 S·cm²·mol⁻¹ at 25 °C.\n\n"
+   f"The net electrical conductivity of dissolved AgCl is obtained by subtracting the solvent background conductivity of pure water: "
+   f"κ_AgCl = κ_sat − κ_w. Because the background conductivity of water (κ_w ≈ 0.05 μS/cm) is comparable in magnitude to the total signal "
+   f"(κ_sat ≈ 1.89 μS/cm), rigorous subtraction is essential to avoid systematic errors in s and K_sp.\n\n"
+   f"The dissolution of silver chloride is an endothermic process (ΔH°_sol = +65.50 kJ·mol⁻¹). Breaking the stable rocksalt crystal lattice "
+   f"requires substantial energy (lattice enthalpy ΔH_latt = +916 kJ/mol), which outweighs the exothermic hydration enthalpies of silver and chloride "
+   f"ions (ΔH_hyd = -850 kJ/mol). In accordance with Le Chatelier's principle, elevating the temperature shifts the equilibrium toward dissolution. "
+   f"Between 20 °C and 45 °C, molar solubility triples from 10.62 μM to 30.53 μM, while K_sp increases by an astounding 726% (from 1.128×10⁻¹⁰ M² "
+   f"to 9.321×10⁻¹⁰ M²). In the van 't Hoff representation, this massive temperature sensitivity generates an empirical slope m = {slope_val:.4f} K, "
+   f"yielding an experimental enthalpy of dissolution ΔH°_sol = {dH_val:.2f} kJ·mol⁻¹ differing by only {percent:.3f}% from the certified "
+   f"literature benchmark ({reference:.2f} kJ·mol⁻¹). These results provide conclusive experimental proof of electrolyte dissolution thermodynamics."
+  )
+
+  conclusion=(
+   f"The conductometric investigation of saturated silver chloride solutions across the temperature range 20.0 °C to 45.0 °C has rigorously established: "
+   f"(1) strict conformity of the temperature-dependent solubility product to the van 't Hoff equation (R² = {r2_val:.6f}); "
+   f"(2) an experimental standard enthalpy of dissolution ΔH°_sol = {dH_val:.2f} ± {se:.2f} kJ·mol⁻¹, differing by only {percent:.3f}% from the certified "
+   f"thermodynamic benchmark of {reference:.2f} kJ·mol⁻¹; "
+   f"(3) an experimental solubility product at 25.00 °C of K_sp = 1.771 × 10⁻¹⁰ M² (pK_sp = 9.75), confirming the validity of the infinite-dilution "
+   f"Kohlrausch conductivity approximation; "
+   f"and (4) the operational necessity of solvent background subtraction and amber-shielded light protection for high-precision conductometric metrology. "
+   f"These findings establish the exceptional accuracy of conductometry for evaluating sparingly soluble salt thermodynamics."
+  )
+
   return abstract, graph_choice, discussion, conclusion
  elif slug=='debye-huckel-onsager-strong-electrolytes':
   slope_val=f['m']
