@@ -81,6 +81,18 @@ function update(){
   $('apparatusDiagram').innerHTML=drawEnzymeKineticsBenchView(p,rawVal);
   return;
  }
+ if(cfg.slug==='heterogeneous-catalysis-langmuir-hinshelwood'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawLangmuirCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawLangmuirSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawLangmuirBenchView(p,rawVal);
+  return;
+ }
  if(cfg.slug==='homogeneous-catalysis-hydrogen-peroxide-decomposition'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawPeroxideCompareView(p,rawVal);
@@ -138,6 +150,13 @@ function update(){
   const dA_dt = v0_uM * 0.0185;
   $('liveState').textContent='Photometric trace recorded: v₀ = '+v0_uM.toFixed(2)+' μM/min (dA/dt = '+(dA_dt/1000).toFixed(4)+' AU/min).';
   message('Assay complete: v₀ = '+v0_uM.toFixed(2)+' μM/min (1/v₀ = '+inv_v0.toFixed(2)+' min/mM, 1/[S] = '+inv_s.toFixed(2)+' mM⁻¹). Record in notebook.');
+ }else if(cfg.slug==='heterogeneous-catalysis-langmuir-hinshelwood'){
+  const c_a = p.input;
+  const r0 = raw;
+  const inv_ca = 1.0 / c_a;
+  const inv_r0 = 1.0 / r0;
+  $('liveState').textContent='Catalytic slurry active: [A] = '+c_a.toFixed(1)+' mM, r₀ = '+r0.toFixed(4)+' mM/min.';
+  message('Slurry rate recorded: r₀ = '+r0.toFixed(4)+' mM/min (1/r₀ = '+inv_r0.toFixed(4)+' min/mM, 1/[A] = '+inv_ca.toFixed(4)+' mM⁻¹). Record in notebook.');
  }else if(cfg.slug==='homogeneous-catalysis-hydrogen-peroxide-decomposition'){
   const c_ki = p.input;
   const k_obs = raw;
@@ -9978,5 +9997,188 @@ function drawPeroxideSandboxView(p, rawVal){
  svg += '<text x="'+midX+'" y="'+(midY+45)+'" text-anchor="middle" fill="#4ade80" font-size="7">Catalytic Regeneration Loop: [I⁻]_net = constant</text>';
 
  svg += text(360, 312, 'Steady-State Rate Law: d[IO⁻]/dt = 0 ⟹ −d[H₂O₂]/dt = 2k₁[H₂O₂][I⁻] = k_cat[H₂O₂][I⁻].', '#789c80', 8.5);
+ return svg;
+}
+
+
+// ======================================================================
+// LAB 29: HETEROGENEOUS CATALYSIS (LANGMUIR-HINSHELWOOD SURFACE KINETICS)
+// ======================================================================
+function drawLangmuirBenchView(p, rawVal){
+ const c_a = p.input;
+ const raw = measurement ? measurement.raw : (busy ? rawVal * 0.8 : (rawVal || 1.2500));
+ const r0 = raw;
+ const theta = (0.0400 * c_a) / (1.0 + 0.0400 * c_a);
+ const inv_ca = (1.0 / c_a).toFixed(4);
+ const inv_r0 = (1.0 / r0).toFixed(4);
+
+ let svg = header('Heterogeneous Slurry Reactor Bench (Pt/Al₂O₃ Nanoparticles)', 'Liquid-Solid Catalytic Interface & Gas-Volumetric Rate Telemetry');
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // Left: Slurry Reactor with Overhead Stirrer (x: 35, y: 60, w: 320, h: 225)
+ const sX = 35, sY = 60, sW = 320, sH = 225;
+ svg += '<rect x="'+sX+'" y="'+sY+'" width="'+sW+'" height="'+sH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(sX+8)+'" y="'+(sY+8)+'" width="'+(sW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(sX+sW/2)+'" y="'+(sY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">JACKETED SLURRY REACTOR (900 RPM, 298.15 K)</text>';
+
+ // Overhead Stirrer Motor
+ svg += '<rect x="'+(sX+sW/2-25)+'" y="'+(sY+35)+'" width="50" height="30" rx="3" fill="#1e293b" stroke="#334155"/>';
+ svg += '<circle cx="'+(sX+sW/2)+'" cy="'+(sY+50)+'" r="6" fill="#22c55e"/>';
+ svg += '<text x="'+(sX+sW/2)+'" y="'+(sY+74)+'" text-anchor="middle" fill="#94a3b8" font-size="6">Overhead Agitator 900 RPM</text>';
+
+ // Stirrer Shaft down to impeller
+ svg += '<line x1="'+(sX+sW/2)+'" y1="'+(sY+65)+'" x2="'+(sX+sW/2)+'" y2="'+(sY+160)+'" stroke="#94a3b8" stroke-width="3"/>';
+ svg += '<polygon points="'+(sX+sW/2-18)+','+(sY+160)+' '+(sX+sW/2+18)+','+(sY+160)+' '+(sX+sW/2)+','+(sY+152)+'" fill="#cbd5e1"/>';
+
+ // Glass Jacketed Reactor Vessel
+ const rctX = sX + 75, rctY = sY + 80, rctW = 170, rctH = 105;
+ svg += '<rect x="'+rctX+'" y="'+rctY+'" width="'+rctW+'" height="'+rctH+'" rx="8" fill="#0284c7" fill-opacity="0.1" stroke="#38bdf8" stroke-width="1.5"/>';
+
+ // Slurry suspension (grey-tinted fluid with floating catalyst particles)
+ svg += '<rect x="'+(rctX+5)+'" y="'+(rctY+30)+'" width="'+(rctW-10)+'" height="'+(rctH-35)+'" rx="4" fill="#334155" fill-opacity="0.35"/>';
+
+ // Pt/Al2O3 Catalyst particles in turbulent suspension
+ for(let i = 0; i < 22; i++){
+  const px = rctX + 15 + (i * 19) % (rctW - 30);
+  const py = rctY + 38 + (i * 13) % (rctH - 45);
+  svg += '<circle cx="'+px+'" cy="'+py+'" r="2.2" fill="#64748b" stroke="#0f172a" stroke-width="0.8"/>';
+ }
+
+ // Evolving gas bubbles
+ for(let b = 0; b < 10; b++){
+  const bx = rctX + 25 + (b * 27) % (rctW - 50);
+  const by = rctY + 85 - (b * 6) % 45;
+  svg += '<circle cx="'+bx+'" cy="'+by+'" r="2" fill="#ffffff" fill-opacity="0.75"/>';
+ }
+
+ // Bottom annotation
+ svg += '<rect x="'+(sX+20)+'" y="'+(sY+195)+'" width="280" height="22" rx="3" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(sX+30)+'" y="'+(sY+210)+'" fill="#94a3b8" font-size="7">Catalyst: <tspan fill="#38bdf8" font-weight="bold">50.0 mg Pt/Al₂O₃</tspan> | Agitation: <tspan fill="#4ade80" font-weight="bold">900 RPM (film-free)</tspan></text>';
+
+ // Right: Telemetry & Surface Adsorption State (x: 365, y: 60, w: 320, h: 225)
+ const tX = 365, tY = 60, tW = 320, tH = 225;
+ svg += '<rect x="'+tX+'" y="'+tY+'" width="'+tW+'" height="'+tH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(tX+8)+'" y="'+(tY+8)+'" width="'+(tW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(tX+tW/2)+'" y="'+(tY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">SURFACE RATE & COVERAGE TELEMETRY</text>';
+
+ // Initial Rate Display Card
+ svg += '<rect x="'+(tX+25)+'" y="'+(tY+40)+'" width="270" height="60" rx="6" fill="#051009" stroke="#38bdf8" stroke-width="1.2"/>';
+ svg += '<text x="'+(tX+160)+'" y="'+(tY+65)+'" text-anchor="middle" fill="#38bdf8" font-family="monospace" font-size="18" font-weight="bold">'+r0.toFixed(4)+' mM/min</text>';
+ svg += '<text x="'+(tX+160)+'" y="'+(tY+85)+'" text-anchor="middle" fill="#94a3b8" font-size="7">INITIAL SURFACE TURNOVER RATE (r₀)</text>';
+
+ // Kinetic Coordinates Grid
+ svg += '<rect x="'+(tX+25)+'" y="'+(tY+110)+'" width="270" height="95" rx="4" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(tX+35)+'" y="'+(tY+130)+'" fill="#94a3b8" font-size="7.5">Substrate Concentration [A]: <tspan fill="#facc15" font-weight="bold">'+c_a.toFixed(1)+' mM</tspan></text>';
+ svg += '<text x="'+(tX+35)+'" y="'+(tY+148)+'" fill="#94a3b8" font-size="7.5">Langmuir Surface Coverage θ_A: <tspan fill="#4ade80" font-weight="bold">'+(theta*100).toFixed(1)+'%</tspan></text>';
+ svg += '<text x="'+(tX+35)+'" y="'+(tY+166)+'" fill="#94a3b8" font-size="7.5">Reciprocal Concentration 1/[A]: <tspan fill="#38bdf8" font-weight="bold">'+inv_ca+' mM⁻¹</tspan></text>';
+ svg += '<text x="'+(tX+35)+'" y="'+(tY+184)+'" fill="#94a3b8" font-size="7.5">Reciprocal Initial Rate 1/r₀: <tspan fill="#86efac" font-weight="bold">'+inv_r0+' min·mM⁻¹</tspan></text>';
+
+ svg += text(360, 312, 'Langmuir-Hinshelwood Invariant: High [A] saturates sites (θ_A → 1.0), yielding k_r = 2.500 mM·min⁻¹.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawLangmuirCompareView(p, rawVal){
+ let svg = header('Langmuir-Hinshelwood Double-Reciprocal Linearization', '1/r₀ vs 1/[A] Multi-Point Least-Squares Regression');
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ const cX = 35, cY = 60, cW = 650, cH = 225;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+
+ const pX = cX + 60, pY = cY + 30, pW = 520, pH = 145;
+ svg += '<line x1="'+pX+'" y1="'+(pY+pH)+'" x2="'+(pX+pW)+'" y2="'+(pY+pH)+'" stroke="#334155" stroke-width="1.2"/>';
+ svg += '<line x1="'+pX+'" y1="'+pY+'" x2="'+pX+'" y2="'+(pY+pH)+'" stroke="#334155" stroke-width="1.2"/>';
+
+ // Linear fit line: 1/r0 = 10.0 * (1/[A]) + 0.400
+ // x from 0 to 0.12 mM^-1. At x = 0: y = 0.400. At x = 0.10: y = 1.400
+ const y0_px = (pY + pH) - (0.400 / 1.60) * pH;
+ const yMax_px = (pY + pH) - (1.400 / 1.60) * pH;
+ const xMax_px = pX + (0.100 / 0.120) * pW;
+
+ svg += '<line x1="'+pX+'" y1="'+y0_px+'" x2="'+xMax_px+'" y2="'+yMax_px+'" stroke="#38bdf8" stroke-width="2.5"/>';
+
+ // Experimental data points
+ const pts = [
+  {ca: 10.0, inv_ca: 0.1000, inv_r0: 1.4008},
+  {ca: 15.0, inv_ca: 0.0667, inv_r0: 1.0662},
+  {ca: 25.0, inv_ca: 0.0400, inv_r0: 0.8000},
+  {ca: 40.0, inv_ca: 0.0250, inv_r0: 0.6497},
+  {ca: 60.0, inv_ca: 0.0167, inv_r0: 0.5670},
+  {ca: 100.0, inv_ca: 0.0100, inv_r0: 0.5001}
+ ];
+
+ pts.forEach(pt => {
+  const px = pX + (pt.inv_ca / 0.120) * pW;
+  const py = (pY + pH) - (pt.inv_r0 / 1.60) * pH;
+  svg += '<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="4" fill="#facc15" stroke="#ef4444" stroke-width="1.2"/>';
+ });
+
+ // Intercept callout: 1/k_r = 0.400 => k_r = 2.500
+ svg += '<circle cx="'+pX+'" cy="'+y0_px+'" r="4.5" fill="#ef4444"/>';
+ svg += '<text x="'+(pX+15)+'" y="'+(y0_px-8)+'" fill="#ef4444" font-size="7" font-weight="bold">Y-Intercept b = 1/k_r = 0.400 min·mM⁻¹ (k_r = 2.500 mM/min)</text>';
+
+ svg += '<text x="'+(pX+pW/2)+'" y="'+(pY+pH+18)+'" text-anchor="middle" fill="#94a3b8" font-size="7">Reciprocal Substrate Concentration 1/[A] (mM⁻¹)</text>';
+ svg += '<text x="'+(pX-15)+'" y="'+(pY+pH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7" transform="rotate(-90 '+(pX-15)+' '+(pY+pH/2)+')">1/r₀ (min·mM⁻¹)</text>';
+
+ svg += text(360, 312, 'Regression Parameters: Slope m = 10.00 min, Intercept b = 0.400 min·mM⁻¹ ⟹ K_A = 0.0400 mM⁻¹, k_r = 2.500 mM/min.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawLangmuirSandboxView(p, rawVal){
+ let svg = header('Langmuir Chemisorption Monolayer & Active Site Saturation Sandbox', 'Fractional Coverage θ_A vs Substrate Concentration [A]');
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ const cX = 35, cY = 60, cW = 650, cH = 225;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+
+ // Left side: Molecular Active Site Surface Grid (x: 45, y: 75, w: 280, h: 180)
+ const mX = cX + 20, mY = cY + 25, mW = 270, mH = 175;
+ svg += '<rect x="'+mX+'" y="'+mY+'" width="'+mW+'" height="'+mH+'" rx="6" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(mX+mW/2)+'" y="'+(mY+18)+'" text-anchor="middle" fill="#86efac" font-size="7.5" font-weight="bold">PLATINUM NANOCRYSTALLITE LATTICE SITES</text>';
+
+ // Platinum lattice atom circles
+ for(let row = 0; row < 3; row++){
+  for(let col = 0; col < 6; col++){
+   const ax = mX + 35 + col * 40;
+   const ay = mY + 120 + row * 22;
+   svg += '<circle cx="'+ax+'" cy="'+ay+'" r="10" fill="#475569" stroke="#94a3b8" stroke-width="1.2"/>';
+   svg += '<text x="'+ax+'" y="'+(ay+3)+'" text-anchor="middle" fill="#cbd5e1" font-size="6" font-weight="bold">Pt</text>';
+
+   // Adsorbed molecule on top row
+   if((col + row) % 2 === 0){
+    svg += '<circle cx="'+ax+'" cy="'+(ay-16)+'" r="6" fill="#facc15" stroke="#ef4444" stroke-width="1"/>';
+    svg += '<line x1="'+ax+'" y1="'+(ay-10)+'" x2="'+ax+'" y2="'+(ay-16)+'" stroke="#ef4444" stroke-width="1.5"/>';
+   }
+  }
+ }
+ svg += '<text x="'+(mX+mW/2)+'" y="'+(mY+50)+'" text-anchor="middle" fill="#facc15" font-size="6.5">Chemisorbed Substrate (AS)</text>';
+ svg += '<text x="'+(mX+mW/2)+'" y="'+(mY+65)+'" text-anchor="middle" fill="#94a3b8" font-size="6">Langmuir Site Monolayer Limit: θ_A ≤ 1.0</text>';
+
+ // Right side: Hyperbolic Coverage Saturation Curve (x: 345, y: 75, w: 320, h: 180)
+ const cvX = cX + 310, cvY = cY + 25, cvW = 310, cvH = 175;
+ svg += '<rect x="'+cvX+'" y="'+cvY+'" width="'+cvW+'" height="'+cvH+'" rx="6" fill="#051009" stroke="#162e1e"/>';
+
+ const aX = cvX + 45, aY = cvY + 25, aW = 245, aH = 115;
+ svg += '<line x1="'+aX+'" y1="'+(aY+aH)+'" x2="'+(aX+aW)+'" y2="'+(aY+aH)+'" stroke="#334155" stroke-width="1.2"/>';
+ svg += '<line x1="'+aX+'" y1="'+aY+'" x2="'+aX+'" y2="'+(aY+aH)+'" stroke="#334155" stroke-width="1.2"/>';
+
+ // Monolayer limit asymptote (theta = 1.0)
+ svg += '<line x1="'+aX+'" y1="'+aY+'" x2="'+(aX+aW)+'" y2="'+aY+'" stroke="#ef4444" stroke-width="1" stroke-dasharray="3,3"/>';
+ svg += '<text x="'+(aX+aW-10)+'" y="'+(aY-4)+'" text-anchor="end" fill="#ef4444" font-size="6.5">Monolayer Limit (θ_A = 1.0)</text>';
+
+ // Hyperbolic curve: theta = 0.04 * A / (1 + 0.04 * A)
+ let dCov = 'M ' + aX + ' ' + (aY + aH);
+ for(let step = 1; step <= 30; step++){
+  const ca = (step / 30.0) * 120.0;
+  const th = (0.0400 * ca) / (1.0 + 0.0400 * ca);
+  const px = aX + (ca / 120.0) * aW;
+  const py = (aY + aH) - th * aH;
+  dCov += ' L ' + px.toFixed(1) + ' ' + py.toFixed(1);
+ }
+ svg += '<path d="'+dCov+'" fill="none" stroke="#4ade80" stroke-width="2.2"/>';
+
+ svg += '<text x="'+(aX+aW/2)+'" y="'+(aY+aH+16)+'" text-anchor="middle" fill="#94a3b8" font-size="7">Substrate Concentration [A] (mM)</text>';
+ svg += '<text x="'+(aX-12)+'" y="'+(aY+aH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7" transform="rotate(-90 '+(aX-12)+' '+(aY+aH/2)+')">θ_A</text>';
+
+ svg += text(360, 312, 'Surface Equilibrium: θ_A = K_A[A]/(1 + K_A[A]). As [A] ⟶ ∞, θ_A ⟶ 1.0 and r ⟶ k_r.', '#789c80', 8.5);
  return svg;
 }

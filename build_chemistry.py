@@ -159,6 +159,13 @@ def observation(c,value):
   v0_mM=raw / 1000.0
   y=rnd(1.0 / v0_mM, 2)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='heterogeneous-catalysis-langmuir-hinshelwood':
+  c_a=float(value)
+  table={10.0:0.7139, 15.0:0.9379, 25.0:1.2500, 40.0:1.5392, 60.0:1.7638, 100.0:1.9997}
+  raw=table.get(round(c_a, 1), round((2.500 * 0.0400 * c_a) / (1.0 + 0.0400 * c_a), 4))
+  x=rnd(1.0 / c_a, 4)
+  y=rnd(1.0 / raw, 4)
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='homogeneous-catalysis-hydrogen-peroxide-decomposition':
   c_ki=float(value)
   table={0.020:0.0720, 0.040:0.1441, 0.060:0.2160, 0.080:0.2879, 0.100:0.3598, 0.120:0.4319}
@@ -391,6 +398,11 @@ def estimate(c,f):
   ref=0.500
   se=abs(f.get('slopeSE', 0.05) / b) if b > 0 else 0.002
   return KM, se, ref
+ elif slug=='heterogeneous-catalysis-langmuir-hinshelwood':
+  intercept=f['b']
+  k_r=1.0 / intercept
+  se=abs(f['slopeSE'] / (intercept * intercept))
+  return k_r, se, 2.500
  elif slug=='homogeneous-catalysis-hydrogen-peroxide-decomposition':
   k_cat=f['m']
   se=f['slopeSE']
@@ -509,6 +521,10 @@ def formula(c,f):
   Vmax=1.0 / b
   KM=m / b
   return f"Slope K_M/V_max = {fmt(m,4)} min; Intercept 1/V_max = {fmt(b,4)} min·mM⁻¹ (V_max = {fmt(Vmax*1000.0,2)} μM/min, K_M = {fmt(KM,4)} mM)"
+ elif slug=='heterogeneous-catalysis-langmuir-hinshelwood':
+  k_r=1.0 / f['b']
+  K_A=f['b'] / f['m']
+  return f"Max Surface Rate k_r = {fmt(k_r,3)} mM·min⁻¹; Adsorption Constant K_A = {fmt(K_A,4)} mM⁻¹ ({fmt(K_A*1000.0,1)} M⁻¹); Slope = {fmt(f['m'],3)} min; Intercept = {fmt(f['b'],4)} min·mM⁻¹"
  elif slug=='homogeneous-catalysis-hydrogen-peroxide-decomposition':
   k_cat=f['m']
   return f"Catalytic Rate Constant k_cat = {fmt(k_cat,4)} L·mol⁻¹·min⁻¹; Uncatalyzed Intercept k_uncat = {fmt(f['b'],5)} min⁻¹; k_obs = {fmt(k_cat,4)}·[I⁻] + {fmt(f['b'],5)}"
@@ -895,6 +911,26 @@ def worked(c,row):
    f"   Linearized equation: 1/v₀ = (K_M / V_max) · (1/[S]) + 1/V_max.\n"
    f"   Slope m = K_M / V_max = 12.50 min; Y-intercept b = 1/V_max = 25.00 min·mM⁻¹.\n"
    f"   Extracted parameters: V_max = 1/b = 0.0400 mM/min (40.0 μM/min); K_M = m / b = 0.500 mM with R² = 1.00000."
+  )
+ elif slug=='heterogeneous-catalysis-langmuir-hinshelwood':
+  c_a=row['input']
+  raw=row['raw']
+  x=row['x']
+  y=row['y']
+  theta=(0.0400 * c_a) / (1.0 + 0.0400 * c_a)
+  return (
+   f"Representative calculation for heterogeneous surface catalysis run at substrate concentration [A] = {c_a:.1f} mM:\n"
+   f"1. Heterogeneous Slurry Reaction System (50.0 mg Pt/Al₂O₃ catalyst, 900 RPM overhead agitation, T = 298.15 K):\n"
+   f"   Initial decomposition rate logged via manometric gas evolution telemetry: r₀ = {raw:.4f} mM·min⁻¹.\n"
+   f"   Calculated fractional surface coverage: θ_A = K_A·[A] / (1 + K_A·[A]) = {theta*100.0:.1f}%.\n"
+   f"2. Langmuir-Hinshelwood Double-Reciprocal Coordinates:\n"
+   f"   Abscissa: x = 1/[A] = 1 / {c_a:.1f} mM = {x:.4f} mM⁻¹.\n"
+   f"   Ordinate: y = 1/r₀ = 1 / {raw:.4f} mM·min⁻¹ = {y:.4f} min·mM⁻¹.\n"
+   f"3. Linear Least-Squares Kinetic Parameter Extraction:\n"
+   f"   Linearized surface model: 1/r₀ = (1 / (k_r · K_A)) · (1/[A]) + 1 / k_r.\n"
+   f"   Multi-point regression yields slope m = 10.005 min and Y-intercept b = 0.3998 min·mM⁻¹ (R² = 1.00000).\n"
+   f"   Intrinsic maximum surface rate: k_r = 1 / b = 1 / 0.3998 = 2.501 mM·min⁻¹.\n"
+   f"   Surface adsorption equilibrium constant: K_A = b / m = 0.3998 / 10.005 = 0.0400 mM⁻¹ (40.0 L·mol⁻¹)."
   )
  elif slug=='homogeneous-catalysis-hydrogen-peroxide-decomposition':
   c_ki=row['input']
@@ -1489,6 +1525,29 @@ def uncertainty_text(c):
    "covariance matrix through the regression parameters gives u(K_M) / K_M = √[ (u(m)/m)² + (u(b)/b)² - 2·cov(m,b)/(m·b) ]. "
    "The high negative correlation between slope and intercept (r ≈ -0.88) substantially attenuates overall uncertainty, yielding an "
    "expanded uncertainty U(K_M) = 0.015 mM (coverage factor k = 2, 95% confidence level)."
+  )
+ elif slug=='heterogeneous-catalysis-langmuir-hinshelwood':
+  return (
+   "In the heterogeneous kinetic investigation of catalytic substrate decomposition over mesoporous supported platinum "
+   "nanoparticles (5.0 wt% Pt/Al₂O₃), metrological uncertainties and transport phenomena are rigorously evaluated across "
+   "hydrodynamic mass transfer, intraparticle pore diffusion, surface chemisorption, and titrimetric telemetry: "
+   "(1) Hydrodynamic External Mass-Transfer (Mears Criterion): External boundary layer film diffusion resistance around "
+   "suspended catalyst particles is assessed using the Mears criterion: C_M = (r_obs · ρ_p · R_p · n) / (k_c · C_bulk) < 0.15. "
+   "At an agitation rate of 900 RPM using a four-blade PTFE turbine, the liquid-solid mass-transfer coefficient k_c exceeds "
+   "1.8 × 10⁻² cm/s, yielding C_M = 0.022 ≪ 0.15. This confirms that interphase concentration gradients are negligible (< 0.25%) "
+   "and that measured rates reflect intrinsic chemical kinetics rather than mass-transfer limitations. "
+   "(2) Intraparticle Knudsen Diffusion Resistance (Weisz-Prater Modulus): Intraparticle pore diffusion within catalyst "
+   "crystallites is evaluated via the Weisz-Prater modulus: Φ_WP = (r_obs · ρ_p · R_p²) / (D_eff · C_surface) < 1.0. Given a mean catalyst "
+   "particle radius R_p = 15 μm and effective diffusivity D_eff ≈ 8.5 × 10⁻⁶ cm²/s, Φ_WP = 0.045 ≪ 1.0 across all concentrations. "
+   "The internal catalyst effectiveness factor η is thus greater than 0.995, verifying that inner active sites participate with full efficiency. "
+   "(3) Catalyst Mass and Active Metal Dispersion Precision: The solid catalyst mass m_cat = 50.0 ± 0.1 mg is weighed on a certified "
+   "micro-balance (u(m) = 0.1 mg, relative uncertainty 0.20%). Metal dispersion measured independently by pulsed carbon monoxide "
+   "chemisorption is D_Pt = 42.5 ± 0.8%, ensuring invariant active site density across serial runs. "
+   "(4) Thermostatic Temperature Stability: Heterogeneous chemisorption equilibria (K_A) are inherently exothermic (ΔH°_ads ≈ −45 kJ/mol). "
+   "The circulating thermostatic water jacket maintains T = 298.15 ± 0.05 K, restricting temperature-induced shifts in K_A to < 0.30%. "
+   "(5) Double-Reciprocal Regression Propagation: Linear regression of 1/r₀ against 1/[A] yields slope m = 10.005 ± 0.025 min and intercept "
+   "b = 0.3998 ± 0.0012 min·mM⁻¹. Propagating uncertainties through the non-linear inversion k_r = 1/b gives u(k_r) = u(b)/b² = 0.0075 mM·min⁻¹, "
+   "yielding an expanded uncertainty U(k_r) = 0.015 mM·min⁻¹ (coverage factor k = 2, 95% confidence level)."
   )
  elif slug=='homogeneous-catalysis-hydrogen-peroxide-decomposition':
   return (
@@ -2556,6 +2615,85 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"reversible enzyme inhibition mechanisms."
   )
   
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='heterogeneous-catalysis-langmuir-hinshelwood':
+  intercept_val=f['b']
+  kr_val=1.0 / intercept_val
+  KA_val=intercept_val / f['m']
+  r2_val=f['r2']
+  
+  abstract=(
+   f"The heterogeneous surface reaction kinetics and adsorption thermodynamics of catalytic substrate decomposition over supported "
+   f"platinum nanoparticles (5.0 wt% Pt/Al₂O₃) were quantitatively investigated at 298.15 ± 0.05 K (25.00 °C) in an isothermal "
+   f"double-walled slurry reactor operated at 900 RPM under atmospheric pressure (P_atm = 1.000 atm). Six kinetic trials were executed "
+   f"across an initial substrate concentration range from [A] = {rows[0]['input']:.1f} mM to {rows[-1]['input']:.1f} mM. Real-time "
+   f"logging of gas-evolution telemetry established initial surface turnover rates r₀ that scaled nonlinearly from {rows[0]['raw']:.4f} "
+   f"mM·min⁻¹ at [A] = {rows[0]['input']:.1f} mM to {rows[-1]['raw']:.4f} mM·min⁻¹ at [A] = {rows[-1]['input']:.1f} mM, exhibiting "
+   f"classical hyperbolic saturation characteristic of monolayer site chemisorption. The Langmuir-Hinshelwood double-reciprocal "
+   f"transformation (1/r₀ versus 1/[A]) demonstrated near-perfect linearity (R² = {r2_val:.5f}). The extracted maximum surface reaction "
+   f"rate constant was k_r = {kr_val:.3f} ± {abs(f['slopeSE']/(intercept_val**2)):.3f} mM·min⁻¹, matching the certified IUPAC benchmark "
+   f"({reference:.3f} mM·min⁻¹) with a percentage difference of only {percent:.3f}%. The surface adsorption equilibrium constant was evaluated "
+   f"as K_A = {KA_val:.4f} mM⁻¹ ({KA_val*1000.0:.1f} L·mol⁻¹), corresponding to a standard Gibbs free energy of chemisorption "
+   f"ΔG°_ads = −20.55 kJ·mol⁻¹. These findings conclusively confirm the validity of the Langmuir-Hinshelwood unimolecular surface decomposition "
+   f"model in diffusion-free heterogeneous catalysis."
+  )
+
+  graph_choice=(
+   f"The primary analytical graphic presents the Langmuir-Hinshelwood double-reciprocal plot: the reciprocal initial surface decomposition "
+   f"rate y = 1/r₀ (in min·mM⁻¹) plotted against the reciprocal substrate concentration x = 1/[A] (in mM⁻¹). In accordance with the "
+   f"linearized Langmuir-Hinshelwood equation 1/r₀ = [1 / (k_r · K_A)] · (1/[A]) + 1/k_r, the data define a strict linear trajectory "
+   f"(R² = {r2_val:.5f}). The Y-intercept b = {intercept_val:.4f} min·mM⁻¹ directly defines the reciprocal maximum surface turnover "
+   f"rate (k_r = 1/b = {kr_val:.3f} mM·min⁻¹), while the slope m = {f['m']:.3f} min provides the ratio 1/(k_r · K_A), isolating the "
+   f"adsorption equilibrium constant K_A = b/m = {KA_val:.4f} mM⁻¹. A secondary comparative graphic illustrates the non-linear hyperbolic "
+   f"Michaelis-Langmuir rate saturation curve r₀ versus [A] alongside the fractional surface coverage profile θ_A = K_A[A]/(1 + K_A[A]), "
+   f"visually demarcating the transition from apparent first-order kinetics at low concentrations to zero-order site saturation as θ_A → 1.0."
+  )
+
+  discussion=(
+   f"Heterogeneous catalytic reactions mediated by solid transition-metal crystallites represent fundamentally multi-step interfacial "
+   f"phenomena governed by the interplay of physical adsorption equilibria and microscopic surface bond activation. The classical "
+   f"Langmuir-Hinshelwood formulation rests on three core physical postulates: (1) all active surface sites on the metal crystallites "
+   f"(Pt(111), Pt(100), and defective edge/step sites) possess energetically uniform chemisorption potential; (2) adsorption is strictly "
+   f"confined to a monomolecular layer, with each surface site capable of binding at most one substrate molecule; and (3) lateral "
+   f"interactions between adjacent adsorbed molecules are negligible within the operational coverage regime.\n\n"
+   f"Under these assumptions, the steady-state chemisorption equilibrium between dissolved substrate molecules A(aq) and vacant surface "
+   f"sites S on the supported platinum nanoparticles is governed by dynamic equivalence between the rate of chemisorption and the rate "
+   f"of thermal desorption:\n"
+   f"  r_ads = k_ads · [A] · (1 − θ_A) = k_des · θ_A = r_des\n"
+   f"where θ_A denotes the fractional surface coverage of the adsorbed intermediate (AS) and (1 − θ_A) represents the fraction of unoccupied "
+   f"catalytic sites. Solving for the equilibrium coverage yields the celebrated Langmuir adsorption isotherm:\n"
+   f"  θ_A = (K_A · [A]) / (1 + K_A · [A])\n"
+   f"where K_A = k_ads / k_des = exp(−ΔG°_ads / RT) is the adsorption equilibrium constant. The rate-determining step in the catalytic cycle "
+   f"is the chemical decomposition of the chemisorbed intermediate on the metal surface: AS ⟶ Products + S (surface rate constant k_r). "
+   f"The macroscopic reaction rate r is therefore directly proportional to surface coverage:\n"
+   f"  r = k_r · θ_A = (k_r · K_A · [A]) / (1 + K_A · [A])\n\n"
+   f"The physical consequences of this rate expression are beautifully illustrated across the experimental concentration range. At the "
+   f"lowest concentration tested ([A] = {rows[0]['input']:.1f} mM), the product K_A [A] = 0.0400 × 10.0 = 0.40 is small relative to unity, "
+   f"yielding a fractional coverage of only θ_A = 28.6%. Over 71% of active surface sites remain vacant, and the rate exhibits significant "
+   f"concentration dependence (r₀ = {rows[0]['raw']:.4f} mM·min⁻¹). Conversely, at the highest concentration ([A] = {rows[-1]['input']:.1f} mM), "
+   f"K_A [A] = 0.0400 × 100.0 = 4.00, pushing surface coverage to θ_A = 80.0%. As [A] increases further toward asymptotic saturation, the "
+   f"denominator becomes dominated by K_A [A], causing the rate to plateau toward the site-saturated limit r → k_r = {kr_val:.3f} mM·min⁻¹.\n\n"
+   f"Linearization of the experimental data in double-reciprocal space yields an empirical slope m = {f['m']:.3f} min and intercept "
+   f"b = {intercept_val:.4f} min·mM⁻¹ with an extraordinary correlation coefficient of R² = {r2_val:.5f}. The extracted maximum surface "
+   f"rate constant k_r = {kr_val:.3f} mM·min⁻¹ deviates by only {percent:.3f}% from the certified physical standard ({reference:.3f} mM·min⁻¹). "
+   f"Dividing k_r by the total quantity of surface platinum atoms (determined from catalyst mass m_cat = 50.0 mg and dispersion D_Pt = 42.5%) "
+   f"yields a turnover frequency of TOF = 0.46 s⁻¹ at 298.15 K, typical for noble-metal catalyzed bond activation. Furthermore, the adsorption "
+   f"equilibrium constant K_A = {KA_val:.4f} mM⁻¹ ({KA_val*1000.0:.1f} M⁻¹) corresponds to an adsorption free energy of "
+   f"ΔG°_ads = −RT ln(K_A) = −(8.3145 J·mol⁻¹·K⁻¹)(298.15 K) ln(40.0) = −20.55 kJ·mol⁻¹, consistent with moderately strong reversible "
+   f"coordinative chemisorption of substrate molecules onto electrophilic surface platinum sites."
+  )
+
+  conclusion=(
+   f"The heterogeneous catalytic investigation of substrate decomposition over supported platinum nanoparticles has established: "
+   f"(1) strict conformity of the initial surface reaction kinetics to the Langmuir-Hinshelwood model across the concentration range 10.0 mM to 100.0 mM; "
+   f"(2) an experimental maximum surface rate constant k_r = {kr_val:.3f} ± {abs(f['slopeSE']/(intercept_val**2)):.3f} mM·min⁻¹, "
+   f"differing by only {percent:.3f}% from the established benchmark of {reference:.3f} mM·min⁻¹; "
+   f"(3) a chemisorption equilibrium constant K_A = {KA_val:.4f} mM⁻¹ (40.0 L·mol⁻¹) corresponding to ΔG°_ads = −20.55 kJ·mol⁻¹; "
+   f"and (4) complete absence of mass-transfer artifacts (Mears criterion < 0.03 at 900 RPM). "
+   f"These results rigorously validate the Langmuir active-site saturation paradigm and provide an authoritative pedagogical model "
+   f"for solid-state heterogeneous reaction engineering."
+  )
+
   return abstract, graph_choice, discussion, conclusion
  elif slug=='homogeneous-catalysis-hydrogen-peroxide-decomposition':
   slope_val=f['m']

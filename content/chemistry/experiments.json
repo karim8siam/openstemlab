@@ -5967,5 +5967,221 @@
    "Record the ambient barometric pressure from a calibrated digital barometer and correct for water vapor pressure at the water jacket temperature."
   ],
   "limitations": "The gas-volumetric technique is subject to specific physical constraints: (1) Initial gas dissolution lag: At the very beginning of a run, a small fraction of evolved oxygen dissolves in the liquid before saturation is reached, causing a slight induction lag (~10-15 s) that can be mitigated by pre-saturating the water with pure oxygen. (2) Hydrostatic head and tubing elasticity: Inelastic Tygon tubing and rapid leveling bulb adjustments are required to prevent pressure transients. (3) Heat of reaction: The decomposition of H\u2082O\u2082 is exothermic (\u0394H\u00b0 = \u221298.05 kJ/mol H\u2082O\u2082); at high substrate concentrations, internal thermal spikes could accelerate the rate, which is prevented here by using dilute [H\u2082O\u2082]\u2080 = 0.100 M in a circulating water jacket with high thermal heat capacity. (4) pH sensitivity: Hypoiodite undergoes disproportionation at high pH to iodate, requiring neutral to weakly buffered pH conditions."
+ },
+ {
+  "slug": "heterogeneous-catalysis-langmuir-hinshelwood",
+  "title": "Heterogeneous Catalysis: Surface Kinetics and Langmuir-Hinshelwood Mechanism",
+  "shortTitle": "Heterogeneous Surface Catalysis",
+  "subject": "chemistry",
+  "number": 29,
+  "published": true,
+  "min": 10.0,
+  "max": 100.0,
+  "step": 5.0,
+  "initial": 25.0,
+  "inputLabel": "Substrate Concentration [A]",
+  "shortInput": "[A]",
+  "inputUnit": "mM",
+  "inputDecimals": 1,
+  "rawLabel": "Initial Surface Decomposition Rate r\u2080",
+  "rawUnit": "mM\u00b7min\u207b\u00b9",
+  "rawDecimals": 4,
+  "angle": false,
+  "timed": false,
+  "observationLabel": "Reciprocal initial surface rate 1/r\u2080 vs reciprocal substrate concentration 1/[A]",
+  "xAxis": "Reciprocal Substrate Concentration 1/[A] (mM\u207b\u00b9)",
+  "yAxis": "Reciprocal Initial Rate 1/r\u2080 (min\u00b7mM\u207b\u00b9)",
+  "xScale": 1.0,
+  "yScale": 1.0,
+  "xDecimals": 4,
+  "yDecimals": 4,
+  "target": 2.5,
+  "resultUnit": "mM\u00b7min\u207b\u00b9",
+  "resultScale": 1.0,
+  "resultDecimals": 3,
+  "targetName": "k_r",
+  "measureLabel": "Initial Surface Reaction Rate (r\u2080)",
+  "fitEquation": "1/r\u2080 = (1/(k_r\u00b7K_A))\u00b7(1/[A]) + 1/k_r",
+  "gradientUnit": "min",
+  "interceptUnit": "min\u00b7mM\u207b\u00b9",
+  "emptyX": [
+   0.0,
+   0.12
+  ],
+  "emptyY": [
+   0.0,
+   1.6
+  ],
+  "samples": [
+   10.0,
+   15.0,
+   25.0,
+   40.0,
+   60.0,
+   100.0
+  ],
+  "settings": [
+   "Thermostatted Double-Walled Slurry Reactor maintained at T = 298.15 \u00b1 0.05 K (25.00 \u00b0C).",
+   "Certified Mesoporous Supported Platinum Nanoparticle Catalyst (5.0 wt% Pt/Al\u2082O\u2083, specific surface area 185 m\u00b2/g).",
+   "High-Speed Overhead Digital Agitator operating at 900 RPM to suppress external film and boundary-layer diffusion resistance.",
+   "Gas-Volumetric Electronic Mass-Flow / Pressure-Tracking Manometer calibrated at P_atm = 1.000 atm."
+  ],
+  "simModes": [
+   {
+    "id": "bench",
+    "icon": "\u2697\ufe0f",
+    "label": "Slurry Surface Reactor"
+   },
+   {
+    "id": "compare",
+    "icon": "\ud83d\udcca",
+    "label": "Surface Saturation Kinetics"
+   },
+   {
+    "id": "sandbox",
+    "icon": "\ud83d\udd2c",
+    "label": "Langmuir-Hinshelwood Monolayer"
+   }
+  ],
+  "aim": "To investigate the heterogeneous surface reaction kinetics of catalytic substrate decomposition on supported platinum nanoparticles, verify the Langmuir-Hinshelwood adsorption-reaction model, and determine the maximum surface rate constant k_r and adsorption equilibrium constant K_A at 298.15 K.",
+  "modelExtra": "The Langmuir-Hinshelwood (L-H) mechanism describes heterogeneous catalytic surface reactions where reactant molecules first undergo rapid, reversible chemisorption onto active catalytic surface sites (S) to form an adsorbed monolayer intermediate (AS), followed by a rate-determining unimolecular or bimolecular transformation of the adsorbed species on the solid surface: A(aq) + S \u21c4 AS (adsorption equilibrium constant K_A), followed by AS \u27f6 Products + S (surface reaction rate constant k_r). Assuming ideal Langmuir chemisorption\u2014where all surface active sites are energetically uniform, each site binds at most one substrate molecule, and lateral adsorbate-adsorbate interactions are negligible\u2014the fractional surface coverage \u03b8_A at steady-state adsorption equilibrium obeys \u03b8_A = K_A [A] / (1 + K_A [A]). The rate of catalytic turnover r is directly proportional to fractional surface coverage: r = k_r \u00b7 \u03b8_A = (k_r \u00b7 K_A \u00b7 [A]) / (1 + K_A \u00b7 [A]). At low substrate concentrations (K_A [A] \u226a 1), fractional coverage is linear (\u03b8_A \u2248 K_A [A]) and the reaction exhibits apparent first-order kinetics with rate r \u2248 k_r K_A [A]. At high substrate concentrations (K_A [A] \u226b 1), the active catalyst surface reaches monolayer saturation (\u03b8_A \u2192 1) and the reaction collapses to zero-order kinetics independent of substrate concentration: r \u2192 k_r. Linearizing the Langmuir-Hinshelwood hyperbolic rate expression into double-reciprocal coordinates yields: 1/r\u2080 = [1 / (k_r \u00b7 K_A)] \u00b7 (1 / [A]) + 1 / k_r. Plotting 1/r\u2080 versus 1/[A] produces a straight line where the Y-intercept b = 1/k_r yields the maximum surface reaction rate constant k_r = 1/b, and the slope m = 1/(k_r \u00b7 K_A) enables evaluation of the adsorption equilibrium constant K_A = b / m.",
+  "intro": "Heterogeneous catalysis is the central engine of the global chemical manufacturing industry, petroleum refining, energy conversion, and environmental pollution abatement, underpinning pivotal industrial processes such as ammonia synthesis (Haber-Bosch process), sulfur dioxide oxidation (Contact process), and automotive exhaust gas mitigation via three-way catalytic converters. In heterogeneous catalytic systems, the reactant fluid phase (gas or liquid) is physically distinct from the solid-state catalytic matrix, offering profound engineering advantages including effortless catalyst recovery, operational longevity, and continuous reactor throughput. However, solid-fluid interfacial catalysis involves complex microscopic sequences combining external hydrodynamic mass transfer, intraparticle Knudsen diffusion through mesoporous channels, activated chemisorption onto localized crystallographic facet sites, surface chemical rearrangement through strained transition states, and product desorption. The formulation established by Irving Langmuir and Cyril Hinshelwood provides the rigorous theoretical foundation for analyzing these surface-mediated reactions. By examining the initial decomposition rates of a model aqueous substrate over finely dispersed supported platinum nanoparticles across varying initial concentrations, students directly probe the transition between diffusion-free surface adsorption control and active-site saturation, quantitatively separating physical surface adsorption affinity from intrinsic chemical bond-cleavage dynamics.",
+  "apparatus": [
+   {
+    "name": "Jacketed Three-Neck Borosilicate Slurry Reactor (100 mL)",
+    "purpose": "Houses the solid catalyst suspension and liquid reaction mixture surrounded by an outer thermal jacket circulating water from a constant-temperature bath maintained at 298.15 \u00b1 0.05 K."
+   },
+   {
+    "name": "High-Torque Overhead Digital Stirrer with Four-Blade PTFE Turbine",
+    "purpose": "Agitates the solid catalyst slurry at 900 RPM to eliminate stagnant liquid boundary layers around catalyst particles, ensuring reaction rates are purely surface-reaction limited rather than mass-transfer controlled."
+   },
+   {
+    "name": "Mesoporous Supported Platinum Catalyst (5.0 wt% Pt/Al\u2082O\u2083 powder)",
+    "purpose": "Provides highly dispersed active metallic platinum crystallites (mean particle diameter 2.8 nm) supported on high-surface-area gamma-alumina to catalyze substrate decomposition."
+   },
+   {
+    "name": "Digital Mass Flow / Micro-Manometric Gas Evolution Sensor",
+    "purpose": "Measures the instantaneous rate of gaseous product evolution (CO\u2082 and H\u2082 or O\u2082) with high temporal resolution to calculate initial surface decomposition rates r\u2080."
+   },
+   {
+    "name": "Hermetic Septum Port and Microliter Substrate Injection Syringe",
+    "purpose": "Allows instantaneous introduction of concentrated substrate stock solution into the pre-equilibrated catalyst slurry without opening the reactor to the atmosphere."
+   },
+   {
+    "name": "Analytical Electronic Balance and Ultrasonic Catalyst Dispersion Bath",
+    "purpose": "Weighs the solid catalyst mass to \u00b10.1 mg and de-agglomerates particle aggregates in distilled water prior to reactor loading."
+   }
+  ],
+  "procedure": [
+   {
+    "title": "Catalyst Pre-treatment, Slurry Preparation, and Ultrasonic De-agglomeration",
+    "text": "Accurately weigh exactly 50.0 mg of 5.0 wt% Pt/Al\u2082O\u2083 catalyst powder into a clean weighing boat. Transfer quantitatively into the jacketed reactor with 35.0 mL of Milli-Q water. Subject the suspension to 5 minutes of mild ultrasonic agitation to break up agglomerates into a uniform slurry."
+   },
+   {
+    "title": "Thermostatic Bath Equilibrium and Reactor Degassing",
+    "text": "Connect the reactor water jacket to the circulating water bath set at 298.15 K (25.00 \u00b0C). Seal the reactor necks with ground-glass joints and purge the system with inert nitrogen gas for 10 minutes to remove dissolved oxygen and establish thermal equilibrium."
+   },
+   {
+    "title": "Overhead Agitator Calibration and Stirring Speed Verification",
+    "text": "Insert the four-blade PTFE turbine agitator into the slurry, adjust the shaft clearance to 5 mm above the reactor floor, and engage rotation at 900 RPM. Verify that the vortex does not draw air bubbles into the liquid and that the catalyst remains completely suspended."
+   },
+   {
+    "title": "Substrate Injection and Real-Time Surface Reaction Logging",
+    "text": "Connect the gas outlet to the calibrated micro-manometric sensor. Rapidly inject the designated volume of concentrated substrate stock solution through the septum port to establish the desired initial concentration (e.g., 10.0 mM to 100.0 mM in 50.0 mL total volume). Record gas evolution rates continuously from t = 0 to 180 s."
+   },
+   {
+    "title": "Initial Rate Extraction and Multi-Concentration Serial Runs",
+    "text": "Determine the initial surface rate r\u2080 (mM/min) from the linear slope of product formation within the first 60 seconds post-injection. Clean and recharge the reactor, then repeat the trial for substrate concentrations of 10.0, 15.0, 25.0, 40.0, 60.0, and 100.0 mM."
+   },
+   {
+    "title": "Langmuir-Hinshelwood Double-Reciprocal Linearization and Parameter Evaluation",
+    "text": "Calculate reciprocal concentrations 1/[A] (mM\u207b\u00b9) and reciprocal rates 1/r\u2080 (min\u00b7mM\u207b\u00b9). Construct the Langmuir-Hinshelwood plot of 1/r\u2080 versus 1/[A], perform ordinary linear regression, and calculate the maximum surface rate constant k_r = 1/intercept and adsorption equilibrium constant K_A = intercept / slope."
+   }
+  ],
+  "topics": [
+   {
+    "question": "What is the physical significance of the Langmuir-Hinshelwood mechanism in heterogeneous catalysis?",
+    "answer": "The Langmuir-Hinshelwood mechanism postulates that the catalytic chemical transformation occurs exclusively between species chemisorbed on active surface sites of the solid catalyst. In unimolecular decomposition, an adsorbed substrate molecule undergoes bond cleavage on the surface. In bimolecular reactions, two adsorbed molecules migrate across adjacent surface sites to form transition states. This contrasts with the Eley-Rideal mechanism, where a gas-phase or solution molecule collides directly with an adsorbed species."
+   },
+   {
+    "question": "Why does the reaction order shift from first-order to zero-order as substrate concentration increases?",
+    "answer": "At low substrate concentrations ([A] \u226a 1/K_A), the fractional surface coverage \u03b8_A is proportional to [A], meaning plenty of vacant active sites exist, producing apparent first-order kinetics. At high substrate concentrations ([A] \u226b 1/K_A), all catalytic surface sites become fully occupied (\u03b8_A \u2192 1.0, monolayer saturation). The reaction rate is then limited strictly by the intrinsic surface turnover frequency k_r, becoming zero-order and independent of [A]."
+   },
+   {
+    "question": "Why is an overhead stirring speed of 900 RPM essential in this experiment?",
+    "answer": "Heterogeneous slurry reactions can easily become limited by external mass transfer (liquid-solid boundary layer diffusion) rather than true chemical kinetics. High-speed agitation at 900 RPM minimizes the hydrodynamic Nernst diffusion layer thickness (\u03b4) around the catalyst particles, driving the Weisz-Prater and Mears criteria below their critical thresholds and ensuring true surface-reaction-limited kinetics."
+   },
+   {
+    "question": "How does chemisorption differ fundamentally from physisorption on a catalyst surface?",
+    "answer": "Physisorption involves weak, non-specific van der Waals interactions with low adsorption enthalpies (\u0394H_ads \u2248 \u221210 to \u221240 kJ/mol) and can form multilayers without chemical bond restructuring. Chemisorption involves electron transfer or orbital hybridization to form true chemical bonds between adsorbate and surface metal atoms, characterized by high adsorption enthalpies (\u0394H_ads \u2248 \u221280 to \u2212400 kJ/mol), site specificity, and strict monolayer limitation."
+   },
+   {
+    "question": "What is the physical meaning of the adsorption constant K_A in the Langmuir isotherm?",
+    "answer": "K_A is the thermodynamic equilibrium constant for the reversible adsorption-desorption equilibrium: K_A = k_ads / k_des = exp(\u2212\u0394G\u00b0_ads / RT). A larger K_A indicates stronger thermodynamic affinity and more extensive surface coverage at lower substrate concentrations."
+   },
+   {
+    "question": "How do catalyst poison molecules such as carbon monoxide or sulfur species deactivate heterogeneous metal catalysts?",
+    "answer": "Poisons possess extremely large adsorption equilibrium constants (K_poison \u226b K_substrate) and bind irreversibly to active transition-metal sites, competitively blocking substrate access to the surface and destroying catalytic activity even at parts-per-billion concentrations."
+   },
+   {
+    "question": "How does the turnover frequency (TOF) relate to the maximum surface rate k_r?",
+    "answer": "The turnover frequency represents the number of substrate molecules converted per active surface metal atom per unit time: TOF = k_r / [Pt_surface]. It is calculated by dividing k_r by the number of accessible surface platinum sites determined independently via carbon monoxide or hydrogen chemisorption."
+   }
+  ],
+  "quiz": [
+   {
+    "question": "In the Langmuir-Hinshelwood rate expression r = (k_r K_A [A]) / (1 + K_A [A]), what is the apparent reaction order when K_A [A] \u226b 1?",
+    "options": [
+     "Second-order",
+     "First-order",
+     "Zero-order",
+     "Half-order"
+    ],
+    "correct": 2,
+    "explanation": "When K_A [A] \u226b 1, the denominator approximates K_A [A], so r \u2248 (k_r K_A [A]) / (K_A [A]) = k_r, which is zero-order and independent of substrate concentration."
+   },
+   {
+    "question": "In the double-reciprocal Langmuir-Hinshelwood plot of 1/r\u2080 vs 1/[A], how is the maximum surface rate k_r extracted?",
+    "options": [
+     "Directly from the slope",
+     "From the reciprocal of the Y-intercept (k_r = 1/b)",
+     "From the product of slope and intercept",
+     "From the X-intercept directly"
+    ],
+    "correct": 1,
+    "explanation": "The linearized equation is 1/r\u2080 = [1/(k_r K_A)]\u00b7(1/[A]) + 1/k_r. The Y-intercept is b = 1/k_r, so k_r = 1/b."
+   },
+   {
+    "question": "Which of the following distinguishes the Langmuir-Hinshelwood mechanism from the Eley-Rideal mechanism?",
+    "options": [
+     "In Langmuir-Hinshelwood, both reacting species must be chemisorbed on the surface before reaction",
+     "In Langmuir-Hinshelwood, no adsorption takes place",
+     "Langmuir-Hinshelwood only occurs in the gas phase",
+     "Eley-Rideal requires complete monolayer coverage of all reactants"
+    ],
+    "correct": 0,
+    "explanation": "The hallmark of the Langmuir-Hinshelwood mechanism is that reaction occurs exclusively between chemisorbed species on the catalyst surface."
+   },
+   {
+    "question": "What is the primary role of the high-surface-area porous support (such as Al\u2082O\u2083 or SiO\u2082) in heterogeneous catalysts?",
+    "options": [
+     "To cool down the reaction mixture",
+     "To disperse active metal nanoparticles into small crystallites and prevent sintering",
+     "To directly react with the substrate molecules",
+     "To permanently absorb product molecules"
+    ],
+    "correct": 1,
+    "explanation": "The support provides a vast surface area (100-300 m\u00b2/g) to maximize dispersion of expensive active metals (like Pt, Pd, Rh) into nanometer-sized crystallites, preventing agglomeration and thermal sintering."
+   }
+  ],
+  "precautions": [
+   "Handle supported platinum and palladium catalyst powders in a certified fume hood; finely divided pyrophoric metal dusts can ignite solvent vapors or cause severe respiratory irritation.",
+   "Ensure the overhead stirrer shaft is perfectly aligned and lubricated to avoid particulate contamination or mechanical vibration during 900 RPM operation.",
+   "Never add dry catalyst powder directly to flammable organic solvents; always wet the catalyst with an inert deoxygenated water aliquot first.",
+   "Maintain thermostatic circulation within \u00b10.05 K; adsorption equilibria (K_A) exhibit strong exothermic temperature sensitivity following the van 't Hoff relation.",
+   "Verify that the digital micro-manometer is calibrated against a certified water column before each series of gas-volumetric rate measurements.",
+   "Do not allow reactant solution to sit on spent catalyst after runs; decant and rinse the catalyst immediately to prevent irreversible surface poisoning by decomposition byproducts."
+  ],
+  "limitations": "The classical Langmuir-Hinshelwood model makes idealized physical assumptions: (1) Energetic site uniformity: Real heterogeneous catalysts possess stepped facets, edges, corners, and defect sites with differing adsorption energies, whereas the Langmuir isotherm assumes an energetically homogeneous surface. (2) Absence of lateral adsorbate-adsorbate interactions: At high surface coverages, dipole-dipole repulsion or steric crowding between neighboring adsorbed molecules causes adsorption enthalpy to decrease with coverage (better described by Temkin or Freundlich isotherms). (3) Internal mass transfer: For large catalyst porous pellets, intraparticle Knudsen diffusion limitations (quantified by the Thiele modulus) can depress observed rates; fine powder slurries (< 50 \u03bcm) are used here to ensure effectiveness factors \u03b7 \u2248 1.0. (4) Product inhibition: If decomposition products adsorb competitively on surface sites, an additional term (1 + K_P [P]) must be incorporated into the rate denominator."
  }
 ]

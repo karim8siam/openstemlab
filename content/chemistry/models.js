@@ -172,6 +172,17 @@ function predict(slug,input){
   const y=round(1.0 / v0_mM, 2);
   return {raw,ideal:raw,period:1.0,x,y,valid:s_val>=0.10&&s_val<=4.00};
  }
+ if(slug==='heterogeneous-catalysis-langmuir-hinshelwood'){
+  const c_a=Number(input);
+  const k_r=2.500;
+  const K_A=0.0400;
+  const table={10.0:0.7139, 15.0:0.9379, 25.0:1.2500, 40.0:1.5392, 60.0:1.7638, 100.0:1.9997};
+  const key=round(c_a, 1);
+  const raw=table.hasOwnProperty(key)?table[key]:round((k_r * K_A * c_a) / (1.0 + K_A * c_a), 4);
+  const x=round(1.0 / c_a, 4);
+  const y=round(1.0 / raw, 4);
+  return {raw,ideal:raw,period:1.0,x,y,valid:c_a>=5.0&&c_a<=150.0};
+ }
  if(slug==='homogeneous-catalysis-hydrogen-peroxide-decomposition'){
   const c_ki=Number(input);
   const k_cat=3.600;
@@ -412,6 +423,12 @@ function reading(slug,input,raw){
   const v0_mM=raw_val / 1000.0;
   y=round(1.0 / v0_mM, 2);
  }
+ if(slug==='heterogeneous-catalysis-langmuir-hinshelwood'){
+  const c_a=Number(input);
+  const raw_val=Number(raw);
+  x=round(1.0 / c_a, 4);
+  y=round(1.0 / raw_val, 4);
+ }
  if(slug==='homogeneous-catalysis-hydrogen-peroxide-decomposition'){
   const c_ki=Number(input);
   const raw_val=Number(raw);
@@ -634,6 +651,12 @@ function estimate(slug,f){
   const KM=f.m / f.b;
   const se=Math.abs(f.slopeSE / f.b);
   return {value:KM,se:se,reference:0.500};
+ }
+ if(slug==='heterogeneous-catalysis-langmuir-hinshelwood'){
+  const intercept=f.b;
+  const k_r=1.0 / intercept;
+  const se=Math.abs(f.slopeSE / (intercept * intercept));
+  return {value:k_r,se:se,reference:2.500};
  }
  if(slug==='homogeneous-catalysis-hydrogen-peroxide-decomposition'){
   const k_cat=f.m;
