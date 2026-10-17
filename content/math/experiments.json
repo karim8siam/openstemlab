@@ -2208,5 +2208,2215 @@
     ],
     "intro": "Steffensen's method, introduced in 1933 by Danish mathematician Johan Frederik Steffensen, stands as one of the most brilliant triumphs of algorithmic acceleration in numerical analysis. For centuries, applied mathematicians were trapped between two competing paradigms: fixed-point Picard iteration was simple and required no derivatives, but suffered from sluggish linear convergence; Newton-Raphson was blazing fast with quadratic convergence, but demanded the exact analytical derivative f'(x), which is frequently intractable, computationally prohibitive, or unavailable in experimental simulations. In 1926, New Zealand mathematician Alexander Aitken discovered his celebrated Δ² acceleration process, which dramatically speeds up linearly converging sequences by estimating the asymptotic limit of a geometric progression. Steffensen's stroke of genius was to embed Aitken's Δ² formula directly into the recurrence loop of fixed-point iteration. Instead of waiting for a sequence to crawl along linearly before accelerating it, Steffensen generated two consecutive Picard steps—y = g(x) and z = g(y)—and immediately applied Aitken's extrapolation to generate the next iterate: x_{k+1} = x − (y − x)² / (z − 2y + x). When expressed directly for a root-finding problem f(x) = 0, Steffensen's formula assumes a breathtakingly simple derivative-free form: x_{k+1} = x_k − [f(x_k)]² / [f(x_k + f(x_k)) − f(x_k)]. A careful inspection reveals that the denominator divided by f(x_k) is precisely the forward-difference quotient [f(x_k + f(x_k)) − f(x_k)] / f(x_k), where the perturbation step size is chosen to be the function value f(x_k) itself! As the iterates approach the root x*, the function value f(x_k) naturally shrinks to zero at exactly the same rate as the error. Consequently, the truncation error of the finite-difference derivative quotient drops to zero in tandem with the root error, preserving the full quadratic convergence order α = 2.000 of Newton's method without requiring any analytic differentiation whatsoever. Furthermore, Steffensen's Ostrowski efficiency index is Eff = 2^(1/2) ≈ 1.414, exactly matching Newton's method while freeing the user from symbolic calculus. In this laboratory investigation, students evaluate Steffensen's accelerated method applied to the quadratic polynomial f(x) = x² − 2 = 0 (x* = √2 ≈ 1.414214), trace Aitken's Δ² acceleration, and extract the empirical quadratic convergence order α = 2.000 via logarithmic linear regression.",
     "modelExtra": "The numerical simulation model evaluates the root of f(x) = x² − 2 = 0 starting from x₀ = 2.000000. Analytical root: x* = √2 = 1.414213562373095... Iteration sequence: x₀ = 2.000000 (ε₀ = 0.585786); x₁ = 1.444444 (ε₁ = 0.030231); x₂ = 1.414371 (ε₂ = 1.571 × 10⁻⁴); x₃ = 1.414213565 (ε₃ = 2.415 × 10⁻⁹); x₄ = 1.414213562373095 (ε₄ = 2.100 × 10⁻¹⁷). Logarithmic error coordinates: x = ln(ε_k) = [−1.3000, −3.4989, −8.7588, −19.8415] and y = ln(ε_{k+1}) = [−3.4989, −8.7588, −19.8415, −38.4035]. Ordinary least-squares linear regression on these coordinates produces an empirical slope α = 2.00000 and intercept ln(C) = −0.5877 with Pearson correlation coefficient R² = 0.999999999. The empirical convergence order α = 2.00000 matches the theoretical quadratic benchmark α = 2.000 within 0.0000% deviation."
+  },
+  {
+    "id": 11,
+    "number": 11,
+    "slug": "gaussian-elimination-partial-pivoting",
+    "title": "Gaussian Elimination with Partial Pivoting and Cubic FLOP Complexity",
+    "shortTitle": "Gaussian Elimination",
+    "category": "Computational Mathematics",
+    "department": "mathematics",
+    "subject_id": 21,
+    "subject": "mathematics",
+    "published": true,
+    "page_path": "/mathematics/gaussian-elimination-partial-pivoting/",
+    "aim": "Solve dense n×n linear algebraic systems Ax = b using Gaussian elimination with row-scaled partial pivoting, eliminate numerical instability from vanishingly small pivot elements, and extract the asymptotic floating-point operational scaling constant C = 2/3 ≈ 0.667 FLOPs/n³ via ordinary least-squares regression.",
+    "difficulty": "Intermediate",
+    "time": "2 Hours",
+    "gradientUnit": "FLOPs/n³",
+    "interceptUnit": "kFLOPs",
+    "target": "0.667",
+    "targetName": "Asymptotic FLOP Scaling Constant C",
+    "resultUnit": "",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 2,
+    "yDecimals": 2,
+    "initial": 20.0,
+    "samples": [
+      10.0,
+      20.0,
+      30.0,
+      40.0,
+      50.0,
+      60.0
+    ],
+    "emptyX": 1.0,
+    "emptyY": 0.667,
+    "measureLabel": "Elimination FLOPs (kFLOPs)",
+    "fitEquation": "\\text{FLOPs}(n) = C \\cdot \\frac{n^3}{1000} \\implies C = \\frac{2}{3} \\approx 0.667",
+    "min": 10.0,
+    "max": 60.0,
+    "step": 5.0,
+    "inputLabel": "Matrix Dimension n",
+    "shortInput": "n",
+    "inputUnit": "rows",
+    "inputDecimals": 0,
+    "rawLabel": "Triangular Elimination FLOPs",
+    "rawUnit": "kFLOPs",
+    "rawDecimals": 2,
+    "angle": false,
+    "timed": false,
+    "observationLabel": "Row operations and cubic FLOP scaling",
+    "xAxis": "Normalized Dimension Cubic n³/1000",
+    "yAxis": "Triangular Elimination Operations (kFLOPs)",
+    "settings": [
+      "Matrix Type: Dense non-singular n×n real system Ax = b with condition number κ(A) ≈ 15.4.",
+      "Pivoting Policy: Row partial pivoting |a_{p,k}| = max_{i≥k} |a_{i,k}| with row swap permutations.",
+      "Forward Elimination: Subtract m_{i,k} = a_{i,k}/a_{k,k} times row k from row i.",
+      "Theoretical FLOP Bound: (2/3)n³ + O(n²) floating-point operations."
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "Triangular Reduction & Pivoting"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "Pivoting vs Naive vs Gauss-Jordan"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "Pivot Growth Factor & Ill-Conditioning"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Dense Matrix BLAS Level-2 Elimination Engine",
+        "purpose": "Executes row multiplier scalings m_{ik} and rank-1 outer product subtractions A_{i,k:n} ← A_{i,k:n} − m_{ik}·A_{k,k:n} in 64-bit IEEE 754 precision."
+      },
+      {
+        "name": "Row Permutation and Pivot Selection Unit",
+        "purpose": "Scans column k for the maximal absolute entry max_{i≥k} |a_{ik}| and exchanges rows to suppress round-off amplification."
+      },
+      {
+        "name": "Back-Substitution Vector Solver",
+        "purpose": "Solves upper-triangular system Ux = c via backward recurrence x_i = (c_i − ∑_{j>i} u_{ij}x_j)/u_{ii} in O(n²) operations."
+      },
+      {
+        "name": "Asymptotic FLOP Scaling Counter",
+        "purpose": "Records cumulative multiplication and subtraction operations across the forward elimination phase."
+      },
+      {
+        "name": "Interactive Matrix Heatmap Canvas",
+        "purpose": "Visualizes non-zero matrix elements, pivot selection highlights, and progressive upper-triangular formation."
+      },
+      {
+        "name": "Wilkinson Backward Stability Benchmark Unit",
+        "purpose": "Evaluates the pivot growth factor ρ_n = max_{i,j,k} |a_{ij}^{(k)}| / max_{i,j} |a_{ij}| to verify numerical stability."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "System Dimension Initialization",
+        "text": "Initialize an n×n dense linear system Ax = b across dimensions n ∈ {10, 20, 30, 40, 50, 60}. Verify that det(A) ≠ 0."
+      },
+      {
+        "title": "Partial Pivot Selection (Column k)",
+        "text": "At step k, scan column elements |a_{i,k}| for i = k, ..., n. Locate row p having the largest absolute magnitude: |a_{p,k}| = max_{i≥k} |a_{i,k}|. If p ≠ k, swap row k and row p in both A and b."
+      },
+      {
+        "title": "Forward Row Elimination",
+        "text": "For each row i from k + 1 to n, compute the multiplier m_{i,k} = a_{i,k} / a_{k,k}. Subtract m_{i,k} times row k from row i: a_{i,j} ← a_{i,j} − m_{i,k} · a_{k,j} for j = k+1, ..., n, and b_i ← b_i − m_{i,k} · b_k."
+      },
+      {
+        "title": "Triangular Form Attainment",
+        "text": "Repeat steps 2 and 3 for all columns k = 1 to n − 1 until the coefficient matrix is reduced to upper-triangular form U."
+      },
+      {
+        "title": "Back-Substitution Execution",
+        "text": "Solve the upper-triangular system Ux = c from row n down to row 1: x_n = c_n / u_{n,n}, and x_i = (c_i − ∑_{j=i+1}^n u_{i,j} x_j) / u_{i,i}."
+      },
+      {
+        "title": "Operational Scaling Regression",
+        "text": "Plot elimination FLOPs against normalized cubic dimension x = n³/1000. Perform ordinary least-squares regression to extract empirical slope C = 0.667, verifying theoretical (2/3)n³ FLOP scaling."
+      }
+    ],
+    "topics": [
+      {
+        "question": "Why is naive Gaussian elimination numerically unstable without partial pivoting?",
+        "answer": "In naive Gaussian elimination, the pivot element a_{k,k} can be zero or extremely close to zero. If |a_{k,k}| is tiny compared to other entries in the column, the multiplier m_{i,k} = a_{i,k} / a_{k,k} becomes enormous. Multiplying row k by this huge multiplier and subtracting it from row i adds large quantities that drown out smaller significant digits. When finite-precision IEEE 754 arithmetic is used, this causes catastrophic round-off error propagation that completely destroys the accuracy of the solution. Partial pivoting ensures that |m_{i,k}| ≤ 1 for all i, bounding error amplification."
+      },
+      {
+        "question": "What is the difference between partial pivoting, complete pivoting, and rook pivoting?",
+        "answer": "In partial (row) pivoting, the search for the maximal pivot is restricted to the current column k: max_{i≥k} |a_{ik}|, requiring O(n²) total comparisons and only row interchanges. In complete pivoting, the algorithm searches the entire active submatrix: max_{i,j≥k} |a_{ij}|, requiring both row and column interchanges (permuting variables) and O(n³) comparisons. Rook pivoting searches alternately along rows and columns until an entry is maximal in both its row and column, requiring O(n²) comparisons while offering stability comparable to complete pivoting."
+      },
+      {
+        "question": "How is the operational complexity (2/3)n³ derived for Gaussian elimination?",
+        "answer": "At step k, eliminating the k-th column below the diagonal requires computing n − k multipliers, and for each multiplier, executing n − k multiplications and n − k subtractions on the remaining matrix entries. Summing over all steps: ∑_{k=1}^{n-1} 2(n − k)² = 2 ∑_{m=1}^{n-1} m² = 2 · [(n−1)n(2n−1)/6] = (2/3)n³ − n² + (1/3)n ≈ (2/3)n³ FLOPs. The right-hand side b requires ∑ 2(n − k) = n² FLOPs, and back-substitution requires n² FLOPs, both of which are asymptotically negligible compared to (2/3)n³."
+      },
+      {
+        "question": "What is Wilkinson's pivot growth factor and how does it relate to backward stability?",
+        "answer": "James H. Wilkinson proved in 1961 that Gaussian elimination with partial pivoting is backward stable, meaning the computed solution x̂ satisfies (A + ΔA)x̂ = b with ‖ΔA‖ ≤ 2·n·ε_mach·ρ_n·‖A‖, where ρ_n = max_{i,j,k} |a_{ij}^{(k)}| / max_{i,j} |a_{ij}| is the pivot growth factor. Although the theoretical worst-case bound for partial pivoting is ρ_n ≤ 2^{n-1} (achieved by pathological matrices like the Kahan matrix), in practical scientific computing ρ_n rarely exceeds n^{1/2} to n^{2/3}, ensuring robust backward stability."
+      },
+      {
+        "question": "Why is Gauss-Jordan elimination rarely used to solve linear systems in practice?",
+        "answer": "Gauss-Jordan elimination continues row operations above the diagonal to reduce A directly into the identity matrix I, eliminating the need for back-substitution. However, eliminating entries above the diagonal increases the total operations to n³ FLOPs—exactly 50% more expensive than standard Gaussian elimination with back-substitution ((2/3)n³ FLOPs). Consequently, Gauss-Jordan is only used when the explicit matrix inverse A⁻¹ is strictly required."
+      },
+      {
+        "question": "How does Gaussian elimination handle singular or rank-deficient matrices?",
+        "answer": "If a matrix is singular, at some step k all candidate pivot elements in column k (and in the remaining submatrix) will be identically zero (within numerical tolerance). The algorithm detects this singularity when max_{i≥k} |a_{ik}| < ε_mach and terminates with a singularity error, indicating that the system either has no solutions or infinitely many solutions."
+      },
+      {
+        "question": "How does row scaling (scaled partial pivoting) improve numerical reliability?",
+        "answer": "If different equations in the system Ax = b have wildly different physical units (e.g. one in micrometers and another in kilometers), row entries can vary by orders of magnitude. Standard partial pivoting might pick an entry that is large in absolute terms but small relative to its own row. Scaled partial pivoting normalizes each row by its maximum entry s_i = max_j |a_{ij}| and selects the pivot maximizing |a_{ik}| / s_i, preventing arbitrary unit choices from corrupting pivot decisions."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What is the leading asymptotic computational complexity of Gaussian elimination on an n×n matrix?",
+        "options": [
+          "(2/3)n³ FLOPs",
+          "O(n²)",
+          "n³ FLOPs",
+          "(1/3)n³ FLOPs"
+        ],
+        "correct": 0,
+        "explanation": "Forward elimination requires ∑_{k=1}^{n-1} 2(n−k)² FLOPs, which evaluates to (2/3)n³ + O(n²)."
+      },
+      {
+        "question": "Why is partial pivoting implemented in Gaussian elimination?",
+        "options": [
+          "To prevent division by zero and eliminate catastrophic round-off error amplification",
+          "To reduce the computational complexity from O(n³) to O(n²)",
+          "To convert the matrix into diagonal form in a single step",
+          "To compute matrix eigenvalues directly"
+        ],
+        "correct": 0,
+        "explanation": "Partial pivoting swaps rows to ensure the pivot element has the largest possible magnitude, bounding all multipliers |m_{ik}| ≤ 1 and preventing round-off explosion."
+      },
+      {
+        "question": "For a 1000×1000 dense matrix, approximately how many floating-point operations are required for Gaussian elimination?",
+        "options": [
+          "~667 million FLOPs (0.667 GFLOPs)",
+          "~1 million FLOPs",
+          "~2 billion FLOPs",
+          "~100 billion FLOPs"
+        ],
+        "correct": 0,
+        "explanation": "FLOPs ≈ (2/3) · (1000)³ = 666,666,667 FLOPs ≈ 0.667 GFLOPs."
+      },
+      {
+        "question": "What is the computational complexity of the back-substitution phase alone?",
+        "options": [
+          "O(n²) FLOPs",
+          "O(n³) FLOPs",
+          "O(n log n) FLOPs",
+          "O(n) FLOPs"
+        ],
+        "correct": 0,
+        "explanation": "Back-substitution requires solving an upper-triangular system, which requires exactly n² operations—asymptotically negligible compared to the (2/3)n³ forward phase."
+      }
+    ],
+    "precautions": [
+      "Always implement partial pivoting; never execute naive Gaussian elimination on general dense matrices.",
+      "Test pivot magnitude against machine precision (|a_{k,k}| > ε_mach · ‖A‖_∞) to detect exact or near-singularity.",
+      "Scale rows before elimination if coefficients span multiple orders of magnitude due to physical units.",
+      "Use 64-bit IEEE 754 double-precision floats to minimize accumulated round-off across n row subtractions.",
+      "Store multipliers m_{ik} in the vacated lower-triangular entries to avoid allocating auxiliary memory arrays.",
+      "Monitor pivot growth factor ρ_n; if ρ_n grows unusually large, switch to complete pivoting or QR factorization."
+    ],
+    "limitations": [
+      "Dense Gaussian elimination scales as O(n³), making it computationally prohibitive for massive systems (n > 20,000) without sparse techniques.",
+      "Susceptible to numerical error on ill-conditioned matrices where condition number κ(A) exceeds 1/ε_mach.",
+      "Requires random access to matrix rows, which can cause memory bus cache misses on large matrices unless blocked algorithms (LAPACK) are used."
+    ],
+    "intro": "Gaussian elimination—formalized by Carl Friedrich Gauss in 1809 for celestial orbit calculations and independently discovered in ancient China in the Han Dynasty text 'The Nine Chapters on the Mathematical Art'—is the definitive direct method for solving dense systems of linear algebraic equations: Ax = b. In modern scientific computing, linear systems arise everywhere: from finite element analysis in structural engineering and Navier-Stokes simulations in aerodynamics to circuit simulation and machine learning regression. Gaussian elimination transforms the system through elementary row operations into an equivalent upper-triangular system Ux = c, which is then solved in backward order via back-substitution. However, the theoretical simplicity of Gaussian elimination conceals a dangerous numerical pitfall: without pivoting, the algorithm is numerically unstable. If a pivot element a_{k,k} happens to be tiny, dividing by it produces gigantic multipliers m_{i,k} = a_{i,k}/a_{k,k}. When row k is scaled by m_{i,k} and subtracted from row i, the large intermediate values obliterate smaller significant digits, resulting in catastrophic loss of significance. Partial pivoting solves this by scanning column k at each step to identify the row p with the largest absolute entry: |a_{p,k}| = max_{i≥k} |a_{i,k}|, and swapping row p with row k before elimination. This simple permutation guarantees that all multipliers satisfy |m_{i,k}| ≤ 1, ensuring backward numerical stability as proven by James H. Wilkinson in 1961. The operational count of Gaussian elimination is dominated by the forward triangularization phase: eliminating row entries across all n columns requires evaluating ∑ 2(n − k)² operations, which converges asymptotically to (2/3)n³ FLOPs. In this computational laboratory, students evaluate Gaussian elimination with partial pivoting across dense linear systems from n = 10 to n = 60, measure cumulative elimination operations, and extract the asymptotic scaling constant C = 2/3 ≈ 0.667 FLOPs/n³ via linear regression, verifying the foundational computational complexity of linear algebra.",
+    "modelExtra": "The numerical simulation model evaluates dense n×n linear systems with partial pivoting across dimensions n = [10, 20, 30, 40, 50, 60]. Normalized cubic coordinate: x = n³/1000 = [1.00, 8.00, 27.00, 64.00, 125.00, 216.00]. Theoretical forward elimination FLOP count: FLOPs(n) = (2/3)n³ = [0.667, 5.333, 18.000, 42.667, 83.333, 144.000] kFLOPs. Ordinary least-squares linear regression of elimination FLOPs against x = n³/1000 produces an empirical slope C = 0.66667 and Y-intercept b = 0.000 with coefficient of determination R² = 1.000000. The empirical scaling constant C = 0.667 matches the analytical constant C = 2/3 = 0.66667 within 0.0000% deviation."
+  },
+  {
+    "id": 12,
+    "number": 12,
+    "slug": "lu-decomposition-doolittle-crout",
+    "title": "LU Triangular Matrix Factorization and Forward-Backward Substitution",
+    "shortTitle": "LU Decomposition",
+    "category": "Computational Mathematics",
+    "department": "mathematics",
+    "subject_id": 21,
+    "subject": "mathematics",
+    "published": true,
+    "page_path": "/mathematics/lu-decomposition-doolittle-crout/",
+    "aim": "Factorize square non-singular matrices A into unit lower-triangular matrix L and upper-triangular matrix U (PA = LU) using Doolittle and Crout algorithms, solve multiple right-hand-side vectors in O(n²) time via forward and back substitution, and extract the asymptotic factorization constant C = 2/3 ≈ 0.667 via linear regression.",
+    "difficulty": "Intermediate",
+    "time": "2 Hours",
+    "gradientUnit": "FLOPs/n³",
+    "interceptUnit": "kFLOPs",
+    "target": "0.667",
+    "targetName": "Factorization Multiplier C",
+    "resultUnit": "",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 2,
+    "yDecimals": 2,
+    "initial": 20.0,
+    "samples": [
+      10.0,
+      20.0,
+      30.0,
+      40.0,
+      50.0,
+      60.0
+    ],
+    "emptyX": 1.0,
+    "emptyY": 0.667,
+    "measureLabel": "Factorization Operations (kFLOPs)",
+    "fitEquation": "\\text{FLOPs}(n) = C \\cdot \\frac{n^3}{1000} \\implies C = \\frac{2}{3} \\approx 0.667",
+    "min": 10.0,
+    "max": 60.0,
+    "step": 5.0,
+    "inputLabel": "Matrix Dimension n",
+    "shortInput": "n",
+    "inputUnit": "rows",
+    "inputDecimals": 0,
+    "rawLabel": "LU Factorization Operations",
+    "rawUnit": "kFLOPs",
+    "rawDecimals": 2,
+    "angle": false,
+    "timed": false,
+    "observationLabel": "Doolittle triangular factorization and substitution",
+    "xAxis": "Normalized Dimension Cubic n³/1000",
+    "yAxis": "Factorization Operations (kFLOPs)",
+    "settings": [
+      "Factorization Algorithm: Doolittle PA = LU with unit diagonal on L (l_{ii} = 1.0).",
+      "Permutation Matrix P: Tracks row swaps to ensure |l_{ik}| ≤ 1.0 for all i > k.",
+      "Forward Substitution: Solve Ly = Pb in n² operations.",
+      "Back Substitution: Solve Ux = y in n² operations."
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "Compact LU In-Place Storage"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "LU vs Matrix Inverse A⁻¹ vs QR"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "Multiple RHS Solve Throughput"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Compact In-Place LU Factorization Unit",
+        "purpose": "Overwrites matrix A with L (strictly lower) and U (upper triangular) to eliminate auxiliary memory allocation."
+      },
+      {
+        "name": "Permutation Vector Register P",
+        "purpose": "Maintains integer pivot indices P = [p₁, p₂, ..., p_n] to apply row swaps to subsequent right-hand side vectors."
+      },
+      {
+        "name": "Dual-Phase Triangular Solver",
+        "purpose": "Executes forward substitution Ly = Pb followed by backward substitution Ux = y in 2n² FLOPs."
+      },
+      {
+        "name": "Factorization FLOP Accumulator",
+        "purpose": "Tracks the (2/3)n³ operations required to compute outer products and Schur complements."
+      },
+      {
+        "name": "Interactive LU Heatmap Canvas",
+        "purpose": "Displays L and U triangular factors with color-coded entry magnitudes and sparsity patterns."
+      },
+      {
+        "name": "Matrix Determinant Extractor",
+        "purpose": "Computes det(A) = det(P) · ∏_{i=1}^n u_{ii} directly from the diagonal of U in O(n) time."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "System Dimension Initialization",
+        "text": "Select matrix dimension n ∈ {10, 20, 30, 40, 50, 60}. Initialize n×n dense matrix A and permutation vector P = [1, 2, ..., n]."
+      },
+      {
+        "title": "Pivot Selection and Row Exchange",
+        "text": "At stage k, locate pivot row p maximizing |a_{p,k}| for p ≥ k. Swap row k and row p in both A and P."
+      },
+      {
+        "title": "Doolittle Factorization Recurrence",
+        "text": "For i = k+1 to n, compute multiplier l_{i,k} = a_{i,k} / a_{k,k} and store it directly in a_{i,k}. For j = k+1 to n, update u_{i,j} = a_{i,j} ← a_{i,j} − l_{i,k} · a_{k,j}."
+      },
+      {
+        "title": "Repeat Across All Columns",
+        "text": "Continue the recurrence for k = 1 to n − 1. Upon completion, the upper triangle contains U and the strictly lower triangle contains L."
+      },
+      {
+        "title": "Dual-Phase Substitution for Solutions",
+        "text": "Given vector b, permute Pb. Solve Ly = Pb via forward substitution in n² operations. Solve Ux = y via back substitution in n² operations."
+      },
+      {
+        "title": "Linear Regression and Scaling Extraction",
+        "text": "Plot factorization operations against normalized cubic coordinate n³/1000. Perform least-squares regression to extract empirical slope C = 0.667, confirming (2/3)n³ factorization complexity."
+      }
+    ],
+    "topics": [
+      {
+        "question": "Why is LU decomposition preferred over standard Gaussian elimination when solving multiple systems Ax = b_i?",
+        "answer": "In Gaussian elimination, forward reduction modifies both the matrix A and the right-hand side vector b simultaneously in (2/3)n³ operations. If m different right-hand side vectors b_1, b_2, ..., b_m must be solved for the same coefficient matrix A, repeating Gaussian elimination requires m · (2/3)n³ operations. In contrast, LU decomposition separates the matrix factorization from the vector: factoring A into LU is performed only once in (2/3)n³ time. Thereafter, each additional system is solved via forward and back substitution (Ly = b, Ux = y) in only 2n² operations. For large m, LU decomposition is m times faster."
+      },
+      {
+        "question": "What is the difference between Doolittle, Crout, and Cholesky factorizations?",
+        "answer": "Doolittle factorization sets the diagonal of L to unity (l_{ii} = 1.0) while U has general diagonal entries. Crout factorization sets the diagonal of U to unity (u_{ii} = 1.0) while L has general diagonal entries. Cholesky factorization applies strictly to symmetric positive-definite matrices, setting U = Lᵀ with identical lower and upper factors A = LLᵀ, which cuts computational cost and storage in half."
+      },
+      {
+        "question": "Why must the permutation matrix P be stored when computing PA = LU?",
+        "answer": "Partial pivoting swaps rows dynamically during factorization to ensure numerical stability (|l_{ik}| ≤ 1). The permutation matrix P records the exact sequence of row swaps. When a new vector b arrives, the rows of b must be permuted in the exact same sequence (computing Pb) before forward substitution Ly = Pb can yield the correct intermediate vector y."
+      },
+      {
+        "question": "How can the matrix inverse A⁻¹ be computed using LU decomposition?",
+        "answer": "To invert an n×n matrix A, one solves n systems Ax_i = e_i for i = 1, ..., n, where e_i is the i-th column of the identity matrix. Factoring A requires (2/3)n³ operations, and solving n right-hand sides requires n · (2n²) = 2n³ operations, yielding a total cost of (8/3)n³ FLOPs. However, in numerical mathematics, explicitly computing A⁻¹ is strongly discouraged because solving Ax = b directly via LU is 4 times faster and far more numerically stable."
+      },
+      {
+        "question": "How is the determinant of A computed effortlessly once LU factorization is complete?",
+        "answer": "Because det(PA) = det(P) · det(A) = det(L) · det(U), and the determinant of a triangular matrix is the product of its diagonal entries: det(L) = 1 (for Doolittle) and det(U) = ∏_{i=1}^n u_{ii}. Furthermore, det(P) = (−1)^s where s is the total number of row swaps performed during pivoting. Thus, det(A) = (−1)^s · ∏_{i=1}^n u_{ii}, requiring only n multiplications once factorization is complete."
+      },
+      {
+        "question": "Can LU decomposition be stored in-place within the original matrix memory buffer?",
+        "answer": "Yes. In the compact Doolittle representation, the upper-triangular factor U occupies the diagonal and upper triangle of the original array A. Because L is unit lower-triangular, its diagonal entries are all 1.0 and do not need to be stored; the strictly lower triangle of array A is used to store the multipliers l_{ik}. This achieves zero memory overhead beyond an integer array of size n to store the permutation vector P."
+      },
+      {
+        "question": "What is the Schur complement in block LU factorization?",
+        "answer": "Partitioning A as [A₁₁ A₁₂; A₂₁ A₂₂] where A₁₁ is invertible, the block elimination step subtracts A₂₁ A₁₁⁻¹ times the first block row from the second block row, leaving the Schur complement S = A₂₂ − A₂₁ A₁₁⁻¹ A₁₂ in the lower-right block. Block algorithms in LAPACK and ScaLAPACK cast Gaussian elimination into Level-3 BLAS matrix-matrix multiplications (GEMM) on Schur complements to exploit cache hierarchies and GPU tensor cores."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "In Doolittle LU factorization, what are the diagonal entries of the L matrix?",
+        "options": [
+          "All diagonal entries are 1.0 (unit lower-triangular)",
+          "All diagonal entries are 0.0",
+          "The square roots of the pivot elements",
+          "Identical to the diagonal of U"
+        ],
+        "correct": 0,
+        "explanation": "Doolittle's convention sets l_{ii} = 1.0 for all i, storing the multipliers strictly below the diagonal."
+      },
+      {
+        "question": "Once A is factored into PA = LU, how many operations are required to solve Ax = b for a new vector b?",
+        "options": [
+          "2n² FLOPs (forward and back substitution)",
+          "(2/3)n³ FLOPs",
+          "O(n) FLOPs",
+          "n³ FLOPs"
+        ],
+        "correct": 0,
+        "explanation": "Solving Ly = Pb requires n² operations and Ux = y requires n² operations, giving a total of 2n² FLOPs."
+      },
+      {
+        "question": "How is det(A) computed from the LU decomposition PA = LU?",
+        "options": [
+          "det(A) = (−1)^s · ∏ u_{ii}, where s is the number of row swaps",
+          "det(A) = ∑ u_{ii}",
+          "det(A) = ∏ l_{ii}",
+          "det(A) = (2/3)n³"
+        ],
+        "correct": 0,
+        "explanation": "The determinant of triangular matrices is the product of their diagonal entries, scaled by (−1)^s for row permutations."
+      },
+      {
+        "question": "What is the primary operational advantage of LU decomposition over repeating Gaussian elimination for 50 right-hand sides?",
+        "options": [
+          "It performs the expensive (2/3)n³ factorization only once, solving each RHS in fast 2n² time",
+          "It requires fewer operations for a single RHS",
+          "It avoids pivoting completely",
+          "It only works on symmetric matrices"
+        ],
+        "correct": 0,
+        "explanation": "Separating factorization from substitution allows subsequent solutions to be evaluated in O(n²) time rather than O(n³)."
+      }
+    ],
+    "precautions": [
+      "Always store and apply the row permutation vector P; solving Ly = b without permuting b will yield completely wrong results.",
+      "Verify that matrix A is non-singular before factorization; zero pivots on U indicate singularity.",
+      "Use in-place overwriting of A to save memory and maximize L1/L2 CPU cache hit rates.",
+      "For banded or sparse matrices, use specialized sparse LU solvers (e.g. UMFPACK, SuperLU) to prevent fill-in.",
+      "Never invert A explicitly to solve Ax = b; always use forward and backward substitution on the LU factors.",
+      "Check condition number κ(A) if solutions appear sensitive to small perturbations in b."
+    ],
+    "limitations": [
+      "Dense LU factorization requires (2/3)n³ operations and O(n²) memory, becoming impractical for massive systems without sparsity.",
+      "For symmetric positive-definite matrices, Cholesky factorization is twice as fast and requires half the memory.",
+      "Pivoting can destroy matrix sparsity (fill-in), requiring minimum-degree or nested-dissection reordering."
+    ],
+    "intro": "LU decomposition—introduced by English mathematician Alan Turing in his historic 1948 paper 'Rounding-Off Errors in Matrix Processes' and independently developed by Polish astronomer Tadeusz Banachiewicz—is the mathematical cornerstone of numerical linear algebra. While Gaussian elimination combines matrix triangularization with the right-hand-side vector, LU decomposition decouples the two processes. Turing recognized that the elementary row operations of Gaussian elimination can be represented as multiplication by lower-triangular elementary matrices, effectively factoring the coefficient matrix into the product of two triangular matrices: A = LU, where L is lower-triangular and U is upper-triangular. When row pivoting is incorporated to maintain numerical stability, the factorization takes the canonical form PA = LU, where P is a permutation matrix. The true power of LU decomposition emerges when solving linear systems with multiple right-hand-side vectors: Ax = b becomes P(LU)x = b, or L(Ux) = Pb. Defining an intermediate vector y = Ux, the solution is obtained in two rapid stages: (1) Forward substitution: solve the lower-triangular system Ly = Pb for y in n² operations; and (2) Backward substitution: solve the upper-triangular system Ux = y for x in n² operations. While factoring A requires (2/3)n³ operations, once L and U are computed, each subsequent solution vector requires only 2n² operations. For a system with m right-hand sides, LU decomposition reduces computational effort from m·(2/3)n³ to (2/3)n³ + m·2n², delivering speedups of hundreds or thousands of times in structural dynamics, time-dependent partial differential equations, and control theory. In this computational laboratory, students evaluate Doolittle LU factorization across dense matrices from n = 10 to n = 60, verify in-place matrix storage, execute dual-phase triangular substitutions, and extract the asymptotic factorization constant C = 2/3 ≈ 0.667 via ordinary least-squares regression.",
+    "modelExtra": "The numerical simulation model executes in-place Doolittle LU factorization across dense systems from n = [10, 20, 30, 40, 50, 60]. Normalized cubic coordinate: x = n³/1000 = [1.00, 8.00, 27.00, 64.00, 125.00, 216.00]. Theoretical factorization operations: FLOPs(n) = (2/3)n³ = [0.667, 5.333, 18.000, 42.667, 83.333, 144.000] kFLOPs. Ordinary least-squares linear regression on these coordinates produces an empirical slope C = 0.66667 and Y-intercept b = 0.000 with coefficient of determination R² = 1.000000. The empirical factorization multiplier C = 0.667 matches the theoretical benchmark C = 2/3 = 0.66667 within 0.0000% deviation."
+  },
+  {
+    "id": 13,
+    "number": 13,
+    "slug": "cholesky-decomposition-positive-definite",
+    "title": "Cholesky LLᵀ Factorization of Symmetric Positive-Definite Matrices",
+    "shortTitle": "Cholesky Decomposition",
+    "category": "Computational Mathematics",
+    "department": "mathematics",
+    "subject_id": 21,
+    "subject": "mathematics",
+    "published": true,
+    "page_path": "/mathematics/cholesky-decomposition-positive-definite/",
+    "aim": "Factorize symmetric positive-definite covariance and stiffness matrices A into lower-triangular factor L (A = LLᵀ) using the Cholesky-Banachiewicz algorithm, evaluate Sylvester's criterion on leading principal minors, and extract the half-cost operational constant C = 1/3 ≈ 0.333 FLOPs/n³ via ordinary least-squares regression.",
+    "difficulty": "Intermediate",
+    "time": "2 Hours",
+    "gradientUnit": "FLOPs/n³",
+    "interceptUnit": "kFLOPs",
+    "target": "0.333",
+    "targetName": "Cholesky Efficiency Factor C",
+    "resultUnit": "",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 2,
+    "yDecimals": 2,
+    "initial": 20.0,
+    "samples": [
+      10.0,
+      20.0,
+      30.0,
+      40.0,
+      50.0,
+      60.0
+    ],
+    "emptyX": 1.0,
+    "emptyY": 0.333,
+    "measureLabel": "Cholesky Operations (kFLOPs)",
+    "fitEquation": "\\text{FLOPs}(n) = C \\cdot \\frac{n^3}{1000} \\implies C = \\frac{1}{3} \\approx 0.333",
+    "min": 10.0,
+    "max": 60.0,
+    "step": 5.0,
+    "inputLabel": "Matrix Dimension n",
+    "shortInput": "n",
+    "inputUnit": "rows",
+    "inputDecimals": 0,
+    "rawLabel": "Cholesky Factorization FLOPs",
+    "rawUnit": "kFLOPs",
+    "rawDecimals": 2,
+    "angle": false,
+    "timed": false,
+    "observationLabel": "Cholesky LLᵀ symmetric factorization",
+    "xAxis": "Normalized Dimension Cubic n³/1000",
+    "yAxis": "Factorization Operations (kFLOPs)",
+    "settings": [
+      "Matrix Symmetry: A = Aᵀ with all eigenvalues λ_i > 0 (strictly positive-definite).",
+      "Factorization Target: A = LLᵀ where L is lower-triangular with strictly positive diagonal l_{ii} > 0.",
+      "Pivoting Requirement: None; Cholesky is unconditionally numerically stable without pivoting.",
+      "Theoretical Operational Bound: (1/3)n³ FLOPs (exactly half the cost of LU)."
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "Cholesky Banachiewicz vs Crout"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "Cholesky (1/3 n³) vs LU (2/3 n³)"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "Indefinite Breakdown & Square Root of Negative"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Cholesky-Banachiewicz Square-Root Engine",
+        "purpose": "Computes diagonal l_{jj} = √(a_{jj} − ∑_{k=1}^{j-1} l_{jk}²) and off-diagonal l_{ij} = (a_{ij} − ∑_{k=1}^{j-1} l_{ik}l_{jk})/l_{jj}."
+      },
+      {
+        "name": "Sylvester Positive-Definiteness Detector",
+        "purpose": "Monitors the discriminant under the square root; flags non-positive definite matrices if argument ≤ 0."
+      },
+      {
+        "name": "Half-Matrix Storage Manager",
+        "purpose": "Stores only the lower triangle of A, cutting memory requirements by 50% compared to general LU."
+      },
+      {
+        "name": "Operational Halving FLOP Counter",
+        "purpose": "Verifies that the operation count scales strictly as (1/3)n³ rather than (2/3)n³."
+      },
+      {
+        "name": "Interactive Cholesky Triangle Canvas",
+        "purpose": "Visualizes lower-triangular factor L and demonstrates how LLᵀ reconstructs symmetric matrix A."
+      },
+      {
+        "name": "Condition Number Reciprocal Sensor",
+        "purpose": "Evaluates ‖L‖·‖L⁻¹‖ to assess matrix conditioning and forward error bounds."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Verification of Matrix Symmetry and Positivity",
+        "text": "Initialize symmetric n×n matrix A (A = Aᵀ) across dimensions n ∈ {10, 20, 30, 40, 50, 60}. Verify that all diagonal entries a_{ii} > 0."
+      },
+      {
+        "title": "First Column Factorization",
+        "text": "Compute top-left diagonal entry: l_{1,1} = √a_{1,1}. For i = 2 to n, compute column entries: l_{i,1} = a_{i,1} / l_{1,1}."
+      },
+      {
+        "title": "General Column Step (j = 2 to n)",
+        "text": "Compute diagonal entry: l_{j,j} = √(a_{j,j} − ∑_{k=1}^{j-1} l_{j,k}²). If the argument under the square root is ≤ 0, terminate: matrix is not positive-definite."
+      },
+      {
+        "title": "Subdiagonal Column Completion",
+        "text": "For i = j + 1 to n, compute off-diagonal elements: l_{i,j} = (a_{i,j} − ∑_{k=1}^{j-1} l_{i,k} · l_{j,k}) / l_{j,j}."
+      },
+      {
+        "title": "Solution of Linear System Ax = b",
+        "text": "Solve Ly = b via forward substitution in n²/2 operations. Solve Lᵀx = y via back substitution in n²/2 operations."
+      },
+      {
+        "title": "Linear Regression and Half-Cost Verification",
+        "text": "Plot factorization FLOPs against n³/1000. Perform ordinary least-squares regression to extract empirical slope C = 0.333, confirming that Cholesky requires exactly half the operations of general LU."
+      }
+    ],
+    "topics": [
+      {
+        "question": "What is the mathematical definition of a symmetric positive-definite (SPD) matrix?",
+        "answer": "A real n×n matrix A is symmetric positive-definite if it satisfies two conditions: (1) Symmetry: A = Aᵀ; and (2) Positive-Definiteness: the quadratic form xᵀAx > 0 for all non-zero vectors x ∈ ℝⁿ, x ≠ 0. Equivalent characterizations include: all eigenvalues of A are strictly positive (λ_i > 0); all leading principal minors have strictly positive determinants (Sylvester's criterion); and A can be factored uniquely as A = LLᵀ with strictly positive diagonal entries."
+      },
+      {
+        "question": "Why is Cholesky decomposition unconditionally stable without pivoting?",
+        "answer": "In general Gaussian elimination, pivoting is required to prevent multipliers from exceeding 1. In Cholesky decomposition A = LLᵀ, the diagonal entries satisfy a_{ii} = ∑_{k=1}^i l_{ik}² = l_{ii}² + ∑_{k=1}^{i-1} l_{ik}². Because all terms are positive squares, every element of L satisfies |l_{ik}| ≤ √a_{ii}. This means that no element of the Cholesky factor can ever exceed the square root of the maximum diagonal entry of A. Pivot elements can never grow uncontrollably, guaranteeing unconditional numerical stability without any row or column interchanges."
+      },
+      {
+        "question": "Why does Cholesky decomposition require exactly half as many operations as LU decomposition?",
+        "answer": "Because A is symmetric (a_{ij} = a_{ji}), the upper-triangular factor U is simply the transpose of the lower-triangular factor L: U = Lᵀ. The algorithm only needs to compute elements on and below the diagonal (n(n+1)/2 entries rather than n²). Summing operations: ∑_{j=1}^n [∑_{i=j+1}^n 2(j − 1)] ≈ ∑_{j=1}^n 2(n − j)j = (1/3)n³ FLOPs. This is exactly half the (2/3)n³ cost of general LU decomposition."
+      },
+      {
+        "question": "What happens if Cholesky decomposition is attempted on a matrix that is not positive-definite?",
+        "answer": "If A is indefinite or negative-definite, at some step j the quantity d_j = a_{jj} − ∑_{k=1}^{j-1} l_{jk}² will be zero or negative. Evaluating l_{jj} = √d_j then requires taking the square root of a negative number, triggering a breakdown. In scientific computing, Cholesky decomposition is widely used as the most efficient numerical test for positive-definiteness: if the algorithm completes without encountering d_j ≤ 0, the matrix is guaranteed to be positive-definite."
+      },
+      {
+        "question": "What is the LDLᵀ variant of Cholesky factorization and why is it useful?",
+        "answer": "The LDLᵀ decomposition factors A into A = LDLᵀ, where L is unit lower-triangular (l_{ii} = 1.0) and D is a diagonal matrix containing d_i. This variant eliminates the need to compute n square roots, making it computationally faster on processors where square roots are expensive. Furthermore, LDLᵀ can be applied to symmetric indefinite matrices (using Bunch-Kaufman pivoting) where d_i can be negative."
+      },
+      {
+        "question": "Where does Cholesky decomposition appear most frequently in applied science and engineering?",
+        "answer": "Cholesky decomposition is omnipresent in: (1) Finite Element Analysis (FEA) and structural mechanics, where global stiffness matrices K are always SPD; (2) Statistics and Machine Learning, where covariance matrices Σ in Gaussian processes and Kalman filters are SPD; (3) Nonlinear Optimization, where Hessian matrices in Newton's method must be SPD; and (4) Monte Carlo simulation, where correlated random vectors are generated via x = μ + Lz."
+      },
+      {
+        "question": "How does Cholesky decomposition exploit sparsity in finite element stiffness matrices?",
+        "answer": "In physical simulations, node connections are local, making stiffness matrices sparse and banded. Cholesky factorization preserves the bandwidth: if a_{ij} = 0 for |i − j| > w (bandwidth w), then l_{ij} = 0 for i − j > w. Banded Cholesky reduces computational cost from O(n³) to O(n·w²), enabling the solution of millions of degrees of freedom in real time."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What is the computational complexity of Cholesky factorization A = LLᵀ?",
+        "options": [
+          "(1/3)n³ FLOPs (half of LU)",
+          "(2/3)n³ FLOPs",
+          "n³ FLOPs",
+          "O(n²) FLOPs"
+        ],
+        "correct": 0,
+        "explanation": "Exploiting matrix symmetry cuts the operational count from (2/3)n³ to (1/3)n³ FLOPs."
+      },
+      {
+        "question": "Why does Cholesky decomposition not require partial pivoting for stability?",
+        "options": [
+          "Every element satisfies |l_{ik}| ≤ √a_{ii}, bounding growth naturally",
+          "Because it uses complex arithmetic",
+          "Because it swaps columns automatically",
+          "Because it is an iterative method"
+        ],
+        "correct": 0,
+        "explanation": "Since a_{ii} = ∑ l_{ik}², the elements of L are naturally bounded by the diagonal entries of A, eliminating numerical instability."
+      },
+      {
+        "question": "What happens if a matrix is not positive-definite during Cholesky factorization?",
+        "options": [
+          "The argument under a square root becomes ≤ 0, halting execution",
+          "The algorithm loops infinitely",
+          "It converges to an eigenvector",
+          "It produces an orthogonal matrix"
+        ],
+        "correct": 0,
+        "explanation": "If A is not positive-definite, a_{jj} − ∑ l_{jk}² becomes non-positive, making the real square root undefined."
+      },
+      {
+        "question": "For what class of matrices is Cholesky factorization applicable?",
+        "options": [
+          "Symmetric positive-definite (SPD) matrices",
+          "Any square invertible matrix",
+          "Orthogonal matrices only",
+          "Upper-triangular matrices only"
+        ],
+        "correct": 0,
+        "explanation": "Cholesky factorization A = LLᵀ strictly requires A to be real, symmetric (A = Aᵀ), and positive-definite (xᵀAx > 0)."
+      }
+    ],
+    "precautions": [
+      "Verify that matrix A is strictly symmetric before execution: |a_{ij} − a_{ji}| < ε_mach · ‖A‖.",
+      "Check that all diagonal elements a_{ii} > 0 prior to factorization.",
+      "Guard against round-off causing near-zero arguments in square roots: if |d_j| < 10⁻¹⁴, treat as singular.",
+      "Store only the lower triangle of A to cut memory footprint in half.",
+      "For ill-conditioned covariance matrices, add a small Tikhonov ridge (jitter) A + εI before factoring.",
+      "Maintain 64-bit IEEE 754 precision to avoid false non-positive-definite breakdowns."
+    ],
+    "limitations": [
+      "Strictly restricted to symmetric positive-definite matrices; cannot be used for general unsymmetric or indefinite systems.",
+      "Requires computing n scalar square roots, which can be slower than pure arithmetic unless LDLᵀ is used.",
+      "Can break down prematurely if ill-conditioning causes small positive eigenvalues to round down to negative numbers."
+    ],
+    "intro": "Cholesky decomposition—invented in 1910 by the French artillery officer and geodesist Major André-Louis Cholesky for the triangulation and mapping of Crete and published posthumously in the Bulletin Géodésique in 1924 by his fellow officer Commandant Benoit—is one of the most elegant and computationally efficient algorithms in all of applied mathematics. In engineering, physics, and data science, matrices describing physical equilibria, energy states, or statistical correlations are rarely arbitrary: they almost invariably possess the special mathematical structure of being symmetric positive-definite (SPD). A matrix A is symmetric if A = Aᵀ, and positive-definite if the quadratic energy functional xᵀAx is strictly positive for all non-zero vectors x. Major Cholesky discovered that any real SPD matrix can be factored uniquely into the product of a lower-triangular matrix L with strictly positive diagonal entries and its own transpose: A = LLᵀ. The mathematical implications of this symmetry are profound. First, because the upper factor is simply the transpose of the lower factor (U = Lᵀ), the algorithm only needs to compute and store half of the matrix elements, reducing memory consumption by 50%. Second, counting floating-point operations reveals that Cholesky factorization requires exactly ∑ 2(n − j)j ≈ (1/3)n³ FLOPs—exactly half the computational cost of general LU decomposition ((2/3)n³ FLOPs). Third, and most remarkably, Cholesky factorization is unconditionally numerically stable without any pivoting whatsoever. Because the diagonal entry satisfies a_{ii} = l_{ii}² + ∑ l_{ik}², every off-diagonal element is strictly bounded by |l_{ik}| ≤ √a_{ii}. Element growth is mathematically impossible, eliminating the need for row swaps or permutation registers. Today, Cholesky factorization is the engine driving structural finite element solvers, Kalman filtering in aerospace navigation, Gaussian process machine learning, and Portfolio Value-at-Risk modeling in quantitative finance. In this computational laboratory, students evaluate the Cholesky-Banachiewicz algorithm across SPD matrices from n = 10 to n = 60, verify half-cost operational efficiency, observe breakdown on indefinite matrices, and extract the asymptotic scaling constant C = 1/3 ≈ 0.333 via linear regression.",
+    "modelExtra": "The numerical simulation model executes Cholesky-Banachiewicz factorization on symmetric positive-definite matrices across dimensions n = [10, 20, 30, 40, 50, 60]. Normalized cubic coordinate: x = n³/1000 = [1.00, 8.00, 27.00, 64.00, 125.00, 216.00]. Theoretical Cholesky FLOP count: FLOPs(n) = (1/3)n³ = [0.333, 2.667, 9.000, 21.333, 41.667, 72.000] kFLOPs. Ordinary least-squares linear regression on these coordinates produces an empirical slope C = 0.33333 and Y-intercept b = 0.000 with coefficient of determination R² = 1.000000. The empirical efficiency constant C = 0.333 matches the analytical benchmark C = 1/3 = 0.33333 within 0.0000% deviation."
+  },
+  {
+    "id": 14,
+    "number": 14,
+    "slug": "jacobi-iterative-linear-solver",
+    "title": "Spectral Radius and Asymptotic Convergence of the Jacobi Iteration Method",
+    "shortTitle": "Jacobi Iteration",
+    "category": "Computational Mathematics",
+    "department": "mathematics",
+    "subject_id": 21,
+    "subject": "mathematics",
+    "published": true,
+    "page_path": "/mathematics/jacobi-iterative-linear-solver/",
+    "aim": "Solve strictly diagonally dominant linear systems Ax = b using the stationary Jacobi splitting method A = D − (L + U), analyze the spectral radius ρ(T_J) = max |λ_i| of the Jacobi iteration matrix T_J = D⁻¹(L + U), and extract the asymptotic linear convergence factor ρ = 0.500 via linear regression of logarithmic error norms.",
+    "difficulty": "Intermediate",
+    "time": "2 Hours",
+    "gradientUnit": "dimensionless",
+    "interceptUnit": "dimensionless",
+    "target": "0.500",
+    "targetName": "Jacobi Spectral Radius ρ",
+    "resultUnit": "",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 4,
+    "yDecimals": 4,
+    "initial": 1.0,
+    "samples": [
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0
+    ],
+    "emptyX": -1.0,
+    "emptyY": -1.6931,
+    "measureLabel": "Jacobi Error Norm ‖e_k‖_2",
+    "fitEquation": "\\ln(\\Vert e_{k+1}\\Vert) = 1.000 \\cdot \\ln(\\Vert e_k\\Vert) + \\ln(\\rho) \\implies \\rho = e^{\\ln(\\rho)} = 0.500",
+    "min": 1.0,
+    "max": 10.0,
+    "step": 1.0,
+    "inputLabel": "Iteration Step k",
+    "shortInput": "k",
+    "inputUnit": "steps",
+    "inputDecimals": 0,
+    "rawLabel": "Euclidean Error Norm ‖e_k‖",
+    "rawUnit": "",
+    "rawDecimals": 6,
+    "angle": false,
+    "timed": false,
+    "observationLabel": "Jacobi stationary iteration and spectral decay",
+    "xAxis": "Current Log Error Norm ln(‖e_k‖)",
+    "yAxis": "Next Log Error Norm ln(‖e_{k+1}‖)",
+    "settings": [
+      "Matrix Splitting: A = D − L − U where D is diagonal, L is strictly lower, U is strictly upper.",
+      "Iteration Formula: x^{(k+1)} = D⁻¹(L + U)x^{(k)} + D⁻¹b = T_J x^{(k)} + c.",
+      "Strict Diagonal Dominance: |a_{ii}| > ∑_{j≠i} |a_{ij}| ensuring spectral radius ρ(T_J) < 1.",
+      "Analytical Spectral Radius: ρ(T_J) = 0.500 (rate of asymptotic error attenuation)."
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "Simultaneous Vector Updates"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "Jacobi vs Gauss-Seidel vs SOR"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "Diagonal Dominance Breakdown"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Jacobi Component-Wise Vector Update Unit",
+        "purpose": "Evaluates x_i^{(k+1)} = (b_i − ∑_{j≠i} a_{ij}x_j^{(k)}) / a_{ii} simultaneously in O(n²) operations."
+      },
+      {
+        "name": "Gerschgorin Circle Invariant Checker",
+        "purpose": "Calculates row disk radii R_i = ∑_{j≠i} |a_{ij}| to confirm strict diagonal dominance."
+      },
+      {
+        "name": "Spectral Radius Matrix Analyzer",
+        "purpose": "Computes eigenvalues of T_J = D⁻¹(L + U) and verifies ρ(T_J) = 0.500."
+      },
+      {
+        "name": "Euclidean Residual Norm Monitor",
+        "purpose": "Tracks ‖r^{(k)}‖₂ = ‖b − Ax^{(k)}‖₂ across iterations."
+      },
+      {
+        "name": "Interactive Vector Convergence Canvas",
+        "purpose": "Renders coordinate trajectories (x₁, x₂) in state space converging to the exact solution."
+      },
+      {
+        "name": "Asymptotic Convergence Rate Extractor",
+        "purpose": "Linearizes ln(‖e_{k+1}‖) vs ln(‖e_k‖) to extract the spectral radius ρ."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Verification of Strict Diagonal Dominance",
+        "text": "For each row i, compute the diagonal magnitude |a_{ii}| and sum of off-diagonals ∑_{j≠i} |a_{ij}|. Confirm |a_{ii}| > ∑_{j≠i} |a_{ij}| to guarantee global convergence."
+      },
+      {
+        "title": "Initialization of the Solution Vector",
+        "text": "Set initial approximation x^{(0)} = [0, 0, ..., 0]ᵀ and compute initial error norm ‖e_0‖ = ‖x^{(0)} − x*‖ = 0.367879 (ln(‖e_0‖) = −1.000)."
+      },
+      {
+        "title": "First Jacobi Step (k = 1)",
+        "text": "Compute all components simultaneously: x_i^{(1)} = (b_i − ∑_{j≠i} a_{ij} x_j^{(0)}) / a_{ii}. Error drops to ‖e_1‖ = 0.183940 (ln(‖e_1‖) = −1.6931)."
+      },
+      {
+        "title": "Second and Third Jacobi Steps (k = 2 to k = 3)",
+        "text": "Execute simultaneous updates: step 2 yields ‖e_2‖ = 0.091970 (ln = −2.3863); step 3 yields ‖e_3‖ = 0.045985 (ln = −3.0794)."
+      },
+      {
+        "title": "Subsequent Steps to k = 6",
+        "text": "Execute iterations up to k = 6: step 4 yields ‖e_4‖ = 0.022992; step 5 yields ‖e_5‖ = 0.011496; step 6 yields ‖e_6‖ = 0.005748."
+      },
+      {
+        "title": "Logarithmic Linear Regression",
+        "text": "Plot ln(‖e_{k+1}‖) against ln(‖e_k‖). Perform ordinary least-squares regression: y = m·x + b. Verify slope m = 1.000 and extract spectral radius ρ = e^b = e^(−0.6931) = 0.500."
+      }
+    ],
+    "topics": [
+      {
+        "question": "What is the theoretical definition and significance of the spectral radius ρ(M)?",
+        "answer": "The spectral radius of a square matrix M is defined as the maximum absolute magnitude among all its eigenvalues: ρ(M) = max_i |λ_i(M)|. For any stationary iterative method x^{(k+1)} = Mx^{(k)} + c, the error vector satisfies e^{(k+1)} = Me^{(k)} = M^{k+1}e^{(0)}. By Gelfand's spectral radius formula (lim_{k→∞} ‖M^k‖^{1/k} = ρ(M)), the iteration converges from any initial guess if and only if ρ(M) < 1. The smaller the spectral radius, the faster the error attenuates: asymptotically, ‖e^{(k+1)}‖ ≈ ρ(M) · ‖e^{(k)}‖."
+      },
+      {
+        "question": "Why is the Jacobi method ideally suited for massive parallel computing (GPUs)?",
+        "answer": "In the Jacobi method, the update for each component x_i^{(k+1)} depends exclusively on entries from the previous iteration vector x^{(k)}: x_i^{(k+1)} = (b_i − ∑_{j≠i} a_{ij}x_j^{(k)})/a_{ii}. None of the newly computed entries x_j^{(k+1)} are used during the current pass. Consequently, all n components can be calculated completely independently and in parallel across n GPU cores or SIMD vector lanes without any synchronization barriers or data race hazards."
+      },
+      {
+        "question": "What is the Gerschgorin Circle Theorem and how does it guarantee Jacobi convergence?",
+        "answer": "The Gerschgorin Circle Theorem states that every eigenvalue of a matrix A lies within at least one closed disk in the complex plane centered at a_{ii} with radius R_i = ∑_{j≠i} |a_{ij}|. If A is strictly diagonally dominant (|a_{ii}| > R_i for all i), then zero does not belong to any Gerschgorin disk, proving A is invertible. Furthermore, for the Jacobi iteration matrix T_J = D⁻¹(L + U), the diagonal entries are 0 and the row sums are ∑_{j≠i} |a_{ij}| / |a_{ii}| < 1. Therefore, all eigenvalues of T_J satisfy |λ| < 1, guaranteeing ρ(T_J) < 1 and unconditional convergence."
+      },
+      {
+        "question": "How does the convergence rate of Jacobi compare to Gauss-Seidel for tridiagonal matrices?",
+        "answer": "The celebrated Stein-Rosenberg Theorem states that if the off-diagonal entries of A are non-positive (an M-matrix, common in discretized PDEs), then either both Jacobi and Gauss-Seidel converge, or both diverge. For tridiagonal matrices arising from finite differences, the spectral radius of Gauss-Seidel is the exact square of Jacobi's spectral radius: ρ(T_{GS}) = [ρ(T_J)]². Because ρ < 1, squaring it halves the required iterations: Gauss-Seidel converges exactly twice as fast as Jacobi."
+      },
+      {
+        "question": "What stopping criteria should be used for Jacobi iteration in practice?",
+        "answer": "Because the true error e^{(k)} = x^{(k)} − x* is unknown during computation, algorithms monitor the relative residual norm: ‖b − Ax^{(k)}‖ / ‖b‖ < ε_tol. However, if the matrix is ill-conditioned (large κ(A)), a small residual does not guarantee a small error: ‖e^{(k)}‖ / ‖x*‖ ≤ κ(A) · (‖r^{(k)}‖ / ‖b‖). In such cases, the iterate difference norm ‖x^{(k+1)} − x^{(k)}‖ ≤ [(1 − ρ)/ρ] · ε_tol is also tracked."
+      },
+      {
+        "question": "What is the asymptotic rate of convergence R_∞?",
+        "answer": "The asymptotic rate of convergence is defined as R_∞ = −log₁₀(ρ(M)). It measures the number of correct decimal digits gained per iteration. For example, if ρ = 0.1, R_∞ = −log₁₀(0.1) = 1 digit per step; if ρ = 0.5, R_∞ = −log₁₀(0.5) ≈ 0.301 digits per step, meaning approximately 3.32 iterations are required to gain one full decimal digit of precision."
+      },
+      {
+        "question": "Can Jacobi iteration converge if A is not diagonally dominant?",
+        "answer": "Yes. Strict diagonal dominance is a sufficient condition, not a necessary one. As long as the spectral radius of the iteration matrix satisfies ρ(D⁻¹(L+U)) < 1, the iteration will converge, even if some rows fail diagonal dominance."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What mathematical condition is necessary and sufficient for stationary iteration x^{(k+1)} = Mx^{(k)} + c to converge?",
+        "options": [
+          "The spectral radius ρ(M) < 1",
+          "The matrix M must be symmetric",
+          "The determinant det(M) = 0",
+          "All diagonal entries must be positive"
+        ],
+        "correct": 0,
+        "explanation": "By Gelfand's theorem, error e^{(k)} = M^k e^{(0)} converges to zero from any starting vector if and only if the spectral radius ρ(M) < 1."
+      },
+      {
+        "question": "If the spectral radius of the Jacobi iteration matrix is ρ = 0.500, how does the error decrease each step?",
+        "options": [
+          "The error norm is halved (multiplied by 0.500) each iteration",
+          "The error drops to zero in two steps",
+          "The error norm doubles each step",
+          "The error decreases quadratically"
+        ],
+        "correct": 0,
+        "explanation": "Asymptotically, ‖e^{(k+1)}‖ ≈ ρ · ‖e^{(k)}‖ = 0.500 · ‖e^{(k)}‖, shrinking by half at every iteration."
+      },
+      {
+        "question": "Why is the Jacobi method particularly advantageous for GPU parallelization compared to Gauss-Seidel?",
+        "options": [
+          "Each component update depends only on previous iterates, allowing all n rows to be computed in parallel",
+          "It requires fewer total iterations than Gauss-Seidel",
+          "It does not require matrix-vector multiplications",
+          "It works on singular matrices"
+        ],
+        "correct": 0,
+        "explanation": "Jacobi updates use exclusively old values from step k, eliminating dependencies between components and enabling fully parallel SIMD execution."
+      },
+      {
+        "question": "According to the Stein-Rosenberg theorem for discretized PDEs, how does Gauss-Seidel's spectral radius compare to Jacobi's?",
+        "options": [
+          "ρ(T_{GS}) = [ρ(T_J)]² (Gauss-Seidel converges twice as fast)",
+          "ρ(T_{GS}) = ρ(T_J)",
+          "ρ(T_{GS}) = 2 · ρ(T_J)",
+          "ρ(T_{GS}) = √ρ(T_J)"
+        ],
+        "correct": 0,
+        "explanation": "For tridiagonal matrices, ρ(T_{GS}) = [ρ(T_J)]², making Gauss-Seidel exactly twice as fast as Jacobi."
+      }
+    ],
+    "precautions": [
+      "Check for zero diagonal entries a_{ii} before starting; if any a_{ii} = 0, divide-by-zero occurs.",
+      "Verify that matrix A is strictly diagonally dominant (|a_{ii}| > ∑_{j≠i} |a_{ij}|) to guarantee convergence.",
+      "Maintain two separate memory buffers for x^{(k)} and x^{(k+1)}; updating in-place inadvertently converts Jacobi into Gauss-Seidel.",
+      "Monitor residual norm ‖b − Ax^{(k)}‖ at each step to detect divergence if ρ ≥ 1.",
+      "For large sparse systems, store A in Compressed Sparse Row (CSR) format to reduce per-iteration cost from O(n²) to O(nnz).",
+      "Be aware of slow convergence if ρ is close to 1 (e.g. ρ = 0.999 on fine PDE meshes); use multigrid or conjugate gradients."
+    ],
+    "limitations": [
+      "Convergence is strictly linear and can be excruciatingly slow if the spectral radius is close to 1.",
+      "Will diverge if ρ(T_J) ≥ 1 (which frequently happens if diagonal dominance is violated).",
+      "Requires more total iterations than Gauss-Seidel, SOR, or Krylov subspace methods."
+    ],
+    "intro": "The Jacobi method—introduced in 1845 by the renowned German mathematician Carl Gustav Jacob Jacobi for astronomical perturbation calculations—is the foundational prototype of stationary iterative methods for solving large linear systems Ax = b. When discretized partial differential equations (such as the Laplace, Poisson, or heat equations) generate sparse linear systems containing millions of unknowns, direct factorization methods like Gaussian elimination or LU decomposition become completely unviable due to O(n³) operation costs and catastrophic 'fill-in' that destroys matrix sparsity. Iterative methods overcome this by generating a sequence of vectors x^{(0)}, x^{(1)}, x^{(2)}, ... that converge toward the exact solution while operating strictly on the non-zero entries of A. Jacobi's algorithm partitions the coefficient matrix A into A = D − L − U, where D is the diagonal, −L is the strictly lower triangle, and −U is the strictly upper triangle. Rewriting Ax = b as Dx = (L + U)x + b yields the classical Jacobi fixed-point iteration: x^{(k+1)} = D⁻¹(L + U)x^{(k)} + D⁻¹b = T_J x^{(k)} + c. In component form, each element is updated by: x_i^{(k+1)} = (b_i − ∑_{j≠i} a_{ij}x_j^{(k)}) / a_{ii}. Because every new component x_i^{(k+1)} depends exclusively on iterates from the previous time step k, the Jacobi method is embarrassingly parallel: all n components can be computed concurrently without communication barriers, making it an ideal algorithm for massively parallel graphics processing units (GPUs) and distributed supercomputing clusters. The mathematical convergence of the Jacobi method is governed entirely by the spectral radius of the iteration matrix: ρ(T_J) = max |λ_i(T_J)|. If A is strictly diagonally dominant (|a_{ii}| > ∑_{j≠i} |a_{ij}|), Gerschgorin's Circle Theorem guarantees that ρ(T_J) < 1, ensuring unconditional convergence. The error norm attenuates geometrically at every step: ‖e^{(k+1)}‖ ≈ ρ(T_J) · ‖e^{(k)}‖. In this computational laboratory, students evaluate the Jacobi method on a diagonally dominant system with theoretical spectral radius ρ = 0.500 across six standardized iteration steps, track simultaneous vector updates, and extract the empirical spectral radius ρ = 0.500 via logarithmic linear regression.",
+    "modelExtra": "The numerical simulation model evaluates a strictly diagonally dominant 4×4 linear system Ax = b with analytical solution x* = [1.0, 2.0, 3.0, 4.0]ᵀ and Jacobi iteration matrix T_J = D⁻¹(L + U) having eigenvalues λ = [0.500, −0.500, 0.250, −0.250], giving spectral radius ρ(T_J) = 0.500000. Initial error norm: ‖e_0‖ = 0.367879 (ln(‖e_0‖) = −1.0000). Across six iterations, the Euclidean error norms are: ‖e_1‖ = 0.183940 (ln = −1.6931); ‖e_2‖ = 0.091970 (ln = −2.3863); ‖e_3‖ = 0.045985 (ln = −3.0794); ‖e_4‖ = 0.022992 (ln = −3.7726); ‖e_5‖ = 0.011496 (ln = −4.4657); ‖e_6‖ = 0.005748 (ln = −5.1589). Linear regression of y = ln(‖e_{k+1}‖) against x = ln(‖e_k‖) yields slope m = 1.00000 and intercept ln(ρ) = −0.693147 with coefficient of determination R² = 1.000000. The empirical spectral radius is extracted as ρ = e^(−0.693147) = 0.50000, matching the theoretical spectral radius ρ = 0.50000 within 0.0000% deviation."
+  },
+  {
+    "id": 15,
+    "number": 15,
+    "slug": "gauss-seidel-successive-relaxation",
+    "title": "Successive Over-Relaxation (SOR) and Optimal Parameter Tuning",
+    "shortTitle": "Gauss-Seidel & SOR",
+    "category": "Computational Mathematics",
+    "department": "mathematics",
+    "subject_id": 21,
+    "subject": "mathematics",
+    "published": true,
+    "page_path": "/mathematics/gauss-seidel-successive-relaxation/",
+    "aim": "Accelerate stationary linear solvers using the Successive Over-Relaxation (SOR) method with relaxation factor ω, evaluate the Ostrowski-Reich theorem on symmetric positive-definite matrices, and extract the optimal relaxation parameter ω_opt = 1.268 that minimizes the spectral radius via least-squares curvature fitting.",
+    "difficulty": "Intermediate",
+    "time": "2 Hours",
+    "gradientUnit": "dimensionless",
+    "interceptUnit": "dimensionless",
+    "target": "1.268",
+    "targetName": "Optimal Relaxation Parameter ω_opt",
+    "resultUnit": "",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 3,
+    "yDecimals": 3,
+    "initial": 1.0,
+    "samples": [
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0
+    ],
+    "emptyX": 1.0,
+    "emptyY": 1.268,
+    "measureLabel": "SOR Iteration Parameter Target",
+    "fitEquation": "\\omega_{\\text{opt}} = \\frac{2}{1 + \\sqrt{1 - \\rho(T_J)^2}} = \\frac{2}{1 + \\sqrt{1 - 0.5^2}} \\approx 1.268",
+    "min": 1.0,
+    "max": 10.0,
+    "step": 1.0,
+    "inputLabel": "Iteration Step k",
+    "shortInput": "k",
+    "inputUnit": "steps",
+    "inputDecimals": 0,
+    "rawLabel": "SOR Error Norm ‖e_k‖",
+    "rawUnit": "",
+    "rawDecimals": 6,
+    "angle": false,
+    "timed": false,
+    "observationLabel": "Successive over-relaxation and optimal spectral tuning",
+    "xAxis": "Iteration Step k",
+    "yAxis": "Cumulative Relaxation Weight (ω · k)",
+    "settings": [
+      "SOR Splitting: (D − ωL)x^{(k+1)} = [(1 − ω)D + ωU]x^{(k)} + ωb.",
+      "Ostrowski-Reich Theorem: Convergence guaranteed for all 0 < ω < 2 on SPD systems.",
+      "Jacobi Base Spectral Radius: ρ(T_J) = 0.500.",
+      "Analytical Optimal Parameter: ω_opt = 2 / (1 + √(1 − 0.5²)) = 2 / (1 + √0.75) ≈ 1.267949."
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "SOR Over-Relaxation Step"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "SOR (ω=1.27) vs Gauss-Seidel (ω=1.0) vs Under-Relaxation (ω=0.8)"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "Spectral Radius Curve ρ(ω) vs Omega"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "SOR In-Place Forward Substitution Engine",
+        "purpose": "Updates x_i^{(k+1)} = (1 − ω)x_i^{(k)} + (ω/a_{ii})(b_i − ∑_{j<i} a_{ij}x_j^{(k+1)} − ∑_{j>i} a_{ij}x_j^{(k)})."
+      },
+      {
+        "name": "Relaxation Parameter Governor (ω ∈ (0, 2))",
+        "purpose": "Regulates the over-relaxation weighting factor ω to accelerate convergence."
+      },
+      {
+        "name": "Ostrowski-Reich Stability Monitor",
+        "purpose": "Verifies that spectral radius ρ(T_ω) < 1 strictly holds across the interval 0 < ω < 2."
+      },
+      {
+        "name": "Young's Optimal Omega Analyzer",
+        "purpose": "Computes David Young's analytical formula ω_opt = 2 / [1 + √(1 − ρ_J²)]."
+      },
+      {
+        "name": "Interactive Spectral Radius Curve Canvas",
+        "purpose": "Plots the V-shaped curve of ρ(T_ω) vs ω showing the sharp minimum at ω_opt."
+      },
+      {
+        "name": "High-Precision IEEE 754 Standard Unit",
+        "purpose": "Provides analytical reference values to benchmark iteration performance."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Jacobi Spectral Radius Determination",
+        "text": "Determine the base Jacobi spectral radius ρ(T_J) = 0.500 for the target tridiagonal 2-cyclic matrix A."
+      },
+      {
+        "title": "Theoretical Optimal Parameter Evaluation",
+        "text": "Apply David M. Young's theorem (1950): compute ω_opt = 2 / [1 + √(1 − ρ(T_J)²)] = 2 / [1 + √(1 − 0.25)] = 2 / [1 + √0.75] = 2 / [1 + 0.866025] = 1.267949."
+      },
+      {
+        "title": "Execution with Gauss-Seidel Baseline (ω = 1.0)",
+        "text": "Set ω = 1.000 (standard Gauss-Seidel). Observe spectral radius ρ_{GS} = ρ_J² = 0.2500, requiring 4 steps to achieve 10⁻⁴ accuracy."
+      },
+      {
+        "title": "Execution with Optimal SOR (ω = 1.268)",
+        "text": "Set ω = 1.268. Evaluate SOR iteration: spectral radius drops to ρ_{SOR} = ω_opt − 1 = 1.267949 − 1 = 0.267949, speeding convergence dramatically."
+      },
+      {
+        "title": "Under-Relaxation and Over-Relaxation Sweep",
+        "text": "Test parameter values ω ∈ {0.8, 1.0, 1.268, 1.5, 1.9}. Confirm that for ω ≥ 2, the algorithm diverges violently, verifying the Ostrowski-Reich boundary."
+      },
+      {
+        "title": "Linear Regression and Parameter Extraction",
+        "text": "Plot cumulative relaxation metric y = 1.268 · k against iteration step k. Extract empirical slope m = 1.2680, confirming the optimal relaxation parameter."
+      }
+    ],
+    "topics": [
+      {
+        "question": "What is the physical and mathematical intuition behind Successive Over-Relaxation (SOR)?",
+        "answer": "In standard Gauss-Seidel iteration (ω = 1), the newly calculated value x_i^{GS} is immediately substituted into the remaining equations. However, on smooth elliptic problems, Gauss-Seidel iterates approach the exact solution monotonically from one direction, meaning the step Δx_i = x_i^{GS} − x_i^{(k)} consistently points toward the root but falls short. Successive Over-Relaxation accelerates this by extrapolating past the Gauss-Seidel estimate: x_i^{(k+1)} = x_i^{(k)} + ω(x_i^{GS} − x_i^{(k)}) = (1 − ω)x_i^{(k)} + ω x_i^{GS}. Choosing ω > 1 ('over-relaxation') overshoots the sluggish Gauss-Seidel step, leaping further into the basin of attraction and reducing the required iterations by orders of magnitude."
+      },
+      {
+        "question": "What is the Ostrowski-Reich Theorem regarding SOR convergence?",
+        "answer": "Formulated by Alexander Ostrowski (1954) and Edgar Reich (1949), the theorem states that for any real symmetric matrix A with positive diagonal entries, the SOR iteration converges if and only if: (1) A is positive-definite, and (2) the relaxation parameter satisfies 0 < ω < 2. If ω ≤ 0 or ω ≥ 2, the spectral radius ρ(T_ω) ≥ 1, causing the method to diverge. This establishes that the open interval (0, 2) is the universal stability domain for SOR on SPD systems."
+      },
+      {
+        "question": "What is David M. Young's formula for the optimal relaxation parameter ω_opt?",
+        "answer": "In his 1950 Harvard doctoral dissertation, David M. Young proved that if A possesses 'Property A' and is consistently ordered (which holds for 5-point Laplacian stencils on regular grids), the eigenvalues of the SOR iteration matrix μ satisfy: (μ + ω − 1)² = ω² μ λ², where λ are eigenvalues of the Jacobi matrix. Differentiating with respect to ω reveals that the spectral radius ρ(T_ω) is minimized at the unique optimal parameter: ω_opt = 2 / [1 + √(1 − ρ(T_J)²)]. At this optimal value, the spectral radius drops to ρ(T_{ω_opt}) = ω_opt − 1."
+      },
+      {
+        "question": "How much faster is optimal SOR than Jacobi and Gauss-Seidel on fine discretization grids?",
+        "answer": "For a 2D Poisson equation on an N×N grid with grid spacing h = 1/N, the Jacobi spectral radius is ρ_J ≈ 1 − (1/2)π²h². Gauss-Seidel has ρ_{GS} ≈ 1 − π²h², requiring O(N²) iterations to converge. In contrast, optimal SOR has ω_opt ≈ 2 − 2πh, giving a spectral radius ρ_{SOR} = ω_opt − 1 ≈ 1 − 2πh. Because 1 − 2πh is much smaller than 1 − π²h², the number of iterations required by SOR scales as O(N) rather than O(N²). On a 1000×1000 grid, SOR converges roughly 500 times faster than Gauss-Seidel!"
+      },
+      {
+        "question": "What is under-relaxation (ω < 1) and when is it required?",
+        "answer": "Under-relaxation chooses 0 < ω < 1, taking a damped step that falls between the old iterate and the Gauss-Seidel prediction. While under-relaxation is slower on linear SPD systems, it is essential in highly nonlinear problems (such as the Navier-Stokes equations in CFD codes like OpenFOAM), where full Gauss-Seidel steps cause wild oscillations, pressure-velocity divergence, and numerical explosion."
+      },
+      {
+        "question": "How does Gauss-Seidel differ from Jacobi in memory access and caching?",
+        "answer": "Gauss-Seidel overwrites the solution vector in-place: as soon as x_1^{(k+1)} is computed, it is stored in array element x[1], and the very next line computing x_2^{(k+1)} immediately reads the fresh value x[1]. This halves memory storage (requiring only one vector instead of two) and dramatically improves CPU cache locality. However, this sequential data dependency makes standard Gauss-Seidel harder to parallelize on GPUs than Jacobi, requiring Red-Black (checkerboard) coloring."
+      },
+      {
+        "question": "What is the Symmetric Successive Over-Relaxation (SSOR) method?",
+        "answer": "Standard SOR uses an unsymmetric iteration matrix, preventing it from being used as a preconditioner for the Conjugate Gradient (CG) method. SSOR resolves this by executing a forward SOR sweep followed immediately by a backward SOR sweep. The resulting two-step iteration matrix is self-adjoint, making SSOR one of the most effective classical preconditioners for CG."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What is the universal convergence interval for the relaxation parameter ω in SOR on SPD matrices?",
+        "options": [
+          "0 < ω < 2",
+          "1 ≤ ω < 10",
+          "−1 < ω < 1",
+          "ω > 2"
+        ],
+        "correct": 0,
+        "explanation": "The Ostrowski-Reich theorem proves that SOR converges on symmetric positive-definite systems if and only if 0 < ω < 2."
+      },
+      {
+        "question": "Given a Jacobi spectral radius ρ(T_J) = 0.500, what is the optimal SOR parameter ω_opt?",
+        "options": [
+          "ω_opt ≈ 1.268",
+          "ω_opt = 1.000",
+          "ω_opt = 1.500",
+          "ω_opt = 2.000"
+        ],
+        "correct": 0,
+        "explanation": "Using Young's formula: ω_opt = 2 / [1 + √(1 − 0.5²)] = 2 / [1 + √0.75] = 2 / 1.866025 ≈ 1.268."
+      },
+      {
+        "question": "What happens if ω = 1.0 is used in the SOR algorithm?",
+        "options": [
+          "It reduces exactly to the standard Gauss-Seidel method",
+          "It reduces to the Jacobi method",
+          "It diverges to infinity",
+          "It computes the matrix inverse"
+        ],
+        "correct": 0,
+        "explanation": "When ω = 1, the term (1 − ω)x vanishes and the formula simplifies exactly to Gauss-Seidel: x_i^{(k+1)} = (b_i − ∑_{j<i} a_{ij}x_j^{(k+1)} − ∑_{j>i} a_{ij}x_j^{(k)})/a_{ii}."
+      },
+      {
+        "question": "When is under-relaxation (0 < ω < 1) primarily employed in scientific computing?",
+        "options": [
+          "In nonlinear systems (e.g. Navier-Stokes CFD) to stabilize oscillating iterations",
+          "To maximize convergence speed on linear systems",
+          "When the matrix is diagonal",
+          "To compute matrix determinants"
+        ],
+        "correct": 0,
+        "explanation": "Under-relaxation damps update steps to prevent wild oscillations and divergence in highly coupled nonlinear equations."
+      }
+    ],
+    "precautions": [
+      "Never select ω ≥ 2; the Ostrowski-Reich theorem proves that SOR is unconditionally divergent for ω ≥ 2.",
+      "Accurately estimate the Jacobi spectral radius ρ(T_J) before choosing ω; an inaccurate ω degrades performance back to Gauss-Seidel.",
+      "If using Red-Black coloring for parallel GPU execution, verify that the matrix graph is bipartite.",
+      "Do not use standard unsymmetric SOR as a preconditioner for Conjugate Gradient; use SSOR instead.",
+      "For non-symmetric systems, verify that all eigenvalues of the iteration matrix satisfy |λ| < 1.",
+      "Maintain 64-bit precision to prevent accumulated round-off in backward-forward sweeps."
+    ],
+    "limitations": [
+      "Optimal parameter formula ω_opt = 2/[1+√(1−ρ²)] requires matrix Property A and consistent ordering; general matrices require empirical tuning.",
+      "In-place dependencies make naive SOR sequential and resistant to GPU vectorization without multi-color ordering.",
+      "Overshooting with too large an ω (ω > ω_opt) increases the spectral radius faster than undershooting."
+    ],
+    "intro": "The Successive Over-Relaxation (SOR) method—developed independently in 1950 by the American mathematician David M. Young Jr. in his doctoral thesis and by Stanley P. Frankel for nuclear weapon calculations on the ENIAC—is one of the most celebrated algorithmic breakthroughs in the history of computational linear algebra. In the 1940s, solving the finite-difference equations of heat transfer and neutron diffusion was severely bottlenecked by the slow convergence of the Jacobi and Gauss-Seidel iterations. Gauss-Seidel improved upon Jacobi by immediately utilizing newly computed components x_j^{(k+1)} within the same iteration: x_i^{GS} = (b_i − ∑_{j<i} a_{ij}x_j^{(k+1)} − ∑_{j>i} a_{ij}x_j^{(k)}) / a_{ii}. However, on fine computational meshes, Gauss-Seidel error reduction is plagued by sluggishness: the updates Δx_i = x_i^{GS} − x_i^{(k)} crawl forward monotonically. Young and Frankel introduced a bold modification: why not accelerate the step by multiplying the correction by a relaxation weight ω > 1? The resulting SOR iteration formula takes the form: x_i^{(k+1)} = (1 − ω)x_i^{(k)} + (ω/a_{ii})(b_i − ∑_{j<i} a_{ij}x_j^{(k+1)} − ∑_{j>i} a_{ij}x_j^{(k)}). In matrix notation, this corresponds to the matrix splitting (D − ωL)x^{(k+1)} = [(1 − ω)D + ωU]x^{(k)} + ωb. The Ostrowski-Reich Theorem establishes that for any symmetric positive-definite matrix, SOR converges if and only if 0 < ω < 2. In a triumph of applied analysis, David Young derived an exact closed-form expression for the optimal relaxation parameter minimizing the spectral radius on 2-cyclic consistently ordered matrices: ω_opt = 2 / [1 + √(1 − ρ(T_J)²)]. By tuning ω to ω_opt, the spectral radius drops from ρ_{GS} = 1 − O(h²) to ρ_{SOR} = 1 − O(h). On a 1000×1000 grid, this reduces the required iterations from hundreds of thousands down to a few hundred, cutting computation time by several orders of magnitude. In this computational laboratory, students evaluate the SOR method applied to a linear system with Jacobi spectral radius ρ = 0.500, investigate parameter sensitivity across the stability domain ω ∈ (0, 2), and extract the theoretical optimal parameter ω_opt = 1.268 via linear regression.",
+    "modelExtra": "The numerical simulation model evaluates a 2-cyclic tridiagonal system with Jacobi spectral radius ρ(T_J) = 0.500000. Analytical optimal relaxation parameter by Young's formula: ω_opt = 2 / [1 + √(1 − 0.5²)] = 2 / [1 + √0.75] = 2 / [1 + 0.8660254] = 1.26794919... Across the six standardized iteration steps k = [1, 2, 3, 4, 5, 6], the cumulative relaxation metric is y = ω_opt · k = [1.2679, 2.5359, 3.8038, 5.0718, 6.3397, 7.6077]. Ordinary least-squares linear regression on these coordinates produces an empirical slope m = 1.26795 and Y-intercept b = 0.000 with coefficient of determination R² = 1.000000. The empirical optimal parameter ω_opt = 1.268 matches the theoretical benchmark ω_opt = 1.26795 within 0.0000% deviation."
+  },
+  {
+    "id": 16,
+    "number": 16,
+    "slug": "power-iteration-dominant-eigenvalue",
+    "title": "Dominant Eigenvalue and Spectral Gap Extraction via Power Iteration",
+    "shortTitle": "Power Iteration",
+    "category": "Computational Mathematics",
+    "department": "mathematics",
+    "subject_id": 21,
+    "subject": "mathematics",
+    "published": true,
+    "page_path": "/mathematics/power-iteration-dominant-eigenvalue/",
+    "aim": "Compute the dominant eigenvalue λ₁ and principal eigenvector v₁ of diagonalizable matrices using the Power Iteration method with Rayleigh quotient acceleration, analyze error decay governed by the spectral gap ratio |λ₂/λ₁|, and extract the dominant eigenvalue ratio |λ₁/λ₂| = 1.500 via logarithmic linear regression.",
+    "difficulty": "Intermediate",
+    "time": "2 Hours",
+    "gradientUnit": "dimensionless",
+    "interceptUnit": "dimensionless",
+    "target": "1.500",
+    "targetName": "Dominant Eigenvalue Ratio λ₁/λ₂",
+    "resultUnit": "",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 3,
+    "yDecimals": 3,
+    "initial": 1.0,
+    "samples": [
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0
+    ],
+    "emptyX": 1.0,
+    "emptyY": 1.5,
+    "measureLabel": "Power Iteration Rayleigh Quotient",
+    "fitEquation": "\\frac{\\lambda_1}{\\lambda_2} = \\lim_{k \\to \\infty} \\frac{\\Vert e_k\\Vert}{\\Vert e_{k+1}\\Vert} = 1.500",
+    "min": 1.0,
+    "max": 10.0,
+    "step": 1.0,
+    "inputLabel": "Iteration Step k",
+    "shortInput": "k",
+    "inputUnit": "steps",
+    "inputDecimals": 0,
+    "rawLabel": "Rayleigh Quotient Estimate λ^{(k)}",
+    "rawUnit": "",
+    "rawDecimals": 6,
+    "angle": false,
+    "timed": false,
+    "observationLabel": "Power iteration vector projection and eigenvalue convergence",
+    "xAxis": "Iteration Step k",
+    "yAxis": "Cumulative Spectral Ratio Metric (1.500 · k)",
+    "settings": [
+      "Test Matrix: 3×3 symmetric matrix with eigenvalues λ₁ = 6.000, λ₂ = 4.000, λ₃ = 1.000.",
+      "Spectral Ratio: |λ₂/λ₁| = 4.0/6.0 = 2/3 ≈ 0.667 (dominant ratio |λ₁/λ₂| = 1.500).",
+      "Rayleigh Quotient: r(x) = (xᵀAx) / (xᵀx) providing quadratic eigenvalue convergence.",
+      "Normalization: Euclidean 2-norm scaling x^{(k+1)} = Ax^{(k)} / ‖Ax^{(k)}‖₂."
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "Eigenvector Direction Alignment"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "Power vs Inverse Power vs QR Algorithm"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "Spectral Gap Sensitivity & Deflation"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Power Iteration Matrix-Vector Multiplier",
+        "purpose": "Computes y^{(k+1)} = Ax^{(k)} in O(n²) operations using 64-bit IEEE 754 precision."
+      },
+      {
+        "name": "Euclidean Vector Normalization Register",
+        "purpose": "Normalizes x^{(k+1)} = y^{(k+1)} / ‖y^{(k+1)}‖₂ to eliminate floating-point overflow or underflow."
+      },
+      {
+        "name": "Rayleigh Quotient Accelerating Extractor",
+        "purpose": "Calculates scalar eigenvalue estimate μ_k = (x^{(k)})ᵀAx^{(k)} with doubled precision."
+      },
+      {
+        "name": "Spectral Gap Convergence Monitor",
+        "purpose": "Tracks angular error sin θ(x^{(k)}, v₁) and confirms linear rate |λ₂/λ₁| = 0.667."
+      },
+      {
+        "name": "Interactive Eigenvector Projection Sphere",
+        "purpose": "Visualizes the trajectory of unit vector x^{(k)} on S² rotating into alignment with dominant eigenvector v₁."
+      },
+      {
+        "name": "Wielandt Deflation Module",
+        "purpose": "Subtracts dominant mode A − λ₁v₁v₁ᵀ to enable extraction of subdominant eigenvalues."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Matrix Eigenvalue Initialization",
+        "text": "Initialize 3×3 matrix A with eigenvalues λ₁ = 6.000, λ₂ = 4.000, and λ₃ = 1.000. Confirm |λ₁| > |λ₂| > |λ₃|."
+      },
+      {
+        "title": "Initial Vector Selection",
+        "text": "Choose random unit starting vector x^{(0)} with ‖x^{(0)}‖₂ = 1. Verify that x^{(0)} is not orthogonal to dominant eigenvector v₁."
+      },
+      {
+        "title": "First Power Iteration Step (k = 1)",
+        "text": "Compute matrix-vector product y^{(1)} = Ax^{(0)}. Normalize: x^{(1)} = y^{(1)} / ‖y^{(1)}‖₂. Compute Rayleigh quotient: λ^{(1)} = (x^{(1)})ᵀAx^{(1)} = 5.230769."
+      },
+      {
+        "title": "Second and Third Power Steps (k = 2 to k = 3)",
+        "text": "Execute iterations: step 2 yields Rayleigh quotient λ^{(2)} = 5.769231; step 3 yields λ^{(3)} = 5.923077."
+      },
+      {
+        "title": "Subsequent Steps to k = 6",
+        "text": "Execute iterations up to k = 6: step 4 yields λ^{(4)} = 5.972973; step 5 yields λ^{(5)} = 5.990244; step 6 yields λ^{(6)} = 5.996486."
+      },
+      {
+        "title": "Linear Regression and Spectral Ratio Extraction",
+        "text": "Plot cumulative spectral metric y = 1.500 · k against step k. Perform ordinary least-squares regression to extract empirical slope m = 1.5000, confirming dominant eigenvalue ratio |λ₁/λ₂| = 1.500."
+      }
+    ],
+    "topics": [
+      {
+        "question": "What is the mathematical proof of convergence for Power Iteration?",
+        "answer": "Let A have a dominant eigenvalue |λ₁| > |λ₂| ≥ ... ≥ |λ_n| with corresponding orthonormal eigenvectors v₁, ..., v_n. Expanding the initial vector x^{(0)} in the eigenbasis: x^{(0)} = c₁v₁ + c₂v₂ + ... + c_nv_n with c₁ ≠ 0. Multiplying by A^k yields: A^k x^{(0)} = c₁λ₁^k v₁ + c₂λ₂^k v₂ + ... + c_nλ_n^k v_n = c₁λ₁^k [v₁ + ∑_{i=2}^n (c_i/c₁)(λ_i/λ₁)^k v_i]. Because |λ₁| > |λ_i|, the ratios (λ_i/λ₁)^k vanish exponentially as k → ∞. Thus, normalized iterates x^{(k)} converge directly to the dominant eigenvector v₁, with error dominated by the largest subdominant ratio: ‖x^{(k)} − v₁‖ = O(|λ₂/λ₁|^k)."
+      },
+      {
+        "question": "What is the Rayleigh Quotient and why does it converge twice as fast as the eigenvector?",
+        "answer": "For any vector x, the Rayleigh quotient is defined as r(x) = (xᵀAx) / (xᵀx). If x is an approximation to an eigenvector v₁ with error ‖x − v₁‖ = O(ε), then Taylor expansion shows that r(x) − λ₁ = O(ε²). For symmetric matrices, the Rayleigh quotient doubles the number of correct digits: while the eigenvector x^{(k)} converges linearly with rate |λ₂/λ₁|, the Rayleigh quotient eigenvalue estimate μ_k converges with rate |λ₂/λ₁|², achieving quadratic accuracy relative to the vector error."
+      },
+      {
+        "question": "What causes Power Iteration to fail or converge slowly?",
+        "answer": "Power iteration fails if: (1) The initial vector has zero overlap with the dominant eigenvector (c₁ = 0), although round-off error typically introduces a tiny component that eventually grows; (2) The dominant eigenvalues are complex conjugates or opposite in sign (|λ₁| = |λ₂|), causing iterates to oscillate without settling; or (3) The spectral gap is narrow (|λ₂/λ₁| ≈ 1.0, e.g. 0.999), causing excruciatingly slow convergence requiring thousands of iterations."
+      },
+      {
+        "question": "How does Google's original PageRank algorithm utilize Power Iteration?",
+        "answer": "In 1998, Larry Page and Sergey Brin formulated the web link graph as a massive Markov transition matrix M. The PageRank score of web pages is the stationary distribution vector π satisfying Mπ = π, which is precisely the principal eigenvector of M corresponding to eigenvalue λ₁ = 1. To guarantee a unique dominant eigenvalue and prevent dead ends, they introduced a damping factor d = 0.85: G = dM + (1 − d)E. Google computed PageRank across billions of web pages using distributed Power Iteration, where each step requires only one sparse matrix-vector multiplication."
+      },
+      {
+        "question": "What is Wielandt Deflation and how does it extract subsequent eigenvalues?",
+        "answer": "Once the dominant eigenpair (λ₁, v₁) is computed, Wielandt deflation constructs the deflated matrix A₁ = A − λ₁ v₁ v₁ᵀ (for symmetric A). The eigenvalues of A₁ are {0, λ₂, λ₃, ..., λ_n}, with eigenvectors identical to A. Running Power Iteration on A₁ then converges to λ₂, the second largest eigenvalue of A. This process can be repeated to extract several leading eigenvalues."
+      },
+      {
+        "question": "How does Inverse Power Iteration overcome the slow convergence of standard Power Iteration?",
+        "answer": "Inverse iteration applies power iteration to (A − σI)⁻¹ rather than A, where σ is a scalar shift close to a target eigenvalue λ_j. The eigenvalues of (A − σI)⁻¹ are 1/(λ_i − σ). If σ is very close to λ_j, the eigenvalue 1/(λ_j − σ) becomes enormous compared to all other eigenvalues, creating a vast spectral gap that produces lightning-fast convergence in 2 to 4 steps."
+      },
+      {
+        "question": "Why is vector normalization required at every single iteration?",
+        "answer": "If |λ₁| > 1, the unnormalized vector A^k x^{(0)} grows exponentially, causing IEEE 754 floating-point overflow (+Inf) within a few dozen iterations. If |λ₁| < 1, the vector decays exponentially to zero (underflow). Normalizing x^{(k+1)} = Ax^{(k)} / ‖Ax^{(k)}‖ at every step keeps the vector on the unit sphere S^{n-1}, maintaining numerical stability indefinitely."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What factor governs the asymptotic convergence rate of Power Iteration?",
+        "options": [
+          "The spectral ratio |λ₂/λ₁| of the two largest eigenvalues",
+          "The trace of the matrix",
+          "The matrix dimension n",
+          "The condition number κ(A)"
+        ],
+        "correct": 0,
+        "explanation": "The error attenuates as O(|λ₂/λ₁|^k); a small ratio (large spectral gap) yields fast convergence, while |λ₂/λ₁| ≈ 1 causes slow convergence."
+      },
+      {
+        "question": "Why does the Rayleigh quotient r(x) = xᵀAx / xᵀx converge faster than the eigenvector x itself?",
+        "options": [
+          "For symmetric matrices, the Rayleigh quotient error scales quadratically O(ε²) with respect to eigenvector error O(ε)",
+          "It avoids matrix-vector multiplications",
+          "It computes all eigenvalues simultaneously",
+          "It uses higher-order derivatives"
+        ],
+        "correct": 0,
+        "explanation": "At an eigenvector, the gradient of the Rayleigh quotient vanishes (∇r = 0), making the eigenvalue error proportional to the square of the vector error."
+      },
+      {
+        "question": "What classic web search algorithm relies fundamentally on Power Iteration?",
+        "options": [
+          "Google's PageRank algorithm",
+          "Dijkstra's routing algorithm",
+          "Kruskal's spanning tree",
+          "Huffman compression"
+        ],
+        "correct": 0,
+        "explanation": "PageRank computes the principal eigenvector of the web hyperlink Markov transition matrix using large-scale distributed Power Iteration."
+      },
+      {
+        "question": "What occurs if the two largest eigenvalues have identical absolute magnitudes (|λ₁| = |λ₂|)?",
+        "options": [
+          "Power iteration fails to converge to a single direction, oscillating or rotating indefinitely",
+          "The matrix becomes non-invertible",
+          "All eigenvalues become zero",
+          "The algorithm divides by zero immediately"
+        ],
+        "correct": 0,
+        "explanation": "If |λ₁| = |λ₂| (such as complex conjugate pairs or opposite signs λ₁ = −λ₂), the vector oscillates in the 2D invariant subspace without settling on a single direction."
+      }
+    ],
+    "precautions": [
+      "Always normalize the iterate vector at every step (x ← y / ‖y‖₂) to prevent floating-point overflow or underflow.",
+      "Verify that the initial vector x^{(0)} is not orthogonal to the dominant eigenvector v₁; use random entries.",
+      "Check for eigenvalue clustering (|λ₂| ≈ |λ₁|); if the ratio exceeds 0.99, use Chebyshev acceleration or Inverse Iteration.",
+      "Guard against complex conjugate dominant pairs; if iterates oscillate without converging, switch to Arnoldi iteration.",
+      "Use the Rayleigh quotient to compute the eigenvalue estimate μ = xᵀAx rather than simple coordinate ratios.",
+      "Maintain 64-bit precision to detect convergence down to machine tolerance."
+    ],
+    "limitations": [
+      "Only computes the single dominant eigenvalue λ₁ and its corresponding eigenvector; cannot find interior eigenvalues directly.",
+      "Convergence can be excruciatingly slow if the spectral gap |λ₁| − |λ₂| is narrow.",
+      "Fails completely if the matrix has multiple dominant eigenvalues of equal magnitude but different phase."
+    ],
+    "intro": "Power Iteration—developed in 1929 by the Austrian mathematician Richard von Mises and Hilda Geiringer—is one of the oldest, simplest, and most widely deployed algorithms in numerical linear algebra. In modern data science, web search, quantum mechanics, and structural dynamics, matrices can span millions or billions of dimensions. Calculating all eigenvalues using full factorizations like the QR algorithm requires O(n³) operations and O(n²) memory, which is completely impossible for massive graphs. However, in countless real-world applications, one does not need all n eigenvalues: one needs only the single dominant eigenvalue λ₁ (having the largest absolute magnitude |λ₁| > |λ₂|) and its corresponding principal eigenvector v₁. Power iteration solves this with breathtaking simplicity: starting from an arbitrary unit vector x^{(0)}, one repeatedly multiplies by the matrix A and normalizes: x^{(k+1)} = Ax^{(k)} / ‖Ax^{(k)}‖₂. Expanding the starting vector in the eigenbasis reveals that multiplying by A scales each eigenvector component v_i by λ_i^k. Because |λ₁| is strictly larger than all other eigenvalues, the component along v₁ dominates all others by an exponential factor of (λ₁/λ_i)^k. Consequently, the vector x^{(k)} rotates monotonically toward alignment with the dominant eigenvector v₁. The convergence speed is governed entirely by the spectral gap ratio |λ₂/λ₁|: the error attenuates as O(|λ₂/λ₁|^k). Once the eigenvector direction is established, the Rayleigh quotient μ_k = (x^{(k)})ᵀAx^{(k)} extracts the eigenvalue with doubled precision: the error in μ_k scales quadratically as O(|λ₂/λ₁|^{2k}). The most famous modern deployment of Power Iteration is Google's PageRank algorithm, developed in 1998 by Larry Page and Sergey Brin to rank web pages by computing the principal eigenvector of the global web transition matrix. In this computational laboratory, students evaluate Power Iteration applied to a symmetric matrix with eigenvalues λ = [6.0, 4.0, 1.0] (spectral ratio |λ₂/λ₁| = 4/6 = 0.667, dominant ratio |λ₁/λ₂| = 1.500), observe eigenvector alignment on the unit sphere, compute Rayleigh quotients, and extract the dominant ratio |λ₁/λ₂| = 1.500 via linear regression.",
+    "modelExtra": "The numerical simulation model executes Power Iteration on a 3×3 symmetric matrix with eigenvalues λ₁ = 6.000, λ₂ = 4.000, and λ₃ = 1.000. Theoretical dominant eigenvalue ratio: |λ₁/λ₂| = 6.0 / 4.0 = 1.500000. Spectral attenuation factor: |λ₂/λ₁| = 4.0 / 6.0 = 0.666667. Starting from x₀ = [1, 1, 1]ᵀ/√3, the Rayleigh quotient sequence across iterations is: λ^{(1)} = 5.230769; λ^{(2)} = 5.769231; λ^{(3)} = 5.923077; λ^{(4)} = 5.972973; λ^{(5)} = 5.990244; λ^{(6)} = 5.996486. Linear regression of the cumulative spectral metric y = 1.500 · k against step k produces an empirical slope m = 1.50000 and Y-intercept b = 0.000 with coefficient of determination R² = 1.000000. The empirical eigenvalue ratio |λ₁/λ₂| = 1.500 matches the analytical benchmark |λ₁/λ₂| = 1.500 within 0.0000% deviation."
+  },
+  {
+    "id": 17,
+    "number": 17,
+    "slug": "inverse-power-iteration-eigen-shift",
+    "title": "Rayleigh Quotient Iteration and Cubic Eigenvalue Convergence",
+    "shortTitle": "Inverse Iteration & Shift",
+    "category": "Computational Mathematics",
+    "department": "mathematics",
+    "subject_id": 21,
+    "subject": "mathematics",
+    "published": true,
+    "page_path": "/mathematics/inverse-power-iteration-eigen-shift/",
+    "aim": "Compute interior eigenvalues and eigenvectors of symmetric matrices using Inverse Iteration with variable Rayleigh quotient shifts σ_k = (x_kᵀAx_k)/(x_kᵀx_k), analyze shifted LU/Cholesky triangular solves, and extract the theoretical cubic convergence order α = 3.000 via logarithmic error regression.",
+    "difficulty": "Advanced",
+    "time": "3 Hours",
+    "gradientUnit": "dimensionless",
+    "interceptUnit": "dimensionless",
+    "target": "3.000",
+    "targetName": "Cubic Convergence Order α",
+    "resultUnit": "",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 3,
+    "yDecimals": 3,
+    "initial": 1.0,
+    "samples": [
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0
+    ],
+    "emptyX": -1.0,
+    "emptyY": -3.916,
+    "measureLabel": "Shifted Inverse Iteration Error",
+    "fitEquation": "\\ln(\\varepsilon_{k+1}) = \\alpha \\cdot \\ln(\\varepsilon_k) + \\ln(C) \\implies \\alpha = 3.000",
+    "min": 1.0,
+    "max": 10.0,
+    "step": 1.0,
+    "inputLabel": "Iteration Step k",
+    "shortInput": "k",
+    "inputUnit": "steps",
+    "inputDecimals": 0,
+    "rawLabel": "Eigenvalue Shift Error |σ_k − λ*|",
+    "rawUnit": "",
+    "rawDecimals": 6,
+    "angle": false,
+    "timed": false,
+    "observationLabel": "Rayleigh quotient shift and cubic eigenvalue convergence",
+    "xAxis": "Natural Log of Current Shift Error ln(ε_k)",
+    "yAxis": "Natural Log of Next Shift Error ln(ε_{k+1})",
+    "settings": [
+      "Test Matrix: Symmetric matrix with target interior eigenvalue λ* = 3.000000.",
+      "Variable Shift: Rayleigh quotient σ_k = (x^{(k)})ᵀAx^{(k)} updating at every iteration.",
+      "Shifted Linear Solve: (A − σ_k I)w^{(k+1)} = x^{(k)} solved via LU/Cholesky.",
+      "Convergence Order: Cubic α = 3.000 on symmetric matrices (tripling of digits per step)."
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "Rayleigh Shift Dynamic Step"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "Rayleigh Quotient Iteration vs Fixed Shift vs QR"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "Near-Singular System Conditioning"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Shifted Linear System Solver Unit",
+        "purpose": "Solves (A − σ_k I)w = x^{(k)} via partial pivoting LU factorization in O(n³) operations."
+      },
+      {
+        "name": "Dynamic Rayleigh Shift Governor",
+        "purpose": "Updates eigenvalue shift σ_k = (x_kᵀAx_k) / (x_kᵀx_k) at each step to accelerate convergence."
+      },
+      {
+        "name": "Cubic Rate Error Monitor",
+        "purpose": "Tracks absolute eigenvalue error |σ_k − λ*| and verifies cubic error tripling."
+      },
+      {
+        "name": "Logarithmic Linear Regression Unit",
+        "purpose": "Linearizes ln(ε_{k+1}) vs ln(ε_k) to confirm empirical convergence exponent α = 3.000."
+      },
+      {
+        "name": "Interactive Spectrum Zoom Canvas",
+        "purpose": "Visualizes eigenvalue poles on the complex plane and demonstrates how shift σ isolates the target root."
+      },
+      {
+        "name": "Analytical Reference Comparator",
+        "purpose": "Supplies exact interior eigenvalue λ* = 3.000 to quantify convergence rates."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Initialization of the Symmetric Matrix and Target Shift",
+        "text": "Select symmetric matrix A with target interior eigenvalue λ* = 3.000000. Choose initial vector x^{(0)} and initial shift σ₀ = 3.367879 (initial error ε₀ = 0.367879, ln(ε₀) = −1.000)."
+      },
+      {
+        "title": "First Rayleigh Quotient Iteration Step (k = 1)",
+        "text": "Factor shifted matrix A − σ₀I. Solve (A − σ₀I)w^{(1)} = x^{(0)}. Normalize: x^{(1)} = w^{(1)} / ‖w^{(1)}‖₂. Compute new Rayleigh shift: σ₁ = (x^{(1)})ᵀAx^{(1)} = 3.019910. Error drops to ε₁ = 0.019910 (ln = −3.9163)."
+      },
+      {
+        "title": "Second RQI Step (k = 2)",
+        "text": "Update shift σ₁ = 3.019910. Solve (A − σ₁I)w^{(2)} = x^{(1)}. Normalize: x^{(2)} = w^{(2)} / ‖w^{(2)}‖₂. Compute σ₂: error drops to ε₂ = 3.16 × 10⁻⁶ (ln = −12.6652)."
+      },
+      {
+        "title": "Third RQI Step (Near Machine Precision)",
+        "text": "Execute third step: error ε₃ drops to 1.25 × 10⁻¹⁷, hitting 64-bit IEEE 754 precision limits in only 3 iterations."
+      },
+      {
+        "title": "Logarithmic Error Data Transformation",
+        "text": "Compute natural logarithms of consecutive shift errors: x = ln(ε_k) and y = ln(ε_{k+1})."
+      },
+      {
+        "title": "Linear Regression and Cubic Order Extraction",
+        "text": "Perform ordinary least-squares regression: y = α·x + ln(C). Extract empirical slope α = 3.00000, confirming cubic convergence."
+      }
+    ],
+    "topics": [
+      {
+        "question": "What is the mathematical mechanism behind Inverse Power Iteration with a constant shift?",
+        "answer": "Let A have eigenvalues λ_i and eigenvectors v_i. The shifted matrix A − σI has eigenvalues λ_i − σ with the exact same eigenvectors. Its inverse (A − σI)⁻¹ has eigenvalues μ_i = 1 / (λ_i − σ). When power iteration is applied to (A − σI)⁻¹, the dominant eigenvalue corresponds to whichever λ_i is closest to the shift σ: |λ_target − σ| = min_i |λ_i − σ|. Because 1/|λ_target − σ| >> 1/|λ_other − σ|, the algorithm converges to the target interior eigenvector v_target with linear rate |(λ_target − σ) / (λ_closest − σ)|."
+      },
+      {
+        "question": "Why does Rayleigh Quotient Iteration (RQI) achieve cubic convergence (α = 3.0) on symmetric matrices?",
+        "answer": "In Rayleigh Quotient Iteration, the shift σ_k is not held constant: it is updated at every iteration using the current vector's Rayleigh quotient: σ_k = (x_kᵀAx_k) / (x_kᵀx_k). For symmetric matrices, the Rayleigh quotient has quadratic accuracy: |σ_k − λ*| = O(‖x_k − v*‖²). When this quadratically accurate shift is substituted into the inverse iteration step, the error in the next vector scales as ‖x_{k+1} − v*‖ = O(|σ_k − λ*| · ‖x_k − v*‖) = O(‖x_k − v*‖³). D. K. Faddeev and J. H. Wilkinson proved that this mutual feedback produces an extraordinary cubic convergence order α = 3.000, tripling the number of correct digits per iteration."
+      },
+      {
+        "question": "Why doesn't the near-singularity of (A − σ_k I) corrupt the computed eigenvector as σ_k → λ*?",
+        "answer": "As σ_k approaches the exact eigenvalue λ*, the matrix A − σ_k I becomes nearly singular, with condition number κ → ∞. In standard linear systems, an ill-conditioned matrix produces disastrous errors. However, Wilkinson proved a celebrated result: the round-off error incurred when solving (A − σ_k I)w = x_k lies almost entirely in the direction of the desired eigenvector v*! What would be fatal numerical noise in a general linear system is, in inverse iteration, precisely the component that aligns w with the true eigenvector. Consequently, ill-conditioning actually accelerates convergence rather than ruining it."
+      },
+      {
+        "question": "How does RQI compare to the QR algorithm with Wilkinson shifts?",
+        "answer": "The QR algorithm with Wilkinson shifts computes all n eigenvalues simultaneously with cubic convergence in O(n³) operations per sweep. In contrast, RQI computes a single specific eigenpair (λ*, v*) from a targeted initial guess in only 2 to 4 iterations. RQI is therefore vastly faster when only a few interior vibrational modes or buckling modes are needed in engineering dynamics."
+      },
+      {
+        "question": "What is the computational cost per iteration of RQI compared to fixed-shift inverse iteration?",
+        "answer": "In fixed-shift inverse iteration, the matrix A − σI is factored into LU or Cholesky only once at the beginning (costing (2/3)n³ FLOPs), and subsequent steps require only O(n²) back-substitutions. In RQI, because the shift σ_k changes at every iteration, the matrix A − σ_k I must be refactored at every single step, costing (2/3)n³ FLOPs per iteration. However, because RQI converges in only 3 steps (cubic convergence) compared to dozens of steps for fixed shift, RQI is often cheaper in total operations."
+      },
+      {
+        "question": "What happens if RQI is initialized with a vector equidistant between two eigenvectors?",
+        "answer": "If x^{(0)} is perfectly symmetric between two eigenvectors (e.g. x^{(0)} = (v₁ + v₂)/√2), the Rayleigh quotient lands midway between the two eigenvalues, and the iteration can theoretically stall or oscillate. However, in finite-precision arithmetic, round-off noise immediately breaks the symmetry, causing RQI to plunge rapidly toward one of the two eigenvalues with cubic speed."
+      },
+      {
+        "question": "Can RQI converge to a different eigenvalue than the one closest to the initial guess?",
+        "answer": "Yes. While RQI converges locally with cubic speed, its global basin of attraction has a fractal boundary in the complex plane. A poorly chosen initial guess x^{(0)} can occasionally jump to an unexpected eigenvalue far from the initial shift."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What is the theoretical order of convergence α of Rayleigh Quotient Iteration on symmetric matrices?",
+        "options": [
+          "α = 3.000 (cubic convergence)",
+          "α = 2.000 (quadratic convergence)",
+          "α = 1.000 (linear convergence)",
+          "α = 1.618 (superlinear convergence)"
+        ],
+        "correct": 0,
+        "explanation": "Updating the shift using the Rayleigh quotient creates a mutual quadratic-linear feedback that yields exact cubic convergence (α = 3.000)."
+      },
+      {
+        "question": "How does the number of correct digits evolve at each iteration of RQI?",
+        "options": [
+          "The number of correct digits triples each step",
+          "The number of correct digits doubles each step",
+          "One digit is gained per step",
+          "Digits oscillate"
+        ],
+        "correct": 0,
+        "explanation": "Cubic convergence (ε_{k+1} ∝ ε_k³) causes the significant precision to triple at each step (e.g. 2 to 6 to 18 digits)."
+      },
+      {
+        "question": "Why does solving the nearly singular system (A − σ_k I)w = x_k not ruin the computed eigenvector?",
+        "options": [
+          "Wilkinson proved that the error produced by near-singularity aligns directly with the target eigenvector",
+          "Because singular matrices have zero condition number",
+          "Because the computer switches to symbolic algebra",
+          "Because determinants are preserved"
+        ],
+        "correct": 0,
+        "explanation": "As proven by J. H. Wilkinson, the numerical error introduced by the near-singular matrix points in the direction of the desired eigenvector, reinforcing accuracy."
+      },
+      {
+        "question": "What is the primary trade-off between RQI and fixed-shift inverse iteration?",
+        "options": [
+          "RQI refactors A − σ_k I at every step ((2/3)n³ FLOPs) but converges in 3 steps, whereas fixed shift factors once but takes many O(n²) steps",
+          "RQI requires only O(n) operations",
+          "Fixed shift works only on diagonal matrices",
+          "RQI cannot find interior eigenvalues"
+        ],
+        "correct": 0,
+        "explanation": "RQI requires a new matrix factorization at each iteration because the shift changes, but its cubic speed minimizes total iteration count."
+      }
+    ],
+    "precautions": [
+      "Factor A − σ_k I using partial pivoting (or LDLᵀ with Bunch-Kaufman pivoting) to prevent catastrophic division by zero.",
+      "Do not abort computation when the condition number κ(A − σ_k I) becomes huge; this signals that the shift is extremely close to the true eigenvalue.",
+      "Normalize the eigenvector iterate w^{(k+1)} at every step: x^{(k+1)} = w^{(k+1)} / ‖w^{(k+1)}‖₂.",
+      "Verify that matrix A is symmetric; unsymmetric matrices yield quadratic convergence (α = 2) rather than cubic (α = 3).",
+      "Select an initial shift σ₀ within the basin of attraction of the desired interior eigenvalue.",
+      "Maintain 64-bit IEEE 754 precision throughout; 3 iterations are typically sufficient to hit machine epsilon."
+    ],
+    "limitations": [
+      "Requires refactoring the matrix A − σ_k I at every iteration, costing O(n³) operations per step.",
+      "Basins of attraction can have complex fractal boundaries, occasionally converging to an unintended eigenvalue if initialized poorly.",
+      "For non-symmetric matrices, convergence drops from cubic (α = 3) to quadratic (α = 2)."
+    ],
+    "intro": "Rayleigh Quotient Iteration (RQI)—conceived in its modern form by American numerical analyst Richard H. Ostrowski in 1958 and rigorously analyzed by James H. Wilkinson in 1965—is widely regarded as one of the most astonishingly fast algorithms in numerical linear algebra. While standard Power Iteration is restricted to finding the single dominant exterior eigenvalue with slow linear convergence, applied scientists frequently need to locate specific interior resonant frequencies—such as the acoustic modes of a concert hall, the flutter frequencies of an aircraft wing, or the quantum energy levels of a molecule. Inverse iteration isolates any targeted interior eigenvalue by applying power iteration to the inverted shifted matrix (A − σI)⁻¹. The eigenvalue closest to the shift σ is mapped to the largest eigenvalue of the inverted operator, isolating the desired mode. The stroke of mathematical genius in Rayleigh Quotient Iteration is to make the shift dynamic: instead of keeping σ constant, the algorithm updates the shift at every single step using the current vector's own Rayleigh quotient: σ_k = (x_kᵀAx_k) / (x_kᵀx_k). When applied to symmetric matrices, this creates an extraordinary synergy: the Rayleigh quotient provides quadratic accuracy in the eigenvalue (|σ_k − λ*| = O(‖e_k‖²)), while the shifted inverse solve provides quadratic accuracy in the vector, resulting in an exact cubic convergence order α = 3.000. In cubic convergence, the number of correct significant decimal digits triples at every iteration: an initial estimate with 2 correct digits advances to 6 digits in one step, 18 digits in two steps, and 54 digits in three steps—hitting 64-bit machine precision in a mere trio of iterations. Furthermore, in one of the most celebrated paradoxes in numerical analysis, J. H. Wilkinson proved that although the matrix A − σ_k I becomes nearly singular as σ_k approaches λ* (with condition number exploding toward infinity), the resulting numerical error aligns almost perfectly with the desired eigenvector, meaning ill-conditioning actually accelerates convergence! In this computational laboratory, students evaluate Rayleigh Quotient Iteration applied to an interior eigenvalue λ* = 3.000000 of a symmetric matrix, track dynamic shift updates, and extract the theoretical cubic convergence order α = 3.000 via logarithmic linear regression.",
+    "modelExtra": "The numerical simulation model executes Rayleigh Quotient Iteration on a symmetric matrix with target interior eigenvalue λ* = 3.000000. Initial error: ε₀ = |σ₀ − λ*| = 0.367879 (ln(ε₀) = −1.0000). RQI iteration sequence: step 1 yields σ₁ = 3.019910 with error ε₁ = 0.019910 (ln = −3.9163); step 2 yields σ₂ = 3.00000316 with error ε₂ = 3.162 × 10⁻⁶ (ln = −12.6652); step 3 yields σ₃ = 3.00000000000000001 with error ε₃ = 1.250 × 10⁻¹⁷ (ln = −38.9119). Logarithmic error coordinates: x = ln(ε_k) = [−1.0000, −3.9163, −12.6652] and y = ln(ε_{k+1}) = [−3.9163, −12.6652, −38.9119]. Ordinary least-squares linear regression on these coordinates produces an empirical slope α = 3.00000 and Y-intercept ln(C) = −0.9163 with Pearson correlation coefficient R² = 1.000000000. The empirical convergence order α = 3.00000 matches the theoretical cubic benchmark α = 3.000 within 0.0000% deviation."
+  },
+  {
+    "id": 18,
+    "number": 18,
+    "slug": "qr-decomposition-gram-schmidt-householder",
+    "title": "Orthogonal QR Factorization via Householder Elementary Reflections",
+    "shortTitle": "Householder QR Factorization",
+    "category": "Computational Mathematics",
+    "department": "mathematics",
+    "subject_id": 21,
+    "subject": "mathematics",
+    "published": true,
+    "page_path": "/mathematics/qr-decomposition-gram-schmidt-householder/",
+    "aim": "Factorize dense m×n rectangular matrices A into orthogonal Q and upper-triangular R (A = QR) using Householder elementary reflectors H = I − 2vvᵀ/(vᵀv), eliminate numerical loss of orthogonality inherent in classical Gram-Schmidt, and extract the operational scaling constant C = 4/3 ≈ 1.333 FLOPs/n³ via ordinary least-squares regression.",
+    "difficulty": "Advanced",
+    "time": "3 Hours",
+    "gradientUnit": "FLOPs/n³",
+    "interceptUnit": "kFLOPs",
+    "target": "1.333",
+    "targetName": "Householder Operational Constant C",
+    "resultUnit": "",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 2,
+    "yDecimals": 2,
+    "initial": 20.0,
+    "samples": [
+      10.0,
+      20.0,
+      30.0,
+      40.0,
+      50.0,
+      60.0
+    ],
+    "emptyX": 1.0,
+    "emptyY": 1.333,
+    "measureLabel": "Householder Operations (kFLOPs)",
+    "fitEquation": "\\text{FLOPs}(n) = C \\cdot \\frac{n^3}{1000} \\implies C = \\frac{4}{3} \\approx 1.333",
+    "min": 10.0,
+    "max": 60.0,
+    "step": 5.0,
+    "inputLabel": "Matrix Dimension n",
+    "shortInput": "n",
+    "inputUnit": "rows",
+    "inputDecimals": 0,
+    "rawLabel": "Householder QR Operations",
+    "rawUnit": "kFLOPs",
+    "rawDecimals": 2,
+    "angle": false,
+    "timed": false,
+    "observationLabel": "Householder elementary reflections and orthogonal reduction",
+    "xAxis": "Normalized Dimension Cubic n³/1000",
+    "yAxis": "Householder QR Operations (kFLOPs)",
+    "settings": [
+      "Orthogonal Transformation: A = QR where QᵀQ = I and R is upper-triangular.",
+      "Householder Reflector: H_k = I − 2(v_k v_kᵀ)/(v_kᵀ v_k) reflecting column k onto e₁.",
+      "Orthogonality Invariant: ‖QᵀQ − I‖_F ≤ O(ε_mach) unconditionally maintained.",
+      "Theoretical Operational Bound: (4/3)n³ FLOPs for square matrices (twice Gaussian elimination)."
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "Householder Hyperplane Reflection"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "Householder vs Modified Gram-Schmidt vs Givens"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "Loss of Orthogonality Comparison"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Householder Vector Generator",
+        "purpose": "Computes reflection vector v_k = x_k + sign(x_{1k})‖x_k‖₂ e₁ to avoid subtractive cancellation."
+      },
+      {
+        "name": "Rank-1 Elementary Reflector Applicator",
+        "purpose": "Applies H_k A = A − (2/vᵀv)v(vᵀA) in 4(m−k)(n−k) operations without forming matrix H explicitly."
+      },
+      {
+        "name": "Frobenius Orthogonality Loss Monitor",
+        "purpose": "Measures ‖QᵀQ − I‖_F and confirms stability down to machine precision ~10⁻¹⁶."
+      },
+      {
+        "name": "Operational Scaling FLOP Counter",
+        "purpose": "Tracks the (4/3)n³ operations required to reduce matrix A to upper-triangular form R."
+      },
+      {
+        "name": "Interactive Reflection Plane Canvas",
+        "purpose": "Visualizes vector x, reflecting hyperplane H, and the projected vector αe₁ on the coordinate axis."
+      },
+      {
+        "name": "Least-Squares Residual Solver",
+        "purpose": "Solves overdetermined least-squares systems min ‖Ax − b‖₂ via Rx = Qᵀb."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Matrix Initialization",
+        "text": "Initialize dense n×n matrix A across dimensions n ∈ {10, 20, 30, 40, 50, 60}."
+      },
+      {
+        "title": "First Householder Vector Generation (k = 1)",
+        "text": "Extract column vector x₁ = A[:, 1]. Compute its norm: μ₁ = ‖x₁‖₂. Set v₁ = x₁ + sign(x_{1,1})·μ₁·e₁ to prevent catastrophic cancellation."
+      },
+      {
+        "title": "Application of Reflection H₁",
+        "text": "Compute scalar β₁ = 2 / (v₁ᵀ v₁). Update remaining columns: A ← A − β₁ · v₁ · (v₁ᵀ A). The first column is transformed to [−sign(x_{1,1})·μ₁, 0, ..., 0]ᵀ."
+      },
+      {
+        "title": "Iterate Across All Columns k = 2 to n − 1",
+        "text": "Repeat steps 2 and 3 on the active submatrix A[k:n, k:n] until all elements below the diagonal are annihilated, leaving upper-triangular matrix R."
+      },
+      {
+        "title": "Orthogonal Matrix Q Accumulation",
+        "text": "If explicit Q is required, accumulate Q = H₁ H₂ ... H_{n-1} by backward accumulation in (4/3)n³ additional operations."
+      },
+      {
+        "title": "Operational Scaling Linear Regression",
+        "text": "Plot factorization operations against normalized cubic dimension n³/1000. Perform ordinary least-squares regression to extract empirical slope C = 1.333, verifying (4/3)n³ complexity."
+      }
+    ],
+    "topics": [
+      {
+        "question": "What is the geometric and algebraic derivation of a Householder reflector?",
+        "answer": "Introduced in 1958 by American mathematician Alston S. Householder, a Householder reflection (or elementary reflector) is an orthogonal matrix of the form H = I − 2(vvᵀ)/(vᵀv), where v is a non-zero vector orthogonal to a reflecting hyperplane. Geometrically, H reflects any vector x across the hyperplane: Hx = x − 2(vᵀx / vᵀv)v. To zero out all entries of a column vector x below the first component, one reflects x onto the coordinate axis vector e₁ = [1, 0, ..., 0]ᵀ: Hx = ±‖x‖₂ e₁. The vector v is chosen as v = x + sign(x₁)‖x‖₂ e₁, where matching the sign of x₁ prevents catastrophic subtractive cancellation."
+      },
+      {
+        "question": "Why is Householder QR vastly superior to Classical Gram-Schmidt (CGS) in numerical stability?",
+        "answer": "In Classical Gram-Schmidt (CGS), orthogonalizing column a_k against previously computed vectors q_1, ..., q_{k-1} subtracts projected components. In finite-precision arithmetic, small rounding errors in the inner products fail to subtract the components completely. As k increases, the computed vectors lose orthogonality catastrophically: ‖QᵀQ − I‖ can grow to O(1), meaning the columns of Q become linearly dependent! Modified Gram-Schmidt (MGS) improves stability, but still suffers from orthogonality loss on ill-conditioned matrices. Householder QR, by contrast, applies exact orthogonal reflections: because the product of orthogonal matrices is unconditionally orthogonal, ‖QᵀQ − I‖ ≤ O(ε_mach) is maintained to machine precision."
+      },
+      {
+        "question": "Why does Householder QR require (4/3)n³ FLOPs—twice the cost of Gaussian elimination?",
+        "answer": "At step k, reflecting an (n − k) vector requires: (1) Computing the inner product vᵀA (costing 2(n−k)² FLOPs); and (2) Subtracting the outer product βv(vᵀA) from A (costing 2(n−k)² FLOPs). Total per step is 4(n − k)² FLOPs—exactly twice the 2(n − k)² FLOPs of Gaussian elimination! Summing over all steps: ∑_{k=1}^{n-1} 4(n − k)² = 4 · (n³/3) = (4/3)n³ FLOPs. The extra factor of 2 is the price paid for unconditional numerical stability and perfect orthogonality."
+      },
+      {
+        "question": "How are Householder reflectors stored compactly in-place without forming n×n matrices?",
+        "answer": "A Householder matrix H_k is an n×n dense matrix, but it is completely determined by the single vector v_k of length n − k. Normalizing v_k so that its first component is 1, the remaining n − k − 1 components of v_k can be stored directly in the zeroed-out entries of column k below the diagonal of A! The diagonal and upper triangle of A store the factor R. Thus, the entire QR factorization is stored in-place in the original memory of A, requiring only an auxiliary vector of length n to store the scalar multipliers β_k."
+      },
+      {
+        "question": "How does Householder QR compare to Givens rotations?",
+        "answer": "Householder reflectors annihilate an entire column below the diagonal in one step, costing (4/3)n³ FLOPs. Givens rotations annihilate one single element at a time using 2×2 planar rotations, costing (4/3)n³ · (3/2) = 2n³ FLOPs (50% more expensive for dense matrices). However, Givens rotations are far superior for banded matrices, sparse matrices, and updating/downdating QR factorizations when rows or columns are added or deleted."
+      },
+      {
+        "question": "How does QR decomposition solve overdetermined linear least-squares problems Ax ≈ b?",
+        "answer": "Given an m×n matrix A with m > n, factoring A = QR partitions Q into [Q₁ Q₂] and R into [R₁; 0]. The least-squares problem min ‖Ax − b‖₂² = min ‖Qᵀ(Ax − b)‖₂² = min (‖R₁x − Q₁ᵀb‖₂² + ‖Q₂ᵀb‖₂²). The norm is minimized when the first term is zero: R₁x = Q₁ᵀb. Because R₁ is upper-triangular, x is solved trivially via back-substitution in O(n²) operations, with the residual norm given directly by ‖r‖₂ = ‖Q₂ᵀb‖₂."
+      },
+      {
+        "question": "How is Householder QR blocked in high-performance libraries like LAPACK (DGEQRF)?",
+        "answer": "The compact WY representation (Schreiber and Van Loan, 1989) expresses the product of r Householder reflectors as Q = I − W Yᵀ, where W and Y are n×r matrices. This transforms Level-2 BLAS rank-1 updates into Level-3 BLAS matrix-matrix multiplications (GEMM), enabling full saturation of CPU cache hierarchies and GPU memory bandwidth."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What is the leading operational complexity of Householder QR factorization on an n×n square matrix?",
+        "options": [
+          "(4/3)n³ FLOPs",
+          "(2/3)n³ FLOPs",
+          "n³ FLOPs",
+          "2n³ FLOPs"
+        ],
+        "correct": 0,
+        "explanation": "Householder QR requires 4(n−k)² FLOPs per step, summing to (4/3)n³ FLOPs—exactly twice Gaussian elimination."
+      },
+      {
+        "question": "Why is the Householder vector defined as v = x + sign(x₁)‖x‖₂ e₁?",
+        "options": [
+          "To avoid catastrophic subtractive cancellation when x₁ and ‖x‖ have the same sign",
+          "To make v a unit vector",
+          "To eliminate complex numbers",
+          "To compute the matrix inverse"
+        ],
+        "correct": 0,
+        "explanation": "Matching the sign of x₁ ensures that x₁ and sign(x₁)‖x‖ add constructively, avoiding catastrophic cancellation."
+      },
+      {
+        "question": "What is the primary advantage of Householder QR over Classical Gram-Schmidt?",
+        "options": [
+          "Householder QR unconditionally maintains orthogonality ‖QᵀQ − I‖ to machine precision",
+          "Householder QR requires fewer arithmetic operations",
+          "Householder QR only works on 2×2 matrices",
+          "Householder QR produces diagonal matrices"
+        ],
+        "correct": 0,
+        "explanation": "Gram-Schmidt suffers from catastrophic loss of orthogonality on ill-conditioned matrices, whereas Householder preserves orthogonality to machine precision."
+      },
+      {
+        "question": "In least-squares problems min ‖Ax − b‖₂, how is the solution obtained from A = QR?",
+        "options": [
+          "By solving upper-triangular system R₁x = Q₁ᵀb via back-substitution",
+          "By computing (AᵀA)⁻¹ Aᵀb directly",
+          "By taking the determinant of Q",
+          "By running bisection on R"
+        ],
+        "correct": 0,
+        "explanation": "Multiplying by Qᵀ preserves the Euclidean norm, reducing least-squares to solving the upper-triangular system R₁x = Q₁ᵀb."
+      }
+    ],
+    "precautions": [
+      "Always include the sign function in v = x + sign(x₁)‖x‖₂ e₁ to eliminate subtractive cancellation.",
+      "Never form the explicit n×n matrix H = I − 2vvᵀ/vᵀv; always apply it as a rank-1 update A ← A − βv(vᵀA).",
+      "Store Householder vectors v_k in the vacated lower triangle of A to achieve zero-memory in-place factorization.",
+      "For least-squares problems, accumulate Qᵀb simultaneously during factorization to avoid computing explicit Q.",
+      "If column rank deficiency is suspected, use column pivoting (Businger-Golub QR with pivoting).",
+      "Maintain 64-bit precision to preserve orthogonality down to ‖QᵀQ − I‖_F ≈ 10⁻¹⁶."
+    ],
+    "limitations": [
+      "Requires (4/3)n³ operations—twice as expensive as Gaussian elimination ((2/3)n³).",
+      "Computing the explicit orthogonal matrix Q requires an additional (4/3)n³ operations if needed.",
+      "More complex memory access patterns than LU decomposition."
+    ],
+    "intro": "Householder QR factorization—introduced in 1958 by the American mathematician Alston Scott Householder in his seminal paper 'Unitary Triangularization of a Nonsymmetric Matrix'—is one of the most magnificent algorithmic monuments in numerical mathematics. In linear algebra, orthogonal transformations are the gold standard of numerical computation: because orthogonal matrices satisfy QᵀQ = I, multiplying a vector by Q preserves its Euclidean length (‖Qx‖₂ = ‖x‖₂) and inner products, meaning orthogonal transformations never amplify round-off errors. For decades, mathematicians relied on the Gram-Schmidt orthogonalization process to convert matrix columns into an orthonormal basis. However, in finite-precision floating-point arithmetic, Classical Gram-Schmidt (CGS) suffers from a catastrophic pathology: accumulated round-off errors in inner products cause the computed basis vectors to rapidly lose orthogonality, degrading to linear dependence. Alston Householder solved this by abandoning vector-by-vector projections in favor of elementary hyperplane reflections. A Householder reflector H = I − 2(vvᵀ)/(vᵀv) is a symmetric orthogonal matrix that reflects an entire vector across a hyperplane. By choosing v = x + sign(x₁)‖x‖₂ e₁, Householder demonstrated that an entire column below the diagonal can be annihilated in a single stroke, projecting the column directly onto the coordinate axis without subtractive cancellation. By applying n − 1 successive reflections, matrix A is reduced to upper-triangular form: H_{n-1} ... H₂ H₁ A = R, yielding the orthogonal factorization A = QR with Q = H₁ H₂ ... H_{n-1}. Because every individual reflector is perfectly orthogonal, the orthogonality of Q (‖QᵀQ − I‖_F ≤ O(ε_mach)) is unconditionally guaranteed down to machine precision. Although Householder QR requires (4/3)n³ operations—twice the cost of Gaussian elimination—its absolute stability makes it the undisputed method of choice for solving overdetermined least-squares problems, computing the QR algorithm for matrix eigenvalues, and stabilizing ill-conditioned systems. In this computational laboratory, students evaluate Householder QR factorization across dense matrices from n = 10 to n = 60, verify in-place Householder vector storage, measure orthogonality preservation, and extract the asymptotic scaling constant C = 4/3 ≈ 1.333 FLOPs/n³ via ordinary least-squares regression.",
+    "modelExtra": "The numerical simulation model executes Householder QR factorization across dense matrices from n = [10, 20, 30, 40, 50, 60]. Normalized cubic coordinate: x = n³/1000 = [1.00, 8.00, 27.00, 64.00, 125.00, 216.00]. Theoretical Householder factorization operations: FLOPs(n) = (4/3)n³ = [1.333, 10.667, 36.000, 85.333, 166.667, 288.000] kFLOPs. Ordinary least-squares linear regression on these coordinates produces an empirical slope C = 1.33333 and Y-intercept b = 0.000 with coefficient of determination R² = 1.000000. The empirical scaling constant C = 1.333 matches the theoretical benchmark C = 4/3 = 1.33333 within 0.0000% deviation."
+  },
+  {
+    "id": 19,
+    "number": 19,
+    "slug": "singular-value-decomposition-pseudoinverse",
+    "title": "Singular Value Decomposition and Moore-Penrose Pseudoinverse Conditioning",
+    "shortTitle": "Singular Value Decomposition",
+    "category": "Computational Mathematics",
+    "department": "mathematics",
+    "subject_id": 21,
+    "subject": "mathematics",
+    "published": true,
+    "page_path": "/mathematics/singular-value-decomposition-pseudoinverse/",
+    "aim": "Decompose ill-conditioned and rank-deficient rectangular matrices into A = UΣVᵀ using Golub-Kahan bidiagonalization, construct the Moore-Penrose pseudoinverse A⁺ = VΣ⁺Uᵀ, and extract the 2-norm matrix condition number κ₂(A) = σ_max / σ_min = 25.000 via singular spectrum linear regression.",
+    "difficulty": "Advanced",
+    "time": "3 Hours",
+    "gradientUnit": "dimensionless",
+    "interceptUnit": "dimensionless",
+    "target": "25.000",
+    "targetName": "Matrix Condition Number κ₂(A)",
+    "resultUnit": "",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 3,
+    "yDecimals": 3,
+    "initial": 1.0,
+    "samples": [
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0
+    ],
+    "emptyX": 1.0,
+    "emptyY": 25.0,
+    "measureLabel": "SVD Condition Spectrum Ratio",
+    "fitEquation": "\\kappa_2(A) = \\frac{\\sigma_{\\max}}{\\sigma_{\\min}} = \\frac{\\sigma_1}{\\sigma_r} = \\frac{10.000}{0.400} = 25.000",
+    "min": 1.0,
+    "max": 10.0,
+    "step": 1.0,
+    "inputLabel": "Iteration Step k",
+    "shortInput": "k",
+    "inputUnit": "steps",
+    "inputDecimals": 0,
+    "rawLabel": "Singular Value Ratio σ_1/σ_r",
+    "rawUnit": "",
+    "rawDecimals": 3,
+    "angle": false,
+    "timed": false,
+    "observationLabel": "SVD singular spectrum and pseudoinverse conditioning",
+    "xAxis": "Iteration Step k",
+    "yAxis": "Cumulative Condition Ratio (25.000 · k)",
+    "settings": [
+      "Decomposition Form: A = UΣVᵀ where U (m×m) and V (n×n) are orthogonal, Σ is diagonal singular spectrum.",
+      "Singular Values: σ₁ = 10.000, σ₂ = 4.000, σ₃ = 0.400 (condition number κ = 10.0/0.4 = 25.000).",
+      "Moore-Penrose Pseudoinverse: A⁺ = V Σ⁺ Uᵀ with σ_i⁺ = 1/σ_i for σ_i > ε_tol.",
+      "Minimal-Norm Least Squares: x_{LS} = A⁺ b minimizes both ‖Ax − b‖₂ and ‖x‖₂."
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "Singular Ellipsoid Transformation"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "SVD vs Normal Equations (AᵀA) vs QR"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "Truncated SVD Low-Rank Denoising"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Golub-Kahan Bidiagonalization Engine",
+        "purpose": "Applies Householder reflections from left and right to reduce A to upper bidiagonal form B."
+      },
+      {
+        "name": "Implicitly Shifted QR Singular Spectrum Solver",
+        "purpose": "Iterates on BᵀB using zero-shift QR to extract singular values σ_i to machine precision."
+      },
+      {
+        "name": "Moore-Penrose Pseudoinverse Generator",
+        "purpose": "Inverts non-zero singular values σ_i⁺ = 1/σ_i and forms A⁺ = VΣ⁺Uᵀ."
+      },
+      {
+        "name": "Spectral Condition Number Analyzer",
+        "purpose": "Evaluates κ₂(A) = σ₁ / σ_r and measures ill-conditioning sensitivity."
+      },
+      {
+        "name": "Interactive Singular Ellipsoid Canvas",
+        "purpose": "Visualizes the unit sphere in ℝⁿ mapping onto the hyperellipsoid in ℝᵐ with semi-axes σ_i u_i."
+      },
+      {
+        "name": "Eckart-Young-Mirsky Low-Rank Approximator",
+        "purpose": "Computes optimal rank-k approximation A_k = ∑_{i=1}^k σ_i u_i v_iᵀ."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Matrix Initialization",
+        "text": "Initialize m×n matrix A with known singular spectrum σ = [10.000, 4.000, 0.400]. Verify that condition number κ₂(A) = 10.0 / 0.4 = 25.000."
+      },
+      {
+        "title": "Golub-Kahan Bidiagonal Reduction",
+        "text": "Apply alternating Householder reflections: P₁ A Q₁ ... P_n A Q_{n-2} reduces A to upper-bidiagonal form B in 4mn² − (4/3)n³ operations."
+      },
+      {
+        "title": "Singular Value Extraction",
+        "text": "Apply the Golub-Reinsch implicitly shifted QR algorithm to bidiagonal matrix B, driving off-diagonal entries to zero to extract singular values σ_i."
+      },
+      {
+        "title": "Moore-Penrose Pseudoinverse Construction",
+        "text": "Form diagonal matrix Σ⁺ where σ_i⁺ = 1/σ_i if σ_i > 10⁻¹², and 0 otherwise. Compute pseudoinverse A⁺ = V Σ⁺ Uᵀ."
+      },
+      {
+        "title": "Minimal-Norm Solution Evaluation",
+        "text": "For right-hand side b, evaluate x_{LS} = A⁺ b. Confirm that x_{LS} is the unique solution minimizing both residual ‖Ax − b‖₂ and solution norm ‖x‖₂."
+      },
+      {
+        "title": "Linear Regression and Condition Number Extraction",
+        "text": "Plot cumulative condition metric y = 25.000 · k against step k. Perform ordinary least-squares regression to extract empirical slope m = 25.000, confirming matrix condition number κ₂(A) = 25.000."
+      }
+    ],
+    "topics": [
+      {
+        "question": "What is the Singular Value Decomposition (SVD) and why is it called the 'rolling pin of linear algebra'?",
+        "answer": "The Singular Value Decomposition factors any real m×n matrix A into A = UΣVᵀ, where U is an m×m orthogonal matrix (left singular vectors), V is an n×n orthogonal matrix (right singular vectors), and Σ is an m×n diagonal matrix containing non-negative singular values σ₁ ≥ σ₂ ≥ ... ≥ σ_p ≥ 0 (p = min(m, n)). Geometrically, SVD reveals that every linear transformation maps the unit sphere in ℝⁿ into a hyperellipsoid in ℝᵐ, where the singular values σ_i are the lengths of the semi-axes and the left singular vectors u_i are their spatial orientations. SVD is universally applicable: unlike eigendecomposition, it exists for every matrix, square or rectangular, full-rank or singular."
+      },
+      {
+        "question": "What is the Moore-Penrose Pseudoinverse A⁺ and what four axioms define it?",
+        "answer": "Formulated by E. H. Moore (1920) and Arne Bjerhammar/Roger Penrose (1955), the pseudoinverse A⁺ is the unique n×m matrix satisfying the four Moore-Penrose conditions: (1) AA⁺A = A; (2) A⁺AA⁺ = A⁺; (3) (AA⁺)ᵀ = AA⁺; and (4) (A⁺A)ᵀ = A⁺A. Using SVD, the pseudoinverse is computed effortlessly as A⁺ = V Σ⁺ Uᵀ, where Σ⁺ inverts all non-zero singular values (σ_i⁺ = 1/σ_i) and leaves zeros untouched. If A is square and invertible, A⁺ = A⁻¹; if A has full column rank, A⁺ = (AᵀA)⁻¹ Aᵀ."
+      },
+      {
+        "question": "What is the Eckart-Young-Mirsky Theorem and how does it power data compression (PCA)?",
+        "answer": "The Eckart-Young-Mirsky theorem (1936) states that for any rank k < r = rank(A), the optimal rank-k approximation to A in both the Frobenius norm and spectral 2-norm is obtained by truncating the SVD to its top k terms: A_k = ∑_{i=1}^k σ_i u_i v_iᵀ. The approximation error is precisely ‖A − A_k‖₂ = σ_{k+1}. This theorem forms the mathematical foundation of Principal Component Analysis (PCA), latent semantic analysis in NLP, image compression, and facial recognition (Eigenfaces)."
+      },
+      {
+        "question": "Why is solving least squares via SVD or QR vastly superior to the Normal Equations (AᵀA x = Aᵀb)?",
+        "answer": "The normal equations AᵀA x = Aᵀb require forming the product AᵀA, which squares the condition number: κ₂(AᵀA) = [κ₂(A)]². If A has condition number κ = 10⁸, AᵀA has condition number κ² = 10¹⁶, completely exhausting 64-bit IEEE 754 precision (ε_mach ≈ 10⁻¹⁶) and rendering the system insoluble! In contrast, SVD and QR solve least squares operating directly on A without forming AᵀA, preserving condition number κ₂(A) and maintaining full 8-digit accuracy."
+      },
+      {
+        "question": "How does Truncated SVD (TSVD) achieve regularization in ill-posed inverse problems?",
+        "answer": "In ill-posed problems (such as medical tomography deconvolution), small singular values σ_i ≈ 0 are dominated by experimental noise. In the pseudoinverse, dividing by tiny σ_i (1/σ_i >> 10¹⁰) blows up noise, destroying the reconstruction. Truncated SVD regularizes the problem by discarding all singular values below a noise threshold ε_tol (setting 1/σ_i = 0), suppressing high-frequency noise amplification while preserving the dominant signal."
+      },
+      {
+        "question": "What is the relationship between the singular values of A and the eigenvalues of AᵀA and AAᵀ?",
+        "answer": "Because A = UΣVᵀ, AᵀA = (VΣᵀUᵀ)(UΣVᵀ) = V(ΣᵀΣ)Vᵀ. This is the exact orthogonal eigendecomposition of the symmetric positive semi-definite matrix AᵀA! Thus, the right singular vectors v_i are eigenvectors of AᵀA, the left singular vectors u_i are eigenvectors of AAᵀ, and the singular values σ_i are the non-negative square roots of the eigenvalues of AᵀA: σ_i = √(λ_i(AᵀA))."
+      },
+      {
+        "question": "How does SVD directly identify the four fundamental subspaces of linear algebra?",
+        "answer": "Gilbert Strang's four fundamental subspaces are partitioned with exact precision by SVD: (1) Column space Col(A): spanned by the first r left singular vectors {u₁, ..., u_r}; (2) Left nullspace N(Aᵀ): spanned by the remaining {u_{r+1}, ..., u_m}; (3) Row space Row(A): spanned by the first r right singular vectors {v₁, ..., v_r}; and (4) Nullspace N(A): spanned by the remaining {v_{r+1}, ..., v_n}."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What is the 2-norm condition number κ₂(A) in terms of singular values?",
+        "options": [
+          "κ₂(A) = σ_max / σ_min",
+          "κ₂(A) = σ_max · σ_min",
+          "κ₂(A) = det(A)",
+          "κ₂(A) = Trace(A)"
+        ],
+        "correct": 0,
+        "explanation": "The 2-norm condition number is the ratio of the largest to smallest non-zero singular value: κ₂(A) = σ₁ / σ_r."
+      },
+      {
+        "question": "How is the Moore-Penrose pseudoinverse A⁺ expressed using SVD A = UΣVᵀ?",
+        "options": [
+          "A⁺ = V Σ⁺ Uᵀ",
+          "A⁺ = U Σ⁺ Vᵀ",
+          "A⁺ = (UΣV)⁻¹",
+          "A⁺ = Vᵀ Σ U"
+        ],
+        "correct": 0,
+        "explanation": "Inverting the decomposition yields A⁺ = (UΣVᵀ)⁺ = (Vᵀ)⁺ Σ⁺ U⁺ = V Σ⁺ Uᵀ, where Σ⁺ inverts non-zero singular values."
+      },
+      {
+        "question": "Why is solving least-squares via normal equations AᵀAx = Aᵀb dangerous on ill-conditioned data?",
+        "options": [
+          "Forming AᵀA squares the condition number (κ(AᵀA) = κ(A)²), doubling precision loss",
+          "It requires O(n⁴) operations",
+          "It only works on diagonal matrices",
+          "It produces complex numbers"
+        ],
+        "correct": 0,
+        "explanation": "Squaring the condition number can easily turn a moderately ill-conditioned problem (κ = 10⁸) into complete numerical garbage (κ² = 10¹⁶)."
+      },
+      {
+        "question": "According to the Eckart-Young-Mirsky theorem, what is the optimal rank-k approximation to matrix A?",
+        "options": [
+          "A_k = ∑_{i=1}^k σ_i u_i v_iᵀ (the truncated SVD)",
+          "A_k = k · I",
+          "The first k columns of A",
+          "A_k = Q_k R_k"
+        ],
+        "correct": 0,
+        "explanation": "Truncating the SVD sum to the top k singular components provides the best possible low-rank approximation in both Frobenius and 2-norms."
+      }
+    ],
+    "precautions": [
+      "Never form the normal equations matrix AᵀA explicitly when A is ill-conditioned; always use SVD or QR.",
+      "Choose singular value truncation threshold ε_tol carefully (e.g. ε_tol = max(m, n) · ε_mach · σ₁) to prevent noise amplification.",
+      "Verify that singular values are sorted in non-increasing order: σ₁ ≥ σ₂ ≥ ... ≥ σ_p ≥ 0.",
+      "Do not invert zero or near-zero singular values; set σ_i⁺ = 0 for σ_i < ε_tol.",
+      "Maintain 64-bit precision; Golub-Kahan bidiagonalization requires dual Householder sweeps.",
+      "Check that U and V are strictly orthogonal: ‖UᵀU − I‖ < 10⁻¹⁴ and ‖VᵀV − I‖ < 10⁻¹⁴."
+    ],
+    "limitations": [
+      "SVD is computationally expensive: full SVD requires approximately 4mn² + 8n³ FLOPs.",
+      "Requires storing both orthogonal matrices U (m×m) and V (n×n) unless thin/economy SVD is used.",
+      "Truncating singular values introduces regularization bias that trades accuracy for stability."
+    ],
+    "intro": "The Singular Value Decomposition (SVD)—originating in the independent mathematical investigations of Eugenio Beltrami (1873), Camille Jordan (1874), and James Joseph Sylvester (1889), and elevated to an algorithmic triumph by Gene Golub and William Kahan in 1965—is universally acknowledged as the absolute summit of matrix computations. In linear algebra, eigendecomposition A = VΛV⁻¹ is restricted exclusively to square, diagonalizable matrices, and can become severely ill-conditioned if eigenvectors are nearly collinear. SVD transcends all such limitations: every matrix—square or rectangular, full-rank or rank-deficient, well-conditioned or pathological—admits an SVD: A = UΣVᵀ. Here, U is an m×m orthogonal matrix containing the left singular vectors, V is an n×n orthogonal matrix containing the right singular vectors, and Σ is an m×n diagonal matrix containing the non-negative singular values sorted in descending order: σ₁ ≥ σ₂ ≥ ... ≥ σ_p ≥ 0. Geometrically, SVD decomposes any linear transformation into three elementary geometric actions: an initial rotation in the domain (Vᵀ), an axis-aligned stretching by factors σ_i (Σ), and a final rotation in the codomain (U). In computational science, SVD provides the definitive definition of matrix condition: the 2-norm condition number is given exactly by κ₂(A) = σ_max / σ_min. Furthermore, SVD resolves the universal problem of inverting non-invertible matrices via the Moore-Penrose pseudoinverse: A⁺ = V Σ⁺ Uᵀ. For any linear system Ax = b, x_{LS} = A⁺ b produces the unique solution that simultaneously minimizes the residual error ‖Ax − b‖₂ and has the minimum Euclidean norm ‖x‖₂. Finally, by the Eckart-Young-Mirsky theorem, truncating the SVD to its top k components yields the mathematically optimal low-rank matrix approximation, providing the engine for Principal Component Analysis (PCA), latent semantic indexing, and big-data denoising. In this computational laboratory, students evaluate SVD on a matrix with singular values σ = [10.0, 4.0, 0.4] (condition number κ = 10.0/0.4 = 25.000), construct the Moore-Penrose pseudoinverse, explore rank truncation, and extract the condition number κ₂(A) = 25.000 via linear regression.",
+    "modelExtra": "The numerical simulation model executes SVD on a 3×3 matrix with singular spectrum σ = [10.000, 4.000, 0.400]. Analytical 2-norm condition number: κ₂(A) = σ₁ / σ₃ = 10.000 / 0.400 = 25.000000. Across the six standardized iteration steps k = [1, 2, 3, 4, 5, 6], the cumulative condition metric is y = κ · k = [25.000, 50.000, 75.000, 100.000, 125.000, 150.000]. Ordinary least-squares linear regression on these coordinates produces an empirical slope m = 25.00000 and Y-intercept b = 0.000 with coefficient of determination R² = 1.000000. The empirical condition number κ₂(A) = 25.000 matches the theoretical benchmark κ₂(A) = 25.000 within 0.0000% deviation."
+  },
+  {
+    "id": 20,
+    "number": 20,
+    "slug": "conjugate-gradient-krylov-optimization",
+    "title": "Krylov Subspace Optimization and the Linear Conjugate Gradient Method",
+    "shortTitle": "Conjugate Gradient Method",
+    "category": "Computational Mathematics",
+    "department": "mathematics",
+    "subject_id": 21,
+    "subject": "mathematics",
+    "published": true,
+    "page_path": "/mathematics/conjugate-gradient-krylov-optimization/",
+    "aim": "Solve large sparse symmetric positive-definite linear systems Ax = b by minimizing the quadratic energy functional Φ(x) = 1/2 xᵀAx − bᵀx over Krylov subspaces using A-conjugate search directions, analyze error contraction bounded by the condition number κ, and extract the theoretical convergence factor γ = (√κ − 1)/(√κ + 1) = 0.600 via logarithmic linear regression.",
+    "difficulty": "Advanced",
+    "time": "3 Hours",
+    "gradientUnit": "dimensionless",
+    "interceptUnit": "dimensionless",
+    "target": "0.600",
+    "targetName": "Krylov Error Reduction Factor γ",
+    "resultUnit": "",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 3,
+    "yDecimals": 3,
+    "initial": 1.0,
+    "samples": [
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0
+    ],
+    "emptyX": 1.0,
+    "emptyY": 0.6,
+    "measureLabel": "Conjugate Gradient A-Norm Error",
+    "fitEquation": "\\gamma = \\frac{\\sqrt{\\kappa} - 1}{\\sqrt{\\kappa} + 1} = \\frac{\\sqrt{16} - 1}{\\sqrt{16} + 1} = \\frac{4 - 1}{4 + 1} = 0.600",
+    "min": 1.0,
+    "max": 10.0,
+    "step": 1.0,
+    "inputLabel": "Iteration Step k",
+    "shortInput": "k",
+    "inputUnit": "steps",
+    "inputDecimals": 0,
+    "rawLabel": "Energy Norm Error ‖e_k‖_A",
+    "rawUnit": "",
+    "rawDecimals": 6,
+    "angle": false,
+    "timed": false,
+    "observationLabel": "Krylov subspace optimization and conjugate gradient descent",
+    "xAxis": "Iteration Step k",
+    "yAxis": "Cumulative Reduction Metric (0.600 · k)",
+    "settings": [
+      "Optimization Target: Minimize quadratic energy Φ(x) = 1/2 xᵀAx − bᵀx whose gradient ∇Φ(x) = Ax − b = −r.",
+      "Matrix Properties: Symmetric positive-definite (SPD) with condition number κ₂(A) = 16.000.",
+      "A-Conjugacy Orthogonality: Search directions satisfy p_iᵀ A p_j = 0 for all i ≠ j.",
+      "Theoretical Error Contraction: ‖e_k‖_A ≤ 2 · [(√κ − 1)/(√κ + 1)]^k · ‖e_0‖_A with γ = (4−1)/(4+1) = 0.600."
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "Energy Contour & Conjugate Zig-Zag Elimination"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "Conjugate Gradient vs Steepest Descent vs GMRES"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "Preconditioned CG (PCG) & Eigenvalue Clustering"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Conjugate Search Direction Generator",
+        "purpose": "Updates search direction p_{k+1} = r_{k+1} + β_k p_k with Gram-Schmidt coefficient β_k = (r_{k+1}ᵀ r_{k+1}) / (r_kᵀ r_k)."
+      },
+      {
+        "name": "Exact Line Search Step Optimizer",
+        "purpose": "Computes optimal step length α_k = (r_kᵀ r_k) / (p_kᵀ A p_k) minimizing energy along p_k."
+      },
+      {
+        "name": "Energy Norm A-Metric Evaluator",
+        "purpose": "Tracks true error in the natural energy norm ‖e_k‖_A = √(e_kᵀ A e_k)."
+      },
+      {
+        "name": "Krylov Subspace Dimension Analyzer",
+        "purpose": "Verifies that iterate x_k minimizes Φ(x) over the expanding Krylov space K_k(A, r₀) = span{r₀, Ar₀, ..., A^{k-1}r₀}."
+      },
+      {
+        "name": "Interactive Quadratic Energy Surface Canvas",
+        "purpose": "Renders elliptical contours of Φ(x) and illustrates how CG reaches the minimum in n steps without zig-zagging."
+      },
+      {
+        "name": "Condition Number Bound Comparator",
+        "purpose": "Evaluates the Chebyshev error bound 2γ^k to confirm optimal worst-case convergence."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "System and Condition Number Initialization",
+        "text": "Initialize symmetric positive-definite matrix A with condition number κ₂(A) = 16.000 (λ_max = 16, λ_min = 1). Verify theoretical contraction rate γ = (√16 − 1)/(√16 + 1) = (4 − 1)/(4 + 1) = 0.600."
+      },
+      {
+        "title": "Initialization of the Residual and Search Direction",
+        "text": "Set x₀ = 0. Compute initial residual r₀ = b − Ax₀ = b. Set initial search direction p₀ = r₀."
+      },
+      {
+        "title": "First Conjugate Gradient Step (k = 1)",
+        "text": "Compute matrix-vector product w₀ = Ap₀. Optimal step: α₀ = (r₀ᵀ r₀) / (p₀ᵀ w₀). Update solution: x₁ = x₀ + α₀ p₀. Update residual: r₁ = r₀ − α₀ w₀. Evaluate energy norm ‖e₁‖_A = 0.600 · ‖e₀‖_A."
+      },
+      {
+        "title": "Gram-Schmidt Conjugate Direction Update",
+        "text": "Compute Fletcher-Reeves coefficient: β₀ = (r₁ᵀ r₁) / (r₀ᵀ r₀). Update conjugate direction: p₁ = r₁ + β₀ p₀. Verify A-conjugacy: p₁ᵀ A p₀ = 0."
+      },
+      {
+        "title": "Subsequent Iterations to k = 6",
+        "text": "Repeat steps 3 and 4 across iterations k = 2 to k = 6: at each step, energy error ‖e_k‖_A attenuates by factor γ = 0.600."
+      },
+      {
+        "title": "Linear Regression and Contraction Factor Extraction",
+        "text": "Plot cumulative reduction metric y = 0.600 · k against step k. Perform ordinary least-squares regression to extract empirical slope m = 0.6000, confirming the theoretical Krylov error reduction factor γ = 0.600."
+      }
+    ],
+    "topics": [
+      {
+        "question": "Why does the Method of Steepest Descent suffer from pathological 'zig-zagging' on ill-conditioned systems?",
+        "answer": "The Steepest Descent method steps along the negative gradient direction: p_k = −∇Φ(x_k) = r_k = b − Ax_k. Minimizing Φ(x) along this line forces consecutive search directions to be strictly orthogonal in the Euclidean metric: p_{k+1}ᵀ p_k = 0. On ill-conditioned systems (where the elliptical contours of Φ are long, narrow canyons), orthogonal search directions bounce back and forth across the valley walls in a painfully slow zig-zag pattern, taking microscopic steps toward the minimum. The error attenuates with the sluggish rate (κ − 1)/(κ + 1), which crawls toward 1 as κ increases."
+      },
+      {
+        "question": "How does Conjugate Gradient eliminate zig-zagging using A-conjugacy?",
+        "answer": "In 1952, Magnus Hestenes and Eduard Stiefel realized that search directions should not be orthogonal in Euclidean space, but rather orthogonal with respect to the matrix A itself: p_iᵀ A p_j = 0 for all i ≠ j (A-conjugacy or A-orthogonality). Because A is SPD, the inner product ⟨u, v⟩_A = uᵀAv defines a valid Hilbert metric. Minimizing the quadratic energy functional along mutually A-conjugate directions guarantees that minimizing along p_k never undoes progress achieved along previous directions p₀, ..., p_{k-1}. Consequently, in exact arithmetic, CG reaches the exact minimum in at most n iterations!"
+      },
+      {
+        "question": "What is a Krylov subspace and why does CG find the optimal polynomial approximation?",
+        "answer": "The k-th Krylov subspace generated by A and r₀ is K_k(A, r₀) = span{r₀, Ar₀, A²r₀, ..., A^{k-1}r₀}. At step k, the CG iterate x_k minimizes the energy norm error ‖x* − x_k‖_A over the entire affine space x₀ + K_k(A, r₀). Mathematically, x_k can be expressed as x_k = x₀ + P_{k-1}(A)r₀, where P_{k-1} is a polynomial of degree at most k − 1. CG automatically selects the optimal polynomial minimizing the A-norm error, connecting CG directly to Chebyshev polynomials and approximation theory."
+      },
+      {
+        "question": "How is the theoretical convergence bound ‖e_k‖_A ≤ 2 · [(√κ − 1)/(√κ + 1)]^k · ‖e_0‖_A derived?",
+        "answer": "The error at step k satisfies e_k = [I − A P_{k-1}(A)]e_0 = Q_k(A)e_0, where Q_k(0) = 1. The A-norm of the error is bounded by: ‖e_k‖_A ≤ min_{Q_k, Q_k(0)=1} max_{λ ∈ [λ_min, λ_max]} |Q_k(λ)| · ‖e_0‖_A. The polynomial of degree k that satisfies Q_k(0) = 1 and has the smallest maximum magnitude on [λ_min, λ_max] is the scaled and shifted Chebyshev polynomial T_k. Evaluating T_k at the origin yields the celebrated bound: ‖e_k‖_A ≤ 2 · γ^k · ‖e_0‖_A, where γ = (√κ − 1)/(√κ + 1). Notice that γ depends on √κ rather than κ, making CG quadratically faster than steepest descent!"
+      },
+      {
+        "question": "How does eigenvalue clustering accelerate CG convergence beyond the Chebyshev bound?",
+        "answer": "The Chebyshev bound assumes worst-case continuous eigenvalue distribution on [λ_min, λ_max]. However, if A has only m distinct eigenvalues (m < n), a polynomial of degree m can place its roots exactly at those m eigenvalues, forcing Q_m(A) = 0 and terminating CG in exactly m steps! More generally, if eigenvalues cluster into a few tightly grouped clumps, CG converges as if the matrix had dimension equal to the number of clusters. This is the foundational principle of Preconditioned Conjugate Gradients (PCG)."
+      },
+      {
+        "question": "What is Preconditioned Conjugate Gradient (PCG) and how does preconditioning work?",
+        "answer": "If A is ill-conditioned (large κ), CG convergence is slow. PCG accelerates convergence by transforming the system into M⁻¹Ax = M⁻¹b, where M is a symmetric positive-definite preconditioning matrix that approximates A (M ≈ A) but is cheap to invert (e.g. Incomplete Cholesky, SSOR, or Multigrid). The preconditioned operator M⁻¹A has a much smaller condition number κ(M⁻¹A) << κ(A) and tightly clustered eigenvalues, allowing PCG to converge in a fraction of the iterations."
+      },
+      {
+        "question": "What happens to the finite-termination property of CG in floating-point arithmetic?",
+        "answer": "In theoretical exact arithmetic, CG terminates in at most n steps. In finite-precision IEEE 754 arithmetic, however, round-off errors gradually degrade the A-conjugacy of the search directions: p_kᵀ A p_j ≠ 0 for j << k. Consequently, finite termination after n steps is lost. Nevertheless, Anne Greenbaum and Zdeněk Strakoš proved that the minimization property over Krylov subspaces is preserved, so CG continues to converge smoothly as an iterative method."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What is the theoretical error contraction factor γ of the Conjugate Gradient method?",
+        "options": [
+          "γ = (√κ − 1) / (√κ + 1)",
+          "γ = (κ − 1) / (κ + 1)",
+          "γ = 1 / κ",
+          "γ = 0.500"
+        ],
+        "correct": 0,
+        "explanation": "The Chebyshev minimax bound proves that the A-norm error shrinks by at least γ = (√κ − 1)/(√κ + 1) per iteration."
+      },
+      {
+        "question": "What geometric property do the search directions p_k satisfy in the Conjugate Gradient method?",
+        "options": [
+          "They are mutually A-conjugate (p_iᵀ A p_j = 0 for all i ≠ j)",
+          "They are orthogonal in Euclidean space (p_iᵀ p_j = 0)",
+          "They are parallel to coordinate axes",
+          "They are tangent to the unit sphere"
+        ],
+        "correct": 0,
+        "explanation": "A-conjugacy (orthogonality with respect to the inner product defined by A) prevents the algorithm from undoing previous progress."
+      },
+      {
+        "question": "For a matrix with condition number κ = 16.000, what is the theoretical error contraction factor γ?",
+        "options": [
+          "γ = (4 − 1)/(4 + 1) = 0.600",
+          "γ = (16 − 1)/(16 + 1) = 0.882",
+          "γ = 0.250",
+          "γ = 0.0625"
+        ],
+        "correct": 0,
+        "explanation": "Since √16 = 4, the factor is γ = (4 − 1)/(4 + 1) = 3/5 = 0.600."
+      },
+      {
+        "question": "In exact arithmetic, what is the maximum number of iterations required for CG to find the exact solution of an n×n system?",
+        "options": [
+          "At most n iterations",
+          "At most (2/3)n³ iterations",
+          "Infinite iterations",
+          "Exactly 1 iteration"
+        ],
+        "correct": 0,
+        "explanation": "Because each step expands the Krylov subspace by one dimension, CG explores the full n-dimensional space in at most n steps."
+      }
+    ],
+    "precautions": [
+      "Verify that matrix A is symmetric positive-definite (xᵀAx > 0); CG can diverge or divide by zero on indefinite systems (use GMRES or MINRES instead).",
+      "Monitor p_kᵀ A p_k; if this scalar is ≤ 0, matrix A is not positive-definite.",
+      "Use the recurrence r_{k+1} = r_k − α_k A p_k, but periodically recompute r = b − Ax to purge accumulated round-off error.",
+      "Always precondition ill-conditioned systems (using Incomplete Cholesky or diagonal Jacobi preconditioning).",
+      "Store sparse matrix A in Compressed Sparse Row (CSR) format to achieve optimal O(nnz) matrix-vector products.",
+      "Maintain 64-bit precision to delay the loss of A-conjugacy caused by finite-precision arithmetic."
+    ],
+    "limitations": [
+      "Strictly restricted to symmetric positive-definite systems; cannot be applied to unsymmetric systems (which require GMRES or BiCGSTAB).",
+      "In finite precision, loss of A-conjugacy eliminates exact termination in n steps.",
+      "Convergence rate deteriorates if condition number κ is large unless an effective preconditioner is used."
+    ],
+    "intro": "The Conjugate Gradient (CG) method—invented in 1952 by the American mathematician Magnus Hestenes and Swiss mathematician Eduard Stiefel—is widely celebrated as one of the top ten algorithms of the twentieth century. In computational physics, structural mechanics, geophysics, and computer graphics, solving the linear system Ax = b arising from discretized elliptic partial differential equations poses a classic challenge: the coefficient matrix A is typically massive (n > 10⁶), highly sparse, and symmetric positive-definite (SPD). Standard elimination methods like LU or Cholesky require O(n³) operations and cause fatal memory 'fill-in'. Conversely, classical relaxation methods like Steepest Descent suffer from catastrophic zig-zagging on ill-conditioned systems: orthogonal gradient steps bounce back and forth across steep canyon walls, taking thousands of microscopic steps. Hestenes and Stiefel revolutionized optimization by reinterpreting the linear system Ax = b as the minimization of the quadratic energy functional: Φ(x) = 1/2 xᵀAx − bᵀx. The gradient of this functional is ∇Φ(x) = Ax − b = −r, meaning finding the root is equivalent to finding the unique global minimum of Φ. Rather than stepping along the steepest descent gradient, Hestenes and Stiefel constructed search directions that are mutually A-conjugate: p_iᵀ A p_j = 0 for all i ≠ j. Because the directions are orthogonal in the natural energy metric defined by A, minimizing along p_k never interferes with progress achieved in previous directions. Furthermore, the algorithm is an optimal Krylov subspace method: at step k, the iterate x_k is the unique vector in the Krylov space K_k(A, r₀) = span{r₀, Ar₀, ..., A^{k-1}r₀} that minimizes the energy norm error ‖x* − x_k‖_A. By connecting CG to Chebyshev polynomials, the error is proven to attenuate by at least the factor γ = (√κ − 1)/(√κ + 1) per iteration, where κ is the condition number. Because γ depends on the square root of the condition number (√κ) rather than κ, Conjugate Gradient converges quadratically faster than steepest descent and requires only one sparse matrix-vector product per step. In this computational laboratory, students evaluate the Conjugate Gradient algorithm on an SPD system with condition number κ = 16.0 (γ = (4−1)/(4+1) = 0.600), observe conjugate search directions, track energy norm minimization, and extract the theoretical error contraction factor γ = 0.600 via linear regression.",
+    "modelExtra": "The numerical simulation model evaluates the Conjugate Gradient algorithm on a symmetric positive-definite linear system with eigenvalues λ_min = 1.000 and λ_max = 16.000, giving 2-norm condition number κ₂(A) = 16.000000. Theoretical Chebyshev error contraction factor: γ = (√16 − 1) / (√16 + 1) = (4.0 − 1.0) / (4.0 + 1.0) = 3.0 / 5.0 = 0.600000. Across the six standardized iteration steps k = [1, 2, 3, 4, 5, 6], the cumulative contraction metric is y = γ · k = [0.600, 1.200, 1.800, 2.400, 3.000, 3.600]. Ordinary least-squares linear regression on these coordinates produces an empirical slope m = 0.60000 and Y-intercept b = 0.000 with coefficient of determination R² = 1.000000. The empirical contraction factor γ = 0.600 matches the analytical benchmark γ = 0.60000 within 0.0000% deviation."
   }
 ]

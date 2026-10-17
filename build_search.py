@@ -132,7 +132,17 @@ def experiment_index(experiments):
     'bairstow-method-polynomial-quadratic-factors': 'bairstow method polynomial quadratic factors synthetic division double recurrence newton raphson jacobian matrix cramer rule deflation complex conjugate roots',
     'brent-dekker-hybrid-root-finding': 'brent dekker method hybrid root finding inverse quadratic interpolation iqi bisection secant guaranteed convergence scipy brentq matlab fzero fallback heuristics',
     'halley-method-cubic-root-convergence': 'halley method cubic convergence second derivative householder iteration osculating hyperbola rational approximation pade approximant curvature correction royal society',
-    'steffensen-method-accelerated-convergence': 'steffensen method aitken delta squared process accelerated convergence quadratic derivative free forward difference fixed point extrapolation error doubling'}
+    'steffensen-method-accelerated-convergence': 'steffensen method aitken delta squared process accelerated convergence quadratic derivative free forward difference fixed point extrapolation error doubling',
+    'gaussian-elimination-partial-pivoting': 'gaussian elimination partial pivoting lu factorization row operations upper triangular back substitution flop complexity cubic scaling 2/3 n3 roundoff error condition number',
+    'lu-decomposition-doolittle-crout': 'lu decomposition doolittle crout algorithm unit lower triangular upper triangular forward substitution backward substitution matrix factorization flop complexity linear systems',
+    'cholesky-decomposition-positive-definite': 'cholesky decomposition symmetric positive definite matrix ll transpose factor ldl factorization square root algorithm flop complexity 1/3 n3 covariance matrix normal equations',
+    'jacobi-iterative-linear-solver': 'jacobi iterative method linear systems strictly diagonally dominant spectral radius error attenuation fixed point stationary iterative solver matrix splitting banach contraction',
+    'gauss-seidel-successive-relaxation': 'gauss seidel method successive over relaxation sor optimal relaxation parameter omega forward substitution triangular splitting spectral radius asymptotic convergence linear systems',
+    'power-iteration-dominant-eigenvalue': 'power iteration dominant eigenvalue rayleigh quotient eigenvector page rank krylov subspace spectral radius matrix power convergence ratio lambda1 lambda2',
+    'inverse-power-iteration-eigen-shift': 'inverse power iteration shifted inverse iteration rayleigh quotient iteration cubic convergence eigenvalue shift targeting condition number wielandt acceleration',
+    'qr-decomposition-gram-schmidt-householder': 'qr decomposition modified gram schmidt householder reflections unitary orthogonal matrix upper triangular least squares orthogonalization flop complexity 4/3 n3',
+    'singular-value-decomposition-pseudoinverse': 'singular value decomposition svd moore penrose pseudoinverse condition number matrix rank low rank approximation frobenius norm 2-norm spectral conditioning',
+    'conjugate-gradient-krylov-optimization': 'conjugate gradient method cg krylov subspace positive definite optimization residual orthogonal search directions a-conjugate energy norm quadratic form'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):
