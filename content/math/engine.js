@@ -156,6 +156,9 @@ function draw(timestamp){
  const isQuad = ['trapezoidal-rule-romberg-extrapolation','simpson-one-third-three-eighths-quadrature','gauss-legendre-quadrature-nodes-weights'].includes(cfg.slug);
  const isMonte = cfg.slug === 'monte-carlo-numerical-multidimensional-integration';
  const isFFT = cfg.slug === 'fast-fourier-transform-spectral-analysis';
+ const isODE = ['euler-forward-backward-heun-methods','runge-kutta-fourth-order-rk4','adams-bashforth-moulton-multistep','adaptive-step-runge-kutta-fehlberg'].includes(cfg.slug);
+ const isPDE = ['finite-difference-boundary-value-problems','heat-equation-crank-nicolson-pde','wave-equation-hyperbolic-pde-cfl','laplace-poisson-elliptic-pde-relaxation'].includes(cfg.slug);
+ const isDynamical = ['lotka-volterra-predator-prey-phase-plane','lorenz-attractor-chaos-lyapunov-exponent'].includes(cfg.slug);
 
  if(currentSimMode==='bench'){
   content += rect(40, 25, 640, 270, '#090d16', '#312e81', 8);
@@ -221,17 +224,13 @@ function draw(timestamp){
    content += text(vx + 6, vy, 'x_' + k, '#f43f5e', 10, 'start');
    content += text(80, 265, 'Spectral Dominance Ratio λ₁/λ₂ = '+cfg.target, '#f59e0b', 11, 'start');
   } else if(isInterp){
-   // Interpolation curves & nodes
    const k = Math.round(val);
    const ox = 80, oy = 220, axW = 380, axH = 140;
    content += line(ox, oy, ox + axW, oy, '#475569', 1.5);
    content += line(ox, oy - axH, ox, oy + 20, '#475569', 1.5);
    content += text(ox + axW + 10, oy + 4, 'x', '#94a3b8', 11);
    content += text(ox - 8, oy - axH - 5, 'y', '#94a3b8', 11, 'end');
-   // True function curve
    content += '<path d="M 80 200 Q 180 100 270 140 T 460 160" fill="none" stroke="#38bdf8" stroke-width="2"/>';
-   content += text(465, 160, 'f(x)', '#38bdf8', 10);
-   // Interpolation polynomial & nodes
    const numNodes = Math.min(2 + k, 8);
    for(let i=0; i<numNodes; i++){
     const nx = ox + 20 + i * ((axW - 40) / (numNodes - 1));
@@ -241,7 +240,6 @@ function draw(timestamp){
    }
    content += text(80, 265, 'Nodal Polynomial Interpolant P_n(x) · Degree n = '+(numNodes-1), '#f59e0b', 11);
   } else if(isQuad){
-   // Numerical quadrature shaded panels
    const k = Math.round(val);
    const ox = 80, oy = 220, axW = 380, axH = 140;
    content += line(ox, oy, ox + axW, oy, '#475569', 1.5);
@@ -258,12 +256,10 @@ function draw(timestamp){
    content += '<path d="M 100 190 Q 220 90 320 130 T 440 180" fill="none" stroke="#10b981" stroke-width="2.5"/>';
    content += text(80, 265, 'Composite Quadrature Mesh: N = '+numPanels+' panels · Order α = '+cfg.target, '#f59e0b', 11);
   } else if(isMonte){
-   // Monte Carlo hypercube projection & random points
    const k = Math.round(val);
    const bx = 110, by = 90, bSize = 140;
    content += rect(bx, by, bSize, bSize, '#0b1120', '#6366f1', 4);
    content += text(bx, by - 8, '5D Unit Hypercube Projection Ω = [0, 1]⁵', '#818cf8', 10);
-   // Scatter sample points
    for(let i=0; i<45; i++){
     const rx = bx + 8 + ((i * 37 + k * 19) % (bSize - 16));
     const ry = by + 8 + ((i * 53 + k * 29) % (bSize - 16));
@@ -271,7 +267,6 @@ function draw(timestamp){
    }
    content += text(bx, 265, 'Sample Count N = '+(1000 * Math.pow(4, k-1))+' · Central Limit Rate: O(N^{-0.5})', '#f59e0b', 11);
   } else if(isFFT){
-   // Cooley-Tukey FFT Butterfly Graph
    const N = Math.round(val);
    const stages = Math.min(Math.round(Math.log2(N)), 5);
    content += text(80, 95, 'Radix-2 FFT Butterfly Flow Graph (N = '+N+', log₂N = '+stages+' stages)', '#38bdf8', 11, 'start', 'bold');
@@ -286,6 +281,71 @@ function draw(timestamp){
     }
    }
    content += text(80, 265, 'Total Operational Cost: ~'+cfg.target+' N log₂(N) FLOPs', '#f59e0b', 11);
+  } else if(isODE){
+   // ODE time integration trajectory
+   const k = Math.round(val);
+   const ox = 80, oy = 220, axW = 380, axH = 140;
+   content += line(ox, oy, ox + axW, oy, '#475569', 1.5);
+   content += line(ox, oy - axH, ox, oy + 20, '#475569', 1.5);
+   content += text(ox + axW + 10, oy + 4, 't', '#94a3b8', 11);
+   content += text(ox - 8, oy - axH - 5, 'y(t)', '#94a3b8', 11, 'end');
+   // Analytic curve
+   content += '<path d="M 80 180 Q 200 90 320 150 T 460 110" fill="none" stroke="#10b981" stroke-width="2"/>';
+   content += text(465, 110, 'Exact', '#10b981', 10);
+   // Numerical steps
+   const steps = Math.min(2 + k * 2, 12);
+   let lastX = ox, lastY = 180;
+   for(let i=1; i<=steps; i++){
+    const nx = ox + i * ((axW - 40) / steps);
+    const ny = 180 + Math.sin(i * 0.5) * 60;
+    content += line(lastX, lastY, nx, ny, '#38bdf8', 2);
+    content += `<circle cx="${nx}" cy="${ny}" r="3" fill="#f43f5e"/>`;
+    lastX = nx; lastY = ny;
+   }
+   content += text(80, 265, 'ODE Stepping: h = '+(0.20/Math.pow(2, k-1)).toFixed(4)+' · Asymptotic Order α = '+cfg.target, '#f59e0b', 11);
+  } else if(isPDE){
+   // PDE spatial profile / wave / thermal
+   const ox = 80, oy = 220, axW = 380, axH = 140;
+   content += line(ox, oy, ox + axW, oy, '#475569', 1.5);
+   content += line(ox, oy - axH, ox, oy + 20, '#475569', 1.5);
+   content += text(ox + axW + 10, oy + 4, 'x', '#94a3b8', 11);
+   content += text(ox - 8, oy - axH - 5, 'u(x, t)', '#94a3b8', 11, 'end');
+   // Multi-time snapshot profiles
+   content += '<path d="M 80 220 Q 260 80 440 220" fill="none" stroke="#38bdf8" stroke-width="2.5"/>';
+   content += '<path d="M 80 220 Q 260 120 440 220" fill="none" stroke="#6366f1" stroke-width="2" stroke-dasharray="4,4"/>';
+   content += '<path d="M 80 220 Q 260 160 440 220" fill="none" stroke="#10b981" stroke-width="1.5" stroke-dasharray="2,2"/>';
+   content += text(270, 75, 't = 0 (Initial Profile)', '#38bdf8', 10);
+   content += text(270, 115, 't = t₁', '#6366f1', 10);
+   content += text(270, 155, 't = t₂', '#10b981', 10);
+   content += text(80, 265, 'PDE Finite Difference Solution · Mesh Spacing Δx = '+(0.20/Math.pow(2, val-1)).toFixed(4), '#f59e0b', 11);
+  } else if(isDynamical){
+   // Phase plane / strange attractor
+   if(cfg.slug.includes('lorenz')){
+    // 3D butterfly strange attractor projection
+    content += text(80, 95, 'Lorenz Strange Attractor 3D Phase Space (σ=10, ρ=28, β=8/3)', '#ec4899', 11, 'start', 'bold');
+    // Left lobe
+    content += '<path d="M 220 180 C 140 100 120 220 220 180" fill="none" stroke="#38bdf8" stroke-width="2"/>';
+    // Right lobe
+    content += '<path d="M 220 180 C 300 100 320 220 220 180" fill="none" stroke="#ec4899" stroke-width="2"/>';
+    content += `<circle cx="220" cy="180" r="4" fill="#f59e0b"/>`;
+    content += text(225, 175, 'Saddle (0,0,0)', '#f59e0b', 9);
+    content += text(80, 265, 'Maximal Lyapunov Exponent λ = '+cfg.target+' nats/sec · Predictability Horizon t_L ≈ 1.1', '#f59e0b', 11);
+   } else {
+    // Lotka-Volterra closed concentric orbit
+    content += text(80, 95, 'Lotka-Volterra Phase Plane (Prey x vs Predator y)', '#10b981', 11, 'start', 'bold');
+    const ox = 220, oy = 180;
+    content += line(ox - 100, oy, ox + 140, oy, '#475569', 1.5);
+    content += line(ox, oy + 70, ox, oy - 90, '#475569', 1.5);
+    content += text(ox + 145, oy + 4, 'Prey (x)', '#94a3b8', 10);
+    content += text(ox - 6, oy - 95, 'Predator (y)', '#94a3b8', 10, 'end');
+    // Center point
+    content += `<circle cx="${ox}" cy="${oy}" r="4" fill="#10b981"/>`;
+    content += text(ox + 8, oy + 4, 'Center (1, 1)', '#10b981', 9, 'start', 'bold');
+    // Closed orbits
+    content += `<ellipse cx="${ox}" cy="${oy}" rx="45" ry="30" fill="none" stroke="#38bdf8" stroke-width="2"/>`;
+    content += `<ellipse cx="${ox}" cy="${oy}" rx="80" ry="55" fill="none" stroke="#f59e0b" stroke-width="2"/>`;
+    content += text(80, 265, 'Conserved First Integral H = '+cfg.target+' · dV/dt = 0 Identically', '#f59e0b', 11);
+   }
   } else {
    // Root finding coordinates
    const k = Math.round(val);
@@ -306,8 +366,6 @@ function draw(timestamp){
     content += rect(aX, oy - 110, bX - aX, 130, 'rgba(99, 102, 241, 0.15)', '#6366f1', 2);
     content += line(aX, oy - 110, aX, oy + 20, '#818cf8', 2);
     content += line(bX, oy - 110, bX, oy + 20, '#818cf8', 2);
-    content += text(aX, oy + 32, 'a_' + k, '#818cf8', 10, 'middle');
-    content += text(bX, oy + 32, 'b_' + k, '#818cf8', 10, 'middle');
    } else if(cfg.slug.includes('fixed-point')){
     content += line(ox, oy, ox + 200, oy - 130, '#64748b', 1.5, '4,4');
     content += '<path d="M 120 180 Q 220 165 330 130" fill="none" stroke="#38bdf8" stroke-width="2.5"/>';
@@ -332,7 +390,6 @@ function draw(timestamp){
    }
   }
 
-  // Telemetry box on right
   content += rect(490, 80, 170, 180, '#0b1120', '#1e293b', 6);
   content += text(505, 105, 'COMPUTATION TELEMETRY', '#94a3b8', 9, 'start', 'bold');
   content += text(505, 130, cfg.shortInput + ': ' + val, '#cbd5e1', 11);
@@ -346,7 +403,22 @@ function draw(timestamp){
   content += text(60, 52, 'COMPUTATIONAL COMPLEXITY & ASYMPTOTIC SPEED', '#818cf8', 12, 'start', 'bold');
   content += text(60, 70, 'Comparison across algorithmic paradigms in numerical analysis', '#94a3b8', 11);
 
-  const methods = isMatrix ? [
+  const methods = isODE ? [
+   { name: 'Runge-Kutta 4th-Order (RK4)', col: '#ec4899', rate: 'O(h⁴) Convergence (4 stages)', speed: 4 },
+   { name: 'Adams-Bashforth-Moulton (PECE)', col: '#10b981', rate: 'O(h⁴) Accuracy (2 evaluations)', speed: 5 },
+   { name: 'Heun Predictor-Corrector', col: '#38bdf8', rate: 'O(h²) Convergence (Midpoint)', speed: 2 },
+   { name: 'Forward / Backward Euler', col: '#f59e0b', rate: 'O(h) Convergence (First Order)', speed: 1 }
+  ] : isPDE ? [
+   { name: 'Crank-Nicolson Parabolic PDE', col: '#10b981', rate: 'O(Δt² + Δx²) Unconditionally Stable', speed: 5 },
+   { name: 'SOR Elliptic Relaxation (ω_opt)', col: '#38bdf8', rate: 'O(N) Iterations (Spectral Opt)', speed: 4 },
+   { name: 'Leapfrog Hyperbolic Wave', col: '#ec4899', rate: 'O(h²) Accuracy (CFL C ≤ 1.0)', speed: 3 },
+   { name: 'Explicit FTCS Heat Diffusion', col: '#f59e0b', rate: 'r ≤ 0.5 Crippling Stability', speed: 1 }
+  ] : isDynamical ? [
+   { name: 'Lorenz Strange Attractor (Chaos)', col: '#ec4899', rate: 'λ = +0.906 (Fractal D = 2.06)', speed: 5 },
+   { name: 'Lotka-Volterra Conservative Orbit', col: '#10b981', rate: 'λ = ± i (Conserved Invariant H)', speed: 4 },
+   { name: 'Van der Pol Limit Cycle', col: '#38bdf8', rate: 'Stable Isolated Orbit Attractor', speed: 3 },
+   { name: 'Linear Damped Sink / Node', col: '#f59e0b', rate: 'Exponential Equilibrium Decay', speed: 1 }
+  ] : isMatrix ? [
    { name: 'Direct QR (Householder / Gram-Schmidt)', col: '#ec4899', rate: 'C ≈ 4/3 n³ FLOPs', speed: 1 },
    { name: 'Gaussian Elimination / LU Doolittle', col: '#10b981', rate: 'C ≈ 2/3 n³ FLOPs', speed: 2 },
    { name: 'Cholesky Factorization (Symmetric PD)', col: '#38bdf8', rate: 'C ≈ 1/3 n³ FLOPs (2x speedup)', speed: 4 },
@@ -401,7 +473,7 @@ function draw(timestamp){
   }
 
   content += text(85, 120, 'Numerical Stability Landscape & Error Propagation', '#38bdf8', 10, 'start', 'bold');
-  content += text(85, 200, isMatrix ? 'Relative Error Bound: ||δx||/||x|| ≤ κ(A) · ||δb||/||b||' : (isQuad || isInterp) ? 'Asymptotic Error Truncation: E ≤ C · h^α' : 'Lipschitz Bound L ≤ ' + (1.0 / Math.max(1, val)).toFixed(3) + ' · Stability: Convergent', '#10b981', 11);
+  content += text(85, 200, isMatrix ? 'Relative Error Bound: ||δx||/||x|| ≤ κ(A) · ||δb||/||b||' : isDynamical ? 'Lyapunov Divergence Horizon: t_L = 1/λ ≈ 1.1 time units' : (isQuad || isInterp || isODE || isPDE) ? 'Asymptotic Error Truncation: E ≤ C · h^α' : 'Lipschitz Bound L ≤ ' + (1.0 / Math.max(1, val)).toFixed(3) + ' · Stability: Convergent', '#10b981', 11);
 
   content += rect(70, 230, 280, 48, '#0f172a', '#1e293b', 4);
   content += text(85, 250, 'Machine Epsilon ε_mach', '#94a3b8', 10);

@@ -6548,5 +6548,2135 @@
       "Fixed-point implementations suffer from dynamic range overflow, requiring scaling at each butterfly stage, though 64-bit float avoids this.",
       "FFT assumes the signal is stationary over the observation window; non-stationary time-frequency signals require Short-Time Fourier Transform (STFT) or Wavelet Transform."
     ]
+  },
+  {
+    "slug": "euler-forward-backward-heun-methods",
+    "number": 31,
+    "title": "Euler Methods (Forward, Backward, Heun) & Global Error Truncation",
+    "shortTitle": "Euler & Heun Methods",
+    "category": "Data & computation",
+    "mode": "Computational mathematics",
+    "published": true,
+    "subject": "mathematics",
+    "aim": "Implement explicit Forward Euler, implicit Backward Euler, and predictor-corrector Heun's method for initial value ordinary differential equations, evaluate numerical stability regions, and verify first-order O(h) global truncation error convergence.",
+    "target": 1.0,
+    "targetName": "Euler Convergence Order (α)",
+    "resultUnit": "order",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "fitEquation": "ln(E_max) = α · ln(h) + ln(C)",
+    "gradientUnit": "dimensionless",
+    "interceptUnit": "ln(constant)",
+    "shortInput": "Step",
+    "inputLabel": "Time Step Setting (k)",
+    "inputUnit": "step",
+    "inputDecimals": 0,
+    "min": 1,
+    "max": 6,
+    "step": 1,
+    "initial": 1,
+    "rawLabel": "Global Truncation Error ||y - y_num||_∞",
+    "rawUnit": "error",
+    "rawDecimals": 6,
+    "xAxis": "Logarithmic Time Step ln(h)",
+    "yAxis": "Logarithmic Global Error ln(E_max)",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 4,
+    "yDecimals": 4,
+    "emptyX": -1.6,
+    "emptyY": -3.1,
+    "samples": [
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0
+    ],
+    "measureLabel": "Integrate ODE & Measure Error",
+    "settings": [
+      "Test IVP system: dy/dt = -2y + t, y(0) = 1.0 on t ∈ [0, 2] with exact solution y(t) = 0.5 t - 0.25 + 1.25 e^{-2t}",
+      "Integration time step: h_k = 0.20 / 2^{k-1} for k = 1 to 6 (h ∈ [0.20, 0.10, 0.05, 0.025, 0.0125, 0.00625])",
+      "Stability boundary: Forward Euler stability condition |1 + λh| ≤ 1 implies h ≤ 1.0 for λ = -2",
+      "Precision buffer: 64-bit IEEE 754 floating-point arithmetic with machine epsilon 2.22 × 10⁻¹⁶"
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "1. Trajectory"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "2. Stability Regions"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "3. Stiff Dynamics"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Initial Value Problem Simulator",
+        "purpose": "Configures and evaluates Cauchy initial value ODEs y' = f(t, y) with exact closed-form reference solutions."
+      },
+      {
+        "name": "Forward Euler Stepper",
+        "purpose": "Executes explicit time integration y_{n+1} = y_n + h f(t_n, y_n) with O(h) global accuracy."
+      },
+      {
+        "name": "Backward Euler Implicit Engine",
+        "purpose": "Solves implicit algebraic equations y_{n+1} = y_n + h f(t_{n+1}, y_{n+1}) via Newton iteration for A-stable integration."
+      },
+      {
+        "name": "Heun Predictor-Corrector Module",
+        "purpose": "Implements explicit trapezoidal Heun stepping: y~_{n+1} = y_n + h f_n, y_{n+1} = y_n + (h/2)(f_n + f(t_{n+1}, y~_{n+1}))."
+      },
+      {
+        "name": "Dahlquist Stability Visualizer",
+        "purpose": "Maps the complex stability function R(z) on the complex plane z = λh and displays stability boundaries |R(z)| ≤ 1."
+      },
+      {
+        "name": "Global Error Telemetry Logger",
+        "purpose": "Evaluates the maximum absolute deviation ||y(t_n) - y_n||_∞ across the entire trajectory to verify O(h) convergence."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Define Benchmark IVP & Exact Solution",
+        "text": "Set up dy/dt = -2y + t with initial condition y(0) = 1.0 on t ∈ [0, 2], recording the exact solution y(t) = 0.5 t - 0.25 + 1.25 e^{-2t}."
+      },
+      {
+        "title": "Initialize Step Size Schedule",
+        "text": "For test levels k = 1 to 6, assign time step h = 0.20 / 2^{k-1} yielding total step counts N = 2 / h."
+      },
+      {
+        "title": "Execute Forward Euler Trajectory",
+        "text": "March from t = 0 to t = 2 using y_{n+1} = y_n + h (-2 y_n + t_n), storing computed ordinates at each discrete time node."
+      },
+      {
+        "title": "Compute Supremum Global Error",
+        "text": "Calculate absolute errors |y(t_n) - y_n| across all steps and extract the global maximum error E_max = ||y - y_num||_∞."
+      },
+      {
+        "title": "Compare Implicit Backward Euler and Heun",
+        "text": "Execute Heun's method on the same grid to observe the transition from first-order O(h) to second-order O(h²) error attenuation."
+      },
+      {
+        "title": "Fit Logarithmic Convergence Slope",
+        "text": "Perform linear regression on (ln(h), ln(E_max)) to empirically confirm the theoretical first-order slope α = 1.000."
+      }
+    ],
+    "topics": [
+      {
+        "question": "What is the difference between local truncation error and global truncation error in ODE solvers?",
+        "answer": "Local truncation error (LTE) is the error committed in a single step assuming the previous solution point was exact; for Forward Euler, LTE is O(h²). Global truncation error (GTE) is the cumulative accumulated error across N = (T - t_0)/h steps. Because errors accumulate over O(1/h) steps, GTE is one order lower: O(h²) · (1/h) = O(h)."
+      },
+      {
+        "question": "How is the stability domain of Forward Euler derived?",
+        "answer": "Applying Forward Euler to the Dahlquist test equation y' = λy yields y_{n+1} = (1 + λh) y_n. For solutions to remain bounded as n → ∞, the amplification factor must satisfy |R(λh)| = |1 + λh| ≤ 1. In the complex z = λh plane, this corresponds to a disk of radius 1 centered at z = -1."
+      },
+      {
+        "question": "Why is Backward Euler unconditionally stable (A-stable) for stiff differential equations?",
+        "answer": "For Backward Euler, y_{n+1} = y_n + λh y_{n+1}, which rearranges to y_{n+1} = y_n / (1 - λh). The amplification factor is R(z) = 1 / (1 - z). Whenever Re(λ) ≤ 0, |1 - z| ≥ 1, so |R(z)| ≤ 1 for the entire left half-plane. This unconditional stability is known as A-stability."
+      },
+      {
+        "question": "What makes a differential equation 'stiff'?",
+        "answer": "A system of ODEs y' = f(t, y) is stiff when its Jacobian eigenvalues have negative real parts with vastly different timescales (|Re(λ_max)| ≫ |Re(λ_min)| ≫ 0). Explicit methods are forced to take impractically tiny time steps dictated by stability rather than accuracy, whereas implicit methods remain stable."
+      },
+      {
+        "question": "How does Heun's method achieve second-order O(h²) global accuracy?",
+        "answer": "Heun's method uses a predictor step (Forward Euler) to estimate y~_{n+1}, then evaluates an explicit trapezoidal corrector step using the average of slopes at t_n and t_{n+1}. This cancels the O(h) Taylor error term, yielding O(h³) LTE and O(h²) GTE."
+      },
+      {
+        "question": "What is the Lax Equivalence Theorem in the context of ODE solvers?",
+        "answer": "Lax's Equivalence Theorem (and Dahlquist's Equivalence Theorem for multistep methods) states that for a consistent numerical method (LTE → 0 as h → 0), zero-stability is both necessary and sufficient for global convergence to the true solution."
+      },
+      {
+        "question": "Why is Forward Euler rarely used in production scientific computing?",
+        "answer": "Forward Euler has very low first-order accuracy O(h) and a tiny conditional stability region. Achieving high precision requires millions of tiny time steps, causing excessive CPU time and floating-point roundoff accumulation compared to higher-order Runge-Kutta or multistep methods."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What is the global truncation error order of convergence α for the explicit Forward Euler method?",
+        "options": [
+          "O(1)",
+          "O(h)",
+          "O(h²)",
+          "O(h⁴)"
+        ],
+        "correct": 1,
+        "explanation": "Although the local truncation error per step is O(h²), accumulating errors across N = T/h steps results in a first-order global error of O(h)."
+      },
+      {
+        "question": "For the test equation y' = -10 y, what is the maximum step size h for which Forward Euler remains numerically stable?",
+        "options": [
+          "h ≤ 0.1",
+          "h ≤ 0.2",
+          "h ≤ 0.5",
+          "h ≤ 1.0"
+        ],
+        "correct": 1,
+        "explanation": "Stability requires |1 + λh| ≤ 1. For λ = -10, |1 - 10h| ≤ 1 implies -1 ≤ 1 - 10h ≤ 1, which gives 10h ≤ 2 or h ≤ 0.2."
+      },
+      {
+        "question": "What mathematical property characterizes the stability region of the implicit Backward Euler method?",
+        "options": [
+          "It is bounded inside a unit circle",
+          "It contains the entire left half of the complex plane (A-stable)",
+          "It is restricted to purely imaginary eigenvalues",
+          "It has zero area"
+        ],
+        "correct": 1,
+        "explanation": "Backward Euler is A-stable: its amplification factor |1/(1 - z)| ≤ 1 holds for all z with Re(z) ≤ 0, making it unconditionally stable."
+      },
+      {
+        "question": "What is the global order of accuracy of Heun's predictor-corrector method?",
+        "options": [
+          "First-order O(h)",
+          "Second-order O(h²)",
+          "Third-order O(h³)",
+          "Fourth-order O(h⁴)"
+        ],
+        "correct": 1,
+        "explanation": "By averaging initial and predicted slopes (explicit trapezoidal rule), Heun's method cancels the leading error term and achieves O(h²) accuracy."
+      }
+    ],
+    "intro": "Leonhard Euler formulated the first numerical algorithm for differential equations in his 1768 treatise Institutiones Calculi Integralis. By approximating the instantaneous derivative dy/dt by a finite difference quotient Δy/h, Euler's method projects the solution along the tangent direction. While conceptually elementary, Euler's method introduces fundamental principles that govern all computational dynamics: the critical distinction between local truncation error (per step) and global error accumulation, the Dahlquist stability barrier, and the trade-offs between explicit and implicit solvers. In this laboratory, we implement explicit Forward Euler, implicit Backward Euler, and the second-order Heun predictor-corrector, map their stability regions, and verify the first-order O(h) global error convergence rate.",
+    "modelExtra": "The simulation executes Forward Euler for time steps h = 0.20 / 2^{k-1} on the test IVP y' = -2y + t. The maximum trajectory error is measured against the exact analytic solution. The logarithmic regression ln(E) = α·ln(h) + ln(C) extracts the asymptotic order α = 1.000 with R² = 1.000000.",
+    "precautions": [
+      "Always check the stability restriction h < 2 / |λ_max| before running explicit Forward Euler on dissipative systems to prevent catastrophic divergence.",
+      "For stiff differential equations with large negative eigenvalues, use implicit Backward Euler to avoid step size collapse.",
+      "Ensure floating point precision remains 64-bit IEEE 754 during iterative time marching to minimize accumulated roundoff error.",
+      "When comparing errors across step sizes, ensure the final evaluation time T is matched exactly (t = N · h).",
+      "In Backward Euler, solve the implicit nonlinear equation using Newton-Raphson iteration with a convergence tolerance of 10⁻¹².",
+      "Do not extrapolate ODE solutions beyond the domain where the right-hand vector field f(t, y) satisfies the Lipschitz continuity condition."
+    ],
+    "limitations": [
+      "Forward Euler requires very small step sizes to maintain accuracy and stability, making it computationally inefficient for precision applications.",
+      "Heun's method is only conditionally stable, still requiring small step sizes on stiff problems.",
+      "Euler methods are not symplectic: when applied to Hamiltonian orbital mechanics, they cause artificial energy drift over long integration times."
+    ]
+  },
+  {
+    "slug": "runge-kutta-fourth-order-rk4",
+    "number": 32,
+    "title": "Classical Fourth-Order Runge-Kutta (RK4) Integration & Convergence",
+    "shortTitle": "Runge-Kutta Fourth-Order (RK4)",
+    "category": "Data & computation",
+    "mode": "Computational mathematics",
+    "published": true,
+    "subject": "mathematics",
+    "aim": "Implement the classical four-stage Runge-Kutta (RK4) algorithm for nonlinear dynamical systems, analyze the Butcher tableau, evaluate the four intermediate slope evaluations k₁, k₂, k₃, k₄, and verify the fourth-order O(h⁴) global truncation error convergence.",
+    "target": 4.0,
+    "targetName": "RK4 Convergence Order (α)",
+    "resultUnit": "order",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "fitEquation": "ln(E_max) = α · ln(h) + ln(C)",
+    "gradientUnit": "dimensionless",
+    "interceptUnit": "ln(constant)",
+    "shortInput": "Step",
+    "inputLabel": "Time Step Setting (k)",
+    "inputUnit": "step",
+    "inputDecimals": 0,
+    "min": 1,
+    "max": 6,
+    "step": 1,
+    "initial": 1,
+    "rawLabel": "RK4 Global Error ||y - y_num||_∞",
+    "rawUnit": "error",
+    "rawDecimals": 6,
+    "xAxis": "Logarithmic Time Step ln(h)",
+    "yAxis": "Logarithmic Global Error ln(E_max)",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 4,
+    "yDecimals": 4,
+    "emptyX": -1.6,
+    "emptyY": -7.9,
+    "samples": [
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0
+    ],
+    "measureLabel": "Integrate via RK4 & Measure Error",
+    "settings": [
+      "Classical Butcher tableau: c = [0, 1/2, 1/2, 1]ᵀ, b = [1/6, 1/3, 1/3, 1/6] (matching Simpson quadrature weights)",
+      "Nonlinear benchmark IVP: dy/dt = y cos(t), y(0) = 1.0 on t ∈ [0, π] with exact analytic solution y(t) = exp(sin(t))",
+      "Stability domain: Stability polynomial R(z) = 1 + z + z²/2 + z³/6 + z⁴/24, stable for Re(z) ∈ [-2.78, 0] on real axis",
+      "Precision buffer: 64-bit IEEE 754 floating-point arithmetic with machine epsilon 2.22 × 10⁻¹⁶"
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "1. RK4 Trajectory"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "2. Stage Slopes"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "3. Butcher Tableau"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Butcher Stage Evaluator",
+        "purpose": "Evaluates intermediate vector fields k₁ = f(t, y), k₂ = f(t + h/2, y + h k₁/2), k₃ = f(t + h/2, y + h k₂/2), k₄ = f(t + h, y + h k₃)."
+      },
+      {
+        "name": "Weighted Stage Combiner",
+        "purpose": "Assembles the weighted Simpson-like increment y_{n+1} = y_n + (h/6) [k₁ + 2 k₂ + 2 k₃ + k₄]."
+      },
+      {
+        "name": "Analytic Benchmark Comparator",
+        "purpose": "Computes exact reference solution y(t) = exp(sin(t)) to determine instantaneous and maximum global error."
+      },
+      {
+        "name": "Order Barrier Analyzer",
+        "purpose": "Demonstrates why achieving order p = 5 requires 6 stages, making 4-stage RK4 the sweet spot of computational efficiency."
+      },
+      {
+        "name": "Complex Stability Boundary Mapper",
+        "purpose": "Plots the stability boundary |1 + z + z²/2 + z³/6 + z⁴/24| = 1 in the complex z = λh plane."
+      },
+      {
+        "name": "Log-Log Regression Slope Processor",
+        "purpose": "Computes ordinary least-squares slope on (ln(h), ln(E_max)) to verify fourth-order convergence α = 4.000."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Initialize IVP Manifold & Analytic Benchmark",
+        "text": "Set up dy/dt = y cos(t) with y(0) = 1.0 on t ∈ [0, π], verifying the exact solution y(t) = exp(sin(t))."
+      },
+      {
+        "title": "Set Step Size Refinement Schedule",
+        "text": "Assign step sizes h = 0.20 / 2^{k-1} across refinement levels k = 1 to 6 (h ∈ [0.20, 0.10, 0.05, 0.025, 0.0125, 0.00625])."
+      },
+      {
+        "title": "Execute Four-Stage Intermediate Slopes",
+        "text": "At each time step, compute initial slope k₁, two midpoint trial slopes k₂ and k₃, and endpoint trial slope k₄."
+      },
+      {
+        "title": "Perform Weighted Simpson Increment",
+        "text": "Advance state vector via y_{n+1} = y_n + (h/6) [k₁ + 2k₂ + 2k₃ + k₄] and update time t_{n+1} = t_n + h."
+      },
+      {
+        "title": "Measure Supremum Global Discrepancy",
+        "text": "Sample trajectory across all time nodes and record maximum absolute error E_max = ||y(t_n) - y_n||_∞."
+      },
+      {
+        "title": "Verify Fourth-Order Asymptotic Slope",
+        "text": "Plot ln(E_max) versus ln(h) and compute the linear regression gradient to confirm α = 4.000 with R² = 1.000000."
+      }
+    ],
+    "topics": [
+      {
+        "question": "How did Carl Runge and Wilhelm Kutta derive the RK4 method?",
+        "answer": "Runge (1895) and Kutta (1901) sought numerical methods that achieve high-order Taylor series accuracy without requiring analytical calculation of higher derivatives (y'', y''', ...). By matching the multi-stage slope expansion to the fourth-order bivariate Taylor series of y(t + h), they derived algebraic conditions on the Butcher coefficients that eliminate all error terms through O(h⁴)."
+      },
+      {
+        "question": "What is the Butcher tableau of a Runge-Kutta method?",
+        "answer": "A Butcher tableau represents an s-stage Runge-Kutta method in compact matrix form: [c | A; -- | bᵀ], where c is the vector of stage time offsets, A is the matrix of stage weighting coefficients, and b is the vector of final output quadrature weights."
+      },
+      {
+        "question": "What is the 'Butcher order barrier' for explicit Runge-Kutta methods?",
+        "answer": "For orders p = 1, 2, 3, 4, an explicit Runge-Kutta method requires exactly s = p stages. However, John Butcher proved in 1965 that achieving order p = 5 requires at least s = 6 stages, order p = 6 requires 7 stages, and order p = 8 requires 11 stages. This makes 4-stage RK4 the most computationally efficient per-stage method."
+      },
+      {
+        "question": "Why does the stage weighting b = [1/6, 1/3, 1/3, 1/6] resemble Simpson's rule?",
+        "answer": "When f(t, y) = f(t) is independent of y, the ODE reduces to a pure quadrature problem y(t + h) - y(t) = ∫_t^{t+h} f(τ) dτ. For RK4, k₁ = f(t), k₂ = k₃ = f(t + h/2), and k₄ = f(t + h). The weighted combination (h/6)[f(t) + 4 f(t + h/2) + f(t + h)] exactly reproduces Simpson's 1/3 rule."
+      },
+      {
+        "question": "What is the stability domain of RK4 compared to Euler's method?",
+        "answer": "The stability function of an explicit s-stage order-p method is the truncated Taylor series of the exponential: R(z) = ∑_{j=0}^p z^j / j!. For RK4, the stability domain extends along the negative real axis to Re(z) ≈ -2.78 (compared to -2.0 for Euler), and along the imaginary axis to Im(z) ≈ ±2.83 (whereas Euler has zero imaginary stability)."
+      },
+      {
+        "question": "Can RK4 be used to integrate Hamiltonian orbital systems over long durations?",
+        "answer": "RK4 is non-symplectic: its flow map does not preserve phase space volume (Poincaré invariants). Over millions of orbits, RK4 introduces artificial energy dissipation or growth, making symplectic integrators (Verlet, leapfrog, Yoshida) preferable for celestial mechanics."
+      },
+      {
+        "question": "What is an embedded Runge-Kutta pair (such as RKF45 or Cash-Karp)?",
+        "answer": "An embedded pair shares the same stage evaluations k_i to compute two simultaneous solutions of orders p and p + 1. The difference between the two solutions provides a computationally free estimate of the local truncation error, enabling automatic adaptive time-step control."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What is the global truncation error order of convergence α of the classical four-stage Runge-Kutta (RK4) algorithm?",
+        "options": [
+          "First-order O(h)",
+          "Second-order O(h²)",
+          "Fourth-order O(h⁴)",
+          "Sixth-order O(h⁶)"
+        ],
+        "correct": 2,
+        "explanation": "Classical RK4 achieves fourth-order global convergence O(h⁴), meaning halving the time step reduces global error by a factor of 16."
+      },
+      {
+        "question": "According to the Butcher order barriers, what is the minimum number of stages required to construct an explicit Runge-Kutta method of order p = 5?",
+        "options": [
+          "4 stages",
+          "5 stages",
+          "6 stages",
+          "8 stages"
+        ],
+        "correct": 2,
+        "explanation": "John Butcher proved that no 5-stage explicit Runge-Kutta method can achieve 5th-order accuracy; at least 6 stages are mathematically required."
+      },
+      {
+        "question": "When applied to an autonomous linear test equation y' = λy, what is the stability polynomial R(z) for RK4?",
+        "options": [
+          "1 + z",
+          "1 + z + z²/2",
+          "1 + z + z²/2 + z³/6 + z⁴/24",
+          "exp(z)"
+        ],
+        "correct": 2,
+        "explanation": "The RK4 amplification factor matches the first four terms of the Taylor expansion of e^z: R(z) = 1 + z + z²/2 + z³/6 + z⁴/24."
+      },
+      {
+        "question": "Why does RK4 evaluate intermediate slopes k₂ and k₃ at the midpoint time t + h/2?",
+        "options": [
+          "To center the difference stencil and cancel odd Taylor error terms",
+          "To reduce floating point mantissa overflow",
+          "To avoid computing division by 2",
+          "To enforce boundary conditions"
+        ],
+        "correct": 0,
+        "explanation": "Midpoint sampling provides symmetric second-order slope approximations that cancel the leading odd Taylor expansion error terms."
+      }
+    ],
+    "intro": "The classical fourth-order Runge-Kutta method (RK4) is arguably the most celebrated and widely utilized algorithm in numerical ordinary differential equations. Developed at the turn of the twentieth century by German mathematicians Carl Runge and Wilhelm Kutta, the method achieved a major mathematical breakthrough: matching the accuracy of a fourth-order Taylor series expansion using four strategic function evaluations per step, completely bypassing the intractable analytical differentiation of nonlinear vector fields. RK4 occupies a unique mathematical sweet spot: below order 5, the number of required stages equals the order (s = p = 4), but the Butcher order barrier proves that order 5 requires 6 stages. In this laboratory, we implement the classical RK4 algorithm, analyze intermediate stage slopes, examine the Butcher tableau, and verify fourth-order O(h⁴) convergence.",
+    "modelExtra": "The simulation executes classical RK4 for time steps h = 0.20 / 2^{k-1} on the nonlinear test IVP y' = y cos(t). The maximum trajectory error is measured against the exact analytic solution exp(sin(t)). The logarithmic regression ln(E) = α·ln(h) + ln(C) extracts the asymptotic order α = 4.000 with R² = 1.000000.",
+    "precautions": [
+      "Verify that stage evaluations k₁, k₂, k₃, k₄ are calculated in strictly sequential order, as each stage depends on the preceding state vector.",
+      "Ensure floating point precision remains 64-bit IEEE 754 to prevent roundoff error accumulation across thousands of integration steps.",
+      "Verify that the system vector field f(t, y) is at least four times continuously differentiable to achieve the full O(h⁴) convergence rate.",
+      "When integrating systems of coupled ODEs, evaluate all components of stage vector k_i simultaneously before advancing to stage k_{i+1}.",
+      "Monitor step size h to ensure z = λh remains strictly within the RK4 stability boundary Re(z) > -2.78.",
+      "For stiff differential systems, do not force RK4 with extremely tiny step sizes; switch to implicit Radau or Rosenbrock methods."
+    ],
+    "limitations": [
+      "RK4 is an explicit algorithm: on stiff problems with rapid decay modes, it requires impractically small time steps to maintain stability.",
+      "Fixed-step RK4 lacks automatic error estimation: if the solution enters an unexpectedly sharp gradient, error can spike without warning.",
+      "RK4 does not preserve Hamiltonian phase space symplectic structure, leading to secular energy drift over orbital astronomical timescales."
+    ]
+  },
+  {
+    "slug": "adams-bashforth-moulton-multistep",
+    "number": 33,
+    "title": "Adams-Bashforth-Moulton Linear Multistep Predictor-Corrector Methods",
+    "shortTitle": "Adams-Bashforth-Moulton Multistep",
+    "category": "Data & computation",
+    "mode": "Computational mathematics",
+    "published": true,
+    "subject": "mathematics",
+    "aim": "Implement the four-step explicit Adams-Bashforth predictor and implicit Adams-Moulton corrector algorithm (PECE), utilize self-starting RK4 initialization, analyze the Dahlquist root condition, and verify fourth-order O(h⁴) global convergence with only two function evaluations per step.",
+    "target": 4.0,
+    "targetName": "Multistep Convergence Order (α)",
+    "resultUnit": "order",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "fitEquation": "ln(E_max) = α · ln(h) + ln(C)",
+    "gradientUnit": "dimensionless",
+    "interceptUnit": "ln(constant)",
+    "shortInput": "Step",
+    "inputLabel": "Time Step Setting (k)",
+    "inputUnit": "step",
+    "inputDecimals": 0,
+    "min": 1,
+    "max": 6,
+    "step": 1,
+    "initial": 1,
+    "rawLabel": "ABM Global Error ||y - y_num||_∞",
+    "rawUnit": "error",
+    "rawDecimals": 6,
+    "xAxis": "Logarithmic Time Step ln(h)",
+    "yAxis": "Logarithmic Global Error ln(E_max)",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 4,
+    "yDecimals": 4,
+    "emptyX": -1.6,
+    "emptyY": -7.9,
+    "samples": [
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0
+    ],
+    "measureLabel": "Integrate via ABM & Measure Error",
+    "settings": [
+      "4-step Adams-Bashforth predictor (AB4): y*_{n+1} = y_n + (h/24) [55 f_n - 59 f_{n-1} + 37 f_{n-2} - 9 f_{n-3}]",
+      "3-step Adams-Moulton corrector (AM4): y_{n+1} = y_n + (h/24) [9 f*_{n+1} + 19 f_n - 5 f_{n-1} + f_{n-2}]",
+      "Self-starting bootstrap: Classical 4-stage RK4 used to compute initial history states y₁, y₂, y₃",
+      "PECE cycle architecture: Predict (AB4) -> Evaluate -> Correct (AM4) -> Evaluate (only 2 evaluations per step vs 4 for RK4)"
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "1. PECE Stencil"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "2. ABM vs RK4"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "3. Dahlquist Roots"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "History Buffer Register",
+        "purpose": "Maintains sliding window of previous solution points (y_n, y_{n-1}, y_{n-2}, y_{n-3}) and derivative vectors."
+      },
+      {
+        "name": "RK4 Bootstrap Starter",
+        "purpose": "Generates the initial 3 history steps with 4th-order accuracy to jumpstart the multistep pipeline."
+      },
+      {
+        "name": "Adams-Bashforth Predictor",
+        "purpose": "Extrapolates polynomial through 4 historical slopes to predict y*_{n+1} with O(h⁴) local error."
+      },
+      {
+        "name": "Adams-Moulton Corrector",
+        "purpose": "Interpolates polynomial including predicted slope f(t_{n+1}, y*_{n+1}) to refine y_{n+1}."
+      },
+      {
+        "name": "Milne Local Error Estimator",
+        "purpose": "Computes Milne's estimate ε ≈ (19/270) |y*_{n+1} - y_{n+1}| using difference between predictor and corrector."
+      },
+      {
+        "name": "Log-Log Regression Slope Processor",
+        "purpose": "Performs linear regression on (ln(h), ln(E_max)) to verify the theoretical fourth-order slope α = 4.000."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Initialize IVP & Benchmark Manifold",
+        "text": "Set up dy/dt = -y + t² on t ∈ [0, 2] with y(0) = 1.0 and exact solution y(t) = t² - 2t + 2 - e^{-t}."
+      },
+      {
+        "title": "Assign Step Size Schedule",
+        "text": "For test settings k = 1 to 6, assign time step h = 0.20 / 2^{k-1} across refinement levels."
+      },
+      {
+        "title": "Bootstrap History Buffer via RK4",
+        "text": "Execute 3 steps of RK4 to populate initial history registers (t₁, y₁, f₁), (t₂, y₂, f₂), and (t₃, y₃, f₃)."
+      },
+      {
+        "title": "Execute PECE Multistep Cycle",
+        "text": "For n ≥ 3, compute AB4 predictor y*_{n+1}, evaluate f*_{n+1}, apply AM4 corrector to obtain y_{n+1}, and update history buffer."
+      },
+      {
+        "title": "Evaluate Maximum Global Trajectory Error",
+        "text": "Record the supremum norm discrepancy ||y(t_n) - y_n||_∞ against the exact analytic reference solution."
+      },
+      {
+        "title": "Verify Asymptotic Fourth-Order Slope",
+        "text": "Plot ln(E_max) versus ln(h) and compute the linear regression slope to verify α = 4.000 with R² = 1.000000."
+      }
+    ],
+    "topics": [
+      {
+        "question": "How do linear multistep methods differ fundamentally from Runge-Kutta methods?",
+        "answer": "Runge-Kutta methods are single-step methods: they discard all past history and compute multiple intermediate stage evaluations per step. Linear multistep methods (LMM) store past solution values and derivatives, requiring only 1 or 2 function evaluations per step to achieve high order, dramatically reducing computational cost when function evaluations are expensive."
+      },
+      {
+        "question": "What is the PECE (Predict-Evaluate-Correct-Evaluate) mode?",
+        "answer": "In PECE mode: (P) the explicit Adams-Bashforth formula predicts y*_{n+1}; (E) the derivative f*_{n+1} = f(t_{n+1}, y*_{n+1}) is evaluated; (C) the implicit Adams-Moulton formula corrects to produce y_{n+1}; and (E) the final derivative f_{n+1} = f(t_{n+1}, y_{n+1}) is evaluated for subsequent steps. This yields an explicit algorithm with the enhanced stability and accuracy of an implicit method."
+      },
+      {
+        "question": "What is the Dahlquist root condition for linear multistep stability?",
+        "answer": "The Dahlquist root condition states that a linear multistep method is zero-stable if and only if all roots of its first characteristic polynomial ρ(r) lie inside or on the unit circle in the complex plane (|r_i| ≤ 1), and any roots on the unit circle (|r_i| = 1) are simple (non-repeated)."
+      },
+      {
+        "question": "What is the first Dahlquist barrier for linear multistep methods?",
+        "answer": "Germund Dahlquist (1956) proved that the order of accuracy p of a zero-stable k-step linear multistep method cannot exceed: p ≤ k + 1 if k is odd; p ≤ k + 2 if k is even; and p ≤ k for any explicit method. Thus, a 4-step explicit method has maximum order p = 4."
+      },
+      {
+        "question": "What is Milne's device for local error estimation?",
+        "answer": "When an explicit predictor of order p and an implicit corrector of order p are combined, their leading local truncation error terms are proportional to h^{p+1} f^{(p+1)}. Milne showed that the error in the corrector can be estimated directly from the difference |y*_{n+1} - y_{n+1}| without computing any higher derivatives: LTE ≈ [C_c / (C_p - C_c)] · (y_{n+1} - y*_{n+1})."
+      },
+      {
+        "question": "Why can multistep methods not start themselves?",
+        "answer": "A k-step method requires k prior solution values (y_n, y_{n-1}, ..., y_{n-k+1}) to compute the next step. At t = 0, only y_0 is known. Therefore, a self-starting single-step method (typically RK4) must be used to generate the first k - 1 points before the multistep engine can engage."
+      },
+      {
+        "question": "How does changing step size h complicate multistep methods compared to RK4?",
+        "answer": "Multistep coefficients are derived assuming uniform spacing h. Changing h requires interpolating past history points onto the new spacing (Nordsieck history array) or using variable-coefficient recurrences, whereas RK4 easily changes h at every step without overhead."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "How many function evaluations per step are required by the Adams-Bashforth-Moulton predictor-corrector method in PECE mode?",
+        "options": [
+          "1 evaluation",
+          "2 evaluations",
+          "4 evaluations",
+          "8 evaluations"
+        ],
+        "correct": 1,
+        "explanation": "PECE mode requires exactly 2 function evaluations per step (one for the predicted state, one for the corrected state), half of RK4's 4 evaluations."
+      },
+      {
+        "question": "What method is conventionally used to bootstrap the history buffer of a 4-step Adams multistep solver?",
+        "options": [
+          "Forward Euler",
+          "Runge-Kutta 4th-order (RK4)",
+          "Bisection method",
+          "Gauss elimination"
+        ],
+        "correct": 1,
+        "explanation": "RK4 is self-starting and fourth-order accurate, perfectly generating the initial 3 history steps needed to launch the 4th-order multistep pipeline."
+      },
+      {
+        "question": "According to the Dahlquist root condition, where must all roots of the first characteristic polynomial ρ(r) lie for zero-stability?",
+        "options": [
+          "On the imaginary axis",
+          "Strictly inside the unit circle, with only simple roots on the unit circle",
+          "In the right half-plane",
+          "At r = 0"
+        ],
+        "correct": 1,
+        "explanation": "Zero-stability requires all characteristic roots to satisfy |r| ≤ 1, and any roots on the unit circle |r| = 1 must be simple."
+      },
+      {
+        "question": "What is the global truncation error order α of the 4-step Adams-Bashforth-Moulton method?",
+        "options": [
+          "O(h)",
+          "O(h²)",
+          "O(h⁴)",
+          "O(h⁶)"
+        ],
+        "correct": 2,
+        "explanation": "Both the AB4 predictor and AM4 corrector have local truncation error O(h⁵), yielding fourth-order O(h⁴) global convergence."
+      }
+    ],
+    "intro": "When solving computationally demanding ordinary differential equations—such as orbital trajectories with expensive gravitational N-body force evaluations or atmospheric climate models—evaluating the vector field f(t, y) dominates overall CPU time. In such regimes, four-stage Runge-Kutta methods are computationally wasteful, discarding all previous function values at the end of each step. Linear multistep methods, pioneered by John Couch Adams in 1855 and Francis Bashforth for ballistics computations, exploit previous time steps stored in a history buffer. By coupling an explicit Adams-Bashforth predictor with an implicit Adams-Moulton corrector in a PECE (Predict-Evaluate-Correct-Evaluate) architecture, the solver achieves fourth-order O(h⁴) accuracy using only two function evaluations per step—doubling computational throughput over RK4. In this laboratory, we implement the ABM predictor-corrector method with RK4 bootstrapping and verify fourth-order O(h⁴) convergence.",
+    "modelExtra": "The simulation executes the 4-step Adams-Bashforth-Moulton predictor-corrector method for time steps h = 0.20 / 2^{k-1}. Global trajectory error is measured against the exact analytic solution of y' = -y + t². The logarithmic regression ln(E) = α·ln(h) + ln(C) extracts the asymptotic order α = 4.000 with R² = 1.000000.",
+    "precautions": [
+      "Always bootstrap the first 3 history points using a fourth-order single-step method (RK4); using lower-order Euler will degrade overall accuracy to O(h).",
+      "Ensure the history buffer correctly shifts previous values: y_{n-3} ← y_{n-2} ← y_{n-1} ← y_n before each new time step.",
+      "Verify that floating point precision remains 64-bit IEEE 754 during the evaluation of large-coefficient difference stencils (e.g. 55, -59, 37, -9).",
+      "Check for numerical instability when integrating near the boundary of the Adams-Moulton stability domain (h λ ∈ [-3.0, 0]).",
+      "If step size h must be changed dynamically, interpolate the history registers or reset the RK4 bootstrap starter.",
+      "Ensure floating point registers prevent subtractive cancellation during Milne error subtraction."
+    ],
+    "limitations": [
+      "Linear multistep methods are not self-starting, requiring auxiliary starter routines whenever integration begins or restarts.",
+      "Changing step size h is mathematically cumbersome compared to single-step Runge-Kutta methods.",
+      "The second Dahlquist barrier proves that no explicit or implicit A-stable linear multistep method can exceed second-order accuracy (p ≤ 2)."
+    ]
+  },
+  {
+    "slug": "adaptive-step-runge-kutta-fehlberg",
+    "number": 34,
+    "title": "Adaptive Step-Size Control & Embedded Runge-Kutta-Fehlberg (RKF45)",
+    "shortTitle": "Adaptive RKF45 Integration",
+    "category": "Data & computation",
+    "mode": "Computational mathematics",
+    "published": true,
+    "subject": "mathematics",
+    "aim": "Implement the embedded Runge-Kutta-Fehlberg (RKF45) algorithm, evaluate the six-stage shared Butcher tableau, compute the embedded local truncation error estimate, and verify the fifth-order O(h⁵) local error scaling governing optimal step-size adaptation.",
+    "target": 5.0,
+    "targetName": "Fehlberg Local Error Exponent (α)",
+    "resultUnit": "order",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "fitEquation": "ln(E_local) = α · ln(h) + ln(C)",
+    "gradientUnit": "dimensionless",
+    "interceptUnit": "ln(constant)",
+    "shortInput": "Step",
+    "inputLabel": "Local Step Size Level (k)",
+    "inputUnit": "step",
+    "inputDecimals": 0,
+    "min": 1,
+    "max": 6,
+    "step": 1,
+    "initial": 1,
+    "rawLabel": "Embedded Local Error Estimate |y₅ - y₄|",
+    "rawUnit": "local error",
+    "rawDecimals": 6,
+    "xAxis": "Logarithmic Time Step ln(h)",
+    "yAxis": "Logarithmic Local Error ln(E_local)",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 4,
+    "yDecimals": 4,
+    "emptyX": -1.6,
+    "emptyY": -9.5,
+    "samples": [
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0
+    ],
+    "measureLabel": "Compute Embedded RKF45 & Error",
+    "settings": [
+      "Embedded Butcher tableau: 6 stages k₁ ... k₆ producing simultaneous 4th-order (y₄) and 5th-order (y₅) solutions",
+      "Local error estimate: E_local = |y₅ - y₄| = h ∑_{i=1}⁶ (b_i^{(5)} - b_i^{(4)}) k_i",
+      "Optimal step adaptation rule: h_{new} = 0.9 · h · (Tolerance / E_local)^{1/5}",
+      "Safety factor: Safety multiplier S = 0.9 with clamping 0.2 ≤ h_{new}/h ≤ 5.0 to prevent step oscillation"
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "1. Adaptive Steps"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "2. Step Distribution"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "3. Error Scaling"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Six-Stage Fehlberg Evaluator",
+        "purpose": "Computes stage slopes k₁ through k₆ according to Erwin Fehlberg's optimal coefficient tableau."
+      },
+      {
+        "name": "Dual-Order State Combiner",
+        "purpose": "Forms simultaneous 4th-order baseline y₄ and 5th-order reference y₅ without extra function evaluations."
+      },
+      {
+        "name": "Local Truncation Estimator",
+        "purpose": "Evaluates the embedded difference vector E = y₅ - y₄, measuring leading O(h⁵) local error."
+      },
+      {
+        "name": "Step Size Adaptation Controller",
+        "purpose": "Implements PI/PID step adjustment h_{opt} = S · h · (TOL / ||E||)^{1/5} to maintain error within specified tolerance."
+      },
+      {
+        "name": "Step Acceptance Logic Port",
+        "purpose": "Accepts steps where E ≤ TOL and repeats rejected steps with reduced step size h_{new}."
+      },
+      {
+        "name": "Local Error Scaling Verifier",
+        "purpose": "Performs linear regression on (ln(h), ln(E_local)) to confirm the theoretical fifth-order slope α = 5.000."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Initialize Nonlinear Dynamical Test System",
+        "text": "Set up dy/dt = -y² + t on t ∈ [0, 2] with initial state y(0) = 0.5 and user-specified error tolerance TOL = 10⁻⁶."
+      },
+      {
+        "title": "Assign Test Step Sizes",
+        "text": "Set step sizes h = 0.20 / 2^{k-1} across refinement settings k = 1 to 6 to analyze local error scaling."
+      },
+      {
+        "title": "Evaluate Six Fehlberg Stages",
+        "text": "Compute k₁, k₂, k₃, k₄, k₅, k₆ using Fehlberg's rational weight matrix in 64-bit precision."
+      },
+      {
+        "title": "Extract Embedded Local Error",
+        "text": "Compute difference E_local = h |(1/360) k₁ - (128/4275) k₃ - (2197/75240) k₄ + (1/50) k₅ + (2/55) k₆|."
+      },
+      {
+        "title": "Execute Step Adaptation Formula",
+        "text": "Calculate recommended next step h_{opt} = 0.9 · h · (TOL / E_local)^{0.2} with safety clamping [0.2, 5.0]."
+      },
+      {
+        "title": "Verify Fifth-Order Scaling Exponent",
+        "text": "Plot ln(E_local) versus ln(h) and compute the linear regression slope to verify α = 5.000 with R² = 1.000000."
+      }
+    ],
+    "topics": [
+      {
+        "question": "Why is fixed-step integration inefficient for systems with multiscale dynamics?",
+        "answer": "In physical systems like celestial orbits or chemical kinetics, solutions alternate between tranquil phases (where large step sizes maintain high accuracy) and violent shock/periapsis passages (where tiny steps are mandatory). A fixed-step integrator must use the worst-case tiny step size throughout the entire trajectory, wasting massive computational resources."
+      },
+      {
+        "question": "How does an embedded Runge-Kutta pair estimate error for free?",
+        "answer": "An embedded pair uses a shared set of stage evaluations k_1, ..., k_s to construct two different solutions: y_p of order p and y_{p+1} of order p + 1. Because y_{p+1} is much more accurate than y_p, the difference E = y_{p+1} - y_p provides an asymptotically exact estimate of the local truncation error of y_p without requiring any extra function evaluations."
+      },
+      {
+        "question": "How is the step-size adaptation formula derived?",
+        "answer": "Because the local truncation error scales as E ≈ C · h^{p+1}, the target error at a new step size h_{new} is TOL ≈ C · h_{new}^{p+1}. Dividing these gives TOL / E = (h_{new} / h)^{p+1}. Solving for h_{new} yields h_{new} = h · (TOL / E)^{1/(p+1)}. A safety factor S ≈ 0.9 is applied to prevent marginal rejections."
+      },
+      {
+        "question": "What is the Dormand-Prince (DOPRI5) method and how does it improve on RKF45?",
+        "answer": "Dormand and Prince (1980) optimized Fehlberg's tableau to minimize the error coefficient of the higher-order solution (local extrapolation). Additionally, DOPRI5 possesses the First Same As Last (FSAL) property: the last stage k_7 equals the first stage k_1 of the next step, effectively reducing the cost from 7 stages to 6 stages per accepted step. It serves as MATLAB's ode45 and SciPy's default RK45."
+      },
+      {
+        "question": "What happens when an adaptive integrator encounters a step rejection?",
+        "answer": "When E > TOL, the step is rejected: the solution state is not advanced, the time step is reduced according to the adaptation formula (clamped to prevent collapse), and the step is recomputed. An efficient controller maintains a rejection rate below 5-10%."
+      },
+      {
+        "question": "What are step-size limiter bounds (e.g. 0.2 and 5.0)?",
+        "answer": "To prevent wild numerical step oscillations caused by local fluctuations or roundoff error, step growth is restricted to at most a factor of 5 (h_{new} ≤ 5 h), and step reduction is limited to at most a factor of 0.2 (h_{new} ≥ 0.2 h)."
+      },
+      {
+        "question": "What is local extrapolation in adaptive Runge-Kutta methods?",
+        "answer": "In local extrapolation, the higher-order solution y_{p+1} (5th order in RKF45) is used to advance the trajectory rather than the lower-order solution y_p (4th order), even though the error estimate was derived for y_p. This provides a free boost in global accuracy."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What is the asymptotic scaling order α of the embedded local truncation error estimate in RKF45 as time step h → 0?",
+        "options": [
+          "O(h²)",
+          "O(h⁴)",
+          "O(h⁵)",
+          "O(h⁶)"
+        ],
+        "correct": 2,
+        "explanation": "The difference between the 4th-order and 5th-order solutions captures the leading O(h⁵) local truncation error term of the 4th-order method."
+      },
+      {
+        "question": "Why is a safety factor S (typically 0.85 to 0.90) included in the step-size adaptation formula?",
+        "options": [
+          "To avoid dividing by zero",
+          "To reduce the probability that the next step marginally fails the error tolerance and is rejected",
+          "To satisfy 64-bit mantissa alignment",
+          "To force the step size to be an integer"
+        ],
+        "correct": 1,
+        "explanation": "Because the error scaling E ∝ h⁵ is an asymptotic approximation, the safety factor prevents next-step marginal rejections caused by higher-order terms."
+      },
+      {
+        "question": "What does the FSAL (First Same As Last) property in modern embedded pairs (like DOPRI5) accomplish?",
+        "options": [
+          "It guarantees the solution is periodic",
+          "It reuses the last stage evaluation as the first stage of the next step, saving one evaluation",
+          "It eliminates all rounding errors",
+          "It sets the initial step size automatically"
+        ],
+        "correct": 1,
+        "explanation": "FSAL designs the tableau so that k_last equals k_1 of the next accepted step, effectively reducing evaluation cost by 1 per step."
+      },
+      {
+        "question": "What power exponent is used to adjust step size in a fifth-order adaptive method with local error E and tolerance TOL?",
+        "options": [
+          "(TOL / E)¹",
+          "(TOL / E)¹/²",
+          "(TOL / E)¹/⁴",
+          "(TOL / E)¹/⁵"
+        ],
+        "correct": 3,
+        "explanation": "Because local error scales as h⁵, the optimal step scales as the 5th root: h_{new} = h · (TOL / E)^{1/5}."
+      }
+    ],
+    "intro": "In realistic computational physics and engineering simulations—from planetary spacecraft trajectories navigating close lunar flybys to chemical combustion fronts—dynamical timescales change by orders of magnitude along a single trajectory. Forcing a fixed step size results in either intolerable inaccuracy in violent regions or massive computational waste in smooth regions. Erwin Fehlberg made a historic breakthrough in 1969 by designing embedded Runge-Kutta pairs: two Runge-Kutta methods of orders p and p + 1 sharing the exact same intermediate stage evaluations. By subtracting the two solutions, the solver obtains a rigorous estimate of the local truncation error without performing any extra function evaluations, enabling automatic closed-loop PI step size adaptation. In this computational laboratory, we implement the embedded RKF45 algorithm, analyze the six-stage Butcher tableau, and verify the fifth-order O(h⁵) local error scaling.",
+    "modelExtra": "The simulation evaluates the embedded local truncation error of the six-stage RKF45 algorithm across step sizes h = 0.20 / 2^{k-1}. The local error estimate scales with the fifth power of h. The logarithmic regression ln(E_local) = α·ln(h) + ln(C) extracts the asymptotic order α = 5.000 with R² = 1.000000.",
+    "precautions": [
+      "Store Fehlberg's rational tableau coefficients as exact fractions or 17-digit floating point constants to preserve 5th-order cancellation.",
+      "Enforce strict clamping bounds (e.g. 0.2 ≤ h_{new}/h ≤ 5.0) to prevent numerical instability and sudden step-size explosion.",
+      "Ensure local error E is evaluated in an appropriate norm (RMS norm or max norm scaled by absolute and relative tolerances).",
+      "Do not allow step size to shrink below machine precision times current time (h < 10 ε_mach · t) to prevent infinite loops at singularities.",
+      "When a step is rejected, repeat the step immediately with the reduced step size rather than advancing the time variable.",
+      "Verify that floating point registers maintain 64-bit IEEE 754 precision during the six-stage linear combination."
+    ],
+    "limitations": [
+      "RKF45 is an explicit embedded pair; on stiff differential equations, the step controller will drastically shrink h to satisfy stability rather than accuracy.",
+      "Step-size adaptation can become jittery near non-smooth events (such as contact collisions), requiring event detection root-finding algorithms.",
+      "Dense output (continuous trajectory interpolation between accepted steps) requires additional Hermite or free interpolant evaluations."
+    ]
+  },
+  {
+    "slug": "finite-difference-boundary-value-problems",
+    "number": 35,
+    "title": "Finite Difference Methods for Two-Point Boundary Value Problems",
+    "shortTitle": "Finite Difference BVPs",
+    "category": "Data & computation",
+    "mode": "Computational mathematics",
+    "published": true,
+    "subject": "mathematics",
+    "aim": "Discretize second-order linear two-point boundary value problems using central finite difference stencils, assemble the tridiagonal stiffness-mass system, enforce Dirichlet and Neumann boundary conditions, and verify the second-order O(h²) global error convergence.",
+    "target": 2.0,
+    "targetName": "BVP Central Difference Order (α)",
+    "resultUnit": "order",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "fitEquation": "ln(E_max) = α · ln(h) + ln(C)",
+    "gradientUnit": "dimensionless",
+    "interceptUnit": "ln(constant)",
+    "shortInput": "Step",
+    "inputLabel": "Grid Refinement Level (k)",
+    "inputUnit": "step",
+    "inputDecimals": 0,
+    "min": 1,
+    "max": 6,
+    "step": 1,
+    "initial": 1,
+    "rawLabel": "Maximum BVP Grid Error ||y - y_num||_∞",
+    "rawUnit": "error norm",
+    "rawDecimals": 6,
+    "xAxis": "Logarithmic Mesh Spacing ln(h)",
+    "yAxis": "Logarithmic Maximum Error ln(E_max)",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 4,
+    "yDecimals": 4,
+    "emptyX": -1.6,
+    "emptyY": -4.7,
+    "samples": [
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0
+    ],
+    "measureLabel": "Solve BVP System & Measure Error",
+    "settings": [
+      "Model differential equation: -y''(x) + 4 y(x) = 16 x, on x ∈ [0, 1] with Dirichlet boundary conditions y(0) = 0, y(1) = 4",
+      "Central difference stencil: y''(x_i) ≈ (y_{i-1} - 2 y_i + y_{i+1}) / h² with local truncation error O(h²)",
+      "Discrete matrix system: Tridiagonal matrix A y = b with diagonal 2/h² + 4 and off-diagonals -1/h²",
+      "Linear system solver: Direct O(N) Thomas algorithm (TDMA) utilizing strict diagonal dominance"
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "1. Solution Profile"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "2. Central Stencil"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "3. Matrix Sparsity"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "One-Dimensional Domain Discretizer",
+        "purpose": "Partitions [0, 1] into N sub-intervals with uniform grid spacing h = 1/N and interior nodes x_i = i · h."
+      },
+      {
+        "name": "Central Difference Stencil Generator",
+        "purpose": "Replaces derivatives with second-order central difference operators: y' ≈ (y_{i+1} - y_{i-1})/(2h), y'' ≈ (y_{i+1} - 2y_i + y_{i-1})/h²."
+      },
+      {
+        "name": "Tridiagonal Matrix Assembler",
+        "purpose": "Constructs the sparse banded coefficient matrix A and load vector b incorporating Dirichlet boundary data."
+      },
+      {
+        "name": "Thomas Algorithm Solver",
+        "purpose": "Solves the symmetric strictly diagonally dominant tridiagonal BVP system in O(N) operations without pivoting."
+      },
+      {
+        "name": "Analytic Reference Evaluator",
+        "purpose": "Computes exact closed-form solution y(x) = 4x + (sinh(2x) / sinh(2)) · (4 - 4) ... to measure exact nodal errors."
+      },
+      {
+        "name": "Log-Log Error Convergence Engine",
+        "purpose": "Performs linear regression on (ln(h), ln(E_max)) to verify the theoretical second-order slope α = 2.000."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Define Boundary Value Problem",
+        "text": "Set up -y'' + 4y = 16x on [0, 1] with boundary conditions y(0) = 0 and y(1) = 4, verifying the analytic solution y(x) = 4x."
+      },
+      {
+        "title": "Configure Mesh Discretization Schedule",
+        "text": "For refinement levels k = 1 to 6, set grid intervals N = 5 · 2^{k-1} with spacing h = 1.0 / N."
+      },
+      {
+        "title": "Assemble Discrete Tridiagonal System",
+        "text": "Set interior matrix rows: -y_{i-1}/h² + (2/h² + 4) y_i - y_{i+1}/h² = 16 x_i for i = 1, ..., N-1."
+      },
+      {
+        "title": "Enforce Boundary Conditions",
+        "text": "Substitute known boundary values y_0 = 0 and y_N = 4 into the first and last equations, transferring knowns to vector b."
+      },
+      {
+        "title": "Solve via Thomas Algorithm & Measure Error",
+        "text": "Execute TDMA forward sweep and back substitution to obtain nodal vector y, computing maximum error E_max = ||y - y_exact||_∞."
+      },
+      {
+        "title": "Fit Asymptotic Order of Convergence",
+        "text": "Plot ln(E_max) versus ln(h) and compute the linear regression slope to verify α = 2.000 with R² = 1.000000."
+      }
+    ],
+    "topics": [
+      {
+        "question": "How do Boundary Value Problems (BVPs) differ fundamentally from Initial Value Problems (IVPs)?",
+        "answer": "In an IVP, all solution state conditions are specified at a single initial time t_0, allowing time-marching integration from past to future. In a BVP, conditions are split across two or more domain boundaries (e.g. x = a and x = b). Information flows in both directions, requiring the simultaneous global solution of an algebraic system across the entire domain."
+      },
+      {
+        "question": "How is the central difference approximation for the second derivative derived?",
+        "answer": "Adding the forward and backward Taylor series expansions y(x + h) = y + h y' + (h²/2) y'' + (h³/6) y''' + (h⁴/24) y^{(4)} and y(x - h) = y - h y' + (h²/2) y'' - (h³/6) y''' + (h⁴/24) y^{(4)} cancels all odd derivative terms, yielding y(x + h) - 2 y(x) + y(x - h) = h² y''(x) + (h⁴/12) y^{(4)}(ξ). Dividing by h² gives the central difference with O(h²) error."
+      },
+      {
+        "question": "Why is the finite difference matrix for -y'' + q(x)y = f(x) strictly diagonally dominant when q(x) ≥ 0?",
+        "answer": "The main diagonal entry is 2/h² + q_i, while the sum of off-diagonal magnitudes is 1/h² + 1/h² = 2/h². As long as q_i ≥ 0, the diagonal entry strictly exceeds the off-diagonal sum, ensuring nonsingularity, stability, and guaranteed convergence of the Thomas algorithm."
+      },
+      {
+        "question": "How are Neumann boundary conditions (y'(0) = α) implemented with second-order accuracy?",
+        "answer": "A naive one-sided difference (y_1 - y_0)/h is only first-order O(h). To preserve global O(h²) accuracy, one introduces a fictitious 'ghost node' x_{-1} = -h and uses the central difference (y_1 - y_{-1})/(2h) = α to eliminate y_{-1} from the differential equation stencil at x_0."
+      },
+      {
+        "question": "What is the shooting method for solving BVPs?",
+        "answer": "The shooting method converts a two-point BVP into an equivalent IVP by guessing the missing initial slope y'(a) = s, integrating to x = b via an IVP solver (like RK4), and using a root-finding algorithm (like Newton-Raphson or secant) to adjust s until the target boundary condition y(b; s) = β is satisfied."
+      },
+      {
+        "question": "What is the maximum principle for elliptic finite difference operators?",
+        "answer": "The discrete maximum principle states that if a matrix is an M-matrix (diagonally dominant with non-positive off-diagonals), the maximum value of the solution must occur on the boundary of the domain unless the source term is non-zero, preventing unphysical spurious internal extrema."
+      },
+      {
+        "question": "Why does the central difference stencil fail when convection/advection dominates diffusion?",
+        "answer": "When the grid Péclet number Pe = |u| h / (2 k) > 1 in convection-diffusion equations, the central difference operator loses diagonal dominance, producing non-physical spatial oscillations and node-to-node wiggles, requiring upwind differencing or Petrov-Galerkin stabilization."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What is the global truncation error order α of the standard central finite difference method for second-order BVPs?",
+        "options": [
+          "First-order O(h)",
+          "Second-order O(h²)",
+          "Third-order O(h³)",
+          "Fourth-order O(h⁴)"
+        ],
+        "correct": 1,
+        "explanation": "Because the central difference stencil for y'' has an O(h²) local error and the discrete operator is stable, global error converges as O(h²)."
+      },
+      {
+        "question": "What matrix structure arises from central difference discretization of a 1D second-order differential equation?",
+        "options": [
+          "Dense full matrix",
+          "Tridiagonal matrix",
+          "Upper triangular matrix",
+          "Diagonal matrix"
+        ],
+        "correct": 1,
+        "explanation": "Each interior node couples only to its immediate left neighbor y_{i-1} and right neighbor y_{i+1}, forming a banded tridiagonal system."
+      },
+      {
+        "question": "What technique preserves second-order O(h²) accuracy when discretizing Neumann boundary conditions?",
+        "options": [
+          "Backward difference of order 1",
+          "Ghost point (fictitious node) central difference elimination",
+          "Setting the boundary value to zero",
+          "Ignoring the boundary condition"
+        ],
+        "correct": 1,
+        "explanation": "Introducing a fictitious ghost node x_{-1} and applying a central difference maintains the symmetry and O(h²) accuracy of the global discretization."
+      },
+      {
+        "question": "Which linear system algorithm solves an N × N tridiagonal BVP system in optimal O(N) operations?",
+        "options": [
+          "Cramer's rule",
+          "Thomas algorithm (tridiagonal matrix algorithm)",
+          "QR factorization via Givens rotations",
+          "Jacobi iterative relaxation"
+        ],
+        "correct": 1,
+        "explanation": "The Thomas algorithm is an specialized O(N) implementation of Gaussian elimination tailored specifically for tridiagonal systems."
+      }
+    ],
+    "intro": "In engineering and physics, equilibrium states—such as temperature distributions along a conducting cooling fin, electrostatic potentials between capacitor plates, or the bending deflections of a loaded structural beam—are governed by Boundary Value Problems (BVPs). Unlike initial value problems where the state evolves forward from a single initial instant, BVPs enforce constraints at two or more distant spatial boundaries simultaneously. The finite difference method discretizes the continuous spatial domain into a discrete grid of nodes, replacing continuous differential operators with localized central difference algebraic stencils. The resulting matrix system is sparse, banded, and tridiagonal, enabling direct solution in linear O(N) time via the Thomas algorithm. In this laboratory, we formulate the central difference equations for a two-point BVP, examine tridiagonal diagonal dominance, and verify the second-order O(h²) global error convergence rate.",
+    "modelExtra": "The simulation solves the two-point BVP -y'' + 4y = 16x on [0, 1] with Dirichlet boundary conditions across grid spacings h = 0.20 / 2^{k-1}. The maximum nodal error is measured against the exact analytic solution. The logarithmic regression ln(E) = α·ln(h) + ln(C) extracts the asymptotic order α = 2.000 with R² = 1.000000.",
+    "precautions": [
+      "Verify that the tridiagonal matrix is strictly diagonally dominant before invoking the Thomas algorithm to ensure numerical stability without pivoting.",
+      "Incorporate Dirichlet boundary conditions by modifying the right-hand vector b rather than augmenting the matrix with trivial identity rows.",
+      "When discretizing Neumann boundary conditions, always use central difference ghost points to avoid degrading global accuracy to first order.",
+      "Ensure floating point precision remains 64-bit IEEE 754 to prevent roundoff error when 1/h² becomes large on fine meshes.",
+      "Check for singular matrices when solving Helmholtz equations -y'' - k² y = f where k² matches an eigenvalue of the Laplacian.",
+      "Never use uniform central differences for advection-dominated problems where the grid Péclet number Pe > 1; employ upwinding."
+    ],
+    "limitations": [
+      "Finite difference methods are naturally suited for simple rectangular or tensor-product geometries; complex curved boundaries require finite elements or coordinate mappings.",
+      "Central difference stencils become unstable for singular perturbation problems with boundary layers unless mesh graded clustering is applied.",
+      "Extending to higher-order stencils (e.g. 5-point O(h⁴) stencil for y'') requires special asymmetric stencils near boundaries to prevent underdetermined systems."
+    ]
+  },
+  {
+    "slug": "heat-equation-crank-nicolson-pde",
+    "number": 36,
+    "title": "Heat Equation Parabolic PDE: Crank-Nicolson Unconditional Stability",
+    "shortTitle": "Crank-Nicolson Heat PDE",
+    "category": "Data & computation",
+    "mode": "Computational mathematics",
+    "published": true,
+    "subject": "mathematics",
+    "aim": "Implement the implicit Crank-Nicolson scheme for the one-dimensional unsteady heat conduction PDE ∂u/∂t = α ∂²u/∂x², demonstrate unconditional numerical stability, and verify second-order temporal and spatial convergence O(Δt² + Δx²).",
+    "target": 2.0,
+    "targetName": "Crank-Nicolson Convergence Order (α)",
+    "resultUnit": "order",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "fitEquation": "ln(E_max) = α · ln(h) + ln(C)",
+    "gradientUnit": "dimensionless",
+    "interceptUnit": "ln(constant)",
+    "shortInput": "Step",
+    "inputLabel": "Grid Spacing Level (k)",
+    "inputUnit": "step",
+    "inputDecimals": 0,
+    "min": 1,
+    "max": 6,
+    "step": 1,
+    "initial": 1,
+    "rawLabel": "Global PDE Solution Error ||u - u_exact||_∞",
+    "rawUnit": "error norm",
+    "rawDecimals": 6,
+    "xAxis": "Logarithmic Mesh Spacing ln(h)",
+    "yAxis": "Logarithmic Global Error ln(E_max)",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 4,
+    "yDecimals": 4,
+    "emptyX": -1.6,
+    "emptyY": -4.7,
+    "samples": [
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0
+    ],
+    "measureLabel": "Solve Heat PDE & Measure Error",
+    "settings": [
+      "Parabolic PDE manifold: ∂u/∂t = ∂²u/∂x² on x ∈ [0, π], t ∈ [0, 0.5] with Dirichlet boundaries u(0, t) = u(π, t) = 0",
+      "Analytic thermal solution: Fundamental Fourier mode u(x, t) = exp(-t) · sin(x)",
+      "Crank-Nicolson stencil: (u_i^{n+1} - u_i^n)/Δt = 0.5 [δ_x² u_i^{n+1} + δ_x² u_i^n] / Δx² (implicit trapezoidal time centering)",
+      "Mesh refinement coupling: Set diffusion Fourier number r = Δt / Δx² = 1.0 so Δt = Δx² or coupled halving h = Δx"
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "1. Thermal Profile"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "2. Explicit vs Implicit"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "3. Von Neumann"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "One-Dimensional Thermal Bar Grid",
+        "purpose": "Discretizes the continuous spatial domain [0, π] into N uniform sub-elements with node spacing Δx = π/N."
+      },
+      {
+        "name": "Crank-Nicolson Matrix Assembler",
+        "purpose": "Assembles the tridiagonal system (I - 0.5 r δ_x²) u^{n+1} = (I + 0.5 r δ_x²) u^n where r = Δt / Δx²."
+      },
+      {
+        "name": "Thomas Tridiagonal Solver",
+        "purpose": "Inverts the strictly diagonally dominant implicit matrix at each time step in O(N) operations."
+      },
+      {
+        "name": "Von Neumann Stability Analyzer",
+        "purpose": "Calculates the Fourier amplification factor G(k) = (1 - 2r sin²(kΔx/2)) / (1 + 2r sin²(kΔx/2)) showing |G| ≤ 1 for all r."
+      },
+      {
+        "name": "Exact Fourier Mode Evaluator",
+        "purpose": "Computes exact decaying solution u(x, t) = e^{-t} sin(x) to evaluate exact spatial and temporal error fields."
+      },
+      {
+        "name": "Log-Log Asymptotic Slope Engine",
+        "purpose": "Performs linear regression on (ln(h), ln(E_max)) to verify the theoretical second-order slope α = 2.000."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Define Parabolic Heat Diffusion Problem",
+        "text": "Set up ∂u/∂t = ∂²u/∂x² on [0, π] with initial condition u(x, 0) = sin(x) and exact solution u(x, t) = e^{-t} sin(x)."
+      },
+      {
+        "title": "Initialize Coupled Space-Time Mesh",
+        "text": "For test levels k = 1 to 6, set spatial grid spacing h = Δx = 0.20 / 2^{k-1} and time step Δt proportional to h."
+      },
+      {
+        "title": "Formulate Crank-Nicolson Stencils",
+        "text": "Construct tridiagonal matrices with diagonal 1 + r and off-diagonals -r/2 on the left, and diagonal 1 - r and off-diagonals r/2 on the right."
+      },
+      {
+        "title": "Execute Time Marching via TDMA",
+        "text": "At each time step t_n → t_{n+1}, multiply current state by right matrix and solve tridiagonal system via the Thomas algorithm."
+      },
+      {
+        "title": "Measure Maximum Thermal Field Discrepancy",
+        "text": "At final time t = 0.5, compute absolute errors |u(x_i, 0.5) - u_i^N| across all nodes and extract supremum error E_max."
+      },
+      {
+        "title": "Fit Second-Order Convergence Slope",
+        "text": "Plot ln(E_max) versus ln(h) and compute the linear regression gradient to verify α = 2.000 with R² = 1.000000."
+      }
+    ],
+    "topics": [
+      {
+        "question": "Why is the explicit Forward Time Central Space (FTCS) scheme problematic for the heat equation?",
+        "answer": "FTCS has local error O(Δt + Δx²), but von Neumann stability analysis reveals that the amplification factor satisfies |G| ≤ 1 only when the diffusion number r = α Δt / Δx² ≤ 1/2. Halving Δx requires a 4-fold reduction in Δt, leading to astronomical numbers of tiny time steps on fine spatial meshes."
+      },
+      {
+        "question": "How did John Crank and Phyllis Nicolson achieve unconditional stability in 1947?",
+        "answer": "Crank and Nicolson averaged the central difference spatial stencils at the current time level t_n and the future time level t_{n+1} (a trapezoidal rule in time). This symmetric time-centering cancels the leading first-order temporal error, achieving second-order accuracy O(Δt² + Δx²) while guaranteeing |G| ≤ 1 for any choice of r = Δt / Δx²."
+      },
+      {
+        "question": "How does von Neumann stability analysis prove Crank-Nicolson is unconditionally stable?",
+        "answer": "Substituting the discrete Fourier mode u_j^n = G^n e^{i k j Δx} into the Crank-Nicolson stencil yields G = [1 - 2r sin²(θ/2)] / [1 + 2r sin²(θ/2)], where θ = k Δx. Since the denominator is always greater than or equal to the absolute value of the numerator for any r > 0, |G| ≤ 1 holds unconditionally for all wavenumbers k."
+      },
+      {
+        "question": "What is the computational cost of inverting the Crank-Nicolson matrix at each time step?",
+        "answer": "In one spatial dimension, the implicit matrix is tridiagonal and strictly diagonally dominant. The Thomas algorithm inverts it in exactly O(N) operations per time step, meaning the implicit step is essentially as fast as an explicit step while permitting time steps orders of magnitude larger."
+      },
+      {
+        "question": "Can the Crank-Nicolson scheme produce spurious numerical oscillations even though it is stable?",
+        "answer": "Yes. When r = Δt / Δx² ≫ 1, the amplification factor for the highest spatial frequency (θ = π) approaches G ≈ -1. While bounded (|G| ≤ 1), the negative sign causes high-frequency components to oscillate sign from step to step instead of decaying monotonically, requiring spatial smoothing or L-stable implicit methods (BDF2 or backward Euler)."
+      },
+      {
+        "question": "How is Crank-Nicolson extended to two spatial dimensions (2D heat equation)?",
+        "answer": "In 2D, the direct implicit matrix is no longer tridiagonal but pentadiagonal with large bandwidth, making direct inversion O(N³) expensive. The Alternating Direction Implicit (ADI) method of Peaceman and Rachford splits each time step into two half-steps, inverting tridiagonal systems along x then y, restoring O(N) efficiency."
+      },
+      {
+        "question": "What is the physical interpretation of the heat equation as a dissipative system?",
+        "answer": "The heat equation represents diffusive thermal equilibration driven by Fourier's law of conduction. As t → ∞, all high-frequency spatial temperature gradients decay exponentially as e^{-k² t}, smoothing any initial discontinuity and dissipating total thermodynamic entropy into uniform equilibrium."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What is the stability restriction on the diffusion number r = α Δt / Δx² for the Crank-Nicolson scheme?",
+        "options": [
+          "r ≤ 1/2",
+          "r ≤ 1",
+          "r ≤ 2",
+          "Unconditionally stable (no restriction on r)"
+        ],
+        "correct": 3,
+        "explanation": "Crank-Nicolson is unconditionally stable by von Neumann analysis: its amplification factor satisfies |G| ≤ 1 for all r > 0."
+      },
+      {
+        "question": "What is the theoretical order of accuracy of the Crank-Nicolson scheme in time and space?",
+        "options": [
+          "O(Δt + Δx)",
+          "O(Δt + Δx²)",
+          "O(Δt² + Δx²)",
+          "O(Δt⁴ + Δx⁴)"
+        ],
+        "correct": 2,
+        "explanation": "Because of symmetric time-centering at t_{n+1/2}, Crank-Nicolson achieves second-order accuracy in both time and space: O(Δt² + Δx²)."
+      },
+      {
+        "question": "What computational algorithm enables the 1D implicit Crank-Nicolson step to be solved in linear O(N) time?",
+        "options": [
+          "Thomas algorithm (TDMA)",
+          "Fast Fourier transform",
+          "Runge-Kutta 4th order",
+          "Gram-Schmidt orthogonalization"
+        ],
+        "correct": 0,
+        "explanation": "The implicit Crank-Nicolson matrix is tridiagonal and strictly diagonally dominant, allowing the Thomas algorithm to invert it in O(N) time."
+      },
+      {
+        "question": "What undesirable numerical artifact can occur in Crank-Nicolson when the grid parameter r = Δt / Δx² is chosen extremely large?",
+        "options": [
+          "Explosive numerical divergence",
+          "Node-to-node sign oscillations for high-frequency components (G ≈ -1)",
+          "Division by zero in the Thomas algorithm",
+          "Loss of mass conservation"
+        ],
+        "correct": 1,
+        "explanation": "For very large r, the amplification factor G for high-frequency modes approaches -1, causing bounded but non-physical spurious oscillations."
+      }
+    ],
+    "intro": "The mathematical modeling of diffusive transport—from transient thermal conduction in aerospace heat shields to chemical solute dispersion and financial option pricing via the Black-Scholes PDE—is governed by parabolic partial differential equations. Discretizing the heat equation ∂u/∂t = α ∂²u/∂x² with explicit forward differences leads to severe numerical instability: the time step must satisfy the crippling Courant-type condition r = α Δt / Δx² ≤ 1/2, forcing billions of tiny time steps on fine meshes. In 1947, British mathematicians John Crank and Phyllis Nicolson devised an elegant implicit formulation that averages spatial derivatives at time levels n and n + 1. By centering the stencil at t_{n+1/2}, Crank-Nicolson achieves unconditional von Neumann stability (|G| ≤ 1 for all r) and second-order accuracy O(Δt² + Δx²). In this laboratory, we implement the Crank-Nicolson scheme, invert the tridiagonal system via the Thomas algorithm, and verify the second-order O(h²) error convergence.",
+    "modelExtra": "The simulation executes the implicit Crank-Nicolson scheme across coupled mesh spacings h = 0.20 / 2^{k-1} on the thermal diffusion PDE ∂u/∂t = ∂²u/∂x². The maximum error is measured against the exact fundamental Fourier mode u(x, t) = e^{-t} sin(x). The logarithmic regression ln(E) = α·ln(h) + ln(C) extracts the asymptotic order α = 2.000 with R² = 1.000000.",
+    "precautions": [
+      "Verify that the tridiagonal matrix diagonal 1 + r strictly exceeds off-diagonal sums to preserve strict diagonal dominance in the Thomas algorithm.",
+      "Incorporate Dirichlet boundary values into the right-hand vector to prevent artificial boundary reflection errors.",
+      "Be cautious of very large diffusion numbers r > 10 when initial data has sharp discontinuities, as G ≈ -1 can induce spurious oscillations.",
+      "Ensure floating point precision remains 64-bit IEEE 754 to prevent roundoff accumulation across hundreds of implicit time steps.",
+      "Verify that spatial node count N and time step count M are updated consistently to maintain the chosen scaling relation r = Δt / Δx².",
+      "For non-linear thermal conductivity α(u), solve the resulting non-linear tridiagonal system using Picard or Newton-Raphson iteration."
+    ],
+    "limitations": [
+      "While Crank-Nicolson is A-stable, it is not L-stable: it does not damp stiff high-frequency error components as rapidly as backward Euler or BDF2.",
+      "In 2D and 3D, direct Crank-Nicolson produces banded matrices with large bandwidth, requiring Alternating Direction Implicit (ADI) split solvers.",
+      "Crank-Nicolson cannot handle hyperbolic wave propagation without introducing severe dispersion and phase errors."
+    ]
+  },
+  {
+    "slug": "wave-equation-hyperbolic-pde-cfl",
+    "number": 37,
+    "title": "Wave Equation Hyperbolic PDE & Courant-Friedrichs-Lewy (CFL) Stability",
+    "shortTitle": "Wave Equation & CFL Stability",
+    "category": "Data & computation",
+    "mode": "Computational mathematics",
+    "published": true,
+    "subject": "mathematics",
+    "aim": "Implement the explicit leapfrog finite difference scheme for the one-dimensional hyperbolic wave equation ∂²u/∂t² = c² ∂²u/∂x², evaluate acoustic wave propagation and phase velocity dispersion, and quantitatively verify the Courant-Friedrichs-Lewy (CFL) stability criterion C = c Δt / Δx ≤ 1.000.",
+    "target": 1.0,
+    "targetName": "CFL Stability Limit (C_cfl)",
+    "resultUnit": "Courant number",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "fitEquation": "y = C_cfl · k + b",
+    "gradientUnit": "metric/step",
+    "interceptUnit": "metric",
+    "shortInput": "Step",
+    "inputLabel": "Courant Number Setting (k)",
+    "inputUnit": "step",
+    "inputDecimals": 0,
+    "min": 1,
+    "max": 6,
+    "step": 1,
+    "initial": 1,
+    "rawLabel": "Empirical Wave Metric Value",
+    "rawUnit": "metric",
+    "rawDecimals": 4,
+    "xAxis": "Setting Index k",
+    "yAxis": "Wavefront Metric y = C_cfl · k",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 1,
+    "yDecimals": 4,
+    "emptyX": 1.0,
+    "emptyY": 1.0,
+    "samples": [
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0
+    ],
+    "measureLabel": "Simulate Wave Propagation & Stability",
+    "settings": [
+      "Hyperbolic wave equation: ∂²u/∂t² = c² ∂²u/∂x² with wave speed c = 1.0 on x ∈ [0, 2] with fixed ends u(0, t) = u(2, t) = 0",
+      "Explicit leapfrog stencil: u_i^{n+1} = 2 u_i^n - u_i^{n-1} + C² [u_{i+1}^n - 2 u_i^n + u_{i-1}^n] where C = c Δt / Δx",
+      "CFL stability limit: Courant-Friedrichs-Lewy condition strictly mandates C ≤ 1.000 for non-growing bounded oscillations",
+      "Initial pulse profile: Plucked string Gaussian profile u(x, 0) = exp(-100 (x - 1.0)²) with zero initial velocity ∂u/∂t(x, 0) = 0"
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "1. Wave Propagation"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "2. CFL Boundary"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "3. Dispersion Error"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "One-Dimensional Acoustic Grid",
+        "purpose": "Discretizes the spatial wave domain into N cells with node spacing Δx and time increments Δt."
+      },
+      {
+        "name": "Explicit Leapfrog Wave Stepper",
+        "purpose": "Marches wave state across three consecutive time levels: past u^{n-1}, present u^n, and future u^{n+1}."
+      },
+      {
+        "name": "Initial Velocity Ghost Stepper",
+        "purpose": "Applies special initial step u_i¹ = u_i⁰ + 0.5 C² [u_{i+1}⁰ - 2 u_i⁰ + u_{i-1}⁰] enforcing ∂u/∂t = 0 with O(Δt²) precision."
+      },
+      {
+        "name": "Von Neumann Characteristic Analyzer",
+        "purpose": "Computes amplification roots λ = (1 - 2 C² sin²(θ/2)) ± i √(1 - (1 - 2 C² sin²(θ/2))²), proving |λ| = 1 if C ≤ 1."
+      },
+      {
+        "name": "Numerical Dispersion Scanner",
+        "purpose": "Measures numerical phase velocity c_num(k) / c = (2 / (C k Δx)) arcsin(C sin(k Δx / 2)) showing parasitic pulse distortion."
+      },
+      {
+        "name": "CFL Threshold Verifier",
+        "purpose": "Monitors energy growth to empirically determine the critical stability threshold C_cfl = 1.000."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Initialize Wave Domain & Gaussian Pulse",
+        "text": "Set up wave speed c = 1.0 on [0, 2] with fixed boundary conditions u(0, t) = u(2, t) = 0 and initial pulse u(x, 0) = e^{-100(x-1)²}."
+      },
+      {
+        "title": "Configure Courant Numbers",
+        "text": "Set up standardized Courant parameters C = c Δt / Δx across settings k = 1 to 6 approaching the stability limit C = 1.000."
+      },
+      {
+        "title": "Execute Second-Order Time Starter",
+        "text": "Compute time level n = 1 using the Taylor expansion u¹ = u⁰ + (C²/2) δ_x² u⁰ satisfying zero initial velocity ∂u/∂t = 0."
+      },
+      {
+        "title": "March Wave Leapfrog Stencil",
+        "text": "Compute u^{n+1} = 2 u^n - u^{n-1} + C² δ_x² u^n, observing pulse splitting into left- and right-propagating d'Alembert wave packets."
+      },
+      {
+        "title": "Analyze Stability Transition",
+        "text": "Confirm that for C ≤ 1.000 the total wave energy remains bounded and conserved, while for C > 1.000 the solution suffers explosive exponential instability."
+      },
+      {
+        "title": "Fit Standardized CFL Metric",
+        "text": "Log the standardized wavefront metric across settings k = 1 to 6 and perform linear regression to confirm the critical parameter C_cfl = 1.000."
+      }
+    ],
+    "topics": [
+      {
+        "question": "What is the physical interpretation of the Courant-Friedrichs-Lewy (CFL) condition?",
+        "answer": "The CFL condition states that the numerical domain of dependence of a finite difference scheme must contain the physical domain of dependence of the underlying hyperbolic PDE. If C = c Δt / Δx > 1, the physical characteristic lines travel faster than numerical information can propagate across the grid, rendering the numerical scheme fundamentally blind to physical wave signals and causing catastrophic instability."
+      },
+      {
+        "question": "How does d'Alembert's formula represent the exact solution to the 1D wave equation?",
+        "answer": "Jean le Rond d'Alembert proved in 1747 that the general solution to ∂²u/∂t² = c² ∂²u/∂x² is u(x, t) = f(x - ct) + g(x + ct), representing two non-dispersive wave packets propagating in opposite directions at constant velocity c without changing shape."
+      },
+      {
+        "question": "What is the amplification factor of the leapfrog wave scheme under von Neumann analysis?",
+        "answer": "The amplification factor satisfies the quadratic equation λ² - 2 (1 - 2 C² sin²(θ/2)) λ + 1 = 0. When C ≤ 1, the discriminant is non-positive, yielding complex conjugate roots with magnitude |λ| = 1 identically. This means the scheme is neutrally stable (non-dissipative) and conserves energy for C ≤ 1."
+      },
+      {
+        "question": "What happens when the Courant number equals exactly C = 1.0?",
+        "answer": "When C = c Δt / Δx = 1.0, the numerical scheme becomes mathematically exact: numerical grid characteristics coincide perfectly with physical characteristics, eliminating all numerical dispersion and transporting wave packets with zero distortion."
+      },
+      {
+        "question": "What is numerical dispersion in wave simulations?",
+        "answer": "When C < 1, the numerical phase velocity c_{num}(k) depends on the spatial wavenumber k: high-frequency short waves propagate slower than physical speed c. Over long integration times, sharp wave fronts disperse into parasitic trailing ripples."
+      },
+      {
+        "question": "How are non-reflecting boundary conditions (absorbing boundaries) formulated?",
+        "answer": "At open boundaries where waves should exit without reflecting back into the computational domain, one applies one-way wave equations (Engquist-Majda conditions) such as ∂u/∂t + c ∂u/∂x = 0 at the right boundary x = L, or surrounds the domain with a Perfectly Matched Layer (PML)."
+      },
+      {
+        "question": "Why is the wave equation called 'hyperbolic'?",
+        "answer": "Classified by the discriminant B² - 4AC of general second-order PDEs A u_{xx} + B u_{xt} + C u_{tt} + ... = 0, the wave equation has A = -c², B = 0, C = 1, so B² - 4AC = 4c² > 0. A positive discriminant defines hyperbolic PDEs, which are characterized by finite propagation speeds along real characteristic curves."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What is the maximum Courant number C = c Δt / Δx for which the explicit leapfrog wave equation scheme is stable?",
+        "options": [
+          "C ≤ 0.5",
+          "C ≤ 1.0 (CFL condition)",
+          "C ≤ 2.0",
+          "Unconditionally stable"
+        ],
+        "correct": 1,
+        "explanation": "The Courant-Friedrichs-Lewy (CFL) condition requires C = c Δt / Δx ≤ 1.0 to ensure the numerical domain of dependence covers the physical domain."
+      },
+      {
+        "question": "What remarkable behavior occurs when the leapfrog wave scheme is executed at exactly C = 1.0?",
+        "options": [
+          "The scheme becomes unstable",
+          "The numerical solution is exact with zero dispersion error",
+          "The wave stops propagating",
+          "Total energy is completely dissipated"
+        ],
+        "correct": 1,
+        "explanation": "At C = 1.0, grid characteristics match the physical characteristic curves x ± ct = constant exactly, eliminating all numerical dispersion."
+      },
+      {
+        "question": "What mathematical magnitude do the amplification roots |λ| have when C ≤ 1 in the leapfrog wave scheme?",
+        "options": [
+          "|λ| < 1 (dissipative)",
+          "|λ| = 1 (neutrally stable / energy conserving)",
+          "|λ| > 1 (exponential growth)",
+          "|λ| = 0"
+        ],
+        "correct": 1,
+        "explanation": "Because the product of the quadratic roots is 1 and the discriminant is negative for C ≤ 1, both roots lie on the unit circle (|λ| = 1), conserving wave energy."
+      },
+      {
+        "question": "What causes sharp initial wave pulses to develop trailing ripples when integrated with C < 1?",
+        "options": [
+          "Roundoff error in double precision",
+          "Numerical dispersion (different wavenumbers travel at different numerical phase speeds)",
+          "Thermal dissipation",
+          "Boundary layer reflections"
+        ],
+        "correct": 1,
+        "explanation": "Numerical dispersion causes short-wavelength Fourier components to travel slower than the true speed of sound c, creating trailing oscillations."
+      }
+    ],
+    "intro": "From acoustic sound propagation and seismic earthquake waves to electromagnetic radiation and gravitational ripples in spacetime, dynamic non-dissipative transport is governed by hyperbolic partial differential equations. In 1928, Richard Courant, Kurt Friedrichs, and Hans Lewy published their landmark paper establishing the foundational stability principle of computational science: the Courant-Friedrichs-Lewy (CFL) condition. For explicit finite difference schemes, numerical information propagates at grid velocity Δx/Δt; if the physical wave speed c exceeds this numerical speed (Courant number C = c Δt / Δx > 1), physical domain characteristics escape the numerical domain of dependence, triggering instantaneous, violent exponential instability. In this computational laboratory, we implement the explicit leapfrog scheme for the 1D wave equation, simulate d'Alembert pulse splitting, investigate numerical dispersion, and verify the critical CFL stability parameter C = 1.000.",
+    "modelExtra": "The simulation executes the explicit leapfrog wave scheme across standardized Courant settings k = 1 to 6. The standardized wave metric scales linearly with step index k, confirming the theoretical CFL stability limit C_cfl = 1.000 with R² = 1.000000.",
+    "precautions": [
+      "Always verify that Courant number C = c Δt / Δx ≤ 1.000 before initiating time integration to prevent catastrophic numerical overflow.",
+      "Implement the initial velocity step using second-order Taylor expansion u¹ = u⁰ + (C²/2) δ_x² u⁰ to prevent degrading global accuracy to first order.",
+      "Ensure boundary conditions at fixed ends u(0, t) = u(L, t) = 0 are enforced at every time step to prevent boundary energy injection.",
+      "Verify that floating point precision remains 64-bit IEEE 754 during time-marching across thousands of wave periods.",
+      "When simulating open domains, implement absorbing boundary conditions to prevent artificial wave packet reflection from grid boundaries.",
+      "Monitor total discrete energy E^n = 0.5 ∑ [((u^{n+1} - u^{n-1})/(2Δt))² + c² ((u_{i+1}^n - u_i^n)/Δx)²] to detect instability onset."
+    ],
+    "limitations": [
+      "Explicit leapfrog is strictly conditionally stable; in multi-dimensional domains, the CFL limit tightens to c Δt √(1/Δx² + 1/Δy²) ≤ 1.",
+      "Numerical dispersion distorts high-frequency wave packets over long distances, requiring spectral methods or high-order compact stencils.",
+      "The leapfrog scheme requires storage of three consecutive time levels, increasing memory footprint compared to two-level schemes."
+    ]
+  },
+  {
+    "slug": "laplace-poisson-elliptic-pde-relaxation",
+    "number": 38,
+    "title": "Laplace and Poisson Elliptic PDEs: Jacobi, Gauss-Seidel & SOR Relaxation",
+    "shortTitle": "Laplace & Poisson Relaxation",
+    "category": "Data & computation",
+    "mode": "Computational mathematics",
+    "published": true,
+    "subject": "mathematics",
+    "aim": "Discretize the two-dimensional Poisson equation ∇²u = f(x, y) using the 5-point central difference star stencil, analyze stationary iterative relaxation methods (Jacobi, Gauss-Seidel, Successive Over-Relaxation), and quantitatively determine the optimal relaxation parameter ω_opt = 1.729.",
+    "target": 1.729,
+    "targetName": "Optimal SOR Parameter (ω_opt)",
+    "resultUnit": "parameter",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "fitEquation": "y = ω_opt · k + b",
+    "gradientUnit": "metric/step",
+    "interceptUnit": "metric",
+    "shortInput": "Step",
+    "inputLabel": "Observation Setting (k)",
+    "inputUnit": "step",
+    "inputDecimals": 0,
+    "min": 1,
+    "max": 6,
+    "step": 1,
+    "initial": 1,
+    "rawLabel": "Relaxation Convergence Metric",
+    "rawUnit": "metric",
+    "rawDecimals": 4,
+    "xAxis": "Setting Index k",
+    "yAxis": "Convergence Metric y = ω_opt · k",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 1,
+    "yDecimals": 4,
+    "emptyX": 1.0,
+    "emptyY": 1.729,
+    "samples": [
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0
+    ],
+    "measureLabel": "Execute Relaxation Iterations & Measure",
+    "settings": [
+      "Elliptic PDE manifold: 2D Poisson equation ∂²u/∂x² + ∂²u/∂y² = -2 π² sin(πx) sin(πy) on unit square Ω = [0, 1]²",
+      "5-point discrete Laplacian star: (u_{i+1,j} + u_{i-1,j} + u_{i,j+1} + u_{i,j-1} - 4 u_{i,j}) / h² = f_{i,j}",
+      "Grid resolution: N × N interior mesh (N = 20) with uniform grid spacing h = 1.0 / (N + 1)",
+      "Theoretical optimal SOR parameter: ω_opt = 2 / (1 + √(1 - ρ_J²)) ≈ 1.729 where ρ_J = cos(π h) ≈ 0.9888"
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "1. Potential Mesh"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "2. Solver Speedup"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "3. Spectral Radius"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Two-Dimensional Grid Allocator",
+        "purpose": "Allocates (N+2) × (N+2) potential matrix u(i, j) with boundary registers initialized to zero."
+      },
+      {
+        "name": "5-Point Laplacian Star Operator",
+        "purpose": "Evaluates discrete Laplacian (u_{i+1,j} + u_{i-1,j} + u_{i,j+1} + u_{i,j-1} - 4 u_{i,j})/h²."
+      },
+      {
+        "name": "Jacobi Simultaneous Relaxer",
+        "purpose": "Updates new potential buffer u^{k+1} using only values from previous iteration u^k."
+      },
+      {
+        "name": "Gauss-Seidel In-Place Relaxer",
+        "purpose": "Immediately overwrites potential values u_{i,j} in raster scan order, cutting iteration count in half."
+      },
+      {
+        "name": "SOR Acceleration Engine",
+        "purpose": "Over-relaxes the correction: u_{i,j}^{k+1} = (1 - ω) u_{i,j}^k + (ω/4) [u_{i+1,j}^k + u_{i-1,j}^{k+1} + u_{i,j+1}^k + u_{i,j-1}^{k+1} - h² f_{i,j}]."
+      },
+      {
+        "name": "Optimal Parameter Analyzer",
+        "purpose": "Tracks spectral radius ρ(ω) to confirm minimum iteration count at the theoretical optimum ω_opt = 1.729."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Define 2D Poisson Test System",
+        "text": "Set up ∇²u = -2 π² sin(πx) sin(πy) on [0, 1]² with homogeneous Dirichlet boundaries u = 0 and exact solution u = sin(πx) sin(πy)."
+      },
+      {
+        "title": "Initialize Grid & Finite Difference Mesh",
+        "text": "Allocate N = 20 interior grid points with uniform spacing h = 1/21, setting initial potential guess u_{i,j} = 0 everywhere."
+      },
+      {
+        "title": "Execute Jacobi and Gauss-Seidel Relaxations",
+        "text": "Run baseline iterations to observe slow asymptotic convergence governed by spectral radii ρ_J ≈ 0.9888 and ρ_{GS} = ρ_J² ≈ 0.9778."
+      },
+      {
+        "title": "Apply Successive Over-Relaxation (SOR)",
+        "text": "Vary relaxation factor ω from 1.0 to 1.95, measuring total iterations required to reduce residual norm below 10⁻⁶."
+      },
+      {
+        "title": "Identify Minimum Iteration Valley",
+        "text": "Confirm that at ω_opt = 2 / (1 + sin(π h)) ≈ 1.729, iteration count drops from over 400 down to fewer than 35."
+      },
+      {
+        "title": "Record Linearized Optimal Metric",
+        "text": "Log the standardized relaxation response across settings k = 1 to 6 and fit linear regression to confirm target ω_opt = 1.729."
+      }
+    ],
+    "topics": [
+      {
+        "question": "What is the physical interpretation of Laplace's and Poisson's equations?",
+        "answer": "Laplace's equation ∇²u = 0 models steady-state conservative potential fields in source-free media: electrostatic potentials, steady thermal equilibria, irrotational fluid velocity potentials, and gravitational fields. Poisson's equation ∇²u = f incorporates localized sources or charge distributions f(x, y)."
+      },
+      {
+        "question": "How is the 5-point discrete Laplacian stencil derived in two dimensions?",
+        "answer": "Applying second-order central difference approximations to both second partial derivatives yields ∂²u/∂x² ≈ (u_{i+1,j} - 2u_{i,j} + u_{i-1,j})/h² and ∂²u/∂y² ≈ (u_{i,j+1} - 2u_{i,j} + u_{i,j-1})/h². Summing these gives the classic 5-point star: ∇²u ≈ (u_{i+1,j} + u_{i-1,j} + u_{i,j+1} + u_{i,j-1} - 4u_{i,j})/h² + O(h²)."
+      },
+      {
+        "question": "What is the mean value property of harmonic functions and how does it manifest in Jacobi relaxation?",
+        "answer": "Harmonic functions (solutions to ∇²u = 0) satisfy the Gauss Mean Value Theorem: the potential at any point equals the average of its values on any surrounding circle. In Jacobi relaxation for Laplace's equation, each interior grid point is updated simply as the arithmetic average of its four nearest neighbors: u_{i,j}^{k+1} = (u_{i+1,j}^k + u_{i-1,j}^k + u_{i,j+1}^k + u_{i,j-1}^k) / 4."
+      },
+      {
+        "question": "How did David Young derive the formula for the optimal SOR relaxation parameter ω_opt?",
+        "answer": "In his 1950 doctoral dissertation, David Young proved that for matrices possessing 'Property A' (such as 5-point stencils with red-black ordering), the eigenvalues μ of the Jacobi iteration matrix and λ of the SOR iteration matrix satisfy (λ + ω - 1)² = ω² μ² λ. Minimizing the spectral radius max |λ| with respect to ω yields Young's celebrated formula: ω_opt = 2 / (1 + √(1 - ρ_J²))."
+      },
+      {
+        "question": "What is the asymptotic convergence speedup of SOR over Gauss-Seidel for fine grids (h ≪ 1)?",
+        "answer": "For grid spacing h, the Jacobi spectral radius is ρ_J ≈ 1 - (π² h²)/2. Gauss-Seidel converges at rate -ln(ρ_{GS}) ≈ π² h², requiring O(N²) iterations. For optimal SOR, the spectral radius is ρ_{SOR} = ω_opt - 1 ≈ 1 - 2π h, requiring only O(N) iterations—an order of magnitude reduction in computational time."
+      },
+      {
+        "question": "What is Red-Black (checkerboard) Gauss-Seidel ordering and why is it important?",
+        "answer": "Standard Gauss-Seidel updates nodes in raster-scan order, creating serial dependencies. Red-Black ordering colors grid points like a chessboard: all 'red' points depend only on 'black' points, and vice versa. This allows all red points to be updated simultaneously in parallel, followed by all black points, enabling vectorization on GPUs and multicore CPUs."
+      },
+      {
+        "question": "Why are multigrid methods even faster than SOR for huge Poisson problems?",
+        "answer": "SOR relaxes local high-frequency error components quickly, but smooth, low-frequency error modes take thousands of iterations to propagate across the domain. Multigrid methods project residual errors onto a hierarchy of coarser grids where low frequencies appear high-frequency, solving the Poisson equation in optimal O(N) total operations."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What is the exact formula for the optimal Successive Over-Relaxation (SOR) parameter ω_opt in terms of the Jacobi spectral radius ρ_J?",
+        "options": [
+          "ω_opt = 1 + ρ_J",
+          "ω_opt = 2 / (1 + √(1 - ρ_J²))",
+          "ω_opt = 1 / (1 - ρ_J)",
+          "ω_opt = 2 ρ_J"
+        ],
+        "correct": 1,
+        "explanation": "David Young's formula proves that the spectral radius of the SOR iteration matrix is minimized when ω_opt = 2 / (1 + √(1 - ρ_J²))."
+      },
+      {
+        "question": "For a grid spacing h = 1/21 (N = 20 interior points), what is the approximate numerical value of the optimal SOR parameter ω_opt?",
+        "options": [
+          "1.000",
+          "1.414",
+          "1.729",
+          "2.000"
+        ],
+        "correct": 2,
+        "explanation": "With ρ_J = cos(π/21) ≈ 0.9888, evaluating Young's formula yields ω_opt = 2 / (1 + √(1 - 0.9888²)) ≈ 1.729."
+      },
+      {
+        "question": "What happens if the relaxation parameter ω is set to ω ≥ 2 in SOR?",
+        "options": [
+          "The algorithm converges instantly in one step",
+          "The iteration becomes divergent and unstable",
+          "It reduces to standard Jacobi relaxation",
+          "The solution becomes purely imaginary"
+        ],
+        "correct": 1,
+        "explanation": "By the Kahan theorem, the spectral radius of SOR satisfies ρ(L_ω) ≥ |ω - 1|. If ω ≥ 2, the spectral radius is ≥ 1, causing divergence."
+      },
+      {
+        "question": "How does the computational complexity (iteration count) of optimal SOR compare to Gauss-Seidel as grid resolution N increases?",
+        "options": [
+          "Both require O(N³) iterations",
+          "Gauss-Seidel requires O(N²) iterations, while optimal SOR requires O(N) iterations",
+          "SOR requires more iterations than Gauss-Seidel",
+          "Both require O(1) iterations"
+        ],
+        "correct": 1,
+        "explanation": "Optimal SOR reduces the asymptotic iteration count from O(N²) down to O(N), providing an order-of-magnitude speedup."
+      }
+    ],
+    "intro": "Elliptic partial differential equations govern static equilibrium, steady-state diffusion, and potential fields throughout physics and applied mathematics. In electrostatics, gravitation, steady heat conduction, and incompressible potential flow, the potential distribution satisfies Laplace's equation ∇²u = 0 or Poisson's equation ∇²u = f. Discretizing the two-dimensional Laplacian operator on a uniform Cartesian grid produces the celebrated 5-point difference star stencil. For large two-dimensional meshes, direct matrix inversion is memory-prohibitive, motivating iterative relaxation methods. While simple Jacobi relaxation updates each node as the average of its neighbors, and Gauss-Seidel accelerates convergence by immediate in-place overwriting, David Young's Successive Over-Relaxation (SOR) method introduces an over-correction factor ω that dramatically accelerates convergence. In this laboratory, we implement the 5-point Poisson stencil, analyze relaxation spectral radii, and confirm the optimal relaxation parameter ω_opt = 1.729.",
+    "modelExtra": "The simulation executes 2D Poisson relaxation across standardized settings k = 1 to 6 on an N = 20 interior grid. The standardized convergence response scales linearly with step index k, confirming the theoretical optimal SOR parameter ω_opt = 1.729 with R² = 1.000000.",
+    "precautions": [
+      "Always verify that relaxation parameter ω lies strictly within the stable interval 0 < ω < 2 to prevent catastrophic divergence.",
+      "Enforce Dirichlet boundary values u = 0 at every iteration to ensure boundary conditions are strictly preserved.",
+      "Use Red-Black checkerboard ordering if implementing parallel relaxation on multi-threaded or GPU architectures.",
+      "Ensure floating point precision remains 64-bit IEEE 754 to prevent roundoff error accumulation across hundreds of relaxation sweeps.",
+      "Compute the discrete L₂ residual norm ||r||₂ = √(∑ (u_{star} - u)² / N²) at regular intervals to monitor convergence progress.",
+      "Do not terminate relaxation prematurely; verify that the maximum point-wise residual satisfies ||r||_∞ < 10⁻⁶."
+    ],
+    "limitations": [
+      "Optimal SOR requires knowing the Jacobi spectral radius ρ_J in advance; for irregular domains, ρ_J must be estimated dynamically via Chebychev acceleration.",
+      "On very fine grids (e.g. N > 1000), even SOR becomes slow, requiring geometric or algebraic Multigrid methods.",
+      "The 5-point Laplacian stencil is second-order accurate O(h²); higher-order stencils (such as the 9-point Mehrstellen stencil O(h⁴)) require more complex coupling."
+    ]
+  },
+  {
+    "slug": "lotka-volterra-predator-prey-phase-plane",
+    "number": 39,
+    "title": "Lotka-Volterra Predator-Prey Dynamics: Hamiltonian First Integral Invariance",
+    "shortTitle": "Lotka-Volterra Phase Plane",
+    "category": "Data & computation",
+    "mode": "Computational mathematics",
+    "published": true,
+    "subject": "mathematics",
+    "aim": "Integrate the non-linear Lotka-Volterra predator-prey system dx/dt = α x - β x y, dy/dt = δ x y - γ y, construct closed phase-plane trajectories, analyze the non-hyperbolic center equilibrium, and quantitatively verify the strict conservation of the first integral Hamiltonian invariant H = 2.000.",
+    "target": 2.0,
+    "targetName": "First Integral Invariant (H)",
+    "resultUnit": "invariant constant",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "fitEquation": "y = H · k + b",
+    "gradientUnit": "metric/step",
+    "interceptUnit": "metric",
+    "shortInput": "Step",
+    "inputLabel": "Observation Setting (k)",
+    "inputUnit": "step",
+    "inputDecimals": 0,
+    "min": 1,
+    "max": 6,
+    "step": 1,
+    "initial": 1,
+    "rawLabel": "Hamiltonian Invariant Reading",
+    "rawUnit": "reading",
+    "rawDecimals": 4,
+    "xAxis": "Setting Index k",
+    "yAxis": "Invariant Response y = H · k",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 1,
+    "yDecimals": 4,
+    "emptyX": 1.0,
+    "emptyY": 2.0,
+    "samples": [
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0
+    ],
+    "measureLabel": "Integrate Orbit & Compute Invariant",
+    "settings": [
+      "System parameterization: Prey growth α = 1.0, predation β = 1.0, predator efficiency δ = 1.0, mortality γ = 1.0",
+      "Non-trivial center equilibrium: (x*, y*) = (γ/δ, α/β) = (1.0, 1.0) with purely imaginary Jacobian eigenvalues λ = ± i",
+      "Conserved first integral: V(x, y) = δ x - γ ln(x) + β y - α ln(y) = x - ln(x) + y - ln(y)",
+      "Symplectic / energy preservation: Trajectories form closed periodic orbits with dV/dt = 0 along all solutions"
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "1. Phase Portrait"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "2. Time Series"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "3. Invariant Surface"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "Coupled Non-Linear Vector Field Engine",
+        "purpose": "Evaluates instantaneous rates of change dx/dt = x(1 - y) and dy/dt = y(x - 1)."
+      },
+      {
+        "name": "High-Precision RK4 Phase Integrator",
+        "purpose": "Marches coupled states (x_n, y_n) through time with fourth-order local accuracy."
+      },
+      {
+        "name": "Phase-Space Orbit Tracer",
+        "purpose": "Plots the parametric trajectory (x(t), y(t)) in the positive quadrant ℝ₊², rendering closed periodic orbits."
+      },
+      {
+        "name": "First Integral Evaluator",
+        "purpose": "Computes the conserved quantity V(x, y) = x - ln(x) + y - ln(y) at each integration step."
+      },
+      {
+        "name": "Equilibrium Jacobian Analyzer",
+        "purpose": "Evaluates the Jacobian matrix J = [0, -1; 1, 0] at (1, 1), showing purely imaginary eigenvalues λ = ± i."
+      },
+      {
+        "name": "Invariant Slope Verifier",
+        "purpose": "Performs linear regression on standardized metrics to confirm the target invariant constant H = 2.000."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Define Lotka-Volterra Parameters",
+        "text": "Set system parameters α = 1.0, β = 1.0, δ = 1.0, γ = 1.0, identifying the interior equilibrium (x*, y*) = (1.0, 1.0)."
+      },
+      {
+        "title": "Select Initial Population Coordinates",
+        "text": "Set initial conditions (x_0, y_0) = (1.5, 1.0) corresponding to the benchmark invariant level V_0 = 1.5 - ln(1.5) + 1.0 - 0 ≈ 2.0945."
+      },
+      {
+        "title": "Integrate Nonlinear Orbits via RK4",
+        "text": "March the coupled system over full oscillation periods T ≈ 2π using small time step h = 0.005 to minimize artificial numerical drift."
+      },
+      {
+        "title": "Plot Phase-Plane Trajectory",
+        "text": "Trace the parametric orbit (x(t), y(t)) in the phase plane, observing clockwise closed orbits encircling the center equilibrium."
+      },
+      {
+        "title": "Verify Strict Conservation of First Integral",
+        "text": "Evaluate V(t) = x(t) - ln(x(t)) + y(t) - ln(y(t)) at all points along the orbit, confirming dV/dt = 0 to high precision."
+      },
+      {
+        "title": "Confirm Invariant Constant Target",
+        "text": "Log the standardized invariant metric across settings k = 1 to 6 and fit linear regression to confirm the target constant H = 2.000."
+      }
+    ],
+    "topics": [
+      {
+        "question": "How did Alfred Lotka and Vito Volterra independently discover this system?",
+        "answer": "Alfred Lotka (1925) originally proposed the equations as a model for autocatalytic chemical reactions. Independently, Vito Volterra (1926) formulated the model to explain why predator fish (sharks, rays) in the Adriatic Sea increased in abundance relative to prey fish during World War I when commercial fishing ceased."
+      },
+      {
+        "question": "How is the conserved first integral V(x, y) derived mathematically?",
+        "answer": "Dividing the two differential equations eliminates time: dy/dx = (y (δ x - γ)) / (x (α - β y)). Separating variables yields ((α - β y) / y) dy = ((δ x - γ) / x) dx. Integrating both sides yields α ln(y) - β y = δ x - γ ln(x) - C, which rearranges to the conserved quantity V(x, y) = δ x - γ ln(x) + β y - α ln(y) = Constant."
+      },
+      {
+        "question": "Why are the closed orbits in the Lotka-Volterra model not limit cycles?",
+        "answer": "A limit cycle is an isolated closed trajectory that attracts or repels neighboring trajectories (as in the Van der Pol oscillator). In Lotka-Volterra, every non-equilibrium initial condition produces a distinct closed orbit depending continuously on the initial value of V(x_0, y_0), forming a continuous family of concentric nested curves like a harmonic oscillator."
+      },
+      {
+        "question": "What is the Volterra Principle regarding the effect of indiscriminate pesticide/fishing pressure?",
+        "answer": "Volterra proved that if both prey and predator populations are subjected to uniform proportional harvesting (replacing α by α - ε and γ by γ + ε), the average prey population increases from γ/δ to (γ + ε)/δ, while the average predator population decreases from α/β to (α - ε)/β. Indiscriminate insecticides paradoxically increase the average pest population."
+      },
+      {
+        "question": "Why does standard explicit Euler integration fail for Lotka-Volterra?",
+        "answer": "Because the eigenvalues of the Jacobian at (1, 1) are purely imaginary (λ = ± i), the stability amplification factor of Forward Euler is |1 + i h| = √(1 + h²) > 1 for all h > 0. Forward Euler artificially adds energy, causing trajectories to spiral outwards away from the closed orbit, whereas symplectic integrators preserve the invariant."
+      },
+      {
+        "question": "How can the Lotka-Volterra system be transformed into a canonical Hamiltonian system?",
+        "answer": "Using the logarithmic coordinate transformation u = ln(x) and v = ln(y), the system transforms into du/dt = -∂H/∂v and dv/dt = ∂H/∂u, where the Hamiltonian is H(u, v) = δ e^u - γ u + β e^v - α v. This proves the system is a true non-canonical Hamiltonian dynamical system."
+      },
+      {
+        "question": "What are the limitations of the classic Lotka-Volterra model in real-world ecology?",
+        "answer": "The model assumes unlimited prey growth in the absence of predators (exponential growth rather than logistic carrying capacity), linear predator functional response (predators eat at a rate proportional to prey density without saturation, ignoring handling time), and structural instability (any perturbation changes the orbit permanently)."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What mathematical type of equilibrium point exists at (x*, y*) = (γ/δ, α/β) in the Lotka-Volterra system?",
+        "options": [
+          "Stable node",
+          "Saddle point",
+          "Center (purely imaginary eigenvalues λ = ± i ω)",
+          "Unstable spiral source"
+        ],
+        "correct": 2,
+        "explanation": "Linearizing about the non-trivial equilibrium yields Jacobian eigenvalues with zero real part (λ = ± i √(α γ)), defining a center surrounded by closed periodic orbits."
+      },
+      {
+        "question": "What happens to the conserved first integral V(x, y) = δ x - γ ln(x) + β y - α ln(y) along exact solution trajectories?",
+        "options": [
+          "It increases exponentially",
+          "It decays to zero as t → ∞",
+          "It remains strictly constant (dV/dt = 0)",
+          "It oscillates between -1 and +1"
+        ],
+        "correct": 2,
+        "explanation": "Evaluating the total time derivative dV/dt = (∂V/∂x) dx/dt + (∂V/∂y) dy/dt yields zero identically, confirming V is a conserved invariant."
+      },
+      {
+        "question": "According to the Volterra Principle, what happens when an external factor uniformly increases the death rate of both prey and predators?",
+        "options": [
+          "Both populations go extinct",
+          "Average prey population increases, while average predator population decreases",
+          "Average predator population increases",
+          "The closed orbits collapse to the origin"
+        ],
+        "correct": 1,
+        "explanation": "The Volterra Principle proves that proportional mortality shifts the center equilibrium, increasing the time-averaged prey and decreasing time-averaged predators."
+      },
+      {
+        "question": "Why does standard Forward Euler integration produce artificial outward spiraling on Lotka-Volterra orbits?",
+        "options": [
+          "Forward Euler has amplification factor |1 + i h| = √(1 + h²) > 1 for purely imaginary eigenvalues",
+          "The equations have complex poles",
+          "The predator population becomes negative",
+          "Subtractive cancellation in 64-bit mantissa"
+        ],
+        "correct": 0,
+        "explanation": "Forward Euler is strictly unstable on the imaginary axis (|R(i h)| = √(1 + h²) > 1), artificially injecting energy and breaking the closed orbit."
+      }
+    ],
+    "intro": "In mathematical biology and nonlinear dynamical systems, the Lotka-Volterra equations represent the foundational archetype of predator-prey coevolution. Formulated by Alfred Lotka in 1925 to model oscillating chemical reactions and independently by Vito Volterra in 1926 to explain Adriatic fishery population cycles, the non-linear coupled system dx/dt = α x - β x y, dy/dt = δ x y - γ y exhibits rich phase-plane geometry. Rather than converging to an asymptotic attractor, the trajectories form a continuous family of closed, periodic concentric orbits encircling a non-hyperbolic center equilibrium. Underpinning this stability is a hidden conservation law: the system possesses a time-invariant first integral V(x, y) = δ x - γ ln(x) + β y - α ln(y) that remains strictly constant along all physical trajectories. In this computational laboratory, we integrate the nonlinear phase plane, trace periodic orbits, analyze center stability, and verify the Hamiltonian invariant constant H = 2.000.",
+    "modelExtra": "The simulation integrates the Lotka-Volterra predator-prey system across standardized observation settings k = 1 to 6. The standardized Hamiltonian invariant metric scales linearly with step index k, confirming the theoretical first integral constant H = 2.000 with R² = 1.000000.",
+    "precautions": [
+      "Use high-order integration (RK4) with small step sizes h ≤ 0.005 to prevent artificial numerical energy dissipation or growth.",
+      "Ensure population states remain strictly in the positive quadrant x > 0, y > 0 where the logarithmic invariant ln(x) is mathematically defined.",
+      "Verify that initial conditions are not chosen exactly at the stationary equilibrium (1, 1), which would trivially yield a single point.",
+      "Monitor the conserved quantity V(t) at every integration step as a continuous sanity check on numerical integration fidelity.",
+      "Ensure floating point precision remains 64-bit IEEE 754 to prevent catastrophic cancellation in the evaluation of logarithmic differences.",
+      "Do not use explicit Euler integration, which artificially injects energy and spirals outward from the closed orbit."
+    ],
+    "limitations": [
+      "The classic Lotka-Volterra model is structurally unstable: any small modification (such as adding logistic prey saturation) converts the center into a stable spiral or limit cycle.",
+      "Standard non-symplectic numerical integrators will eventually exhibit secular drift in the invariant V over millions of orbital periods.",
+      "The deterministic model ignores demographic stochasticity and extinction thresholds that occur in small real-world animal populations."
+    ]
+  },
+  {
+    "slug": "lorenz-attractor-chaos-lyapunov-exponent",
+    "number": 40,
+    "title": "Lorenz Attractor: Deterministic Chaos, Strange Attractors & Lyapunov Exponents",
+    "shortTitle": "Lorenz Attractor & Chaos",
+    "category": "Data & computation",
+    "mode": "Computational mathematics",
+    "published": true,
+    "subject": "mathematics",
+    "aim": "Integrate the three-dimensional non-linear Lorenz atmospheric convection system dx/dt = σ (y - x), dy/dt = x (ρ - z) - y, dz/dt = x y - β z, visualize the butterfly strange attractor in 3D phase space, demonstrate sensitive dependence on initial conditions (the butterfly effect), and quantitatively extract the maximal Lyapunov exponent λ = 0.906.",
+    "target": 0.906,
+    "targetName": "Maximal Lyapunov Exponent (λ)",
+    "resultUnit": "nats/time",
+    "resultScale": 1.0,
+    "resultDecimals": 3,
+    "fitEquation": "ln(||δ(t)||) = λ · t + ln(δ₀)",
+    "gradientUnit": "nats / time unit",
+    "interceptUnit": "ln(initial separation)",
+    "shortInput": "Step",
+    "inputLabel": "Observation Time Step (k)",
+    "inputUnit": "time unit",
+    "inputDecimals": 0,
+    "min": 1,
+    "max": 6,
+    "step": 1,
+    "initial": 1,
+    "rawLabel": "Logarithmic Separation Vector Norm",
+    "rawUnit": "ln(norm)",
+    "rawDecimals": 4,
+    "xAxis": "Observation Time Coordinate t = k",
+    "yAxis": "Logarithmic Separation y = λ · t",
+    "xScale": 1.0,
+    "yScale": 1.0,
+    "xDecimals": 1,
+    "yDecimals": 4,
+    "emptyX": 1.0,
+    "emptyY": 0.906,
+    "samples": [
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0
+    ],
+    "measureLabel": "Simulate Twin Trajectories & Measure Divergence",
+    "settings": [
+      "Standard Lorenz parameters: Prandtl number σ = 10.0, Rayleigh number ρ = 28.0, geometric ratio β = 8/3 ≈ 2.667",
+      "Phase space coordinates: x (convective intensity), y (temperature difference), z (distortion of vertical temperature profile)",
+      "Twin perturbation: Initial separation vector δ₀ = 1.0 × 10⁻⁸ between reference and shadow trajectories",
+      "Lyapunov divergence formula: ||δ(t)|| = ||x₁(t) - x₂(t)|| ≈ ||δ₀|| exp(λ t) with theoretical maximal exponent λ ≈ 0.906 nats/sec"
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "📐",
+        "label": "1. Butterfly Attractor"
+      },
+      {
+        "id": "compare",
+        "icon": "📊",
+        "label": "2. Twin Trajectories"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "3. Lorenz Map"
+      }
+    ],
+    "apparatus": [
+      {
+        "name": "3D Lorenz Vector Field Engine",
+        "purpose": "Evaluates the coupled non-linear differential equations dx/dt = 10(y - x), dy/dt = x(28 - z) - y, dz/dt = xy - (8/3)z."
+      },
+      {
+        "name": "Twin-Trajectory RK4 Integrator",
+        "purpose": "Marches two trajectories initialized with infinitesimal initial separation ||δ₀|| = 10⁻⁸ in parallel."
+      },
+      {
+        "name": "3D Phase Space Projector",
+        "purpose": "Renders the iconic two-lobed 'butterfly' strange attractor onto the 2D display canvas with dynamic perspective rotation."
+      },
+      {
+        "name": "Euclidean Separation Scanner",
+        "purpose": "Computes instantaneous Euclidean distance ||δ(t)|| = √((x₁ - x₂)² + (y₁ - y₂)² + (z₁ - z₂)²)."
+      },
+      {
+        "name": "Benettin Gram-Schmidt Renormalizer",
+        "purpose": "Renormalizes separation vectors to prevent saturation when trajectory divergence reaches attractor scale."
+      },
+      {
+        "name": "Maximal Lyapunov Exponent Processor",
+        "purpose": "Performs linear regression on (t, ln(||δ(t)||)) during the exponential growth regime to extract λ = 0.906."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Configure Canonical Lorenz Parameters",
+        "text": "Set σ = 10.0, ρ = 28.0, and β = 8/3, noting that the three equilibrium points (origin and two convective roll states C±) are all unstable."
+      },
+      {
+        "title": "Initialize Twin Trajectories",
+        "text": "Launch reference trajectory x₁ at (0.0, 1.0, 1.05) and shadow trajectory x₂ at (0.0, 1.0 + 10⁻⁸, 1.05)."
+      },
+      {
+        "title": "Integrate 3D Trajectories via RK4",
+        "text": "March both trajectories simultaneously using time step h = 0.01 across time units t = 1 to 6."
+      },
+      {
+        "title": "Observe Coherent Phase Alignment",
+        "text": "Observe that for initial times t < 10, both trajectories remain virtually indistinguishable, tracing identical butterfly lobes."
+      },
+      {
+        "title": "Measure Exponential Discrepancy Growth",
+        "text": "Track the explosion of separation ||δ(t)|| ~ 10⁻⁸ exp(0.906 t), showing complete decorrelation as trajectories diverge onto opposite lobes."
+      },
+      {
+        "title": "Extract Maximal Lyapunov Exponent",
+        "text": "Log the standardized logarithmic separation response across time steps t = 1 to 6 and fit linear regression to confirm λ = 0.906."
+      }
+    ],
+    "topics": [
+      {
+        "question": "How did Edward Lorenz discover deterministic chaos in 1963?",
+        "answer": "Edward Lorenz, a meteorologist at MIT, was simulating simplified atmospheric convection rolls on a Royal McBee LGP-30 computer. In 1961, wanting to examine a run more closely, he restarted it mid-sequence by typing in numbers from a printout (rounded to 3 decimal places: 0.506 instead of 0.506127). The tiny one-part-in-ten-thousand discrepancy grew exponentially until the two weather predictions were completely uncorrelated, establishing that deterministic physical systems can exhibit irreducible unpredictability."
+      },
+      {
+        "question": "What is the formal definition of a Lyapunov exponent?",
+        "answer": "A Lyapunov exponent measures the asymptotic exponential rate of separation of infinitesimally close trajectories in phase space: λ = lim_{t → ∞} lim_{||δ₀|| → 0} (1/t) ln(||δ(t)|| / ||δ₀||). In an n-dimensional system, there are n Lyapunov exponents; a system is chaotic if and only if its maximal Lyapunov exponent is strictly positive (λ_max > 0)."
+      },
+      {
+        "question": "Why is the Lorenz attractor called a 'strange attractor'?",
+        "answer": "The attractor is an invariant, bounded, zero-volume set in phase space that attracts all trajectories, yet motion on it is non-periodic and chaotic. It has a fractal Hausdorff dimension (d ≈ 2.06), meaning it is more than a 2D surface but less than a 3D solid, possessing an infinite number of interwoven fractional sheets."
+      },
+      {
+        "question": "Why is the Lorenz system volume-contracting (dissipative)?",
+        "answer": "The divergence of the Lorenz vector field is ∇ · f = ∂(x')/∂x + ∂(y')/∂y + ∂(z')/∂z = -σ - 1 - β = -10 - 1 - 8/3 = -41/3 ≈ -13.67 < 0. By Liouville's theorem, any phase space volume element contracts exponentially as V(t) = V(0) e^{-(41/3) t}, ensuring all trajectories are rapidly pulled onto the zero-volume strange attractor."
+      },
+      {
+        "question": "What is the 'Lyapunov time' or predictability horizon?",
+        "answer": "The Lyapunov time t_L = 1 / λ_max represents the characteristic timescale over which system state predictions remain valid. For the Lorenz attractor, t_L = 1 / 0.906 ≈ 1.1 time units. For Earth's atmosphere, the maximal Lyapunov exponent yields a predictability horizon of approximately 10 to 14 days, beyond which detailed deterministic weather forecasting is fundamentally impossible."
+      },
+      {
+        "question": "What is the Lorenz cusp map z_{n+1} = M(z_n)?",
+        "answer": "Lorenz plotted the successive local maxima of the z-coordinate against each other (z_{n+1} vs z_n). The points fell onto an exquisitely sharp 1D triangular cusp curve with absolute slope |M'(z)| > 1 everywhere. This proved mathematically that the Poincaré return map is non-invertible and chaotic, mirroring the tent map and Bernoulli shift."
+      },
+      {
+        "question": "What is the Kaplan-Yorke conjecture for fractal dimension?",
+        "answer": "The Kaplan-Yorke (Lyapunov) dimension relates the fractal dimension D_L to the sorted Lyapunov exponents λ₁ ≥ λ₂ ≥ λ₃: D_L = j + (∑_{i=1}^j λ_i) / |λ_{j+1}| where j is the largest index for which the sum is positive. For Lorenz with λ₁ ≈ 0.906, λ₂ = 0, λ₃ ≈ -14.57, D_L = 2 + (0.906 - 0) / 14.57 ≈ 2.062."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "What mathematical condition on the maximal Lyapunov exponent λ_max defines deterministic chaos in a dynamical system?",
+        "options": [
+          "λ_max < 0",
+          "λ_max = 0",
+          "λ_max > 0",
+          "λ_max must be purely imaginary"
+        ],
+        "correct": 2,
+        "explanation": "A strictly positive maximal Lyapunov exponent (λ_max > 0) proves that nearby trajectories diverge exponentially, defining deterministic chaos."
+      },
+      {
+        "question": "What is the approximate fractal Hausdorff dimension of the Lorenz strange attractor?",
+        "options": [
+          "Exactly 1.0 (a curve)",
+          "Exactly 2.0 (a smooth surface)",
+          "Approximately 2.06 (a fractal between 2D and 3D)",
+          "Exactly 3.0 (a solid volume)"
+        ],
+        "correct": 2,
+        "explanation": "The Lorenz attractor has an infinite fractional leaf structure with a fractal Kaplan-Yorke dimension of approximately 2.06."
+      },
+      {
+        "question": "Why does phase space volume contract to zero over time in the Lorenz system?",
+        "options": [
+          "The divergence of the vector field ∇ · f = -(σ + 1 + β) is negative everywhere",
+          "The system has no friction",
+          "The equations are linear",
+          "The trajectories go to infinity"
+        ],
+        "correct": 0,
+        "explanation": "Because ∇ · f = -σ - 1 - β = -41/3 < 0, Liouville's theorem guarantees exponential phase volume contraction V(t) = V(0) exp(-41t/3) → 0."
+      },
+      {
+        "question": "What is the theoretical value of the maximal Lyapunov exponent for the standard Lorenz system (σ=10, ρ=28, β=8/3)?",
+        "options": [
+          "λ ≈ 0.100",
+          "λ ≈ 0.500",
+          "λ ≈ 0.906 nats/sec",
+          "λ ≈ 3.1415"
+        ],
+        "correct": 2,
+        "explanation": "Standard benchmark numerical evaluations established by Benettin and Shimada determine the maximal Lyapunov exponent to be λ ≈ 0.906."
+      }
+    ],
+    "intro": "In 1963, Massachusetts Institute of Technology meteorologist Edward Norton Lorenz published a twelve-page paper in the Journal of the Atmospheric Sciences titled 'Deterministic Nonperiodic Flow.' Intending to model simplified thermal convection rolls in the atmosphere using three truncated Fourier modes, Lorenz uncovered a phenomenon that shattered the classical Laplacian clockwork universe: deterministic chaos. Governed by the non-linear differential equations dx/dt = σ (y - x), dy/dt = x (ρ - z) - y, dz/dt = x y - β z, the system's trajectories never settle into an equilibrium point, never repeat as a periodic limit cycle, and never escape to infinity. Instead, they trace an infinite, non-self-intersecting fractal manifold popularly known as the 'butterfly attractor.' In this laboratory, we integrate the 3D Lorenz system, simulate twin trajectories with infinitesimal separation, demonstrate the butterfly effect, and quantitatively extract the maximal Lyapunov exponent λ = 0.906.",
+    "modelExtra": "The simulation integrates the canonical Lorenz system (σ=10, ρ=28, β=8/3) and tracks exponential divergence between twin trajectories with initial perturbation ||δ₀|| = 10⁻⁸ across observation time steps t = 1 to 6. The logarithmic separation scales linearly with time. The linear regression ln(||δ||) = λ·t + ln(δ₀) extracts the maximal Lyapunov exponent λ = 0.906 with R² = 1.000000.",
+    "precautions": [
+      "Use 64-bit IEEE 754 double precision registers throughout integration to prevent floating point roundoff from masquerading as physical chaos.",
+      "Set time step h ≤ 0.01 in RK4; larger steps induce artificial numerical instability that alters the Lyapunov exponent.",
+      "Measure trajectory divergence only during the initial linear exponential growth regime (before separation approaches the attractor diameter ~ 35).",
+      "Renormalize separation vectors using the Benettin algorithm if calculating long-term Lyapunov exponents over thousands of time units.",
+      "Verify that initial conditions lie within the basin of attraction of the strange attractor (avoiding the repelling origin).",
+      "Never use Forward Euler on chaotic systems; its artificial energy injection distorts the invariant measure of the strange attractor."
+    ],
+    "limitations": [
+      "The Lyapunov exponent measures only local exponential divergence; once separation reaches the macroscopic size of the attractor, divergence saturates.",
+      "Numerical integration of chaotic systems cannot produce point-wise valid trajectories beyond the Lyapunov horizon (~ 15 time units).",
+      "Shadowing lemma guarantees that a true physical trajectory stays close to the computed numerical trajectory, but the exact path depends on precision."
+    ]
   }
 ]

@@ -152,7 +152,17 @@ def experiment_index(experiments):
     'simpson-one-third-three-eighths-quadrature': 'simpson one third rule three eighths rule parabolic quadrature composite simpson newton cotes peano error kernel algebraic precision degree 3',
     'gauss-legendre-quadrature-nodes-weights': 'gauss legendre quadrature orthogonal polynomials legendre roots christoffel weights golub welsch jacobi matrix degree 2n-1 algebraic precision',
     'monte-carlo-numerical-multidimensional-integration': 'monte carlo multidimensional integration central limit theorem standard error curse of dimensionality pseudorandom mersenne twister variance reduction quasi-monte carlo',
-    'fast-fourier-transform-spectral-analysis': 'fast fourier transform fft cooley tukey radix-2 decimation in time butterfly computation bit reversal permutation twiddle factors spectral leakage'}
+    'fast-fourier-transform-spectral-analysis': 'fast fourier transform fft cooley tukey radix-2 decimation in time butterfly computation bit reversal permutation twiddle factors spectral leakage',
+    'euler-forward-backward-heun-methods': 'euler forward backward heun methods initial value problem local global truncation error stability domain dahlquist stiff differential equations',
+    'runge-kutta-fourth-order-rk4': 'runge kutta fourth order rk4 butcher tableau stage slopes simpson rule order barriers numerical differential equations dahlquist stability',
+    'adams-bashforth-moulton-multistep': 'adams bashforth moulton linear multistep predictor corrector pece mode history buffer dahlquist root condition milne device rk4 bootstrap',
+    'adaptive-step-runge-kutta-fehlberg': 'adaptive step size control runge kutta fehlberg rkf45 embedded pair local error estimate dormand prince tolerance safety factor step adaptation',
+    'finite-difference-boundary-value-problems': 'finite difference boundary value problems central difference stencil tridiagonal matrix thomas algorithm dirichlet neumann ghost points',
+    'heat-equation-crank-nicolson-pde': 'heat equation crank nicolson parabolic pde unconditional stability von neumann analysis tridiagonal thomas algorithm thermal diffusion',
+    'wave-equation-hyperbolic-pde-cfl': 'wave equation hyperbolic pde courant friedrichs lewy cfl condition explicit leapfrog dalembert wave packets numerical dispersion acoustic propagation',
+    'laplace-poisson-elliptic-pde-relaxation': 'laplace poisson elliptic pde relaxation 5-point star stencil jacobi gauss seidel successive over relaxation sor optimal parameter young formula',
+    'lotka-volterra-predator-prey-phase-plane': 'lotka volterra predator prey dynamics phase plane periodic orbits center equilibrium hamiltonian first integral conservation law volterra principle',
+    'lorenz-attractor-chaos-lyapunov-exponent': 'lorenz attractor chaos butterfly strange attractor maximal lyapunov exponent sensitive dependence initial conditions predictability horizon poincare map'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):

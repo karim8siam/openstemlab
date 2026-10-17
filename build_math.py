@@ -41,13 +41,19 @@ def observation(c, value):
 
     step = int(round(val))
 
-    # 3. Order h convergence (Labs 21, 24, 26, 27, 28)
+    # 3. Order h convergence (Labs 21, 24, 26, 27, 28, 31, 32, 33, 34, 35, 36)
     order_h_targets = {
         'lagrange-polynomial-interpolation-error': 4.000,
         'cubic-spline-interpolation-natural-clamped': 4.000,
         'trapezoidal-rule-romberg-extrapolation': 2.000,
         'simpson-one-third-three-eighths-quadrature': 4.000,
-        'gauss-legendre-quadrature-nodes-weights': 6.000
+        'gauss-legendre-quadrature-nodes-weights': 6.000,
+        'euler-forward-backward-heun-methods': 1.000,
+        'runge-kutta-fourth-order-rk4': 4.000,
+        'adams-bashforth-moulton-multistep': 4.000,
+        'adaptive-step-runge-kutta-fehlberg': 5.000,
+        'finite-difference-boundary-value-problems': 2.000,
+        'heat-equation-crank-nicolson-pde': 2.000
     }
     if slug in order_h_targets:
         cur_x = math.log(0.20) - (step - 1) * math.log(2.0)
@@ -78,7 +84,7 @@ def observation(c, value):
         raw = rnd(math.exp(x), 6)
         return {'input': value, 'raw': raw, 'x': x, 'y': y}
 
-    # 7. Linear step metrics (Labs 15, 16, 19, 20, 22, 23, 25, 29)
+    # 7. Linear step metrics (Labs 15, 16, 19, 20, 22, 23, 25, 29, 37, 38, 39, 40)
     linear_slopes = {
         'gauss-seidel-successive-relaxation': 1.268,
         'power-iteration-dominant-eigenvalue': 1.500,
@@ -87,7 +93,11 @@ def observation(c, value):
         'newton-divided-differences-interpolation': 0.1667,
         'runge-phenomenon-chebyshev-nodes': 0.500,
         'least-squares-polynomial-curve-fitting': 2.500,
-        'monte-carlo-numerical-multidimensional-integration': 0.500
+        'monte-carlo-numerical-multidimensional-integration': 0.500,
+        'wave-equation-hyperbolic-pde-cfl': 1.000,
+        'laplace-poisson-elliptic-pde-relaxation': 1.729,
+        'lotka-volterra-predator-prey-phase-plane': 2.000,
+        'lorenz-attractor-chaos-lyapunov-exponent': 0.906
     }
     if slug in linear_slopes:
         x = float(step)
@@ -165,9 +175,9 @@ def formula(c, f):
         return f"FLOPs(n) = {fmt(f['m'], 4)} · (n³/1000) + {fmt(f['b'], 4)} ⟹ C = {fmt(val, c['resultDecimals'])} FLOPs/n³ (theoretical C = {c['target']})"
     elif slug == 'fast-fourier-transform-spectral-analysis':
         return f"FLOPs(N) = {fmt(f['m'], 4)} · (N log₂(N)/1000) + {fmt(f['b'], 4)} ⟹ C = {fmt(val, c['resultDecimals'])} (theoretical C = {c['target']})"
-    elif slug in ['lagrange-polynomial-interpolation-error', 'cubic-spline-interpolation-natural-clamped', 'trapezoidal-rule-romberg-extrapolation', 'simpson-one-third-three-eighths-quadrature', 'gauss-legendre-quadrature-nodes-weights']:
+    elif slug in ['lagrange-polynomial-interpolation-error', 'cubic-spline-interpolation-natural-clamped', 'trapezoidal-rule-romberg-extrapolation', 'simpson-one-third-three-eighths-quadrature', 'gauss-legendre-quadrature-nodes-weights', 'euler-forward-backward-heun-methods', 'runge-kutta-fourth-order-rk4', 'adams-bashforth-moulton-multistep', 'adaptive-step-runge-kutta-fehlberg', 'finite-difference-boundary-value-problems', 'heat-equation-crank-nicolson-pde']:
         return f"ln(E) = {fmt(f['m'], 4)} · ln(h) + {fmt(f['b'], 4)} ⟹ α = {fmt(val, c['resultDecimals'])} (theoretical α = {c['target']})"
-    elif slug in ['gauss-seidel-successive-relaxation', 'power-iteration-dominant-eigenvalue', 'singular-value-decomposition-pseudoinverse', 'conjugate-gradient-krylov-optimization', 'newton-divided-differences-interpolation', 'runge-phenomenon-chebyshev-nodes', 'least-squares-polynomial-curve-fitting', 'monte-carlo-numerical-multidimensional-integration']:
+    elif slug in ['gauss-seidel-successive-relaxation', 'power-iteration-dominant-eigenvalue', 'singular-value-decomposition-pseudoinverse', 'conjugate-gradient-krylov-optimization', 'newton-divided-differences-interpolation', 'runge-phenomenon-chebyshev-nodes', 'least-squares-polynomial-curve-fitting', 'monte-carlo-numerical-multidimensional-integration', 'wave-equation-hyperbolic-pde-cfl', 'laplace-poisson-elliptic-pde-relaxation', 'lotka-volterra-predator-prey-phase-plane', 'lorenz-attractor-chaos-lyapunov-exponent']:
         return f"y = {fmt(f['m'], 4)} · k + {fmt(f['b'], 4)} ⟹ Target = {fmt(val, c['resultDecimals'])} (theoretical = {c['target']})"
     else:
         return f"ln(ε_(k+1)) = {fmt(f['m'], 4)} · ln(ε_k) + {fmt(f['b'], 4)} ⟹ α = {fmt(val, c['resultDecimals'])} (theoretical α = {c['target']})"
@@ -183,7 +193,7 @@ def worked(c, row):
         return f"For dimension n = {k}: Normalized cubic coordinate x = n³/1000 = {k}³/1000 = {row['x']:.3f}. Cumulative operations y = C · x = {row['y']:.3f} kFLOPs."
     elif slug == 'fast-fourier-transform-spectral-analysis':
         return f"For transform size N = {k}: Normalized complexity coordinate x = N log₂(N)/1000 = {row['x']:.3f}. Measured operations y = C · x = {row['y']:.3f} kFLOPs."
-    elif slug in ['lagrange-polynomial-interpolation-error', 'cubic-spline-interpolation-natural-clamped', 'trapezoidal-rule-romberg-extrapolation', 'simpson-one-third-three-eighths-quadrature', 'gauss-legendre-quadrature-nodes-weights']:
+    elif slug in ['lagrange-polynomial-interpolation-error', 'cubic-spline-interpolation-natural-clamped', 'trapezoidal-rule-romberg-extrapolation', 'simpson-one-third-three-eighths-quadrature', 'gauss-legendre-quadrature-nodes-weights', 'euler-forward-backward-heun-methods', 'runge-kutta-fourth-order-rk4', 'adams-bashforth-moulton-multistep', 'adaptive-step-runge-kutta-fehlberg', 'finite-difference-boundary-value-problems', 'heat-equation-crank-nicolson-pde']:
         return f"For step k = {k}: Logarithmic mesh coordinate x = ln(h) = {row['x']:.4f}. Logarithmic error y = ln(E) = α · ln(h) + ln(C) = {row['y']:.4f}. Empirical error: {row['raw']:.6f}."
     else:
         return f"For step k = {k}: Current coordinate x = {row['x']:.4f}. Mathematical model response y = {row['y']:.4f}. Output reading: {row['raw']:.4f}."

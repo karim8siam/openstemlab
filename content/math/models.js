@@ -37,7 +37,19 @@ const PARAMS = {
   'simpson-one-third-three-eighths-quadrature': { type: 'order_h', alpha: 4.000, lnC: -1.5000, ref: 4.000 },
   'gauss-legendre-quadrature-nodes-weights': { type: 'order_h', alpha: 6.000, lnC: -1.5000, ref: 6.000 },
   'monte-carlo-numerical-multidimensional-integration': { type: 'linear_step', slope: 0.500, ref: 0.500 },
-  'fast-fourier-transform-spectral-analysis': { type: 'fft_ops', coeff: 5.000, ref: 5.000 }
+  'fast-fourier-transform-spectral-analysis': { type: 'fft_ops', coeff: 5.000, ref: 5.000 },
+
+  // Group IV: Differential Equations, Dynamical Systems & Chaos
+  'euler-forward-backward-heun-methods': { type: 'order_h', alpha: 1.000, lnC: -1.5000, ref: 1.000 },
+  'runge-kutta-fourth-order-rk4': { type: 'order_h', alpha: 4.000, lnC: -1.5000, ref: 4.000 },
+  'adams-bashforth-moulton-multistep': { type: 'order_h', alpha: 4.000, lnC: -1.5000, ref: 4.000 },
+  'adaptive-step-runge-kutta-fehlberg': { type: 'order_h', alpha: 5.000, lnC: -1.5000, ref: 5.000 },
+  'finite-difference-boundary-value-problems': { type: 'order_h', alpha: 2.000, lnC: -1.5000, ref: 2.000 },
+  'heat-equation-crank-nicolson-pde': { type: 'order_h', alpha: 2.000, lnC: -1.5000, ref: 2.000 },
+  'wave-equation-hyperbolic-pde-cfl': { type: 'linear_step', slope: 1.000, ref: 1.000 },
+  'laplace-poisson-elliptic-pde-relaxation': { type: 'linear_step', slope: 1.729, ref: 1.729 },
+  'lotka-volterra-predator-prey-phase-plane': { type: 'linear_step', slope: 2.000, ref: 2.000 },
+  'lorenz-attractor-chaos-lyapunov-exponent': { type: 'linear_step', slope: 0.906, ref: 0.906 }
 };
 
 function predict(slug, input){
