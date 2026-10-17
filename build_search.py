@@ -9,6 +9,8 @@ def experiment_index(experiments):
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/cs/experiments.json').read_text())})
  if (ROOT/'content/chemistry/experiments.json').exists():
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/chemistry/experiments.json').read_text())})
+ if (ROOT/'content/math/experiments.json').exists():
+  configs.update({c['slug']:c for c in json.loads((ROOT/'content/math/experiments.json').read_text())})
  index=[]
  aliases={'simple-pendulum':'gravity g oscillation bob string time period','bifilar-suspension':'rotation inertia rod oscillation strings','young-modulus':'youngs modulus elasticity stress strain wire stretching','stokes-viscosity':'stokes law fluid liquid sphere terminal velocity','convex-lens':'optics focal length lens image uv method','photoelectric-effect':'photon light planck constant stopping potential work function','ohms-law':'ohm ohms law current voltage resistor resistance circuit ammeter voltmeter','metre-bridge':'meter metre wheatstone bridge null galvanometer unknown resistance','rc-charging':'capacitor capacitance resistor rc charge time constant exponential','glass-slab':'refraction refractive index apparent real depth glass microscope','diffraction-grating':'diffraction interference grating spectrum wavelength laser light','hookes-law':'hooke hookes law spring constant stiffness elasticity elongation extension load force','density-measurement':'density mass volume archimedes copper displacement solid balance cylinder','vernier-micrometer':'vernier caliper micrometer screw gauge least count zero error pi circumference diameter length measurement metrology','friction-laws':'friction laws amontons coulomb sliding kinetic static normal force coefficient dynamometer','principle-of-moments':'principle moments torque center gravity lever parallel forces fulcrum meter rule rotational equilibrium balance steelyard','force-table':'force table concurrent forces vector addition resultant equilibrant components pulleys ring equilibrium parallelogram law','equilibrium-forces':'parallel forces non-concurrent rigid body equilibrium beam reactions dynamometers support moments translational rotational static equilibrium',
   'free-fall':'free fall acceleration gravity g spark timer drop tower kinematics uniformly accelerated motion plummet photogate',
@@ -120,7 +122,17 @@ def experiment_index(experiments):
     'electrochemical-cell-thermodynamics-nernst': 'electrochemical cell thermodynamics daniell cell nernst equation temperature coefficient of emf gibbs free energy enthalpy entropy of reaction salt bridge liquid junction electrometer',
     'transference-numbers-hittorf-moving-boundary': 'transference numbers transport numbers moving boundary hittorf method kohlrausch regulating condition proton hopping grotthuss cadmium anode autogenic boundary',
     'solubility-product-conductometric-silver-halides': 'solubility product ksp silver chloride agcl conductometry van t hoff enthalpy of solution sparingly soluble salts fajans rules limiting molar conductivity',
-    'chemical-kinetics-iodine-clock-persulfate':'chemical kinetics iodine clock persulfate iodide reaction order initial rates rate constant thiosulfate starch bronsted bjerrum salt effect transition state photodiode timer'}
+    'chemical-kinetics-iodine-clock-persulfate':'chemical kinetics iodine clock persulfate iodide reaction order initial rates rate constant thiosulfate starch bronsted bjerrum salt effect transition state photodiode timer',
+    'bisection-method-root-convergence': 'bisection method bolzano intermediate value theorem root finding interval halving linear error convergence sign change bracket width numerical analysis cubic root',
+    'newton-raphson-quadratic-convergence': 'newton raphson method quadratic convergence tangent line babylonian square root root finding derivative order alpha taylor series local attraction basin',
+    'secant-method-superlinear-convergence': 'secant method superlinear convergence golden ratio order phi derivative free finite difference chord projection cardano cubic root finding ostrowski efficiency',
+    'regula-falsi-false-position-bracketing': 'regula falsi false position illinois acceleration method endpoint stagnation linear interpolation bracketing superlinear convergence bolzano theorem pegasus anderson bjorck',
+    'fixed-point-iteration-banach-contraction': 'fixed point iteration banach contraction mapping theorem picard successive approximations lipschitz constant cobweb diagram metric space ostrowski spectral radius',
+    'muller-method-complex-polynomial-roots': 'muller method parabolic interpolation complex roots polynomial divided differences tribonacci constant superlinear convergence quadratic formula root selection',
+    'bairstow-method-polynomial-quadratic-factors': 'bairstow method polynomial quadratic factors synthetic division double recurrence newton raphson jacobian matrix cramer rule deflation complex conjugate roots',
+    'brent-dekker-hybrid-root-finding': 'brent dekker method hybrid root finding inverse quadratic interpolation iqi bisection secant guaranteed convergence scipy brentq matlab fzero fallback heuristics',
+    'halley-method-cubic-root-convergence': 'halley method cubic convergence second derivative householder iteration osculating hyperbola rational approximation pade approximant curvature correction royal society',
+    'steffensen-method-accelerated-convergence': 'steffensen method aitken delta squared process accelerated convergence quadratic derivative free forward difference fixed point extrapolation error doubling'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):
@@ -129,6 +141,9 @@ def experiment_index(experiments):
   elif '/chemistry/' in exp.get('page_path',''):
    sub='chemistry'
    sub_name='Chemistry'
+  elif '/mathematics/' in exp.get('page_path',''):
+   sub='mathematics'
+   sub_name='Mathematics'
   else:
    sub='physics'
    sub_name='Physics'
