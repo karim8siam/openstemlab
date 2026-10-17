@@ -140,6 +140,58 @@ function drawComparativeSim(t,p,v,ink,soft,orange){
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
+ if(cfg.slug==='string-matching-automata'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'STRING MATCHING PARADIGMS & ARCHITECTURES (n = '+p.input+', m = 20)','#e2f0f8',11);
+
+  const n=p.input;
+  const m_pat=20;
+  const c_kmp=Math.round(n + m_pat);
+  const c_bm=Math.round(n / 3.5 + m_pat * 1.5);
+  const c_rk=Math.round(n + m_pat * 2);
+  const c_ac=Math.round(n + m_pat);
+  const c_naive=Math.round(n * (m_pat / 2.5));
+
+  const strategies=[
+   {name:'Boyer-Moore (Bad Char + Good Suffix)',col:'#10b981',cost:c_bm,scale:'O(n/m) sublinear average',desc:'Right-to-left scan; skips up to m characters per mismatch on large alphabets'},
+   {name:'Knuth-Morris-Pratt (π-Prefix Array)',col:'#38bdf8',cost:c_kmp,scale:'O(n + m) linear stream',desc:'Monotonic text pointer i; π-table fallback; zero text buffer rewinding'},
+   {name:'Rabin-Karp Rolling Hash (Horner)',col:'#f97316',cost:c_rk,scale:'O(n + m) expected',desc:'Polynomial rolling hash; O(1) window slide; multi-pattern capable'},
+   {name:'Aho-Corasick Multi-Pattern Trie',col:'#a855f7',cost:c_ac,scale:'O(n + M) dictionary search',desc:'Trie failure & output links; simultaneous multi-string scanning; Snort NIDS'},
+   {name:'Naive Brute-Force (Worst Case)',col:'#ef4444',cost:c_naive,scale:'Θ(n · m) worst-case',desc:'Full text pointer rewind on mismatch; L1 cache line thrashing'}
+  ];
+
+  strategies.forEach((item,idx)=>{
+   const rowY=cY+16+idx*42;
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+12)+'" fill="#dcebf2" font-size="8.5" font-weight="bold">'+item.name+'</text>';
+   const costStr=item.cost>=1000000?(item.cost/1000000).toFixed(1)+'M':item.cost>=1000?(item.cost/1000).toFixed(1)+'k':item.cost;
+   svg+='<text x="'+(cX+cW-15)+'" y="'+(rowY+12)+'" text-anchor="end" fill="'+item.col+'" font-size="8.5" font-family="monospace" font-weight="bold">'+costStr+' comps ('+item.scale+')</text>';
+   
+   const barX=cX+15,barY=rowY+16,barMaxW=cW-30;
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barMaxW+'" height="7" rx="2" fill="#16242c"/>';
+   const maxVal=Math.max(1000, c_naive);
+   const frac=Math.min(1.0,Math.log10(item.cost+1)/Math.log10(maxVal+1));
+   const fillW=Math.max(4,frac*barMaxW);
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+fillW+'" height="7" rx="2" fill="'+item.col+'"/>';
+  });
+
+  const bX=460,bY=45,bW=220,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">STREAMING SPEEDUP VS NAIVE</text>';
+  const speedup=(c_naive / Math.max(1, c_kmp)).toFixed(1);
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+speedup+'×</text>';
+  svg+='<text x="'+(bX+95)+'" y="'+(bY+46)+'" fill="#dcebf2" font-size="10">Zero Rewind</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#7e9bab" font-size="9">FAILURE TABLE FOOTPRINT</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="16" font-family="monospace" font-weight="bold">π[0..19] = 80 Bytes</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+124)+'" fill="#8ba5b5" font-size="8">O(m) auxiliary table fits in CPU L1 cache</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+136)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+136)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+154)+'" fill="#7e9bab" font-size="9">AMORTIZED COMPLEXITY BOUND</text>';
+  svg+=text(bX+bW/2,bY+180,'Comparisons ≤ 2n in text scan','#10b981',9.5);
+  svg+=text(bX+bW/2,bY+202,'Monotonic text pointer i ∈ [0..n-1]',orange,8.5);
+  svg+=text(360,305,'Comparative Invariant: KMP guarantees linear O(n + m) without rewinding text; Boyer-Moore achieves sublinear O(n/m) on large alphabets',soft,10);
+  return svg;
+ }
+
  if(cfg.slug==='greedy-minimum-spanning-trees'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
   svg+=text(cX+cW/2,cY-14,'MINIMUM SPANNING TREE PARADIGMS & ARCHITECTURES (|V| = '+p.input+')','#e2f0f8',11);
@@ -757,6 +809,73 @@ function drawDynamicSandbox(t,p,v,ink,soft,orange){
  const cX=45,cY=45,cW=400,cH=230;
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+ if(cfg.slug==='string-matching-automata'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'KMP FAILURE FUNCTION (π-ARRAY) JUMP & FALLBACK EXPLORER','#e2f0f8',11);
+
+  svg+='<text x="'+(cX+15)+'" y="'+(cY+20)+'" fill="#10b981" font-size="8.5" font-weight="bold">PATTERN P = "ABABCABAB" · π-ARRAY PRECOMPUTATION IN O(m) TIME</text>';
+
+  const pat="ABABCABAB";
+  const pi=[0,0,1,2,0,1,2,3,4];
+  const tCells=pat.length;
+  const cellW=36, cellH=22, tblX=cX+20, tblY=cY+32;
+
+  svg+='<text x="'+(tblX-10)+'" y="'+(tblY+15)+'" text-anchor="end" fill="#64748b" font-size="7.5" font-family="monospace">P[j]:</text>';
+  svg+='<text x="'+(tblX-10)+'" y="'+(tblY+38)+'" text-anchor="end" fill="'+orange+'" font-size="7.5" font-family="monospace">π[j]:</text>';
+
+  for(let j=0; j<tCells; j++){
+   const xPos=tblX+j*cellW;
+   const isMatch=j<4;
+   const isMismatch=(j===4);
+   const bgCol=isMatch?'#064e3b':isMismatch?'#450a0a':'#0f172a';
+   const borderCol=isMatch?'#10b981':isMismatch?'#ef4444':'#1e293b';
+   
+   svg+='<rect x="'+xPos+'" y="'+tblY+'" width="'+(cellW-3)+'" height="'+cellH+'" rx="3" fill="'+bgCol+'" stroke="'+borderCol+'" stroke-width="1.2"/>';
+   svg+='<text x="'+(xPos+(cellW-3)/2)+'" y="'+(tblY+15)+'" text-anchor="middle" fill="#dcebf2" font-size="10" font-family="monospace" font-weight="bold">'+pat[j]+'</text>';
+
+   svg+='<rect x="'+xPos+'" y="'+(tblY+24)+'" width="'+(cellW-3)+'" height="'+cellH+'" rx="3" fill="#081016" stroke="#1e3340" stroke-width="1"/>';
+   svg+='<text x="'+(xPos+(cellW-3)/2)+'" y="'+(tblY+39)+'" text-anchor="middle" fill="'+(isMismatch?orange:'#38bdf8')+'" font-size="9" font-family="monospace" font-weight="bold">'+pi[j]+'</text>';
+
+   svg+='<text x="'+(xPos+(cellW-3)/2)+'" y="'+(tblY-4)+'" text-anchor="middle" fill="#475569" font-size="7" font-family="monospace">'+j+'</text>';
+  }
+
+  const txtDemoY=cY+88;
+  svg+='<text x="'+(cX+15)+'" y="'+(txtDemoY+12)+'" fill="#7dd3fc" font-size="8" font-weight="bold">TEXT STREAM T[0..11]: "A B A B D A B A C D A B"</text>';
+  const textChars=["A","B","A","B","D","A","B","A","C","D","A","B"];
+  for(let i=0; i<textChars.length; i++){
+   const xPos=tblX+i*28;
+   const isTMatch=(i<4);
+   const isTMis=(i===4);
+   const tBg=isTMatch?'#064e3b':isTMis?'#7f1d1d':'#0b161f';
+   const tBdr=isTMatch?'#10b981':isTMis?'#ef4444':'#1e293b';
+   svg+='<rect x="'+xPos+'" y="'+(txtDemoY+18)+'" width="25" height="20" rx="3" fill="'+tBg+'" stroke="'+tBdr+'" stroke-width="1"/>';
+   svg+='<text x="'+(xPos+12.5)+'" y="'+(txtDemoY+32)+'" text-anchor="middle" fill="#e2f0f8" font-size="9" font-family="monospace" font-weight="bold">'+textChars[i]+'</text>';
+  }
+
+  const cdX=cX+15, cdY=cY+155, cdW=cW-30, cdH=65;
+  svg+='<rect x="'+cdX+'" y="'+cdY+'" width="'+cdW+'" height="'+cdH+'" rx="4" fill="#050b0e" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(cdX+10)+'" y="'+(cdY+16)+'" fill="#ef4444" font-size="7.5" font-family="monospace">Mismatch at index i = 4: Text T[4] = \'D\' ≠ Pattern P[4] = \'C\'</text>';
+  svg+='<text x="'+(cdX+10)+'" y="'+(cdY+30)+'" fill="#10b981" font-size="7.5" font-family="monospace">Matched Prefix: P[0..3] = "ABAB" ⟶ Longest Proper Suffix/Prefix π[3] = 2 ("AB")</text>';
+  svg+='<text x="'+(cdX+10)+'" y="'+(cdY+44)+'" fill="'+orange+'" font-size="7.5" font-family="monospace">Fallback Jump: j ⟶ π[3] = 2. Text pointer i stays at 4 (ZERO BACKTRACKING!)</text>';
+  svg+='<text x="'+(cdX+10)+'" y="'+(cdY+58)+'" fill="#38bdf8" font-size="7.5" font-family="monospace">Next Comparison: T[4] (\'D\') vs P[2] (\'A\') directly without rewinding the text stream</text>';
+
+  const bX=465,bY=45,bW=210,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#7e9bab" font-size="9">ACTIVE PREFIX STATE</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+54)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">j = 4 ⟶ 2</text>';
+  svg+='<text x="'+(bX+105)+'" y="'+(bY+50)+'" fill="#10b981" font-size="10">(π[3] = 2)</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+80)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+80)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+98)+'" fill="#7e9bab" font-size="9">PRESERVED PREFIX</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+120)+'" fill="'+ink+'" font-size="14" font-family="monospace" font-weight="bold">"AB" (2 chars)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+136)+'" fill="#8ba5b5" font-size="8">Suffix of matched matches prefix of pattern</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+150)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+150)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+168)+'" fill="#7e9bab" font-size="9">TEXT POINTER INVARIANT</text>';
+  svg+=text(bX+bW/2,bY+190,'Text Pointer i Never Decrements','#10b981',9.5);
+  svg+=text(bX+bW/2,bY+208,'i strictly advances 0 ⟶ n-1',orange,8.5);
+  svg+=text(360,305,'Sandbox Invariant: π-failure function directs pattern alignment fallback; text pointer i never moves backwards',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='greedy-minimum-spanning-trees'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
@@ -1557,6 +1676,62 @@ function draw(t){
  const ink='#38bdf8',soft='#7e9bab',orange='#f97316';
  if(currentSimMode==='compare'){$('apparatusDiagram').innerHTML=drawComparativeSim(t,p,v,ink,soft,orange);return;}
  if(currentSimMode==='sandbox'){$('apparatusDiagram').innerHTML=drawDynamicSandbox(t,p,v,ink,soft,orange);return;}
+
+ if(cfg.slug==='string-matching-automata'){
+  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
+  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+  const n=p.input;
+  const m_pat=20;
+  const c_comps=v.raw;
+
+  svg+='<rect x="35" y="38" width="410" height="235" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+=text(240,24,'Knuth-Morris-Pratt Prefix Automaton & Text Stream Scanner');
+
+  svg+='<text x="50" y="56" fill="#7e9bab" font-size="8.5" font-weight="bold">TEXT STREAM T[0 .. '+(n-1)+'] · PATTERN P[0 .. 19] (m = 20) · SCAN POINTER i ∈ [0 .. '+(n-1)+']</text>';
+
+  const stX=50, stY=68, stW=380, stH=40;
+  svg+='<rect x="'+stX+'" y="'+stY+'" width="'+stW+'" height="'+stH+'" rx="4" fill="#081016" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(stX+10)+'" y="'+(stY+14)+'" fill="#7dd3fc" font-size="7.5" font-family="monospace">Incoming Stream: [ A C G T A C G T A A T C G G T A A C G T ... ]</text>';
+  svg+='<text x="'+(stX+10)+'" y="'+(stY+28)+'" fill="#10b981" font-size="7.5" font-family="monospace">Text Pointer i = '+(Math.min(n-1, 1420))+': Monotonically advancing (NO BACKTRACKING)</text>';
+
+  const patX=50, patY=116, patW=380, patH=48;
+  svg+='<rect x="'+patX+'" y="'+patY+'" width="'+patW+'" height="'+patH+'" rx="4" fill="#050b0e" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(patX+10)+'" y="'+(patY+15)+'" fill="'+orange+'" font-size="7.5" font-family="monospace">Pattern P[0..19]: [ A C G T A C G T A A T C G G T A A C G T ]</text>';
+  svg+='<text x="'+(patX+10)+'" y="'+(patY+29)+'" fill="#38bdf8" font-size="7" font-family="monospace">π-Failure Array:  [ 0 0 0 0 1 2 3 4 1 1 0 1 0 0 0 1 1 2 3 4 ]</text>';
+  svg+='<text x="'+(patX+10)+'" y="'+(patY+42)+'" fill="#10b981" font-size="7" font-family="monospace">Preprocessing Cost: C_0 = m = 20 comparisons · Space: 80 bytes (L1 Cache Resident)</text>';
+
+  const regX=50, regY=172, regW=380, regH=44;
+  svg+='<rect x="'+regX+'" y="'+regY+'" width="'+regW+'" height="'+regH+'" rx="4" fill="#081016" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(regX+10)+'" y="'+(regY+14)+'" fill="#dcebf2" font-size="7.5" font-family="monospace">State: j = Pattern State Pointer [0 .. 19] | Text Character T[i] vs P[j]</text>';
+  svg+='<text x="'+(regX+10)+'" y="'+(regY+28)+'" fill="'+orange+'" font-size="7.5" font-family="monospace">Fallback Rule: On mismatch, j ⟵ π[j - 1] (Preserves matched prefix history)</text>';
+  svg+='<text x="'+(regX+10)+'" y="'+(regY+40)+'" fill="#8ba5b5" font-size="6.5">Amortized Analysis: Potential Φ = j; comparisons ≤ 2n across entire stream</text>';
+
+  const sumX=50, sumY=224, sumW=380, sumH=42;
+  svg+='<rect x="'+sumX+'" y="'+sumY+'" width="'+sumW+'" height="'+sumH+'" rx="4" fill="#081016" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(sumX+10)+'" y="'+(sumY+14)+'" fill="#38bdf8" font-size="7.5" font-family="monospace">Total Comparisons: C(n) = n + m = '+n+' + 20 = '+c_comps+' comparisons</text>';
+  svg+='<text x="'+(sumX+10)+'" y="'+(sumY+26)+'" fill="#10b981" font-size="7" font-family="monospace">Linear Model: k_kmp = 1.0000 comparisons/char · Intercept C_0 = 20.0000</text>';
+  svg+='<text x="'+(sumX+10)+'" y="'+(sumY+38)+'" fill="#8ba5b5" font-size="6.5">Stream Scanning Invariant: Linear time O(n + m) with strictly O(1) auxiliary working space</text>';
+
+  const bX=465,bY=38,bW=220,bH=235;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#7e9bab" font-size="9">TOTAL KMP COMPARISONS C(n)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+54)+'" fill="'+orange+'" font-size="24" font-family="monospace" font-weight="bold">'+c_comps+'</text>';
+  svg+='<text x="'+(bX+105)+'" y="'+(bY+50)+'" fill="#8ba5b5" font-size="11">comps</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+84)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+84)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+102)+'" fill="#7e9bab" font-size="9">PATTERN REGISTER & π-TABLE</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+126)+'" fill="'+ink+'" font-size="16" font-family="monospace" font-weight="bold">m = 20 chars</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+142)+'" fill="#8ba5b5" font-size="8">C_0 = 20 preprocessing ops</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+156)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+156)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+174)+'" fill="#7e9bab" font-size="9">LINEAR SCAN ASYMPTOTE</text>';
+  svg+=text(bX+bW/2,bY+196,'C(n) = 1.0000 · n + 20.0000','#10b981',10);
+  svg+=text(bX+bW/2,bY+214,'Linear Coordinate: n (chars)',orange,8.5);
+
+  svg+=text(360,305,'Mathematical Model: C(n) = 1.0000 · n + 20.0000 comparisons · R² = 1.000000 · Diff = 0.0000%',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='greedy-minimum-spanning-trees'){
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';

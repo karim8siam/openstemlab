@@ -55,7 +55,8 @@ def experiment_index(experiments):
     'hash-tables-collision-resolution':'hash table collision resolution separate chaining open addressing linear probing quadratic probing double hashing load factor clustering swiss table robin hood knuth probe length',
     'graph-traversal-shortest-paths':'graph traversal breadth first search depth first search bfs dfs dijkstra shortest path adjacency matrix adjacency list compressed sparse row csr edge relaxation priority queue',
     'dynamic-programming-memoization':'dynamic programming memoization tabulation bellman recurrence optimal substructure overlapping subproblems 0 1 knapsack state space pseudo polynomial weak np complete rolling array reverse scan',
-    'greedy-minimum-spanning-trees':'greedy algorithm minimum spanning tree mst kruskal prim boruvka disjoint set union dsu union find path compression union by rank cut property cycle property matroid'}
+    'greedy-minimum-spanning-trees':'greedy algorithm minimum spanning tree mst kruskal prim boruvka disjoint set union dsu union find path compression union by rank cut property cycle property matroid',
+    'string-matching-automata':'string matching automata knuth morris pratt kmp failure function prefix array boyer moore bad character good suffix rabin karp rolling hash aho corasick trie simd avx512'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   sub='computer-science' if '/computer-science/' in exp.get('page_path','') else 'physics'

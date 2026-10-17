@@ -95,6 +95,14 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:raw/800.0,x,y,valid:v>=50&&v<=1000};
  }
+ if(slug==='string-matching-automata'){
+  const n=Number(input);
+  const m=20;
+  const raw=Math.round(n + m);
+  const x=n;
+  const y=raw;
+  return {raw,ideal:raw,period:raw/1000.0,x,y,valid:n>=200&&n<=20000};
+ }
  throw Error('Unknown CS experiment: '+slug);
 }
 
@@ -153,6 +161,10 @@ function reading(slug,input,raw){
   y=raw;
  }
  if(slug==='greedy-minimum-spanning-trees'){
+  x=Number(input);
+  y=raw;
+ }
+ if(slug==='string-matching-automata'){
   x=Number(input);
   y=raw;
  }
@@ -215,6 +227,9 @@ function estimate(slug,f){
  }
  if(slug==='greedy-minimum-spanning-trees'){
   return {value:f.m,se:f.slopeSE,reference:8.0000};
+ }
+ if(slug==='string-matching-automata'){
+  return {value:f.m,se:f.slopeSE,reference:1.0000};
  }
  throw Error('Unknown CS experiment: '+slug);
 }
