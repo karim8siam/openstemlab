@@ -159,6 +159,14 @@ def observation(c,value):
   v0_mM=raw / 1000.0
   y=rnd(1.0 / v0_mM, 2)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='photochemical-decomposition-uranyl-oxalate':
+  t=float(value)
+  V0=20.00
+  table={5.0:18.86, 10.0:17.72, 15.0:16.58, 20.0:15.44, 30.0:13.16, 40.0:10.88}
+  raw=table.get(round(t, 1), round(V0 - (5.700 * t) / 25.0, 2))
+  x=t
+  y=rnd(25.0 * (V0 - raw), 2)
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='clock-reaction-landolt-iodate-sulfite':
   io3=float(value)
   k_prime=0.00500
@@ -376,6 +384,11 @@ def estimate(c,f):
   ref=0.500
   se=abs(f.get('slopeSE', 0.05) / b) if b > 0 else 0.002
   return KM, se, ref
+ elif slug=='photochemical-decomposition-uranyl-oxalate':
+  q0=10.00
+  phi=f['m'] / q0
+  se=f['slopeSE'] / q0
+  return phi, se, 0.570
  elif slug=='clock-reaction-landolt-iodate-sulfite':
   slope=f['m']
   k_val=slope * 1000.0
@@ -485,6 +498,9 @@ def formula(c,f):
   Vmax=1.0 / b
   KM=m / b
   return f"Slope K_M/V_max = {fmt(m,4)} min; Intercept 1/V_max = {fmt(b,4)} min·mM⁻¹ (V_max = {fmt(Vmax*1000.0,2)} μM/min, K_M = {fmt(KM,4)} mM)"
+ elif slug=='photochemical-decomposition-uranyl-oxalate':
+  phi=f['m'] / 10.00
+  return f"Photolysis Rate Slope m = {fmt(f['m'],4)} μmol·min⁻¹; Quantum Yield Φ = m / q₀ = {fmt(phi,4)} mol/einstein; Intercept Δn₀ = {fmt(f['b'],3)} μmol"
  elif slug=='clock-reaction-landolt-iodate-sulfite':
   k_val=f['m'] * 1000.0
   return f"Slope k' = {fmt(f['m'],6)} s⁻¹·mM⁻¹ (k = Slope × 1000 = {fmt(k_val,3)} L·mol⁻¹·s⁻¹); Intercept b = {fmt(f['b'],5)} s⁻¹"
@@ -865,6 +881,28 @@ def worked(c,row):
    f"   Linearized equation: 1/v₀ = (K_M / V_max) · (1/[S]) + 1/V_max.\n"
    f"   Slope m = K_M / V_max = 12.50 min; Y-intercept b = 1/V_max = 25.00 min·mM⁻¹.\n"
    f"   Extracted parameters: V_max = 1/b = 0.0400 mM/min (40.0 μM/min); K_M = m / b = 0.500 mM with R² = 1.00000."
+  )
+ elif slug=='photochemical-decomposition-uranyl-oxalate':
+  t_val=row['input']
+  raw=row['raw']
+  x=row['x']
+  y=row['y']
+  delta_V=20.00 - raw
+  return (
+   f"Representative calculation for uranyl oxalate photolysis run at exposure time t = {t_val:.1f} min:\n"
+   f"1. Monochromatic 365 nm Photolysis Irradiance: q₀ = 10.00 μeinstein/min (1.667 × 10⁻⁷ einstein/s) at 25.00 °C.\n"
+   f"2. Redox Permanganometry Telemetry (25.00 mL aliquot at 70 °C, standardized 0.0100 M KMnO₄):\n"
+   f"   Initial unphotolyzed blank titre: V₀ = 20.00 mL ([H₂C₂O₄]₀ = 0.0200 M ⟹ n₀ = 500.0 μmol).\n"
+   f"   Titration volume after {t_val:.1f} min exposure: V_t = {raw:.2f} mL.\n"
+   f"   Net titrant deficit: ΔV = V₀ − V_t = 20.00 − {raw:.2f} = {delta_V:.2f} mL.\n"
+   f"3. Decomposed Oxalate Quantification:\n"
+   f"   Stoichiometry: 5 H₂C₂O₄ + 2 MnO₄⁻ + 6 H⁺ ⟶ 10 CO₂ + 2 Mn²⁺ + 8 H₂O (factor = 5/2 = 2.50).\n"
+   f"   Δn = 2.50 × c(KMnO₄) × ΔV = 2.50 × 0.0100 mol/L × {delta_V:.2f} mL × 1000 = {y:.2f} μmol.\n"
+   f"4. Coordinate Mapping:\n"
+   f"   Abscissa: x = t = {t_val:.1f} min; Ordinate: y = Δn = {y:.2f} μmol.\n"
+   f"5. Linear Least-Squares Quantum Yield Extraction:\n"
+   f"   Linear model: Δn = (Φ · q₀) · t + b gives empirical photolysis rate slope m = 5.700 μmol/min.\n"
+   f"   Photochemical quantum yield: Φ = m / q₀ = 5.700 μmol/min / 10.00 μeinstein/min = 0.570 mol/einstein (R² = 1.00000)."
   )
  elif slug=='clock-reaction-landolt-iodate-sulfite':
   io3=row['input']
@@ -1418,6 +1456,26 @@ def uncertainty_text(c):
    "covariance matrix through the regression parameters gives u(K_M) / K_M = √[ (u(m)/m)² + (u(b)/b)² - 2·cov(m,b)/(m·b) ]. "
    "The high negative correlation between slope and intercept (r ≈ -0.88) substantially attenuates overall uncertainty, yielding an "
    "expanded uncertainty U(K_M) = 0.015 mM (coverage factor k = 2, 95% confidence level)."
+  )
+ elif slug=='photochemical-decomposition-uranyl-oxalate':
+  return (
+   "In the photochemical determination of the quantum yield (Φ) by uranyl oxalate actinometry, metrological uncertainties "
+   "and systematic controls are comprehensively evaluated across optical, radiometric, volumetric, and chemical domains: "
+   "(1) Radiometric Photon Flux Calibration: The incident photon rate q₀ = 10.00 ± 0.05 μeinstein/min is calibrated using secondary "
+   "ferrioxalate actinometry and certified thermopile radiometry (relative standard uncertainty u_r(q₀) = 0.50%). Arc lamp power supply "
+   "regulation maintains irradiance stability within ±0.30% over the 40-minute run. "
+   "(2) Optical Absorption and Reflection Geometry: The optical absorbance of the actinometer solution (0.010 M UO₂²⁺, 0.020 M H₂C₂O₄) "
+   "at λ = 365 nm across the 1.000 cm cell path exceeds A = 2.4 (fractional transmittance T < 0.4%), ensuring that > 99.6% of incident "
+   "photons are completely absorbed within the liquid volume. Fresnel reflection corrections at the quartz-air boundary are standardized "
+   "at 4.0 ± 0.2%, contributing a systematic correction uncertainty of < 0.20%. "
+   "(3) Volumetric Dispensing and Titrimetric Accuracy: Permanganate titrant volumes delivered via Class A burettes (ISO 385, tolerance ±0.03 mL) "
+   "contribute a volume uncertainty u(V) = 0.03 mL, corresponding to an uncertainty of ±0.75 μmol in photolyzed oxalate. Maintaining the "
+   "titration at 70.0 ± 1.0 °C prevents premature visual endpoint fading while precluding non-photochemical thermal autodecomposition. "
+   "(4) Thermal Invariance of Quantum Yield: The photochemical quantum yield has an exceptionally low temperature coefficient (< 0.25%/°C). "
+   "Thermostating the photolysis cell jacket to 25.00 ± 0.05 °C restricts temperature-induced quantum yield variations to < 0.02%. "
+   "(5) Multi-Point Linear Regression Uncertainty: Linear regression of Δn against exposure time t across six observation points yields "
+   "an ideal correlation coefficient (R² = 1.00000). Propagation of the slope standard error through Φ = m / q₀ gives an expanded "
+   "uncertainty U(Φ) = 0.003 mol/einstein (coverage factor k = 2, 95% level of confidence)."
   )
  elif slug=='clock-reaction-landolt-iodate-sulfite':
   return (
@@ -2433,6 +2491,64 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"and (3) near-perfect linearity (R² = {r2_val:.5f}). These results rigorously confirm the validity of the Briggs-Haldane steady-state catalytic "
    f"mechanism, demonstrate the high fidelity of initial-rate spectrophotometric enzymology, and establish an authoritative baseline for analyzing "
    f"reversible enzyme inhibition mechanisms."
+  )
+  
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='photochemical-decomposition-uranyl-oxalate':
+  slope_val=f['m']
+  phi_val=slope_val / 10.00
+  r2_val=f['r2']
+  
+  abstract=(
+   f"The photochemical quantum yield (Φ) and zero-order photolysis kinetics of the uranyl oxalate actinometer system "
+   f"(0.0100 M UO₂(NO₃)₂ and 0.0200 M H₂C₂O₄) were quantitatively investigated at 25.00 ± 0.05 °C under monochromatic UV irradiation "
+   f"(λ = 365.0 nm, incident photon flux q₀ = 10.00 ± 0.05 μeinstein·min⁻¹). Six exposure trials ranging from t = {rows[0]['input']:.1f} min "
+   f"to {rows[-1]['input']:.1f} min were executed in a planar quartz irradiation cell. The extent of photodecomposition was determined "
+   f"by residual redox permanganometry against standardized 0.0100 M KMnO₄ at 70 °C, with titrant volumes decreasing smoothly from the "
+   f"unirradiated blank V₀ = 20.00 mL to {rows[-1]['raw']:.2f} mL. Linear regression of the moles of oxalic acid photolyzed (Δn) against "
+   f"exposure time demonstrated ideal zero-order linearity (R² = {r2_val:.5f}), yielding an empirical photolysis rate slope "
+   f"m = {slope_val:.4f} ± {f['slopeSE']:.4f} μmol·min⁻¹. Dividing by the calibrated incident photon flux established a photochemical "
+   f"quantum yield Φ = {phi_val:.4f} ± {f['slopeSE']/10.0:.4f} mol/einstein, matching the certified IUPAC benchmark ({reference:.3f} mol/einstein) "
+   f"with a percentage difference of {percent:.3f}%. These results validate the Stark-Einstein law and confirm the high fidelity of uranyl oxalate "
+   f"as an absolute actinometric reference standard."
+  )
+
+  graph_choice=(
+   f"The primary analytical graphic illustrates the zero-order photolysis progression curve: the net amount of photolyzed oxalic acid "
+   f"y = Δn (in μmol) plotted as a function of UV exposure time x = t (in min). In the optically dense regime (A₃₆₅ > 2.4), photon absorption "
+   f"is 100% complete throughout the irradiation, yielding the linear relationship Δn = (Φ · q₀) · t + b. The empirical slope "
+   f"m = {slope_val:.4f} μmol·min⁻¹ directly defines the steady photodecomposition rate (Φ · q₀), while the intercept b = {f['b']:.3f} μmol "
+   f"is zero within experimental uncertainty. All six experimental points conform strictly to the regression line (R² = {r2_val:.5f}). "
+   f"A secondary comparative graphic displays the residual permanganate titrant volumes V_t (mL) as a function of irradiation time, "
+   f"illustrating the clean linear consumption of the oxalate pool from V₀ = 20.00 mL down to V₄₀ = {rows[-1]['raw']:.2f} mL."
+  )
+
+  discussion=(
+   f"Quantitative analysis of the photolysis progression reveals profound insights into the sensitized photochemistry of the uranyl-oxalate "
+   f"coordination system. Because the uranyl cation (UO₂²⁺) exhibits intense ligand-to-metal charge-transfer absorption at λ = 365 nm "
+   f"(molar absorptivity ε₃₆₅ ≈ 25 L·mol⁻¹·cm⁻¹), and because its concentration is maintained at 0.0100 M in a 1.000 cm optical pathlength, "
+   f"the initial absorbance exceeds A = 2.4, ensuring that over 99.6% of incident photons are absorbed within the solution. Throughout the "
+   f"entire 40-minute irradiation window, the photolysis rate remains rigorously constant at 5.700 μmol/min, confirming that the reaction "
+   f"operates strictly under zero-order photokinetic conditions where the rate is governed exclusively by the photon flux rather than substrate diffusion.\n\n"
+   f"The extracted quantum yield Φ = {phi_val:.4f} mol/einstein is in magnificent agreement with the authoritative Leighton-Forbes literature "
+   f"standard ({reference:.3f} mol/einstein, percentage difference = {percent:.3f}%). Mechanistically, this quantum efficiency indicates that "
+   f"57.0% of the photo-excited (UO₂²⁺)* complexes undergo productive intramolecular electron transfer, cleaving the central C-C bond of oxalate "
+   f"to generate CO₂ and CO gases, while the remaining 43.0% undergo non-radiative vibronic relaxation and solvent quenching back to the ground state. "
+   f"Because uranyl ions are not permanently consumed, the yellow color of the actinometer solution persists unchanged, maintaining constant "
+   f"photosensitization throughout extended exposures.\n\n"
+   f"Execution of the redox titrations at 70 °C with standardized 0.0100 M KMnO₄ ensured sharp, stoichiometric endpoints. Each milliliter "
+   f"reduction in titrant volume corresponds to exactly 25.0 μmol of photolyzed oxalic acid. The strict linearity of the photolysis plot "
+   f"demonstrates that photochemical decomposition products (carbon dioxide and carbon monoxide) do not act as internal light filters or "
+   f"quenchers, establishing uranyl oxalate as an exceptionally robust chemical actinometer."
+  )
+
+  conclusion=(
+   f"The photochemical quantum yield and photodecomposition kinetics of uranyl oxalate actinometry were definitively determined at 25.00 °C "
+   f"and λ = 365 nm. High-precision UV photolysis coupled with permanganometric redox titration established: (1) a strictly zero-order "
+   f"photolysis rate m = {slope_val:.4f} ± {f['slopeSE']:.4f} μmol·min⁻¹; (2) an absolute photochemical quantum yield Φ = {phi_val:.4f} ± {f['slopeSE']/10.0:.4f} mol/einstein, "
+   f"differing by only {percent:.3f}% from the certified standard ({reference:.3f} mol/einstein); and (3) an ideal linear fit (R² = {r2_val:.5f}). "
+   f"These findings rigorously confirm the Stark-Einstein law of photochemical equivalence, validate the Leighton-Forbes actinometric mechanism, "
+   f"and demonstrate the power of chemical actinometry for precise absolute radiometry in photochemical research."
   )
   
   return abstract, graph_choice, discussion, conclusion

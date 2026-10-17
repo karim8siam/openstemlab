@@ -81,6 +81,18 @@ function update(){
   $('apparatusDiagram').innerHTML=drawEnzymeKineticsBenchView(p,rawVal);
   return;
  }
+ if(cfg.slug==='photochemical-decomposition-uranyl-oxalate'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawUranylCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawUranylSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawUranylBenchView(p,rawVal);
+  return;
+ }
  if(cfg.slug==='clock-reaction-landolt-iodate-sulfite'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawLandoltCompareView(p,rawVal);
@@ -114,6 +126,9 @@ function update(){
   const dA_dt = v0_uM * 0.0185;
   $('liveState').textContent='Photometric trace recorded: v₀ = '+v0_uM.toFixed(2)+' μM/min (dA/dt = '+(dA_dt/1000).toFixed(4)+' AU/min).';
   message('Assay complete: v₀ = '+v0_uM.toFixed(2)+' μM/min (1/v₀ = '+inv_v0.toFixed(2)+' min/mM, 1/[S] = '+inv_s.toFixed(2)+' mM⁻¹). Record in notebook.');
+ }else if(cfg.slug==='photochemical-decomposition-uranyl-oxalate'){
+  $('liveState').textContent='Ready to irradiate uranyl oxalate cell for exposure time t = '+p.input.toFixed(1)+' min.';
+  message('Expose actinometer cell to 365 nm UV arc at 25.00 °C, withdraw aliquot & titrate with 0.0100 M KMnO₄ at 70 °C.');
  }else if(cfg.slug==='clock-reaction-landolt-iodate-sulfite'){
   $('liveState').textContent='Ready to trigger Landolt clock with [IO₃⁻]₀ = '+p.input.toFixed(2)+' mM.';
   message('Mix iodate and bisulfite-starch solutions at 25.00 °C (400 rpm) & measure induction time Δt.');

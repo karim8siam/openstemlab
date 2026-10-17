@@ -172,6 +172,19 @@ function predict(slug,input){
   const y=round(1.0 / v0_mM, 2);
   return {raw,ideal:raw,period:1.0,x,y,valid:s_val>=0.10&&s_val<=4.00};
  }
+ if(slug==='photochemical-decomposition-uranyl-oxalate'){
+  const t=Number(input);
+  const V0=20.00;
+  const phi=0.570;
+  const q0=10.00; // ueinstein/min
+  const rate_umol=phi * q0; // 5.700 umol/min
+  const table={5.0:18.86, 10.0:17.72, 15.0:16.58, 20.0:15.44, 30.0:13.16, 40.0:10.88};
+  const key=round(t, 1);
+  const raw=table.hasOwnProperty(key)?table[key]:round(V0 - (rate_umol * t) / 25.0, 2);
+  const x=t;
+  const y=round(25.0 * (V0 - raw), 2);
+  return {raw,ideal:raw,period:1.0,x,y,valid:t>=2.0&&t<=60.0};
+ }
  if(slug==='clock-reaction-landolt-iodate-sulfite'){
   const io3=Number(input);
   const k_prime=0.00500;
@@ -389,6 +402,13 @@ function reading(slug,input,raw){
   const v0_mM=raw_val / 1000.0;
   y=round(1.0 / v0_mM, 2);
  }
+ if(slug==='photochemical-decomposition-uranyl-oxalate'){
+  const t=Number(input);
+  const raw_val=Number(raw);
+  const V0=20.00;
+  x=t;
+  y=round(25.0 * (V0 - raw_val), 2);
+ }
  if(slug==='clock-reaction-landolt-iodate-sulfite'){
   const io3=Number(input);
   const raw_val=Number(raw);
@@ -598,6 +618,12 @@ function estimate(slug,f){
   const KM=f.m / f.b;
   const se=Math.abs(f.slopeSE / f.b);
   return {value:KM,se:se,reference:0.500};
+ }
+ if(slug==='photochemical-decomposition-uranyl-oxalate'){
+  const q0=10.00; // ueinstein/min
+  const phi=f.m / q0;
+  const se=f.slopeSE / q0;
+  return {value:phi,se:se,reference:0.570};
  }
  if(slug==='clock-reaction-landolt-iodate-sulfite'){
   const k_prime=f.m;
