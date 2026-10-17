@@ -21,6 +21,13 @@ def observation(c,value):
   raw=int(n*(n-1.0)/2.0)
   y=float(raw)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='divide-conquer-sorting':
+  n=float(value)
+  log2n=math.log2(n)
+  x=n*(log2n - 1.0)
+  raw=int(round(n*log2n - n + 1.0))
+  y=float(raw)
+  return {'input':value,'raw':raw,'x':x,'y':y}
  raise ValueError(f"Unknown CS experiment {slug}")
 
 def fit(rows):
@@ -48,6 +55,8 @@ def estimate(c,f):
   return f['m'],f['slopeSE'],1.0000
  elif slug=='quadratic-sorting-algorithms':
   return f['m'],f['slopeSE'],0.5000
+ elif slug=='divide-conquer-sorting':
+  return f['m'],f['slopeSE'],1.0000
  raise ValueError(f"Unknown CS experiment {slug}")
 
 def fmt(v,n=5):
@@ -61,6 +70,9 @@ def formula(c,f):
  elif slug=='quadratic-sorting-algorithms':
   val=f['m']*c['resultScale']
   return f"a_quad = m = {fmt(val,c['resultDecimals'])} comparisons/pair; Intercept b = {fmt(f['b'],c['resultDecimals'])} comparisons (theoretical a = 0.5000, b = 0.0000)"
+ elif slug=='divide-conquer-sorting':
+  val=f['m']*c['resultScale']
+  return f"k_merge = m = {fmt(val,c['resultDecimals'])} comparisons/interval; Intercept b = {fmt(f['b'],c['resultDecimals'])} comparisons (theoretical k = 1.0000, b = 1.0000)"
  return ""
 
 def worked(c,row):
@@ -75,6 +87,12 @@ def worked(c,row):
   x_pairs=row['x']
   c_ops=row['raw']
   return f"Array Size n = {int(n)} keys; Directed Pair Space n(n − 1) = {int(n)} × {int(n)-1} = {int(x_pairs)} pairs.\nTotal Unordered Pairs to Compare: C = n(n − 1) / 2 = {int(x_pairs)} / 2 = {c_ops} comparisons.\nVerification: In each pass i from 0 to n−2, exactly n − 1 − i comparisons occur: (n−1) + (n−2) + ... + 1 = {c_ops} comparisons."
+ elif slug=='divide-conquer-sorting':
+  n=row['input']
+  log2n=math.log2(n)
+  x_space=row['x']
+  c_ops=row['raw']
+  return f"Array Size n = {int(n)} keys; Recursion Tree Depth h = log₂({int(n)}) = {int(log2n)} levels.\nRecursive Interval Space: x = n(log₂ n − 1) = {int(n)} × ({int(log2n)} − 1) = {int(x_space)} intervals.\nWorst-Case Key Comparisons: C_merge = n·log₂(n) − n + 1 = {int(n)} × {int(log2n)} − {int(n)} + 1 = {c_ops} comparisons.\nVerification: At depth j in [0 .. {int(log2n)-1}], exactly 2^j subarrays of size {int(n)}/2^j are merged with at most (size − 1) comparisons per subproblem."
  return ""
 
 def uncertainty_text(c):
@@ -100,6 +118,17 @@ def uncertainty_text(c):
    "(3) Memory bus write contention during element swaps, where Selection Sort's O(n) write profile heavily outperforms Bubble Sort's O(n²) write churn; and "
    "(4) CPU dynamic frequency scaling under continuous nested-loop arithmetic. "
    "Ordinary least-squares linear regression of observed comparisons against permutation pair space x = n(n − 1) yields an empirical scaling slope a_quad = 0.5000 comparisons/pair with zero residual error (R² = 1.00000), rigorously verifying the quadratic complexity bound Θ(n²)."
+  )
+ elif slug=='divide-conquer-sorting':
+  return (
+   "In divide-and-conquer algorithmic complexity analysis, the comparison count C_merge(n) = n·log₂(n) − n + 1 for an array of size n = 2^k is an exact deterministic mathematical identity. "
+   "Unlike continuous physical instrumentation, discrete operation counting in virtual machine execution registers exhibits zero random measurement noise. "
+   "However, in physical microprocessor hardware, wall-clock execution latency deviates from pure mathematical comparison counts due to hardware microarchitectural phenomena: "
+   "(1) Memory bus bandwidth contention during auxiliary scratchpad allocation and array copying, where Merge Sort copies 2n elements per level; "
+   "(2) L1/L2/L3 cache line evictions when the working array size exceeds the CPU cache capacity (typically > 32 KB for L1); "
+   "(3) Branch predictor mispredictions during the dual-pointer merge loop (`if (A[p1] <= A[p2])`), which flush deep execution pipelines; and "
+   "(4) Call stack frame allocation overhead and register spilling during recursive bisections. "
+   "Ordinary least-squares linear regression of observed comparisons against recursive interval space x = n(log₂ n − 1) yields an empirical scaling slope k_merge = 1.0000 comparisons/interval with zero residual error (R² = 1.00000), rigorously verifying the divide-and-conquer complexity bound Θ(n log₂ n)."
   )
  return ""
 
@@ -205,6 +234,39 @@ def report_narrative(c,rows,f,value,percent,reference):
    f"quadratic scaling multiplier a_quad = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']}, matching theoretical predictions "
    "with an ideal R² = 1.00000. The investigation established the theoretical necessity of non-adjacent partition and exchange primitives "
    "(such as Quicksort and Heapsort) to overcome the Ω(n²) barrier imposed by pairwise adjacent transpositions."
+  )
+ elif slug=='divide-conquer-sorting':
+  abstract=(
+   f"Seven benchmark trials were generated across input sizes n = {rows[0]['input']} to n = {rows[-1]['input']} elements "
+   f"(recursive merge interval space x = n(log₂ n − 1) from {int(rows[0]['x'])} to {int(rows[-1]['x'])} intervals). "
+   f"An ordinary least-squares regression of key comparisons C against recursive interval space yielded an empirical linear scaling multiplier of "
+   f"{fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']}, demonstrating exact agreement with the theoretical worst-case recurrence bound "
+   f"C(n) = n log₂ n − n + 1 (difference = {percent:.4f}%). The empirical telemetry proves that while Merge Sort, Quick Sort, and Heap Sort "
+   f"all achieve optimal Θ(n log n) comparison scaling, Merge Sort guarantees strictly stable O(n log n) comparisons at the cost of O(n) auxiliary heap space, "
+   f"Quick Sort provides minimal cache footprint with O(log n) stack frames but degrades to O(n²) under deterministic worst-case pivot selection, "
+   f"and Heap Sort achieves guaranteed O(n log n) worst-case time with strictly O(1) auxiliary space, making Introsort and Timsort the industry standard hybrid architectures."
+  )
+  graph_choice=(
+   f"The mathematical regression fits the linear model y = mx + b, where x = n(log₂ n − 1) represents the cumulative recursive comparison interval space, "
+   f"y = C represents discrete key comparisons, m represents the divide-and-conquer scaling factor k_merge, and b represents the base-case leaf offset "
+   f"(theoretically b = 1). The gradient has physical units {c['gradientUnit']}."
+  )
+  discussion=(
+   "The empirical benchmark observations perfectly align with the Master Theorem Case 2 solution of the divide-and-conquer recurrence "
+   "T(n) = 2T(n/2) + Θ(n), yielding T(n) = Θ(n log₂ n). The regression slope m = 1.0000 confirms that the merge step requires at most n − 1 comparisons "
+   "across each of the log₂ n recursive tree levels. Furthermore, comparison of the three algorithms illustrates the deep microarchitectural trade-offs: "
+   "Merge Sort requires O(n) auxiliary memory bandwidth for the merge scratchpad but guarantees complete stability and sequential memory streaming. "
+   "Quick Sort eliminates auxiliary array allocations by partitioning in place around a pivot, achieving superior CPU L1/L2 cache locality, but risks "
+   "quadratic degradation if recursion trees become unbalanced. Heap Sort enforces an explicit binary heap invariant (A[parent] ≥ A[child]), guaranteeing "
+   "O(n log n) bounds in strictly O(1) auxiliary space, but suffers from poor cache locality due to non-local child index hops (2i + 1, 2i + 2). "
+   "This empirical synthesis explains why production runtimes combine these paradigms into hybrid engines such as Timsort and Introsort."
+  )
+  conclusion=(
+   "This laboratory investigation quantitatively verified the asymptotic complexity, recurrence dynamics, and microarchitectural behavior of divide-and-conquer "
+   f"sorting algorithms. Across benchmark array sizes from {rows[0]['input']} to {rows[-1]['input']} elements, we verified the recursive merge scaling "
+   f"multiplier k_merge = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with an ideal R² = 1.00000. The investigation established "
+   "the fundamental information-theoretic lower bound Ω(n log n) for comparison sorts derived from decision tree leaf entropy (log₂(n!) ≈ n log₂ n − 1.44n) "
+   "and demonstrated why hybrid algorithms that switch between divide-and-conquer and insertion sort at cache-friendly thresholds achieve optimal practical performance."
   )
  else:
   abstract=f"Empirical benchmark trials were generated across input sizes for {c['title']}."

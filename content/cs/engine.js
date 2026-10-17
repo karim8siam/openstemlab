@@ -140,6 +140,58 @@ function drawComparativeSim(t,p,v,ink,soft,orange){
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
+ if(cfg.slug==='divide-conquer-sorting'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'DIVIDE-AND-CONQUER COMPARATIVE BENCHMARK (n = '+p.input+')','#e2f0f8',11);
+
+  const n=p.input;
+  const log2n=Math.log2(n);
+  const c_merge=Math.round(n*log2n - n + 1);
+  const c_quick_avg=Math.round(1.386*n*log2n);
+  const c_quick_worst=Math.round(n*(n-1)/2);
+  const c_heap=Math.round(2*n*log2n);
+  const c_tim=Math.round(n*log2n*0.85);
+
+  const algos=[
+   {name:'Merge Sort (Guaranteed Worst)',col:'#38bdf8',ops:c_merge,space:'O(n) heap',stable:'Stable (Yes)',desc:'Predictable comparisons, streaming memory'},
+   {name:'Quick Sort (Expected Average)',col:'#10b981',ops:c_quick_avg,space:'O(log n) stack',stable:'Unstable (No)',desc:'Superior L1/L2 cache locality, in-place'},
+   {name:'Quick Sort (Deterministic Worst)',col:'#ef4444',ops:c_quick_worst,space:'O(n) stack',stable:'Unstable (No)',desc:'Unbalanced pivot partition collapse'},
+   {name:'Heap Sort (Guaranteed Worst)',col:'#f97316',ops:c_heap,space:'O(1) in-place',stable:'Unstable (No)',desc:'In-place heapify, poor cache locality'},
+   {name:'Timsort / Introsort (Hybrid)',col:'#a855f7',ops:c_tim,space:'O(n) / O(log n)',stable:'Adaptive',desc:'Insertion below threshold, worst O(n log n)'}
+  ];
+
+  algos.forEach((item,idx)=>{
+   const rowY=cY+16+idx*42;
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+12)+'" fill="#dcebf2" font-size="8.5" font-weight="bold">'+item.name+'</text>';
+   svg+='<text x="'+(cX+cW-15)+'" y="'+(rowY+12)+'" text-anchor="end" fill="'+item.col+'" font-size="8.5" font-family="monospace" font-weight="bold">'+item.ops+' comp | '+item.space+'</text>';
+   
+   const barX=cX+15,barY=rowY+16,barMaxW=cW-30;
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barMaxW+'" height="7" rx="2" fill="#16242c"/>';
+   const maxVal=Math.max(c_quick_worst, c_heap, 1);
+   const frac=Math.min(1.0,item.ops/maxVal);
+   const fillW=Math.max(4,frac*barMaxW);
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+fillW+'" height="7" rx="2" fill="'+item.col+'"/>';
+  });
+
+  const bX=460,bY=45,bW=220,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">AUXILIARY BUFFER OVERHEAD</text>';
+  const auxBytes=(n*8);
+  const auxText=auxBytes>=1024?(auxBytes/1024).toFixed(1)+' KiB':auxBytes+' B';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+auxText+'</text>';
+  svg+='<text x="'+(bX+110)+'" y="'+(bY+46)+'" fill="#dcebf2" font-size="10">Merge Scratchpad</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#7e9bab" font-size="9">CACHE LOCALITY PROFILE</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="14" font-family="monospace" font-weight="bold">Quick > Merge >> Heap</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+124)+'" fill="#8ba5b5" font-size="8">Heap non-local jumps degrade hardware prefetch</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+136)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+136)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+154)+'" fill="#7e9bab" font-size="9">ASYMPTOTIC MASTER THEOREM</text>';
+  svg+=text(bX+bW/2,bY+180,'T(n) = 2T(n/2) + Θ(n)','#38bdf8',11);
+  svg+=text(bX+bW/2,bY+202,'⟹ T(n) = Θ(n log₂ n) (Case 2)',orange,9.5);
+  svg+=text(360,305,'Comparative Invariant: Merge guarantees stability with O(n) space · Quick optimizes CPU cache · Heap guarantees O(1) space',soft,10);
+  return svg;
+ }
+
  if(cfg.slug==='quadratic-sorting-algorithms'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
   svg+=text(cX+cW/2,cY-14,'QUADRATIC SORTING COMPARATIVE BENCHMARK (n = '+p.input+')','#e2f0f8',11);
@@ -243,6 +295,80 @@ function drawDynamicSandbox(t,p,v,ink,soft,orange){
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
+ if(cfg.slug==='divide-conquer-sorting'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'RECURSION TREE & MASTER THEOREM UNROLLING (n = '+p.input+')','#e2f0f8',11);
+
+  const n=p.input;
+  const treeY=cY+22;
+  
+  // Level 0
+  const l0W=140,l0H=20;
+  const l0X=cX+(cW-l0W)/2;
+  svg+='<rect x="'+l0X+'" y="'+treeY+'" width="'+l0W+'" height="'+l0H+'" rx="3" fill="#1e3e52" stroke="'+orange+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(l0X+l0W/2)+'" y="'+(treeY+13)+'" text-anchor="middle" fill="#dcebf2" font-size="8" font-family="monospace">Problem T(n) · Work: c·n</text>';
+  svg+='<text x="'+(cX+cW-15)+'" y="'+(treeY+13)+'" text-anchor="end" fill="'+orange+'" font-size="8" font-family="monospace">c·n</text>';
+
+  // Level 1
+  const l1Y=treeY+45;
+  const l1W=80,l1H=18;
+  const l1X1=cX+cW/4-l1W/2, l1X2=cX+3*cW/4-l1W/2;
+  svg+='<line x1="'+(l0X+l0W/4)+'" y1="'+(treeY+l0H)+'" x2="'+(l1X1+l1W/2)+'" y2="'+l1Y+'" stroke="#334d5c" stroke-width="1.5"/>';
+  svg+='<line x1="'+(l0X+3*l0W/4)+'" y1="'+(treeY+l0H)+'" x2="'+(l1X2+l1W/2)+'" y2="'+l1Y+'" stroke="#334d5c" stroke-width="1.5"/>';
+  svg+='<rect x="'+l1X1+'" y="'+l1Y+'" width="'+l1W+'" height="'+l1H+'" rx="2" fill="#162a36" stroke="#38bdf8" stroke-width="1"/>';
+  svg+='<text x="'+(l1X1+l1W/2)+'" y="'+(l1Y+12)+'" text-anchor="middle" fill="#dcebf2" font-size="7" font-family="monospace">T(n/2) [c·n/2]</text>';
+  svg+='<rect x="'+l1X2+'" y="'+l1Y+'" width="'+l1W+'" height="'+l1H+'" rx="2" fill="#162a36" stroke="#38bdf8" stroke-width="1"/>';
+  svg+='<text x="'+(l1X2+l1W/2)+'" y="'+(l1Y+12)+'" text-anchor="middle" fill="#dcebf2" font-size="7" font-family="monospace">T(n/2) [c·n/2]</text>';
+  svg+='<text x="'+(cX+cW-15)+'" y="'+(l1Y+12)+'" text-anchor="end" fill="'+orange+'" font-size="8" font-family="monospace">2·(cn/2) = c·n</text>';
+
+  // Level 2
+  const l2Y=l1Y+42;
+  const l2W=46,l2H=16;
+  const centers=[cX+cW/8, cX+3*cW/8, cX+5*cW/8, cX+7*cW/8];
+  svg+='<line x1="'+(l1X1+l1W/4)+'" y1="'+(l1Y+l1H)+'" x2="'+centers[0]+'" y2="'+l2Y+'" stroke="#334d5c" stroke-width="1"/>';
+  svg+='<line x1="'+(l1X1+3*l1W/4)+'" y1="'+(l1Y+l1H)+'" x2="'+centers[1]+'" y2="'+l2Y+'" stroke="#334d5c" stroke-width="1"/>';
+  svg+='<line x1="'+(l1X2+l1W/4)+'" y1="'+(l1Y+l1H)+'" x2="'+centers[2]+'" y2="'+l2Y+'" stroke="#334d5c" stroke-width="1"/>';
+  svg+='<line x1="'+(l1X2+3*l1W/4)+'" y1="'+(l1Y+l1H)+'" x2="'+centers[3]+'" y2="'+l2Y+'" stroke="#334d5c" stroke-width="1"/>';
+  for(let i=0;i<4;i++){
+   svg+='<rect x="'+(centers[i]-l2W/2)+'" y="'+l2Y+'" width="'+l2W+'" height="'+l2H+'" rx="2" fill="#111c24" stroke="#5a7687" stroke-width="1"/>';
+   svg+='<text x="'+centers[i]+'" y="'+(l2Y+11)+'" text-anchor="middle" fill="#8ba5b5" font-size="6.5" font-family="monospace">T(n/4)</text>';
+  }
+  svg+='<text x="'+(cX+cW-15)+'" y="'+(l2Y+12)+'" text-anchor="end" fill="'+orange+'" font-size="8" font-family="monospace">4·(cn/4) = c·n</text>';
+
+  // Leaves level
+  const leafY=l2Y+38;
+  svg+='<line x1="'+(cX+cW/2)+'" y1="'+(l2Y+l2H)+'" x2="'+(cX+cW/2)+'" y2="'+leafY+'" stroke="#334d5c" stroke-width="1" stroke-dasharray="3 3"/>';
+  svg+='<text x="'+(cX+cW/2)+'" y="'+(leafY-5)+'" text-anchor="middle" fill="#5a7687" font-size="7">⋮ (tree height = log₂ n levels)</text>';
+  svg+='<rect x="'+(cX+20)+'" y="'+leafY+'" width="'+(cW-100)+'" height="18" rx="2" fill="#0c4a6e" stroke="#10b981" stroke-width="1"/>';
+  svg+='<text x="'+(cX+20+(cW-100)/2)+'" y="'+(leafY+12)+'" text-anchor="middle" fill="#6ee7b7" font-size="7.5" font-family="monospace">Base Leaves: n subproblems of size 1 ⟹ Θ(n) work</text>';
+  svg+='<text x="'+(cX+cW-15)+'" y="'+(leafY+12)+'" text-anchor="end" fill="'+orange+'" font-size="8" font-family="monospace">Θ(n)</text>';
+
+  svg+='<rect x="'+(cX+15)+'" y="'+(cY+cH-34)+'" width="'+(cW-30)+'" height="26" rx="4" fill="#0e1a22" stroke="#1e3340"/>';
+  svg+='<text x="'+(cX+25)+'" y="'+(cY+cH-17)+'" fill="#38bdf8" font-size="8" font-family="monospace">Total Work = ∑_{i=0}^{log₂ n - 1} (c·n) + Θ(n) = c·n·log₂ n + Θ(n) = Θ(n log n)</text>';
+
+  const bX=470,bY=45,bW=210,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#7e9bab" font-size="9">RECURSION TREE DEPTH (h)</text>';
+  const h_levels=Math.round(Math.log2(n));
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+54)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+h_levels+'</text>';
+  svg+='<text x="'+(bX+65)+'" y="'+(bY+50)+'" fill="#8ba5b5" font-size="11">log₂('+n+') levels</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+68)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+68)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+88)+'" fill="#7e9bab" font-size="9">WORK ACROSS EACH DEPTH</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+112)+'" fill="'+ink+'" font-size="16" font-family="monospace" font-weight="bold">c · '+n+'</text>';
+  svg+='<text x="'+(bX+105)+'" y="'+(bY+108)+'" fill="#8ba5b5" font-size="9">ops/level</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+124)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+124)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+142)+'" fill="#7e9bab" font-size="9">INFORMATION LOWER BOUND</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+166)+'" fill="#fde047" font-size="13" font-family="monospace" font-weight="bold">Ω(n log n)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+184)+'" fill="#8ba5b5" font-size="8">Leaves L ≥ n! ⟹ Height ≥ log₂(n!)</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+198)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+198)+'" stroke="#1e3340"/>';
+
+  svg+=text(bX+bW/2,bY+218,'Stirling Bound: log₂(n!) ≈ n log₂ n − 1.44n',orange,8.5);
+  svg+=text(360,305,'Mathematical Theorem: All tree levels do uniform c·n work ⟹ Total Work = Θ(n log n)',soft,10);
+  return svg;
+ }
+
  if(cfg.slug==='quadratic-sorting-algorithms'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
   svg+=text(cX+cW/2,cY-14,'KENDALL-TAU INVERSION VECTOR & PAIR MATRIX (n = '+p.input+')','#e2f0f8',11);
@@ -342,6 +468,97 @@ function draw(t){
  const ink='#38bdf8',soft='#7e9bab',orange='#f97316';
  if(currentSimMode==='compare'){$('apparatusDiagram').innerHTML=drawComparativeSim(t,p,v,ink,soft,orange);return;}
  if(currentSimMode==='sandbox'){$('apparatusDiagram').innerHTML=drawDynamicSandbox(t,p,v,ink,soft,orange);return;}
+
+ if(cfg.slug==='divide-conquer-sorting'){
+  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
+  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+  const n=p.input;
+  const log2n=Math.log2(n);
+  const intervalSpace=Math.round(n*(log2n - 1));
+  const c_total=v.raw;
+
+  svg+='<rect x="35" y="38" width="410" height="235" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+=text(240,24,'Virtual Memory Buffer & Divide-and-Conquer Merge Bench');
+
+  const halfN=6;
+  const cellW=26,cellH=30;
+  const leftX=55,rightX=leftX+halfN*(cellW+3)+12,rowY=70;
+  const leftVals=[14, 29, 42, 58, 77, 91];
+  const rightVals=[18, 25, 36, 64, 83, 95];
+  const p1=2,p2=1;
+
+  svg+='<text x="55" y="58" fill="#38bdf8" font-size="8.5" font-weight="bold">LEFT SUBARRAY L[0..'+(Math.floor(n/2)-1)+']</text>';
+  for(let i=0;i<halfN;i++){
+   const cx=leftX+i*(cellW+3);
+   const isCur=i===p1;
+   svg+='<rect x="'+cx+'" y="'+rowY+'" width="'+cellW+'" height="'+cellH+'" rx="2" fill="'+(isCur?'#0c4a6e':'#11222c')+'" stroke="'+(isCur?orange:'#38bdf8')+'" stroke-width="'+(isCur?2:1)+'"/>';
+   svg+='<text x="'+(cx+cellW/2)+'" y="'+(rowY+cellH/2+4)+'" text-anchor="middle" fill="'+(isCur?'#fde047':'#dcebf2')+'" font-size="8" font-family="monospace">'+leftVals[i]+'</text>';
+   svg+='<text x="'+(cx+cellW/2)+'" y="'+(rowY+cellH+10)+'" text-anchor="middle" fill="#5a7687" font-size="6.5">['+i+']</text>';
+  }
+  const p1Px=leftX+p1*(cellW+3)+cellW/2;
+  svg+='<polygon points="'+p1Px+','+(rowY-3)+' '+(p1Px-4)+','+(rowY-9)+' '+(p1Px+4)+','+(rowY-9)+'" fill="'+orange+'"/>';
+  svg+='<text x="'+p1Px+'" y="'+(rowY-11)+'" text-anchor="middle" fill="'+orange+'" font-size="7" font-weight="bold">p1</text>';
+
+  svg+='<text x="'+rightX+'" y="58" fill="#a855f7" font-size="8.5" font-weight="bold">RIGHT SUBARRAY R[0..'+(Math.floor(n/2)-1)+']</text>';
+  for(let i=0;i<halfN;i++){
+   const cx=rightX+i*(cellW+3);
+   const isCur=i===p2;
+   svg+='<rect x="'+cx+'" y="'+rowY+'" width="'+cellW+'" height="'+cellH+'" rx="2" fill="'+(isCur?'#3b0764':'#1a1128')+'" stroke="'+(isCur?orange:'#a855f7')+'" stroke-width="'+(isCur?2:1)+'"/>';
+   svg+='<text x="'+(cx+cellW/2)+'" y="'+(rowY+cellH/2+4)+'" text-anchor="middle" fill="'+(isCur?'#fde047':'#dcebf2')+'" font-size="8" font-family="monospace">'+rightVals[i]+'</text>';
+   svg+='<text x="'+(cx+cellW/2)+'" y="'+(rowY+cellH+10)+'" text-anchor="middle" fill="#5a7687" font-size="6.5">['+i+']</text>';
+  }
+  const p2Px=rightX+p2*(cellW+3)+cellW/2;
+  svg+='<polygon points="'+p2Px+','+(rowY-3)+' '+(p2Px-4)+','+(rowY-9)+' '+(p2Px+4)+','+(rowY-9)+'" fill="'+orange+'"/>';
+  svg+='<text x="'+p2Px+'" y="'+(rowY-11)+'" text-anchor="middle" fill="'+orange+'" font-size="7" font-weight="bold">p2</text>';
+
+  // Scratchpad
+  const scratchY=145,sW=24,sH=28;
+  const mergedVals=[14, 18, 25];
+  svg+='<text x="55" y="'+(scratchY-8)+'" fill="#10b981" font-size="8.5" font-weight="bold">MERGE SCRATCHPAD M[0 .. '+(n-1)+'] (AUXILIARY BUFFER O(n))</text>';
+  for(let i=0;i<12;i++){
+   const cx=55+i*(sW+4);
+   const hasVal=i<mergedVals.length;
+   const isWriteTarget=i===mergedVals.length;
+   svg+='<rect x="'+cx+'" y="'+scratchY+'" width="'+sW+'" height="'+sH+'" rx="2" fill="'+(hasVal?'#064e3b':isWriteTarget?'#1e3e52':'#0f171d')+'" stroke="'+(hasVal?'#10b981':isWriteTarget?orange:'#243c4a')+'" stroke-width="'+(isWriteTarget?1.5:1)+'"/>';
+   if(hasVal){
+    svg+='<text x="'+(cx+sW/2)+'" y="'+(scratchY+sH/2+4)+'" text-anchor="middle" fill="#6ee7b7" font-size="7.5" font-family="monospace">'+mergedVals[i]+'</text>';
+   } else if(isWriteTarget){
+    svg+='<text x="'+(cx+sW/2)+'" y="'+(scratchY+sH/2+4)+'" text-anchor="middle" fill="'+orange+'" font-size="7">next</text>';
+   }
+   svg+='<text x="'+(cx+sW/2)+'" y="'+(scratchY+sH+10)+'" text-anchor="middle" fill="#5a7687" font-size="6">['+i+']</text>';
+  }
+
+  const regX=55,regY=195,regW=370,regH=65;
+  svg+='<rect x="'+regX+'" y="'+regY+'" width="'+regW+'" height="'+regH+'" rx="4" fill="#081016" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(regX+10)+'" y="'+(regY+16)+'" fill="#38bdf8" font-size="8" font-family="monospace">ALU Comparator: L['+p1+'] ('+leftVals[p1]+') <= R['+p2+'] ('+rightVals[p2]+') ? ⟹ TRUE</text>';
+  svg+='<text x="'+(regX+10)+'" y="'+(regY+32)+'" fill="'+orange+'" font-size="8" font-family="monospace">Memory Bus: Writing L['+p1+'] ('+leftVals[p1]+') to Scratchpad M['+mergedVals.length+'] · Increment p1</text>';
+  svg+='<text x="'+(regX+10)+'" y="'+(regY+48)+'" fill="#8ba5b5" font-size="7.5">Merge Invariant: Subarrays already sorted ⟹ at most (len(L) + len(R) - 1) comparisons</text>';
+
+  const bX=465,bY=38,bW=220,bH=235;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">ARRAY SIZE (n)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+n+'</text>';
+  svg+='<text x="'+(bX+95)+'" y="'+(bY+46)+'" fill="#8ba5b5" font-size="11">elements</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+64)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+64)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+82)+'" fill="#7e9bab" font-size="9">RECURSIVE INTERVALS n(log₂ n − 1)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+106)+'" fill="'+ink+'" font-size="18" font-family="monospace" font-weight="bold">'+intervalSpace+'</text>';
+  svg+='<text x="'+(bX+120)+'" y="'+(bY+104)+'" fill="#8ba5b5" font-size="10">intervals</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+120)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+120)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+138)+'" fill="#7e9bab" font-size="9">KEY COMPARISONS C(n)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+164)+'" fill="#fde047" font-size="20" font-family="monospace" font-weight="bold">'+c_total+'</text>';
+  svg+='<text x="'+(bX+105)+'" y="'+(bY+160)+'" fill="#8ba5b5" font-size="9">n log₂ n − n + 1</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+178)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+178)+'" stroke="#1e3340"/>';
+
+  svg+=text(bX+bW/2,bY+200,'C = k_merge · n(log₂ n − 1) + 1',ink,10);
+  svg+=text(bX+bW/2,bY+218,'Scaling Gradient: k = 1.0000 comp/interval',orange,9);
+
+  svg+=text(360,305,'Algorithmic Complexity: C(n) = n log₂ n − n + 1 = Θ(n log n) · Auxiliary Space: O(n) Buffer',soft,10);
+  $('apparatusDiagram').innerHTML=svg;
+  return;
+ }
 
  if(cfg.slug==='quadratic-sorting-algorithms'){
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';

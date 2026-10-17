@@ -18,6 +18,14 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:raw/50.0,x,y,valid:n>=10&&n<=70};
  }
+ if(slug==='divide-conquer-sorting'){
+  const n=Number(input);
+  const log2n=Math.log2(n);
+  const raw=Math.round(n*log2n - n + 1);
+  const x=n*(log2n - 1);
+  const y=raw;
+  return {raw,ideal:raw,period:raw/100.0,x,y,valid:n>=64&&n<=4096};
+ }
  throw Error('Unknown CS experiment: '+slug);
 }
 
@@ -31,6 +39,12 @@ function reading(slug,input,raw){
  }
  if(slug==='quadratic-sorting-algorithms'){
   x=Number(input)*(Number(input)-1);
+  y=raw;
+ }
+ if(slug==='divide-conquer-sorting'){
+  const n=Number(input);
+  const log2n=Math.log2(n);
+  x=n*(log2n - 1);
   y=raw;
  }
  return {input,raw,x,y};
@@ -62,6 +76,9 @@ function estimate(slug,f){
  }
  if(slug==='quadratic-sorting-algorithms'){
   return {value:f.m,se:f.slopeSE,reference:0.5000};
+ }
+ if(slug==='divide-conquer-sorting'){
+  return {value:f.m,se:f.slopeSE,reference:1.0000};
  }
  throw Error('Unknown CS experiment: '+slug);
 }

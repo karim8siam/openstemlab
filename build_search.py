@@ -45,7 +45,8 @@ def experiment_index(experiments):
     'emission-spectra-spectroscopy':'emission spectra spectroscopy balmer series rydberg constant hydrogen geissler tube diffraction grating bohr atom quantum energy levels fraunhofer lines wavelength wavenumber',
     'photometry-lamp-efficiency':'photometry lamp efficiency lummer brodhun bunsen grease spot candela lumen lux illuminance inverse square law luminous efficacy incandescent cfl led photometer bench optical track',
     'search-algorithms-complexity':'binary search linear search interpolation search time complexity asymptotic analysis big-o logarithm divide and conquer array decision tree algorithm profiling',
-    'quadratic-sorting-algorithms':'bubble sort selection sort insertion sort quadratic sorting algorithms time complexity inversions swaps memory writes stability permutation comparison count'}
+    'quadratic-sorting-algorithms':'bubble sort selection sort insertion sort quadratic sorting algorithms time complexity inversions swaps memory writes stability permutation comparison count',
+    'divide-conquer-sorting':'merge sort quick sort heap sort divide and conquer recursion tree master theorem introsort timsort comparisons auxiliary space stability cache locality decision tree lower bound'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   sub='computer-science' if '/computer-science/' in exp.get('page_path','') else 'physics'
