@@ -47,7 +47,8 @@ def experiment_index(experiments):
     'search-algorithms-complexity':'binary search linear search interpolation search time complexity asymptotic analysis big-o logarithm divide and conquer array decision tree algorithm profiling',
     'quadratic-sorting-algorithms':'bubble sort selection sort insertion sort quadratic sorting algorithms time complexity inversions swaps memory writes stability permutation comparison count',
     'divide-conquer-sorting':'merge sort quick sort heap sort divide and conquer recursion tree master theorem introsort timsort comparisons auxiliary space stability cache locality decision tree lower bound',
-    'stack-adt-recursion':'stack abstract data type lifo recursion call stack activation record stack frame rsp rbp memory consumption overflow shunting yard parentheses parsing tail call optimization'}
+    'stack-adt-recursion':'stack abstract data type lifo recursion call stack activation record stack frame rsp rbp memory consumption overflow shunting yard parentheses parsing tail call optimization',
+    'queue-buffer-management':'queue abstract data type fifo circular ring buffer modular arithmetic producer consumer false sharing cache line padding backpressure disruptor socket buffer pipe'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   sub='computer-science' if '/computer-science/' in exp.get('page_path','') else 'physics'

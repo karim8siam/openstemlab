@@ -140,6 +140,55 @@ function drawComparativeSim(t,p,v,ink,soft,orange){
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
+ if(cfg.slug==='queue-buffer-management'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'QUEUE ARCHITECTURES & THROUGHPUT BENCHMARK (n = '+p.input+')','#e2f0f8',11);
+
+  const n=p.input;
+  const t_ring=Math.round(n * 0.05);
+  const t_disruptor=Math.round(n * 0.015);
+  const t_dyn=Math.round(n * 0.12);
+  const t_linked=Math.round(n * 0.65);
+  const t_naive=Math.round(n * 2.8);
+
+  const algos=[
+   {name:'Lock-Free Disruptor Ring',col:'#10b981',time:t_disruptor,scale:'O(1) lock-free',desc:'Zero malloc, atomic sequence, padded lines'},
+   {name:'Circular Ring Buffer (Mutex)',col:'#38bdf8',time:t_ring,scale:'O(1) in-place',desc:'Cyclic modular indexing, zero reallocations'},
+   {name:'Dynamic Array Queue',col:'#f97316',time:t_dyn,scale:'Amortized O(1)',desc:'Occasional O(N) capacity doubling spikes'},
+   {name:'Singly-Linked Node Queue',col:'#a855f7',time:t_linked,scale:'O(1) pointer',desc:'Heap malloc per node, pointer chasing cache misses'},
+   {name:'Naive Array (Dequeue Shift)',col:'#ef4444',time:t_naive,scale:'O(n) per dequeue',desc:'Shifts elements left; catastrophic latency'}
+  ];
+
+  algos.forEach((item,idx)=>{
+   const rowY=cY+16+idx*42;
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+12)+'" fill="#dcebf2" font-size="8.5" font-weight="bold">'+item.name+'</text>';
+   svg+='<text x="'+(cX+cW-15)+'" y="'+(rowY+12)+'" text-anchor="end" fill="'+item.col+'" font-size="8.5" font-family="monospace" font-weight="bold">'+item.time+' µs ('+item.scale+')</text>';
+   
+   const barX=cX+15,barY=rowY+16,barMaxW=cW-30;
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barMaxW+'" height="7" rx="2" fill="#16242c"/>';
+   const frac=Math.min(1.0,Math.log10(item.time+1)/Math.log10(t_naive+1));
+   const fillW=Math.max(4,frac*barMaxW);
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+fillW+'" height="7" rx="2" fill="'+item.col+'"/>';
+  });
+
+  const bX=460,bY=45,bW=220,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">THROUGHPUT ADVANTAGE RATIO</text>';
+  const speedRatio=(t_naive/t_ring).toFixed(1);
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+speedRatio+'×</text>';
+  svg+='<text x="'+(bX+85)+'" y="'+(bY+46)+'" fill="#dcebf2" font-size="10">Ring vs Naive Shift</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#7e9bab" font-size="9">FALSE SHARING ELIMINATION</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="15" font-family="monospace" font-weight="bold">64-Byte Padding</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+124)+'" fill="#8ba5b5" font-size="8">Head and tail on separate cache lines</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+136)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+136)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+154)+'" fill="#7e9bab" font-size="9">POWER-OF-TWO BITMASKING</text>';
+  svg+=text(bX+bW/2,bY+180,'index & (N − 1) (1 cycle)','#38bdf8',11);
+  svg+=text(bX+bW/2,bY+202,'Replaces IDIV instruction (30 cycles)',orange,9.5);
+  svg+=text(360,305,'Comparative Invariant: Circular buffer provides O(1) in-place operations with zero memory churn',soft,10);
+  return svg;
+ }
+
  if(cfg.slug==='stack-adt-recursion'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
   svg+=text(cX+cW/2,cY-14,'RECURSION & CALL STACK MEMORY COMPARISON (n = '+p.input+')','#e2f0f8',11);
@@ -345,6 +394,80 @@ function drawDynamicSandbox(t,p,v,ink,soft,orange){
  const cX=45,cY=45,cW=400,cH=230;
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+ if(cfg.slug==='queue-buffer-management'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'PRODUCER-CONSUMER PIPELINE & BACKPRESSURE FLOW (n = '+p.input+')','#e2f0f8',11);
+
+  const n=p.input;
+  // Producer Box on Left
+  const prX=cX+20,prY=cY+35,prW=90,prH=110;
+  svg+='<rect x="'+prX+'" y="'+prY+'" width="'+prW+'" height="'+prH+'" rx="4" fill="#0f291e" stroke="#10b981" stroke-width="1.5"/>';
+  svg+='<text x="'+(prX+prW/2)+'" y="'+(prY+20)+'" text-anchor="middle" fill="#10b981" font-size="9" font-weight="bold">PRODUCER</text>';
+  svg+='<text x="'+(prX+prW/2)+'" y="'+(prY+40)+'" text-anchor="middle" fill="#6ee7b7" font-size="7.5">Rate: λ_p pkts/s</text>';
+  svg+='<text x="'+(prX+prW/2)+'" y="'+(prY+58)+'" text-anchor="middle" fill="#dcebf2" font-size="7.5" font-family="monospace">Stream Gen</text>';
+  svg+='<rect x="'+(prX+10)+'" y="'+(prY+72)+'" width="'+(prW-20)+'" height="22" rx="2" fill="#064e3b" stroke="#34d399"/>';
+  svg+='<text x="'+(prX+prW/2)+'" y="'+(prY+86)+'" text-anchor="middle" fill="#a7f3d0" font-size="7" font-weight="bold">enqueue()</text>';
+
+  // Flow Arrow into Buffer
+  svg+='<line x1="'+(prX+prW)+'" y1="'+(prY+83)+'" x2="'+(cX+140)+'" y2="'+(prY+83)+'" stroke="#10b981" stroke-width="2"/>';
+  svg+='<polygon points="'+(cX+140)+','+(prY+83)+' '+(cX+133)+','+(prY+79)+' '+(cX+133)+','+(prY+87)+'" fill="#10b981"/>';
+
+  // Ring Buffer Reservoir in Center
+  const rfX=cX+145,rfY=cY+30,rfW=110,rfH=120;
+  svg+='<rect x="'+rfX+'" y="'+rfY+'" width="'+rfW+'" height="'+rfH+'" rx="5" fill="#0c1e28" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(rfX+rfW/2)+'" y="'+(rfY+18)+'" text-anchor="middle" fill="#38bdf8" font-size="8.5" font-weight="bold">RING RESERVOIR</text>';
+  svg+='<text x="'+(rfX+rfW/2)+'" y="'+(rfY+32)+'" text-anchor="middle" fill="#8ba5b5" font-size="7">Capacity: 12 slots</text>';
+
+  // Fill gauge
+  const fillPct=0.58;
+  const gaugeW=rfW-30,gaugeH=12;
+  svg+='<rect x="'+(rfX+15)+'" y="'+(rfY+44)+'" width="'+gaugeW+'" height="'+gaugeH+'" rx="3" fill="#16242c" stroke="#334d5c"/>';
+  svg+='<rect x="'+(rfX+15)+'" y="'+(rfY+44)+'" width="'+(gaugeW*fillPct)+'" height="'+gaugeH+'" rx="3" fill="'+orange+'"/>';
+  svg+='<text x="'+(rfX+rfW/2)+'" y="'+(rfY+70)+'" text-anchor="middle" fill="'+orange+'" font-size="8" font-family="monospace" font-weight="bold">7 / 12 (58% Full)</text>';
+
+  svg+='<rect x="'+(rfX+10)+'" y="'+(rfY+82)+'" width="'+(rfW-20)+'" height="26" rx="2" fill="#111c24" stroke="#223a4a"/>';
+  svg+='<text x="'+(rfX+rfW/2)+'" y="'+(rfY+94)+'" text-anchor="middle" fill="#6ee7b7" font-size="6.5">State: STABLE FLOW</text>';
+  svg+='<text x="'+(rfX+rfW/2)+'" y="'+(rfY+104)+'" text-anchor="middle" fill="#8ba5b5" font-size="6">λ_p <= λ_c (No Drops)</text>';
+
+  // Flow Arrow out of Buffer
+  svg+='<line x1="'+(rfX+rfW)+'" y1="'+(prY+83)+'" x2="'+(cX+285)+'" y2="'+(prY+83)+'" stroke="#38bdf8" stroke-width="2"/>';
+  svg+='<polygon points="'+(cX+285)+','+(prY+83)+' '+(cX+278)+','+(prY+79)+' '+(cX+278)+','+(prY+87)+'" fill="#38bdf8"/>';
+
+  // Consumer Box on Right
+  const csX=cX+290,csY=cY+35,csW=90,csH=110;
+  svg+='<rect x="'+csX+'" y="'+csY+'" width="'+csW+'" height="'+csH+'" rx="4" fill="#082f49" stroke="#38bdf8" stroke-width="1.5"/>';
+  svg+='<text x="'+(csX+csW/2)+'" y="'+(csY+20)+'" text-anchor="middle" fill="#38bdf8" font-size="9" font-weight="bold">CONSUMER</text>';
+  svg+='<text x="'+(csX+csW/2)+'" y="'+(csY+40)+'" text-anchor="middle" fill="#7dd3fc" font-size="7.5">Rate: λ_c pkts/s</text>';
+  svg+='<text x="'+(csX+csW/2)+'" y="'+(csY+58)+'" text-anchor="middle" fill="#dcebf2" font-size="7.5" font-family="monospace">Work Drain</text>';
+  svg+='<rect x="'+(csX+10)+'" y="'+(csY+72)+'" width="'+(csW-20)+'" height="22" rx="2" fill="#0369a1" stroke="#38bdf8"/>';
+  svg+='<text x="'+(csX+csW/2)+'" y="'+(csY+86)+'" text-anchor="middle" fill="#e0f2fe" font-size="7" font-weight="bold">dequeue()</text>';
+
+  svg+='<rect x="'+(cX+15)+'" y="'+(cY+cH-42)+'" width="'+(cW-30)+'" height="32" rx="4" fill="#0e1a22" stroke="#1e3340"/>';
+  svg+='<text x="'+(cX+25)+'" y="'+(cY+cH-26)+'" fill="#38bdf8" font-size="8" font-family="monospace">Queuing Invariant: Little\'s Law L = λ · W ⟹ Buffer Occupancy = Arrival Rate × Residence Time</text>';
+  svg+='<text x="'+(cX+25)+'" y="'+(cY+cH-14)+'" fill="#8ba5b5" font-size="7.5">Backpressure Policy: Mutex wait on full buffer · Prevents packet loss without unmapped heap growth</text>';
+
+  const bX=470,bY=45,bW=210,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#7e9bab" font-size="9">BUFFER CAPACITY (N)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+54)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">12</text>';
+  svg+='<text x="'+(bX+55)+'" y="'+(bY+50)+'" fill="#8ba5b5" font-size="11">ring slots</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+68)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+68)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+88)+'" fill="#7e9bab" font-size="9">FLOW EQUILIBRIUM STATE</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+112)+'" fill="'+ink+'" font-size="15" font-family="monospace" font-weight="bold">λ_p ≤ λ_c Safe</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+124)+'" fill="#8ba5b5" font-size="8">Zero buffer overflow drop events</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+138)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+138)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+156)+'" fill="#7e9bab" font-size="9">SYNCHRONIZATION PRIMITIVES</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+180)+'" fill="#fde047" font-size="12" font-family="monospace" font-weight="bold">Condition Variables</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+196)+'" fill="#8ba5b5" font-size="8">not_empty / not_full kernel wait queues</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+208)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+208)+'" stroke="#1e3340"/>';
+
+  svg+=text(bX+bW/2,bY+224,'Elastic Reservoir: Smooths bursty network I/O',orange,8.5);
+  svg+=text(360,305,'Mathematical Theorem: Bounded buffer guarantees stability when service rate exceeds arrival rate',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='stack-adt-recursion'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
@@ -596,6 +719,109 @@ function draw(t){
  const ink='#38bdf8',soft='#7e9bab',orange='#f97316';
  if(currentSimMode==='compare'){$('apparatusDiagram').innerHTML=drawComparativeSim(t,p,v,ink,soft,orange);return;}
  if(currentSimMode==='sandbox'){$('apparatusDiagram').innerHTML=drawDynamicSandbox(t,p,v,ink,soft,orange);return;}
+
+ if(cfg.slug==='queue-buffer-management'){
+  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
+  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+  const n=p.input;
+  const v_total=v.raw;
+  const wrapCycles=Math.floor(n/12);
+
+  svg+='<rect x="35" y="38" width="410" height="235" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+=text(240,24,'Circular Ring Buffer Memory Architecture & Pointer Invariants');
+
+  // Ring Array slots layout
+  const numSlots=12;
+  const slotW=28,slotH=36;
+  const startX=48,slotY=70;
+  const frontIdx=3,rearIdx=8;
+
+  svg+='<text x="50" y="58" fill="#7e9bab" font-size="8.5" font-weight="bold">CIRCULAR BUFFER ARRAY SLOTS [0 .. 11] (N = 12)</text>';
+  svg+='<text x="430" y="58" text-anchor="end" fill="'+orange+'" font-size="8.5" font-weight="bold">OCCUPANCY = 5 / 12</text>';
+
+  for(let i=0;i<numSlots;i++){
+   const sx=startX+i*(slotW+3);
+   const isOccupied=(i>=frontIdx && i<rearIdx);
+   const isFront=i===frontIdx;
+   const isRear=i===rearIdx;
+
+   let fillCol='#111c24',strokeCol='#243c4a';
+   if(isOccupied){fillCol='#064e3b';strokeCol='#10b981';}
+   if(isFront){strokeCol='#38bdf8';}
+   if(isRear){strokeCol=orange;}
+
+   svg+='<rect x="'+sx+'" y="'+slotY+'" width="'+slotW+'" height="'+slotH+'" rx="2" fill="'+fillCol+'" stroke="'+strokeCol+'" stroke-width="'+(isFront||isRear?2:1)+'"/>';
+   svg+='<text x="'+(sx+slotW/2)+'" y="'+(slotY+slotH/2+4)+'" text-anchor="middle" fill="'+(isOccupied?'#6ee7b7':'#5a7687')+'" font-size="8" font-family="monospace">'+(isOccupied?'P'+(i+1):'—')+'</text>';
+   svg+='<text x="'+(sx+slotW/2)+'" y="'+(slotY+slotH+11)+'" text-anchor="middle" fill="#5a7687" font-size="6.5">['+i+']</text>';
+  }
+
+  // Front Cursor Arrow (Top)
+  const frontPx=startX+frontIdx*(slotW+3)+slotW/2;
+  svg+='<polygon points="'+frontPx+','+(slotY-3)+' '+(frontPx-4)+','+(slotY-9)+' '+(frontPx+4)+','+(slotY-9)+'" fill="#38bdf8"/>';
+  svg+='<text x="'+frontPx+'" y="'+(slotY-11)+'" text-anchor="middle" fill="#38bdf8" font-size="7.5" font-weight="bold">front (head)</text>';
+
+  // Rear Cursor Arrow (Top)
+  const rearPx=startX+rearIdx*(slotW+3)+slotW/2;
+  svg+='<polygon points="'+rearPx+','+(slotY-3)+' '+(rearPx-4)+','+(slotY-9)+' '+(rearPx+4)+','+(slotY-9)+'" fill="'+orange+'"/>';
+  svg+='<text x="'+rearPx+'" y="'+(slotY-11)+'" text-anchor="middle" fill="'+orange+'" font-size="7.5" font-weight="bold">rear (tail)</text>';
+
+  // Modular Wrap-Around Arrow beneath array
+  svg+='<path d="M '+(startX+(numSlots-1)*(slotW+3)+slotW)+' '+(slotY+slotH+18)+' Q 240 '+(slotY+slotH+35)+' '+startX+' '+(slotY+slotH+18)+'" fill="none" stroke="'+orange+'" stroke-width="1.5" stroke-dasharray="3 3"/>';
+  svg+='<polygon points="'+startX+','+(slotY+slotH+18)+' '+(startX+6)+','+(slotY+slotH+14)+' '+(startX+6)+','+(slotY+slotH+22)+'" fill="'+orange+'"/>';
+  svg+='<text x="240" y="'+(slotY+slotH+32)+'" text-anchor="middle" fill="'+orange+'" font-size="7.5" font-family="monospace">Modular Wrap: next = (index + 1) mod 12</text>';
+
+  // Cache line padding diagram (Descriptor)
+  const padX=50,padY=145,padW=375,padH=50;
+  svg+='<rect x="'+padX+'" y="'+padY+'" width="'+padW+'" height="'+padH+'" rx="4" fill="#081016" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(padX+10)+'" y="'+(padY+15)+'" fill="#38bdf8" font-size="8" font-weight="bold">CACHE-LINE PADDED DESCRIPTOR BLOCK (256 BYTES)</text>';
+  
+  // Cache Line 0 (Head)
+  svg+='<rect x="'+(padX+10)+'" y="'+(padY+22)+'" width="80" height="20" rx="2" fill="#0c4a6e" stroke="#38bdf8"/>';
+  svg+='<text x="'+(padX+50)+'" y="'+(padY+35)+'" text-anchor="middle" fill="#dcebf2" font-size="7" font-family="monospace">Head (64B Pad)</text>';
+
+  // Cache Line 1 (Tail)
+  svg+='<rect x="'+(padX+95)+'" y="'+(padY+22)+'" width="80" height="20" rx="2" fill="#431407" stroke="'+orange+'"/>';
+  svg+='<text x="'+(padX+135)+'" y="'+(padY+35)+'" text-anchor="middle" fill="#dcebf2" font-size="7" font-family="monospace">Tail (64B Pad)</text>';
+
+  // Cache Line 2 & 3 (Capacity & Mutex)
+  svg+='<rect x="'+(padX+180)+'" y="'+(padY+22)+'" width="95" height="20" rx="2" fill="#1e293b" stroke="#64748b"/>';
+  svg+='<text x="'+(padX+227)+'" y="'+(padY+35)+'" text-anchor="middle" fill="#94a3b8" font-size="7" font-family="monospace">Capacity & Flags (64B)</text>';
+
+  svg+='<rect x="'+(padX+280)+'" y="'+(padY+22)+'" width="85" height="20" rx="2" fill="#1e293b" stroke="#64748b"/>';
+  svg+='<text x="'+(padX+322)+'" y="'+(padY+35)+'" text-anchor="middle" fill="#94a3b8" font-size="7" font-family="monospace">Mutex State (64B)</text>';
+
+  const regX=50,regY=205,regW=375,regH=58;
+  svg+='<rect x="'+regX+'" y="'+regY+'" width="'+regW+'" height="'+regH+'" rx="4" fill="#081016" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(regX+10)+'" y="'+(regY+16)+'" fill="#38bdf8" font-size="8" font-family="monospace">Atomic Cursors: front = '+frontIdx+' · rear = '+rearIdx+' ⟹ Occupancy = ('+rearIdx+' − '+frontIdx+' + 12) % 12 = 5</text>';
+  svg+='<text x="'+(regX+10)+'" y="'+(regY+32)+'" fill="'+orange+'" font-size="8" font-family="monospace">Memory Bus Telemetry: Cumulative Volume V = '+v_total+' bytes ('+(v_total/1024).toFixed(2)+' KiB)</text>';
+  svg+='<text x="'+(regX+10)+'" y="'+(regY+48)+'" fill="#8ba5b5" font-size="7">Full/Empty Invariant: (rear + 1) % N == front ⟹ Buffer Full · front == rear ⟹ Buffer Empty</text>';
+
+  const bX=465,bY=38,bW=220,bH=235;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">PACKET BATCH SIZE (n)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+n+'</text>';
+  svg+='<text x="'+(bX+95)+'" y="'+(bY+46)+'" fill="#8ba5b5" font-size="11">packets</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+64)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+64)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+82)+'" fill="#7e9bab" font-size="9">MEMORY TRANSFER VOLUME V(n)</text>';
+  const volKb=(v_total/1024).toFixed(2);
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+106)+'" fill="'+ink+'" font-size="18" font-family="monospace" font-weight="bold">'+v_total+'</text>';
+  svg+='<text x="'+(bX+120)+'" y="'+(bY+104)+'" fill="#8ba5b5" font-size="10">bytes ('+volKb+' KiB)</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+120)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+120)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+138)+'" fill="#7e9bab" font-size="9">UNIT PACKET PAYLOAD L_packet</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+164)+'" fill="#fde047" font-size="20" font-family="monospace" font-weight="bold">64.0000</text>';
+  svg+='<text x="'+(bX+125)+'" y="'+(bY+160)+'" fill="#8ba5b5" font-size="9">bytes/packet</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+178)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+178)+'" stroke="#1e3340"/>';
+
+  svg+=text(bX+bW/2,bY+200,'V = L_packet · n + V_0',ink,10);
+  svg+=text(bX+bW/2,bY+218,'Cache Line Unit: 64 B/packet',orange,9);
+
+  svg+=text(360,305,'Microarchitectural Invariant: V(n) = 64·n + 256 bytes = Θ(n) · Ring Wraparounds: '+wrapCycles,soft,10);
+  $('apparatusDiagram').innerHTML=svg;
+  return;
+ }
 
  if(cfg.slug==='stack-adt-recursion'){
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
