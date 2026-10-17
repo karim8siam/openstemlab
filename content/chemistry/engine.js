@@ -1,6 +1,13 @@
 'use strict';
 const cfg=JSON.parse(document.getElementById('labConfig').textContent),model=window.ChemistryModels,$=id=>document.getElementById(id);
 const fmt=(v,n=4)=>Math.abs(v)>0&&(Math.abs(v)<.001||Math.abs(v)>=1e6)?v.toExponential(3):v.toFixed(n);
+function header(title, subtitle=''){
+ return '<rect x="0" y="0" width="720" height="320" fill="#051009"/><text x="360" y="24" text-anchor="middle" fill="#4ade80" font-size="13" font-weight="bold">'+title+'</text>' + (subtitle ? '<text x="360" y="39" text-anchor="middle" fill="#94a3b8" font-size="9">'+subtitle+'</text>' : '');
+}
+function text(x, y, str, col='#94a3b8', sz=8.5, anchor='middle', weight='normal'){
+ return '<text x="'+x+'" y="'+y+'" text-anchor="'+anchor+'" fill="'+col+'" font-size="'+sz+'" font-weight="'+weight+'">'+str+'</text>';
+}
+
 let rows=[],measurement=null,busy=false,clearPending=false;
 try{const saved=JSON.parse(localStorage.getItem('openstemlab-'+cfg.slug+'-v1')||'[]');if(Array.isArray(saved))rows=saved.filter(r=>r&&Number.isFinite(r.input)&&r.input>=cfg.min&&r.input<=cfg.max&&Number.isFinite(r.raw)&&r.raw>0).slice(0,100).map(r=>model.reading(cfg.slug,r.input,r.raw));}catch{}
 
@@ -59,9 +66,26 @@ function update(){
  }else if(cfg.slug==='gibbs-free-energy-solubility-van-t-hoff'){
   $('liveState').textContent='Ready to equilibrate saturated borax slurry at '+p.input.toFixed(1)+' °C.';
   message('Equilibrate borax flask, pre-warm filter pipette, draw 5.00 mL aliquot & titrate with 0.50 M HCl.');
+ }else if(cfg.slug==='activation-energy-arrhenius-acetone-iodination'){
+  $('liveState').textContent='Ready to equilibrate optical cuvette at '+p.input.toFixed(1)+' °C.';
+  message('Set bath temperature T, equilibrate cuvette, inject 1.00 mM I₂ & record decolorization time Δt.');
  }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
   $('liveState').textContent='Ready to trigger iodine clock with [S₂O₈²⁻]₀ = '+p.input.toFixed(1)+' mM.';
   message('Mix persulfate and iodide-thiosulfate-starch cocktail at 25.00 °C (400 rpm) & measure clock time Δt.');
+ }else if(cfg.slug==='activation-energy-arrhenius-acetone-iodination'){
+  const T_c = p.input;
+  const dt = raw;
+  const k_calc = 0.00200 / dt;
+  const ln_k = Math.log(k_calc);
+  $('liveState').textContent='Decolorization complete: Δt = '+dt.toFixed(2)+' s (k = '+(k_calc*1e5).toFixed(3)+' × 10⁻⁵ M⁻¹s⁻¹).';
+  message('Reaction complete: iodine fully consumed at Δt = '+dt.toFixed(2)+' s (ln(k) = '+ln_k.toFixed(4)+'). Record in notebook.');
+ }else if(cfg.slug==='activation-energy-arrhenius-acetone-iodination'){
+  const T_c = p.input;
+  const dt = raw;
+  const k_calc = 0.00200 / dt;
+  const ln_k = Math.log(k_calc);
+  $('liveState').textContent='Decolorization complete: Δt = '+dt.toFixed(2)+' s (k = '+(k_calc*1e5).toFixed(3)+' × 10⁻⁵ M⁻¹s⁻¹).';
+  message('Reaction complete: iodine fully consumed at Δt = '+dt.toFixed(2)+' s (ln(k) = '+ln_k.toFixed(4)+'). Record in notebook.');
  }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
   const p_mM = p.input;
   const dt = raw;
@@ -70,7 +94,31 @@ function update(){
   const k_sec = k_prime / 0.0800;
   $('liveState').textContent='Flash transition: Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s).';
   message('Clock reaction complete: sudden blue-black starch-triiodide flash at Δt = '+dt.toFixed(3)+' s (r₀ = '+(rate0*1e5).toFixed(3)+' × 10⁻⁵ M/s, k = '+k_sec.toFixed(4)+' L/(mol·s)). Record in notebook.');
- }else if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
+ }else if(cfg.slug==='activation-energy-arrhenius-acetone-iodination'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawArrheniusCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawArrheniusSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawArrheniusBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='activation-energy-arrhenius-acetone-iodination'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawArrheniusCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawArrheniusSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawArrheniusBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='chemical-kinetics-iodine-clock-persulfate'){
   if(currentSimMode==='compare'){
    $('apparatusDiagram').innerHTML=drawClockCompareView(p,rawVal);
    return;
@@ -3889,7 +3937,7 @@ function drawCopperCompareView(p,rawVal){
     'Principle: Anodic dissolution & cathodic deposition of Cu²⁺ ions',
     'Reactions: Cu(blister anode) ⟶ Cu²⁺ + 2e⁻ ⟶ Cu(pure cathode)',
     'Energy & Temp: 55 °C to 65 °C; electrical power ~300 kWh/ton',
-    'Theoretical Yield: >99.5% cathode current efficiency (Faraday's law)',
+    'Theoretical Yield: >99.5% cathode current efficiency (Faraday\'s law)',
     'Selectivity: Produces 99.99% Grade A electrolytic copper cathode',
     'Primary advantage: Precious metals (Au, Ag, Pt) drop as anode slime',
     'Limitation: Requires pre-smelted copper anodes and high DC power'
@@ -4913,7 +4961,7 @@ function drawCryoCompareView(p,rawVal){
    color:'#fde047',
    border:'#5a4814',
    items:[
-    'Principle: Van 't Hoff osmotic pressure across membrane: Π = (c/M)·RT',
+    'Principle: Van \'t Hoff osmotic pressure across membrane: Π = (c/M)·RT',
     'Sensitivity: Immense pressure signals (0.001 M produces ~25 cm head)',
     'Temperature: Isothermal ambient operation (25.0 °C)',
     'Solute range: Macromolecules & synthetic polymers (M = 10⁴ to 10⁶ g/mol)',
@@ -5418,7 +5466,7 @@ function drawHessBenchView(p, rawVal){
  svg += '<rect x="'+(rX+15)+'" y="'+(rY+200)+'" width="405" height="30" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1"/>';
  svg += '<text x="'+(rX+217)+'" y="'+(rY+218)+'" text-anchor="middle" fill="#4ade80" font-size="8.2" font-family="monospace" font-weight="bold">Hess Law Invariant: ΔH_f° = −m_slope·(10.783) + 146.00 − 285.83 = −601.82 kJ/mol (R² = 1.000)</text>';
 
- svg += text(360, 310, 'Hess's Law couples solution calorimetry with standard thermochemical cycles to isolate formation enthalpies.', '#789c80', 8.5);
+ svg += text(360, 310, 'Hess\'s Law couples solution calorimetry with standard thermochemical cycles to isolate formation enthalpies.', '#789c80', 8.5);
  return svg;
 }
 
@@ -5487,7 +5535,7 @@ function drawHessCompareView(p, rawVal){
   });
  });
 
- svg += text(360, 305, 'Thermodynamic Invariant: Hess's law bridges macroscopic bench calorimetry with microscopic lattice energy cycles.', '#789c80', 8.5);
+ svg += text(360, 305, 'Thermodynamic Invariant: Hess\'s law bridges macroscopic bench calorimetry with microscopic lattice energy cycles.', '#789c80', 8.5);
  return svg;
 }
 
@@ -6055,13 +6103,13 @@ function drawSolnSandboxView(p, rawVal){
 
  let svg = '';
  svg += '<rect x="0" y="0" width="720" height="320" fill="#051009"/>';
- svg += text(360, 24, 'VAN 'T HOFF SOLUBILITY DEPENDENCE & HEAT-LEAK EXTRAPOLATION', '#4ade80', 13);
+ svg += text(360, 24, 'VAN \'T HOFF SOLUBILITY DEPENDENCE & HEAT-LEAK EXTRAPOLATION', '#4ade80', 13);
  svg += text(360, 39, 'd(ln K_sp)/dT = ΔH_soln° / (R T²) and Newton Inward Heat Leak Correction', '#94a3b8', 9);
 
  // --- LEFT PANEL: TEMPERATURE-DEPENDENT SOLUBILITY CURVE ---
  const lX = 25, lY = 50, lW = 390, lH = 240;
  svg += '<rect x="'+lX+'" y="'+lY+'" width="'+lW+'" height="'+lH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
- svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+18)+'" text-anchor="middle" fill="#86efac" font-size="9.5" font-weight="bold">VAN 'T HOFF SOLUBILITY PROFILE (g KNO₃ / 100 g H₂O)</text>';
+ svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+18)+'" text-anchor="middle" fill="#86efac" font-size="9.5" font-weight="bold">VAN \'T HOFF SOLUBILITY PROFILE (g KNO₃ / 100 g H₂O)</text>';
 
  const gX = lX + 45, gY = lY + 35, gW = 325, gH = 155;
  svg += '<rect x="'+gX+'" y="'+gY+'" width="'+gW+'" height="'+gH+'" fill="#051009" stroke="#162e1e" stroke-width="1"/>';
@@ -6100,7 +6148,7 @@ function drawSolnSandboxView(p, rawVal){
 
  // Bottom delta T badge
  svg += '<rect x="'+(lX+15)+'" y="'+(lY+198)+'" width="'+(lW-30)+'" height="32" rx="3" fill="#051009" stroke="#162e1e"/>';
- svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+218)+'" text-anchor="middle" fill="#86efac" font-size="8" font-family="monospace" font-weight="bold">Van 't Hoff Relation: d(ln K_sp)/dT > 0 due to positive endothermic ΔH_soln°</text>';
+ svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+218)+'" text-anchor="middle" fill="#86efac" font-size="8" font-family="monospace" font-weight="bold">Van \'t Hoff Relation: d(ln K_sp)/dT > 0 due to positive endothermic ΔH_soln°</text>';
 
 
  // --- RIGHT PANEL: SOURCES OF BIAS & SYSTEM AUDIT ---
@@ -6279,7 +6327,7 @@ function drawVapCompareView(p, rawVal){
    ]
   },
   {
-   title: '3. Trouton's Rule',
+   title: '3. Trouton\'s Rule',
    sub: 'ΔS_vap° = ΔH_vap / T_b ≈ 88 J/(mol·K)',
    color: '#facc15',
    border: '#854d0e',
@@ -6403,7 +6451,7 @@ function drawVapSandboxView(p, rawVal){
 }
 
 
-// --- LAB 16: VAN 'T HOFF THERMODYNAMIC SOLUBILITY ANALYSIS ---
+// --- LAB 16: VAN \'T HOFF THERMODYNAMIC SOLUBILITY ANALYSIS ---
 
 function drawHoffBenchView(p, rawVal){
  const t = (p && p.input) ? p.input : 40.0;
@@ -6425,7 +6473,7 @@ function drawHoffBenchView(p, rawVal){
  let svg = '';
  svg += '<rect x="0" y="0" width="720" height="320" fill="#051009"/>';
  svg += text(360, 24, 'SATURATED BORAX THERMOSTAT & QUANTITATIVE BURETTE TITRATION', '#4ade80', 13);
- svg += text(360, 39, 'Na2B4O7·10H2O(s) <=> 2 Na+(aq) + B4O5(OH)4^2-(aq) + 8 H2O(l) | van 't Hoff ΔH° = +110.1 kJ/mol', '#94a3b8', 9);
+ svg += text(360, 39, 'Na2B4O7·10H2O(s) <=> 2 Na+(aq) + B4O5(OH)4^2-(aq) + 8 H2O(l) | van \'t Hoff ΔH° = +110.1 kJ/mol', '#94a3b8', 9);
 
  // --- LEFT PANEL: THERMOSTATTED BORAX FLASK & BURETTE TITRATION ---
  const bX = 140, bY = 70;
@@ -6466,7 +6514,7 @@ function drawHoffBenchView(p, rawVal){
  svg += '<text x="'+tX+'" y="'+(fY+74)+'" text-anchor="middle" fill="#64748b" font-size="7">5.00 mL Aliquot</text>';
 
 
- // --- RIGHT PANEL: DIGITAL TITRANT DISPLAY & VAN 'T HOFF AUDIT ---
+ // --- RIGHT PANEL: DIGITAL TITRANT DISPLAY & VAN \'T HOFF AUDIT ---
  const rX = 260, rY = 55, rW = 435, rH = 240;
  svg += '<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
 
@@ -6478,10 +6526,10 @@ function drawHoffBenchView(p, rawVal){
  svg += '<text x="'+(rX+140)+'" y="'+(rY+56)+'" fill="#38bdf8" font-size="7.5" font-weight="bold">ln K_sp = '+ln_Ksp.toFixed(3)+'</text>';
  svg += '<text x="'+(rX+140)+'" y="'+(rY+68)+'" fill="#86efac" font-size="7">±0.02 mL Res.</text>';
 
- // Mini van 't Hoff Linear Profile Profile
+ // Mini van \'t Hoff Linear Profile Profile
  const cX = rX + 225, cY = rY + 12, cW = 195, cH = 72;
  svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1.2"/>';
- svg += '<text x="'+(cX+8)+'" y="'+(cY+12)+'" fill="#94a3b8" font-size="7">ln(K_sp) vs 1000/T van 't Hoff Plot</text>';
+ svg += '<text x="'+(cX+8)+'" y="'+(cY+12)+'" fill="#94a3b8" font-size="7">ln(K_sp) vs 1000/T van \'t Hoff Plot</text>';
  // Axes inside mini box
  svg += '<line x1="'+(cX+15)+'" y1="'+(cY+60)+'" x2="'+(cX+185)+'" y2="'+(cY+60)+'" stroke="#162e1e" stroke-width="1"/>';
  svg += '<line x1="'+(cX+15)+'" y1="'+(cY+18)+'" x2="'+(cX+15)+'" y2="'+(cY+60)+'" stroke="#162e1e" stroke-width="1"/>';
@@ -6513,9 +6561,9 @@ function drawHoffBenchView(p, rawVal){
 
  // Bottom Verification Banner
  svg += '<rect x="'+(rX+15)+'" y="'+(rY+200)+'" width="405" height="30" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1"/>';
- svg += '<text x="'+(rX+217)+'" y="'+(rY+218)+'" text-anchor="middle" fill="#4ade80" font-size="8.2" font-family="monospace" font-weight="bold">van 't Hoff Invariant: ln K_sp = −13.241·(1000/T) + 39.723 => ΔH° = +110.1 kJ/mol, ΔS° = +330.3 J/mol·K (R² = 1.000)</text>';
+ svg += '<text x="'+(rX+217)+'" y="'+(rY+218)+'" text-anchor="middle" fill="#4ade80" font-size="8.2" font-family="monospace" font-weight="bold">van \'t Hoff Invariant: ln K_sp = −13.241·(1000/T) + 39.723 => ΔH° = +110.1 kJ/mol, ΔS° = +330.3 J/mol·K (R² = 1.000)</text>';
 
- svg += text(360, 310, 'van 't Hoff analysis extracts enthalpy and entropy purely from equilibrium solubility without calorimetry.', '#789c80', 8.5);
+ svg += text(360, 310, 'van \'t Hoff analysis extracts enthalpy and entropy purely from equilibrium solubility without calorimetry.', '#789c80', 8.5);
  return svg;
 }
 
@@ -6523,11 +6571,11 @@ function drawHoffCompareView(p, rawVal){
  let svg = '';
  svg += '<rect x="0" y="0" width="720" height="320" fill="#051009"/>';
  svg += text(360, 24, 'THERMODYNAMIC ANALYSIS OF ELECTROLYTE DISSOLUTION', '#4ade80', 13);
- svg += text(360, 39, 'van 't Hoff Linear Ideal Model vs Debye-Hückel Extended Law vs Entropic Compensation', '#94a3b8', 9);
+ svg += text(360, 39, 'van \'t Hoff Linear Ideal Model vs Debye-Hückel Extended Law vs Entropic Compensation', '#94a3b8', 9);
 
  const cards = [
   {
-   title: '1. van 't Hoff Linear Model',
+   title: '1. van \'t Hoff Linear Model',
    sub: 'ln K_sp = −(ΔH°/R)·(1/T) + ΔS°/R',
    color: '#4ade80',
    border: '#166534',
@@ -6674,7 +6722,7 @@ function drawHoffSandboxView(p, rawVal){
   svg += '<text x="'+(rX+rW-14)+'" y="'+(ly+12)+'" text-anchor="end" fill="'+li.col+'" font-size="7.5" font-family="monospace">'+li.val+'</text>';
  });
 
- svg += text(360, 305, 'Thermodynamic Invariant: van 't Hoff analysis provides complete state function derivation.', '#789c80', 8.5);
+ svg += text(360, 305, 'Thermodynamic Invariant: van \'t Hoff analysis provides complete state function derivation.', '#789c80', 8.5);
  return svg;
 }
 
@@ -6750,19 +6798,19 @@ function drawClementBenchView(p, rawVal){
  svg += '<text x="'+(rX+140)+'" y="'+(rY+68)+'" fill="#38bdf8" font-size="7">±0.05 cm Res.</text>';
 
  // Mini h2 vs h1 Linear Regression Profile
- const cX = rX + 225, cY = rY + 12, cW = 195, cH = 72;
- svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1.2"/>';
- svg += '<text x="'+(cX+8)+'" y="'+(cY+12)+'" fill="#94a3b8" font-size="7">Linear Fit: h₂ = [(γ−1)/γ] · h₁</text>';
+ const boxX = rX + 225, boxY = rY + 12, boxW = 195, boxH = 72;
+ svg += '<rect x="'+boxX+'" y="'+boxY+'" width="'+boxW+'" height="'+boxH+'" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1.2"/>';
+ svg += '<text x="'+(boxX+8)+'" y="'+(boxY+12)+'" fill="#94a3b8" font-size="7">Linear Fit: h₂ = [(γ−1)/γ] · h₁</text>';
  // Axes inside mini box
- svg += '<line x1="'+(cX+15)+'" y1="'+(cY+60)+'" x2="'+(cX+185)+'" y2="'+(cY+60)+'" stroke="#162e1e" stroke-width="1"/>';
- svg += '<line x1="'+(cX+15)+'" y1="'+(cY+18)+'" x2="'+(cX+15)+'" y2="'+(cY+60)+'" stroke="#162e1e" stroke-width="1"/>';
+ svg += '<line x1="'+(boxX+15)+'" y1="'+(boxY+60)+'" x2="'+(boxX+185)+'" y2="'+(boxY+60)+'" stroke="#162e1e" stroke-width="1"/>';
+ svg += '<line x1="'+(boxX+15)+'" y1="'+(boxY+18)+'" x2="'+(boxX+15)+'" y2="'+(boxY+60)+'" stroke="#162e1e" stroke-width="1"/>';
  // Sloping line with m = 2/7 = 0.2857
- svg += '<line x1="'+(cX+15)+'" y1="'+(cY+60)+'" x2="'+(cX+180)+'" y2="'+(cY+20)+'" stroke="#4ade80" stroke-width="1.8"/>';
+ svg += '<line x1="'+(boxX+15)+'" y1="'+(boxY+60)+'" x2="'+(boxX+180)+'" y2="'+(boxY+20)+'" stroke="#4ade80" stroke-width="1.8"/>';
  // Current data point
- const ptX = cX + 15 + (h1 / 45.0) * 165;
- const ptY = cY + 60 - (h2 / 14.0) * 40;
+ const ptX = boxX + 15 + (h1 / 45.0) * 165;
+ const ptY = boxY + 60 - (h2 / 14.0) * 40;
  svg += '<circle cx="'+ptX+'" cy="'+ptY+'" r="3.5" fill="#facc15" stroke="#ef4444" stroke-width="1"/>';
- svg += '<text x="'+(cX+185)+'" y="'+(cY+22)+'" text-anchor="end" fill="#facc15" font-size="6.8" font-weight="bold">Slope = 0.2857</text>';
+ svg += '<text x="'+(boxX+185)+'" y="'+(boxY+22)+'" text-anchor="end" fill="#facc15" font-size="6.8" font-weight="bold">Slope = 0.2857</text>';
 
  // State Matrix Grid
  const gY = rY + 92;
@@ -7977,7 +8025,7 @@ function drawClockBenchView(p, rawVal){
   {label: 'Ionic Strength I', val: '0.200 M', col: '#94a3b8'},
   {label: 'Clock Time Δt', val: dt.toFixed(3)+' s', col: '#facc15'},
   {label: 'Initial Rate r₀', val: (rate0*1e5).toFixed(3)+' ×10⁻⁵', col: '#4ade80'},
-  {label: 'Pseudo-1st Order k'', val: (k_prime*1e3).toFixed(3)+' ×10⁻³', col: '#38bdf8'},
+  {label: 'Pseudo-1st Order k\'', val: (k_prime*1e3).toFixed(3)+' ×10⁻³', col: '#38bdf8'},
   {label: '2nd-Order Rate k', val: k_sec.toFixed(4)+' M⁻¹s⁻¹', col: '#4ade80'},
   {label: 'Reaction Order m', val: '1.000 (1st)', col: '#facc15'}
  ];
@@ -8130,5 +8178,533 @@ function drawClockSandboxView(p, rawVal){
  });
 
  svg += text(360, 312, 'Rate Invariant: r₀ = (0.0220)·[S₂O₈²⁻]₀·[I⁻]₀ isolates second-order rate constant with R² = 1.00000.', '#789c80', 8.5);
+ return svg;
+}
+
+
+// ======================================================================
+// LAB 22: TEMPERATURE DEPENDENCE OF RATES & ARRHENIUS ACTIVATION ENERGY
+// ======================================================================
+
+function drawArrheniusBenchView(p, rawVal){
+ const T_c = (p && p.input) ? p.input : 25.0;
+ const T_k = T_c + 273.15;
+ const inv_T = 1000.0 / T_k;
+ const R_const = 8.314462618;
+ const E_a = 84140.0;
+ const A_arr = 1.541094e10;
+ const k_ideal = A_arr * Math.exp(-E_a / (R_const * T_k));
+ const dt = rawVal !== null ? rawVal : (0.00200 / k_ideal);
+ const k_calc = 0.00200 / dt;
+ const ln_k = Math.log(k_calc);
+
+ let svg = header('Peltier Spectrophotometer & Zero-Order Iodine Decolorization Cell', 'CH₃COCH₃ + I₂ ⟶[H⁺] CH₃COCH₂I + H⁺ + I⁻ | Arrhenius Activation Barrier E_a = 84.14 kJ/mol');
+
+ // Background Lab Bench
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // --- LEFT: THERMOSTATIC CUVETTE CHAMBER (x: 35, y: 60, w: 250, h: 225) ---
+ const cX = 35, cY = 60, cW = 250, cH = 225;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(cX+8)+'" y="'+(cY+8)+'" width="'+(cW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(cX+cW/2)+'" y="'+(cY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">PELTIER THERMOSTATIC CELL ('+T_c.toFixed(1)+' °C)</text>';
+
+ // Copper Jacket Cooling / Heating Coils
+ svg += '<rect x="'+(cX+25)+'" y="'+(cY+40)+'" width="120" height="140" rx="6" fill="#1e293b" stroke="#b45309" stroke-width="2"/>';
+ for(let coilY=cY+50; coilY<=cY+165; coilY+=15){
+  svg += '<line x1="'+(cX+20)+'" y1="'+coilY+'" x2="'+(cX+25)+'" y2="'+coilY+'" stroke="#d97706" stroke-width="2"/>';
+  svg += '<line x1="'+(cX+145)+'" y1="'+coilY+'" x2="'+(cX+150)+'" y2="'+coilY+'" stroke="#d97706" stroke-width="2"/>';
+ }
+
+ // Quartz Cuvette (10.00 mm optical path)
+ const qX = cX + 45, qY = cY + 50, qW = 80, qH = 115;
+ svg += '<rect x="'+qX+'" y="'+qY+'" width="'+qW+'" height="'+qH+'" rx="2" fill="#030712" stroke="#94a3b8" stroke-width="1.8" fill-opacity="0.7"/>';
+
+ // Liquid solution inside cuvette (fading amber/yellow)
+ const fadeProgress = Math.min(1.0, Math.max(0.0, 1.0 - (T_c - 20.0) / 25.0 * 0.3));
+ const amberOpacity = 0.25 + 0.55 * fadeProgress;
+ svg += '<rect x="'+(qX+3)+'" y="'+(qY+18)+'" width="'+(qW-6)+'" height="'+(qH-21)+'" rx="1" fill="#f59e0b" fill-opacity="'+amberOpacity+'"/>';
+
+ // 465 nm LED Light Source (Left Beam)
+ svg += '<rect x="'+(cX+5)+'" y="'+(qY+40)+'" width="15" height="25" rx="2" fill="#0284c7" stroke="#38bdf8"/>';
+ svg += '<polygon points="'+(cX+20)+','+(qY+45)+' '+(qX)+','+(qY+35)+' '+(qX)+','+(qY+70)+' '+(cX+20)+','+(qY+60)+'" fill="#38bdf8" fill-opacity="0.35"/>';
+ svg += '<text x="'+(cX+12)+'" y="'+(qY+32)+'" text-anchor="middle" fill="#38bdf8" font-size="6.5" font-weight="bold">465 nm</text>';
+
+ // Photodiode Sensor (Right side)
+ svg += '<rect x="'+(cX+150)+'" y="'+(qY+40)+'" width="16" height="25" rx="2" fill="#1e293b" stroke="#22c55e"/>';
+ svg += '<polygon points="'+(qX+qW)+','+(qY+38)+' '+(cX+150)+','+(qY+46)+' '+(cX+150)+','+(qY+58)+' '+(qX+qW)+','+(qY+66)+'" fill="#22c55e" fill-opacity="0.25"/>';
+ svg += '<text x="'+(cX+158)+'" y="'+(qY+32)+'" text-anchor="middle" fill="#4ade80" font-size="6.5" font-weight="bold">PD-DET</text>';
+
+ // Magnetic Stirrer Bar at Bottom (rotating)
+ svg += '<rect x="'+(qX+qW/2-10)+'" y="'+(qY+qH-10)+'" width="20" height="5" rx="2.5" fill="#ffffff" stroke="#475569" stroke-width="1"/>';
+ svg += '<text x="'+(qX+qW/2)+'" y="'+(qY+qH-14)+'" text-anchor="middle" fill="#94a3b8" font-size="6">400 rpm</text>';
+
+ // Pt-100 RTD Sensor Dip
+ svg += '<line x1="'+(qX+qW/2+18)+'" y1="'+(cY+28)+'" x2="'+(qX+qW/2+18)+'" y2="'+(qY+55)+'" stroke="#e2e8f0" stroke-width="2"/>';
+ svg += '<circle cx="'+(qX+qW/2+18)+'" cy="'+(qY+55)+'" r="2.5" fill="#ef4444"/>';
+ svg += '<text x="'+(cX+cW/2)+'" y="'+(cY+cH-10)+'" text-anchor="middle" fill="#cbd5e1" font-size="7.5">[Acetone]₀ = 1.00 M | [HCl]₀ = 0.50 M | [I₂]₀ = 1.00 mM</text>';
+
+ // --- CENTER: DIGITAL READOUT & DECIMATION METROLOGY (x: 295, y: 60, w: 200, h: 225) ---
+ const mX = 295, mY = 60, mW = 200, mH = 225;
+ svg += '<rect x="'+mX+'" y="'+mY+'" width="'+mW+'" height="'+mH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(mX+8)+'" y="'+(mY+8)+'" width="'+(mW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(mX+mW/2)+'" y="'+(mY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">KINETIC METROLOGY CONSOLE</text>';
+
+ // Digital Timer Display Box
+ svg += '<rect x="'+(mX+12)+'" y="'+(mY+36)+'" width="'+(mW-24)+'" height="52" rx="5" fill="#020b05" stroke="#15803d" stroke-width="1.2"/>';
+ svg += '<text x="'+(mX+20)+'" y="'+(mY+50)+'" fill="#4ade80" font-size="7" font-weight="bold">STOPWATCH (DECOLORIZATION Δt)</text>';
+ svg += '<text x="'+(mX+mW/2)+'" y="'+(mY+76)+'" text-anchor="middle" fill="#facc15" font-size="20" font-family="monospace" font-weight="bold">'+dt.toFixed(2)+' s</text>';
+
+ const metItems = [
+  {label: 'Bath Temperature T', val: T_c.toFixed(1)+' °C ('+T_k.toFixed(2)+' K)', col: '#38bdf8'},
+  {label: 'Reciprocal 1000/T', val: inv_T.toFixed(4)+' K⁻¹', col: '#94a3b8'},
+  {label: 'Zero-Order Rate r₀', val: (0.00100/dt*1e5).toFixed(3)+' ×10⁻⁵ M/s', col: '#4ade80'},
+  {label: 'Rate Constant k', val: (k_calc*1e5).toFixed(3)+' ×10⁻⁵ M⁻¹s⁻¹', col: '#facc15'},
+  {label: 'Logarithmic ln(k)', val: ln_k.toFixed(4), col: '#f87171'},
+  {label: 'Activation Energy E_a', val: '84.14 kJ·mol⁻¹', col: '#4ade80'}
+ ];
+
+ metItems.forEach((it, idx)=>{
+  const iy = mY + 96 + idx * 20;
+  svg += '<rect x="'+(mX+12)+'" y="'+iy+'" width="'+(mW-24)+'" height="17" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg += '<text x="'+(mX+16)+'" y="'+(iy+11)+'" fill="#94a3b8" font-size="6.5">'+it.label+'</text>';
+  svg += '<text x="'+(mX+mW-16)+'" y="'+(iy+11)+'" text-anchor="end" fill="'+it.col+'" font-size="7" font-family="monospace" font-weight="bold">'+it.val+'</text>';
+ });
+
+ // --- RIGHT: ARRHENIUS LINEAR REGRESSION PLOT (x: 505, y: 60, w: 180, h: 225) ---
+ const pX = 505, pY = 60, pW = 180, pH = 225;
+ svg += '<rect x="'+pX+'" y="'+pY+'" width="'+pW+'" height="'+pH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(pX+8)+'" y="'+(pY+8)+'" width="'+(pW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(pX+pW/2)+'" y="'+(pY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">ARRHENIUS PLOT: ln(k) vs 1000/T</text>';
+
+ // Mini Cartesian coordinate frame
+ const axX = pX + 25, axY = pY + 42, axW = 135, axH = 130;
+ svg += '<rect x="'+axX+'" y="'+axY+'" width="'+axW+'" height="'+axH+'" fill="#040d07" stroke="#162e1e"/>';
+ svg += '<line x1="'+axX+'" y1="'+(axY+axH)+'" x2="'+(axX+axW)+'" y2="'+(axY+axH)+'" stroke="#334155" stroke-width="1"/>';
+ svg += '<line x1="'+axX+'" y1="'+axY+'" x2="'+axX+'" y2="'+(axY+axH)+'" stroke="#334155" stroke-width="1"/>';
+
+ // Grid lines
+ for(let g=1; g<=3; g++){
+  const gy = axY + g * (axH/4);
+  svg += '<line x1="'+axX+'" y1="'+gy+'" x2="'+(axX+axW)+'" y2="'+gy+'" stroke="#0f2918" stroke-width="0.8" stroke-dasharray="2,2"/>';
+ }
+
+ // Linear regression line: from 1000/T = 3.14 to 3.42 (y from -8.35 to -11.06)
+ svg += '<line x1="'+(axX+10)+'" y1="'+(axY+15)+'" x2="'+(axX+axW-10)+'" y2="'+(axY+axH-15)+'" stroke="#4ade80" stroke-width="1.8"/>';
+
+ // Plot all 6 standard benchmark points
+ const benchPts = [
+  {t: 20.0, raw: 127.44}, {t: 25.0, raw: 71.43}, {t: 30.0, raw: 40.81},
+  {t: 35.0, raw: 23.74}, {t: 40.0, raw: 14.05}, {t: 45.0, raw: 8.46}
+ ];
+ benchPts.forEach(pt=>{
+  const tk = pt.t + 273.15;
+  const invT = 1000.0 / tk;
+  const px = axX + axW - 10 - ((invT - 3.14) / 0.28) * (axW - 20);
+  const kVal = 0.00200 / pt.raw;
+  const py = axY + 15 + ((-Math.log(kVal) - 8.35) / 2.75) * (axH - 30);
+  const isCur = Math.abs(pt.t - T_c) < 1.0;
+  svg += '<circle cx="'+px+'" cy="'+py+'" r="'+(isCur?4.5:2.5)+'" fill="'+(isCur?'#facc15':'#38bdf8')+'" stroke="'+(isCur?'#ef4444':'none')+'" stroke-width="1.2"/>';
+ });
+
+ svg += '<text x="'+(axX+axW/2)+'" y="'+(axY+axH+12)+'" text-anchor="middle" fill="#94a3b8" font-size="6.5">1000/T (K⁻¹) ⟶</text>';
+ svg += '<text x="'+(axX+8)+'" y="'+(axY+12)+'" fill="#4ade80" font-size="6.5" font-weight="bold">Slope = −10.120 K</text>';
+ svg += '<text x="'+(pX+pW/2)+'" y="'+(pY+pH-10)+'" text-anchor="middle" fill="#facc15" font-size="7.5" font-weight="bold">E_a = 84.14 kJ·mol⁻¹ (R² = 1.000)</text>';
+
+ svg += text(360, 312, 'Acid-catalyzed acetone iodination: enolization is rate-determining; zero-order in [I₂] eliminates product inhibition biases.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawArrheniusCompareView(p, rawVal){
+ const T_c = (p && p.input) ? p.input : 25.0;
+ let svg = header('Comparative Thermal Kinetic Profiling: Temperature Acceleration Dynamics', 'Side-by-Side Absorbance Fading at 20.0 °C vs 40.0 °C | Empirical Q₁₀ Temperature Coefficient');
+
+ // Background Lab Bench
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // Two Side-by-Side Reaction Cuvettes
+ const configs = [
+  {name: 'Cuvette A: Cold Bath (20.0 °C / 293.15 K)', t: 20.0, dt: 127.44, k: 1.569e-5, col: '#38bdf8', x: 35},
+  {name: 'Cuvette B: Warm Bath (40.0 °C / 313.15 K)', t: 40.0, dt: 14.05, k: 1.423e-4, col: '#f87171', x: 370}
+ ];
+
+ configs.forEach(cfg=>{
+  const bX = cfg.x, bY = 60, bW = 315, bH = 225;
+  svg += '<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+  svg += '<rect x="'+(bX+8)+'" y="'+(bY+8)+'" width="'+(bW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+  svg += '<text x="'+(bX+bW/2)+'" y="'+(bY+22)+'" text-anchor="middle" fill="'+cfg.col+'" font-size="8.5" font-weight="bold">'+cfg.name+'</text>';
+
+  // Absorbance vs Time Decay Curve Box
+  const cX = bX + 15, cY = bY + 38, cW = 285, cH = 95;
+  svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="4" fill="#040d07" stroke="#162e1e"/>';
+  svg += '<line x1="'+cX+'" y1="'+(cY+cH-15)+'" x2="'+(cX+cW-10)+'" y2="'+(cY+cH-15)+'" stroke="#334155" stroke-width="1"/>';
+  svg += '<line x1="'+(cX+20)+'" y1="'+cY+'" x2="'+(cX+20)+'" y2="'+(cY+cH-15)+'" stroke="#334155" stroke-width="1"/>';
+
+  // Linear Absorbance Decay Line
+  svg += '<line x1="'+(cX+20)+'" y1="'+(cY+12)+'" x2="'+(cX+cW-30)+'" y2="'+(cY+cH-15)+'" stroke="'+cfg.col+'" stroke-width="2"/>';
+  svg += '<circle cx="'+(cX+cW-30)+'" cy="'+(cY+cH-15)+'" r="3.5" fill="#facc15" stroke="#ef4444" stroke-width="1"/>';
+
+  svg += '<text x="'+(cX+24)+'" y="'+(cY+20)+'" fill="#94a3b8" font-size="6.5">A₀ = 0.850 (1.00 mM I₂)</text>';
+  svg += '<text x="'+(cX+cW-30)+'" y="'+(cY+cH-20)+'" text-anchor="middle" fill="#facc15" font-size="7" font-weight="bold">Δt = '+cfg.dt.toFixed(1)+' s</text>';
+
+  // Parameter Metric Grid
+  const rows = [
+   {l: 'Second-Order Rate Constant k', v: (cfg.k*1e5).toFixed(3)+' × 10⁻⁵ L/(mol·s)'},
+   {l: 'Zero-Order Depletion Rate r₀', v: (0.00100/cfg.dt*1e5).toFixed(3)+' × 10⁻⁵ M/s'},
+   {l: 'Decolorization Duration Δt', v: cfg.dt.toFixed(2)+' s ('+(cfg.dt/60).toFixed(2)+' min)'},
+   {l: 'Relative Reaction Velocity', v: (cfg.t === 20.0 ? '1.00× (Baseline)' : '9.07× Faster (907%)')}
+  ];
+
+  rows.forEach((r, idx)=>{
+   const ry = bY + 142 + idx * 19;
+   svg += '<rect x="'+(bX+15)+'" y="'+ry+'" width="'+(bW-30)+'" height="16" rx="3" fill="#051009" stroke="#162e1e"/>';
+   svg += '<text x="'+(bX+22)+'" y="'+(ry+11)+'" fill="#94a3b8" font-size="6.5">'+r.l+'</text>';
+   svg += '<text x="'+(bX+bW-22)+'" y="'+(ry+11)+'" text-anchor="end" fill="'+cfg.col+'" font-size="7" font-family="monospace" font-weight="bold">'+r.v+'</text>';
+  });
+ });
+
+ svg += text(360, 312, 'Kinetic Invariant: A 20.0 °C thermal elevation accelerates acetone iodination by a factor of 9.07 (Q₁₀ ≈ 3.01).', '#789c80', 8.5);
+ return svg;
+}
+
+function drawArrheniusSandboxView(p, rawVal){
+ const T_c = (p && p.input) ? p.input : 25.0;
+ const T_k = T_c + 273.15;
+ const R_const = 8.314462618;
+ const E_a = 84140.0;
+ const f_boltzmann = Math.exp(-E_a / (R_const * T_k));
+ const deltaH_act = (E_a - R_const * T_k) / 1000.0;
+ const deltaS_act = -62.4;
+ const deltaG_act = deltaH_act - T_k * (deltaS_act / 1000.0);
+
+ let svg = header('Eyring Transition State & Maxwell-Boltzmann Collision Dynamics Sandbox', 'Potential Energy Surface (Reaction Coordinate) vs Boltzmann Thermal Population Fraction');
+
+ // Background Lab Bench
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // --- LEFT: POTENTIAL ENERGY SURFACE DIAGRAM (x: 35, y: 60, w: 320, h: 225) ---
+ const pX = 35, pY = 60, pW = 320, pH = 225;
+ svg += '<rect x="'+pX+'" y="'+pY+'" width="'+pW+'" height="'+pH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(pX+8)+'" y="'+(pY+8)+'" width="'+(pW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(pX+pW/2)+'" y="'+(pY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">POTENTIAL ENERGY SURFACE (ENOLIZATION PATHWAY)</text>';
+
+ // Coordinate Axis
+ const eX = pX + 25, eY = pY + 45, eW = 270, eH = 145;
+ svg += '<line x1="'+eX+'" y1="'+(eY+eH-15)+'" x2="'+(eX+eW)+'" y2="'+(eY+eH-15)+'" stroke="#334155" stroke-width="1.2"/>';
+ svg += '<line x1="'+eX+'" y1="'+eY+'" x2="'+eX+'" y2="'+(eY+eH-15)+'" stroke="#334155" stroke-width="1.2"/>';
+ svg += '<text x="'+(eX+eW)+'" y="'+(eY+eH-8)+'" text-anchor="end" fill="#94a3b8" font-size="6.5">Reaction Coordinate ⟶</text>';
+ svg += '<text x="'+(eX+6)+'" y="'+(eY+10)+'" fill="#94a3b8" font-size="6.5">Potential Energy (kJ/mol)</text>';
+
+ // Potential Energy Curve
+ // Reactants (0 kJ/mol) -> TS1 (+84.14 kJ/mol) -> Enol (+35 kJ/mol) -> Products (-60 kJ/mol)
+ svg += '<path d="M '+(eX+15)+' '+(eY+eH-35)+' Q '+(eX+70)+' '+(eY+eH-35)+' '+(eX+105)+' '+(eY+25)+' Q '+(eX+140)+' '+(eY+eH-35)+' '+(eX+185)+' '+(eY+eH-65)+' Q '+(eX+225)+' '+(eY+eH-65)+' '+(eX+260)+' '+(eY+eH-18)+'" fill="none" stroke="#38bdf8" stroke-width="2.5"/>';
+
+ // Activation Barrier Double Arrow
+ svg += '<line x1="'+(eX+105)+'" y1="'+(eY+25)+'" x2="'+(eX+105)+'" y2="'+(eY+eH-35)+'" stroke="#facc15" stroke-width="1.5" stroke-dasharray="3,3"/>';
+ svg += '<circle cx="'+(eX+105)+'" cy="'+(eY+25)+'" r="4" fill="#ef4444" stroke="#facc15" stroke-width="1.2"/>';
+ svg += '<text x="'+(eX+112)+'" y="'+(eY+40)+'" fill="#facc15" font-size="7.5" font-weight="bold">E_a = 84.14 kJ/mol</text>';
+ svg += '<text x="'+(eX+105)+'" y="'+(eY+18)+'" text-anchor="middle" fill="#ef4444" font-size="7" font-weight="bold">[TS]‡ Enolization</text>';
+
+ svg += '<text x="'+(eX+20)+'" y="'+(eY+eH-42)+'" fill="#86efac" font-size="6.5">Ketone + H⁺</text>';
+ svg += '<text x="'+(eX+185)+'" y="'+(eY+eH-72)+'" fill="#f59e0b" font-size="6.5">Enol + H⁺</text>';
+ svg += '<text x="'+(eX+240)+'" y="'+(eY+eH-25)+'" fill="#4ade80" font-size="6.5">Iodoacetone</text>';
+
+ svg += '<text x="'+(pX+pW/2)+'" y="'+(pY+pH-8)+'" text-anchor="middle" fill="#cbd5e1" font-size="7">ΔH‡ = '+deltaH_act.toFixed(2)+' kJ/mol | ΔS‡ = '+deltaS_act.toFixed(1)+' J/(mol·K) | ΔG‡ = '+deltaG_act.toFixed(2)+' kJ/mol</text>';
+
+ // --- RIGHT: MAXWELL-BOLTZMANN COLLISION TAIL (x: 365, y: 60, w: 320, h: 225) ---
+ const mX = 365, mY = 60, mW = 320, mH = 225;
+ svg += '<rect x="'+mX+'" y="'+mY+'" width="'+mW+'" height="'+mH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(mX+8)+'" y="'+(mY+8)+'" width="'+(mW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(mX+mW/2)+'" y="'+(mY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">MAXWELL-BOLTZMANN ENERGY TAIL (f = e^(−E_a/RT))</text>';
+
+ // Maxwell-Boltzmann Distribution Plot Box
+ const bX = mX + 25, bY = mY + 45, bW = 270, bH = 115;
+ svg += '<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#040d07" stroke="#162e1e"/>';
+ svg += '<line x1="'+bX+'" y1="'+(bY+bH-15)+'" x2="'+(bX+bW)+'" y2="'+(bY+bH-15)+'" stroke="#334155" stroke-width="1.2"/>';
+ svg += '<line x1="'+bX+'" y1="'+bY+'" x2="'+bX+'" y2="'+(bY+bH-15)+'" stroke="#334155" stroke-width="1.2"/>';
+
+ // Distribution curve peaking at E ~ RT
+ const peakX = bX + 35 + (T_c - 20.0) * 1.5;
+ svg += '<path d="M '+bX+' '+(bY+bH-15)+' Q '+peakX+' '+(bY+15)+' '+(bX+120)+' '+(bY+55)+' Q '+(bX+200)+' '+(bY+bH-22)+' '+(bX+bW)+' '+(bY+bH-16)+'" fill="none" stroke="#4ade80" stroke-width="2"/>';
+
+ // Activation threshold line E_a
+ const eaLineX = bX + 175;
+ svg += '<line x1="'+eaLineX+'" y1="'+bY+'" x2="'+eaLineX+'" y2="'+(bY+bH-15)+'" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3,3"/>';
+ svg += '<text x="'+(eaLineX+4)+'" y="'+(bY+16)+'" fill="#ef4444" font-size="6.5" font-weight="bold">E_a Threshold</text>';
+
+ // Shaded active energetic tail
+ svg += '<polygon points="'+eaLineX+','+(bY+73)+' '+(bX+210)+','+(bY+bH-21)+' '+(bX+bW)+','+(bY+bH-16)+' '+(bX+bW)+','+(bY+bH-15)+' '+eaLineX+','+(bY+bH-15)+'" fill="#facc15" fill-opacity="0.35"/>';
+ svg += '<text x="'+(eaLineX+25)+'" y="'+(bY+bH-25)+'" fill="#facc15" font-size="6.5" font-weight="bold">Active Tail</text>';
+
+ // Tail population metrics
+ svg += '<rect x="'+(mX+20)+'" y="'+(mY+170)+'" width="'+(mW-40)+'" height="42" rx="4" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(mX+30)+'" y="'+(mY+185)+'" fill="#94a3b8" font-size="7">Active Collision Fraction f = exp(−E_a / RT):</text>';
+ svg += '<text x="'+(mX+30)+'" y="'+(mY+202)+'" fill="#facc15" font-size="11" font-family="monospace" font-weight="bold">f = '+f_boltzmann.toExponential(4)+' ('+(f_boltzmann*1e15).toFixed(2)+' per 10¹⁵ collisions)</text>';
+
+ svg += text(360, 312, 'Transition State Invariant: Negative activation entropy (ΔS‡ = −62.4 J/(mol·K)) reflects solvent electrostrictive immobilisation.', '#789c80', 8.5);
+ return svg;
+}
+
+
+// ======================================================================
+// LAB 22: TEMPERATURE DEPENDENCE OF RATES & ARRHENIUS ACTIVATION ENERGY
+// ======================================================================
+
+function drawArrheniusBenchView(p, rawVal){
+ const T_c = (p && p.input) ? p.input : 25.0;
+ const T_k = T_c + 273.15;
+ const inv_T = 1000.0 / T_k;
+ const R_const = 8.314462618;
+ const E_a = 84140.0;
+ const A_arr = 1.541094e10;
+ const k_ideal = A_arr * Math.exp(-E_a / (R_const * T_k));
+ const dt = rawVal !== null ? rawVal : (0.00200 / k_ideal);
+ const k_calc = 0.00200 / dt;
+ const ln_k = Math.log(k_calc);
+
+ let svg = header('Peltier Spectrophotometer & Zero-Order Iodine Decolorization Cell', 'CH₃COCH₃ + I₂ ⟶[H⁺] CH₃COCH₂I + H⁺ + I⁻ | Arrhenius Activation Barrier E_a = 84.14 kJ/mol');
+
+ // Background Lab Bench
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // --- LEFT: THERMOSTATIC CUVETTE CHAMBER (x: 35, y: 60, w: 250, h: 225) ---
+ const cX = 35, cY = 60, cW = 250, cH = 225;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(cX+8)+'" y="'+(cY+8)+'" width="'+(cW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(cX+cW/2)+'" y="'+(cY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">PELTIER THERMOSTATIC CELL ('+T_c.toFixed(1)+' °C)</text>';
+
+ // Copper Jacket Cooling / Heating Coils
+ svg += '<rect x="'+(cX+25)+'" y="'+(cY+40)+'" width="120" height="140" rx="6" fill="#1e293b" stroke="#b45309" stroke-width="2"/>';
+ for(let coilY=cY+50; coilY<=cY+165; coilY+=15){
+  svg += '<line x1="'+(cX+20)+'" y1="'+coilY+'" x2="'+(cX+25)+'" y2="'+coilY+'" stroke="#d97706" stroke-width="2"/>';
+  svg += '<line x1="'+(cX+145)+'" y1="'+coilY+'" x2="'+(cX+150)+'" y2="'+coilY+'" stroke="#d97706" stroke-width="2"/>';
+ }
+
+ // Quartz Cuvette (10.00 mm optical path)
+ const qX = cX + 45, qY = cY + 50, qW = 80, qH = 115;
+ svg += '<rect x="'+qX+'" y="'+qY+'" width="'+qW+'" height="'+qH+'" rx="2" fill="#030712" stroke="#94a3b8" stroke-width="1.8" fill-opacity="0.7"/>';
+
+ // Liquid solution inside cuvette (fading amber/yellow)
+ const fadeProgress = Math.min(1.0, Math.max(0.0, 1.0 - (T_c - 20.0) / 25.0 * 0.3));
+ const amberOpacity = 0.25 + 0.55 * fadeProgress;
+ svg += '<rect x="'+(qX+3)+'" y="'+(qY+18)+'" width="'+(qW-6)+'" height="'+(qH-21)+'" rx="1" fill="#f59e0b" fill-opacity="'+amberOpacity+'"/>';
+
+ // 465 nm LED Light Source (Left Beam)
+ svg += '<rect x="'+(cX+5)+'" y="'+(qY+40)+'" width="15" height="25" rx="2" fill="#0284c7" stroke="#38bdf8"/>';
+ svg += '<polygon points="'+(cX+20)+','+(qY+45)+' '+(qX)+','+(qY+35)+' '+(qX)+','+(qY+70)+' '+(cX+20)+','+(qY+60)+'" fill="#38bdf8" fill-opacity="0.35"/>';
+ svg += '<text x="'+(cX+12)+'" y="'+(qY+32)+'" text-anchor="middle" fill="#38bdf8" font-size="6.5" font-weight="bold">465 nm</text>';
+
+ // Photodiode Sensor (Right side)
+ svg += '<rect x="'+(cX+150)+'" y="'+(qY+40)+'" width="16" height="25" rx="2" fill="#1e293b" stroke="#22c55e"/>';
+ svg += '<polygon points="'+(qX+qW)+','+(qY+38)+' '+(cX+150)+','+(qY+46)+' '+(cX+150)+','+(qY+58)+' '+(qX+qW)+','+(qY+66)+'" fill="#22c55e" fill-opacity="0.25"/>';
+ svg += '<text x="'+(cX+158)+'" y="'+(qY+32)+'" text-anchor="middle" fill="#4ade80" font-size="6.5" font-weight="bold">PD-DET</text>';
+
+ // Magnetic Stirrer Bar at Bottom (rotating)
+ svg += '<rect x="'+(qX+qW/2-10)+'" y="'+(qY+qH-10)+'" width="20" height="5" rx="2.5" fill="#ffffff" stroke="#475569" stroke-width="1"/>';
+ svg += '<text x="'+(qX+qW/2)+'" y="'+(qY+qH-14)+'" text-anchor="middle" fill="#94a3b8" font-size="6">400 rpm</text>';
+
+ // Pt-100 RTD Sensor Dip
+ svg += '<line x1="'+(qX+qW/2+18)+'" y1="'+(cY+28)+'" x2="'+(qX+qW/2+18)+'" y2="'+(qY+55)+'" stroke="#e2e8f0" stroke-width="2"/>';
+ svg += '<circle cx="'+(qX+qW/2+18)+'" cy="'+(qY+55)+'" r="2.5" fill="#ef4444"/>';
+ svg += '<text x="'+(cX+cW/2)+'" y="'+(cY+cH-10)+'" text-anchor="middle" fill="#cbd5e1" font-size="7.5">[Acetone]₀ = 1.00 M | [HCl]₀ = 0.50 M | [I₂]₀ = 1.00 mM</text>';
+
+ // --- CENTER: DIGITAL READOUT & DECIMATION METROLOGY (x: 295, y: 60, w: 200, h: 225) ---
+ const mX = 295, mY = 60, mW = 200, mH = 225;
+ svg += '<rect x="'+mX+'" y="'+mY+'" width="'+mW+'" height="'+mH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(mX+8)+'" y="'+(mY+8)+'" width="'+(mW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(mX+mW/2)+'" y="'+(mY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">KINETIC METROLOGY CONSOLE</text>';
+
+ // Digital Timer Display Box
+ svg += '<rect x="'+(mX+12)+'" y="'+(mY+36)+'" width="'+(mW-24)+'" height="52" rx="5" fill="#020b05" stroke="#15803d" stroke-width="1.2"/>';
+ svg += '<text x="'+(mX+20)+'" y="'+(mY+50)+'" fill="#4ade80" font-size="7" font-weight="bold">STOPWATCH (DECOLORIZATION Δt)</text>';
+ svg += '<text x="'+(mX+mW/2)+'" y="'+(mY+76)+'" text-anchor="middle" fill="#facc15" font-size="20" font-family="monospace" font-weight="bold">'+dt.toFixed(2)+' s</text>';
+
+ const metItems = [
+  {label: 'Bath Temperature T', val: T_c.toFixed(1)+' °C ('+T_k.toFixed(2)+' K)', col: '#38bdf8'},
+  {label: 'Reciprocal 1000/T', val: inv_T.toFixed(4)+' K⁻¹', col: '#94a3b8'},
+  {label: 'Zero-Order Rate r₀', val: (0.00100/dt*1e5).toFixed(3)+' ×10⁻⁵ M/s', col: '#4ade80'},
+  {label: 'Rate Constant k', val: (k_calc*1e5).toFixed(3)+' ×10⁻⁵ M⁻¹s⁻¹', col: '#facc15'},
+  {label: 'Logarithmic ln(k)', val: ln_k.toFixed(4), col: '#f87171'},
+  {label: 'Activation Energy E_a', val: '84.14 kJ·mol⁻¹', col: '#4ade80'}
+ ];
+
+ metItems.forEach((it, idx)=>{
+  const iy = mY + 96 + idx * 20;
+  svg += '<rect x="'+(mX+12)+'" y="'+iy+'" width="'+(mW-24)+'" height="17" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg += '<text x="'+(mX+16)+'" y="'+(iy+11)+'" fill="#94a3b8" font-size="6.5">'+it.label+'</text>';
+  svg += '<text x="'+(mX+mW-16)+'" y="'+(iy+11)+'" text-anchor="end" fill="'+it.col+'" font-size="7" font-family="monospace" font-weight="bold">'+it.val+'</text>';
+ });
+
+ // --- RIGHT: ARRHENIUS LINEAR REGRESSION PLOT (x: 505, y: 60, w: 180, h: 225) ---
+ const pX = 505, pY = 60, pW = 180, pH = 225;
+ svg += '<rect x="'+pX+'" y="'+pY+'" width="'+pW+'" height="'+pH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(pX+8)+'" y="'+(pY+8)+'" width="'+(pW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(pX+pW/2)+'" y="'+(pY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">ARRHENIUS PLOT: ln(k) vs 1000/T</text>';
+
+ // Mini Cartesian coordinate frame
+ const axX = pX + 25, axY = pY + 42, axW = 135, axH = 130;
+ svg += '<rect x="'+axX+'" y="'+axY+'" width="'+axW+'" height="'+axH+'" fill="#040d07" stroke="#162e1e"/>';
+ svg += '<line x1="'+axX+'" y1="'+(axY+axH)+'" x2="'+(axX+axW)+'" y2="'+(axY+axH)+'" stroke="#334155" stroke-width="1"/>';
+ svg += '<line x1="'+axX+'" y1="'+axY+'" x2="'+axX+'" y2="'+(axY+axH)+'" stroke="#334155" stroke-width="1"/>';
+
+ // Grid lines
+ for(let g=1; g<=3; g++){
+  const gy = axY + g * (axH/4);
+  svg += '<line x1="'+axX+'" y1="'+gy+'" x2="'+(axX+axW)+'" y2="'+gy+'" stroke="#0f2918" stroke-width="0.8" stroke-dasharray="2,2"/>';
+ }
+
+ // Linear regression line: from 1000/T = 3.14 to 3.42 (y from -8.35 to -11.06)
+ svg += '<line x1="'+(axX+10)+'" y1="'+(axY+15)+'" x2="'+(axX+axW-10)+'" y2="'+(axY+axH-15)+'" stroke="#4ade80" stroke-width="1.8"/>';
+
+ // Plot all 6 standard benchmark points
+ const benchPts = [
+  {t: 20.0, raw: 127.44}, {t: 25.0, raw: 71.43}, {t: 30.0, raw: 40.81},
+  {t: 35.0, raw: 23.74}, {t: 40.0, raw: 14.05}, {t: 45.0, raw: 8.46}
+ ];
+ benchPts.forEach(pt=>{
+  const tk = pt.t + 273.15;
+  const invT = 1000.0 / tk;
+  const px = axX + axW - 10 - ((invT - 3.14) / 0.28) * (axW - 20);
+  const kVal = 0.00200 / pt.raw;
+  const py = axY + 15 + ((-Math.log(kVal) - 8.35) / 2.75) * (axH - 30);
+  const isCur = Math.abs(pt.t - T_c) < 1.0;
+  svg += '<circle cx="'+px+'" cy="'+py+'" r="'+(isCur?4.5:2.5)+'" fill="'+(isCur?'#facc15':'#38bdf8')+'" stroke="'+(isCur?'#ef4444':'none')+'" stroke-width="1.2"/>';
+ });
+
+ svg += '<text x="'+(axX+axW/2)+'" y="'+(axY+axH+12)+'" text-anchor="middle" fill="#94a3b8" font-size="6.5">1000/T (K⁻¹) ⟶</text>';
+ svg += '<text x="'+(axX+8)+'" y="'+(axY+12)+'" fill="#4ade80" font-size="6.5" font-weight="bold">Slope = −10.120 K</text>';
+ svg += '<text x="'+(pX+pW/2)+'" y="'+(pY+pH-10)+'" text-anchor="middle" fill="#facc15" font-size="7.5" font-weight="bold">E_a = 84.14 kJ·mol⁻¹ (R² = 1.000)</text>';
+
+ svg += text(360, 312, 'Acid-catalyzed acetone iodination: enolization is rate-determining; zero-order in [I₂] eliminates product inhibition biases.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawArrheniusCompareView(p, rawVal){
+ const T_c = (p && p.input) ? p.input : 25.0;
+ let svg = header('Comparative Thermal Kinetic Profiling: Temperature Acceleration Dynamics', 'Side-by-Side Absorbance Fading at 20.0 °C vs 40.0 °C | Empirical Q₁₀ Temperature Coefficient');
+
+ // Background Lab Bench
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // Two Side-by-Side Reaction Cuvettes
+ const configs = [
+  {name: 'Cuvette A: Cold Bath (20.0 °C / 293.15 K)', t: 20.0, dt: 127.44, k: 1.569e-5, col: '#38bdf8', x: 35},
+  {name: 'Cuvette B: Warm Bath (40.0 °C / 313.15 K)', t: 40.0, dt: 14.05, k: 1.423e-4, col: '#f87171', x: 370}
+ ];
+
+ configs.forEach(cfg=>{
+  const bX = cfg.x, bY = 60, bW = 315, bH = 225;
+  svg += '<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+  svg += '<rect x="'+(bX+8)+'" y="'+(bY+8)+'" width="'+(bW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+  svg += '<text x="'+(bX+bW/2)+'" y="'+(bY+22)+'" text-anchor="middle" fill="'+cfg.col+'" font-size="8.5" font-weight="bold">'+cfg.name+'</text>';
+
+  // Absorbance vs Time Decay Curve Box
+  const cX = bX + 15, cY = bY + 38, cW = 285, cH = 95;
+  svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="4" fill="#040d07" stroke="#162e1e"/>';
+  svg += '<line x1="'+cX+'" y1="'+(cY+cH-15)+'" x2="'+(cX+cW-10)+'" y2="'+(cY+cH-15)+'" stroke="#334155" stroke-width="1"/>';
+  svg += '<line x1="'+(cX+20)+'" y1="'+cY+'" x2="'+(cX+20)+'" y2="'+(cY+cH-15)+'" stroke="#334155" stroke-width="1"/>';
+
+  // Linear Absorbance Decay Line
+  svg += '<line x1="'+(cX+20)+'" y1="'+(cY+12)+'" x2="'+(cX+cW-30)+'" y2="'+(cY+cH-15)+'" stroke="'+cfg.col+'" stroke-width="2"/>';
+  svg += '<circle cx="'+(cX+cW-30)+'" cy="'+(cY+cH-15)+'" r="3.5" fill="#facc15" stroke="#ef4444" stroke-width="1"/>';
+
+  svg += '<text x="'+(cX+24)+'" y="'+(cY+20)+'" fill="#94a3b8" font-size="6.5">A₀ = 0.850 (1.00 mM I₂)</text>';
+  svg += '<text x="'+(cX+cW-30)+'" y="'+(cY+cH-20)+'" text-anchor="middle" fill="#facc15" font-size="7" font-weight="bold">Δt = '+cfg.dt.toFixed(1)+' s</text>';
+
+  // Parameter Metric Grid
+  const rows = [
+   {l: 'Second-Order Rate Constant k', v: (cfg.k*1e5).toFixed(3)+' × 10⁻⁵ L/(mol·s)'},
+   {l: 'Zero-Order Depletion Rate r₀', v: (0.00100/cfg.dt*1e5).toFixed(3)+' × 10⁻⁵ M/s'},
+   {l: 'Decolorization Duration Δt', v: cfg.dt.toFixed(2)+' s ('+(cfg.dt/60).toFixed(2)+' min)'},
+   {l: 'Relative Reaction Velocity', v: (cfg.t === 20.0 ? '1.00× (Baseline)' : '9.07× Faster (907%)')}
+  ];
+
+  rows.forEach((r, idx)=>{
+   const ry = bY + 142 + idx * 19;
+   svg += '<rect x="'+(bX+15)+'" y="'+ry+'" width="'+(bW-30)+'" height="16" rx="3" fill="#051009" stroke="#162e1e"/>';
+   svg += '<text x="'+(bX+22)+'" y="'+(ry+11)+'" fill="#94a3b8" font-size="6.5">'+r.l+'</text>';
+   svg += '<text x="'+(bX+bW-22)+'" y="'+(ry+11)+'" text-anchor="end" fill="'+cfg.col+'" font-size="7" font-family="monospace" font-weight="bold">'+r.v+'</text>';
+  });
+ });
+
+ svg += text(360, 312, 'Kinetic Invariant: A 20.0 °C thermal elevation accelerates acetone iodination by a factor of 9.07 (Q₁₀ ≈ 3.01).', '#789c80', 8.5);
+ return svg;
+}
+
+function drawArrheniusSandboxView(p, rawVal){
+ const T_c = (p && p.input) ? p.input : 25.0;
+ const T_k = T_c + 273.15;
+ const R_const = 8.314462618;
+ const E_a = 84140.0;
+ const f_boltzmann = Math.exp(-E_a / (R_const * T_k));
+ const deltaH_act = (E_a - R_const * T_k) / 1000.0;
+ const deltaS_act = -62.4;
+ const deltaG_act = deltaH_act - T_k * (deltaS_act / 1000.0);
+
+ let svg = header('Eyring Transition State & Maxwell-Boltzmann Collision Dynamics Sandbox', 'Potential Energy Surface (Reaction Coordinate) vs Boltzmann Thermal Population Fraction');
+
+ // Background Lab Bench
+ svg += '<rect x="20" y="45" width="680" height="255" rx="6" fill="#06120b" stroke="#162e1e"/>';
+
+ // --- LEFT: POTENTIAL ENERGY SURFACE DIAGRAM (x: 35, y: 60, w: 320, h: 225) ---
+ const pX = 35, pY = 60, pW = 320, pH = 225;
+ svg += '<rect x="'+pX+'" y="'+pY+'" width="'+pW+'" height="'+pH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(pX+8)+'" y="'+(pY+8)+'" width="'+(pW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(pX+pW/2)+'" y="'+(pY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">POTENTIAL ENERGY SURFACE (ENOLIZATION PATHWAY)</text>';
+
+ // Coordinate Axis
+ const eX = pX + 25, eY = pY + 45, eW = 270, eH = 145;
+ svg += '<line x1="'+eX+'" y1="'+(eY+eH-15)+'" x2="'+(eX+eW)+'" y2="'+(eY+eH-15)+'" stroke="#334155" stroke-width="1.2"/>';
+ svg += '<line x1="'+eX+'" y1="'+eY+'" x2="'+eX+'" y2="'+(eY+eH-15)+'" stroke="#334155" stroke-width="1.2"/>';
+ svg += '<text x="'+(eX+eW)+'" y="'+(eY+eH-8)+'" text-anchor="end" fill="#94a3b8" font-size="6.5">Reaction Coordinate ⟶</text>';
+ svg += '<text x="'+(eX+6)+'" y="'+(eY+10)+'" fill="#94a3b8" font-size="6.5">Potential Energy (kJ/mol)</text>';
+
+ // Potential Energy Curve
+ // Reactants (0 kJ/mol) -> TS1 (+84.14 kJ/mol) -> Enol (+35 kJ/mol) -> Products (-60 kJ/mol)
+ svg += '<path d="M '+(eX+15)+' '+(eY+eH-35)+' Q '+(eX+70)+' '+(eY+eH-35)+' '+(eX+105)+' '+(eY+25)+' Q '+(eX+140)+' '+(eY+eH-35)+' '+(eX+185)+' '+(eY+eH-65)+' Q '+(eX+225)+' '+(eY+eH-65)+' '+(eX+260)+' '+(eY+eH-18)+'" fill="none" stroke="#38bdf8" stroke-width="2.5"/>';
+
+ // Activation Barrier Double Arrow
+ svg += '<line x1="'+(eX+105)+'" y1="'+(eY+25)+'" x2="'+(eX+105)+'" y2="'+(eY+eH-35)+'" stroke="#facc15" stroke-width="1.5" stroke-dasharray="3,3"/>';
+ svg += '<circle cx="'+(eX+105)+'" cy="'+(eY+25)+'" r="4" fill="#ef4444" stroke="#facc15" stroke-width="1.2"/>';
+ svg += '<text x="'+(eX+112)+'" y="'+(eY+40)+'" fill="#facc15" font-size="7.5" font-weight="bold">E_a = 84.14 kJ/mol</text>';
+ svg += '<text x="'+(eX+105)+'" y="'+(eY+18)+'" text-anchor="middle" fill="#ef4444" font-size="7" font-weight="bold">[TS]‡ Enolization</text>';
+
+ svg += '<text x="'+(eX+20)+'" y="'+(eY+eH-42)+'" fill="#86efac" font-size="6.5">Ketone + H⁺</text>';
+ svg += '<text x="'+(eX+185)+'" y="'+(eY+eH-72)+'" fill="#f59e0b" font-size="6.5">Enol + H⁺</text>';
+ svg += '<text x="'+(eX+240)+'" y="'+(eY+eH-25)+'" fill="#4ade80" font-size="6.5">Iodoacetone</text>';
+
+ svg += '<text x="'+(pX+pW/2)+'" y="'+(pY+pH-8)+'" text-anchor="middle" fill="#cbd5e1" font-size="7">ΔH‡ = '+deltaH_act.toFixed(2)+' kJ/mol | ΔS‡ = '+deltaS_act.toFixed(1)+' J/(mol·K) | ΔG‡ = '+deltaG_act.toFixed(2)+' kJ/mol</text>';
+
+ // --- RIGHT: MAXWELL-BOLTZMANN COLLISION TAIL (x: 365, y: 60, w: 320, h: 225) ---
+ const mX = 365, mY = 60, mW = 320, mH = 225;
+ svg += '<rect x="'+mX+'" y="'+mY+'" width="'+mW+'" height="'+mH+'" rx="8" fill="#0a1a12" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<rect x="'+(mX+8)+'" y="'+(mY+8)+'" width="'+(mW-16)+'" height="20" rx="3" fill="#0d2419" stroke="#163824"/>';
+ svg += '<text x="'+(mX+mW/2)+'" y="'+(mY+22)+'" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="bold">MAXWELL-BOLTZMANN ENERGY TAIL (f = e^(−E_a/RT))</text>';
+
+ // Maxwell-Boltzmann Distribution Plot Box
+ const bX = mX + 25, bY = mY + 45, bW = 270, bH = 115;
+ svg += '<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" fill="#040d07" stroke="#162e1e"/>';
+ svg += '<line x1="'+bX+'" y1="'+(bY+bH-15)+'" x2="'+(bX+bW)+'" y2="'+(bY+bH-15)+'" stroke="#334155" stroke-width="1.2"/>';
+ svg += '<line x1="'+bX+'" y1="'+bY+'" x2="'+bX+'" y2="'+(bY+bH-15)+'" stroke="#334155" stroke-width="1.2"/>';
+
+ // Distribution curve peaking at E ~ RT
+ const peakX = bX + 35 + (T_c - 20.0) * 1.5;
+ svg += '<path d="M '+bX+' '+(bY+bH-15)+' Q '+peakX+' '+(bY+15)+' '+(bX+120)+' '+(bY+55)+' Q '+(bX+200)+' '+(bY+bH-22)+' '+(bX+bW)+' '+(bY+bH-16)+'" fill="none" stroke="#4ade80" stroke-width="2"/>';
+
+ // Activation threshold line E_a
+ const eaLineX = bX + 175;
+ svg += '<line x1="'+eaLineX+'" y1="'+bY+'" x2="'+eaLineX+'" y2="'+(bY+bH-15)+'" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3,3"/>';
+ svg += '<text x="'+(eaLineX+4)+'" y="'+(bY+16)+'" fill="#ef4444" font-size="6.5" font-weight="bold">E_a Threshold</text>';
+
+ // Shaded active energetic tail
+ svg += '<polygon points="'+eaLineX+','+(bY+73)+' '+(bX+210)+','+(bY+bH-21)+' '+(bX+bW)+','+(bY+bH-16)+' '+(bX+bW)+','+(bY+bH-15)+' '+eaLineX+','+(bY+bH-15)+'" fill="#facc15" fill-opacity="0.35"/>';
+ svg += '<text x="'+(eaLineX+25)+'" y="'+(bY+bH-25)+'" fill="#facc15" font-size="6.5" font-weight="bold">Active Tail</text>';
+
+ // Tail population metrics
+ svg += '<rect x="'+(mX+20)+'" y="'+(mY+170)+'" width="'+(mW-40)+'" height="42" rx="4" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(mX+30)+'" y="'+(mY+185)+'" fill="#94a3b8" font-size="7">Active Collision Fraction f = exp(−E_a / RT):</text>';
+ svg += '<text x="'+(mX+30)+'" y="'+(mY+202)+'" fill="#facc15" font-size="11" font-family="monospace" font-weight="bold">f = '+f_boltzmann.toExponential(4)+' ('+(f_boltzmann*1e15).toFixed(2)+' per 10¹⁵ collisions)</text>';
+
+ svg += text(360, 312, 'Transition State Invariant: Negative activation entropy (ΔS‡ = −62.4 J/(mol·K)) reflects solvent electrostrictive immobilisation.', '#789c80', 8.5);
  return svg;
 }

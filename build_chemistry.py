@@ -149,6 +149,19 @@ def observation(c,value):
   ksp_calc=4.0 * (s_calc**3)
   y=rnd(math.log(ksp_calc), 4)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='activation-energy-arrhenius-acetone-iodination':
+  T_c=float(value)
+  T_k=T_c + 273.15
+  R_const=8.314462618
+  E_a=84140.0
+  A_arr=1.541094e10
+  k_ideal=A_arr * math.exp(-E_a / (R_const * T_k))
+  dt_ideal=0.00200 / k_ideal
+  raw=rnd(dt_ideal, 2)
+  k_calc=0.00200 / raw
+  x=rnd(1000.0 / T_k, 4)
+  y=rnd(math.log(k_calc), 4)
+  return {'input':value,'raw':raw,'x':x,'y':y,'k':k_calc}
  elif slug=='chemical-kinetics-iodine-clock-persulfate':
   p_mM=float(value)
   p_M=p_mM * 1e-3
@@ -312,6 +325,11 @@ def estimate(c,f):
   dH_est= -f['m'] * 8.31446
   se=f['slopeSE'] * 8.31446
   return dH_est, se, 110.0
+ elif slug=='activation-energy-arrhenius-acetone-iodination':
+  slope= f['m']
+  E_a_est= -slope * 8.314462618
+  se= f['slopeSE'] * 8.314462618
+  return E_a_est, se, 84.14
  elif slug=='chemical-kinetics-iodine-clock-persulfate':
   slope= f['m']
   I_conc= 0.0800
@@ -397,6 +415,10 @@ def formula(c,f):
   conv_S= f['b'] * 8.31446
   dG_298= conv_H - (298.15 * conv_S * 0.001)
   return f"ΔH° = −m_slope · (1000·R) = −({fmt(f['m'],4)}) × 8.3145 = {fmt(conv_H,1)} kJ/mol; ΔS° = b · R = {fmt(conv_S,1)} J/(mol·K); ΔG°(298K) = {fmt(dG_298,1)} kJ/mol; Intercept b = {fmt(f['b'],4)}"
+ elif slug=='activation-energy-arrhenius-acetone-iodination':
+  slope= f['m']
+  E_a= -slope * 8.314462618
+  return f"Slope m = {fmt(slope,3)} K (E_a = {fmt(E_a,2)} kJ/mol); Intercept ln(A) = {fmt(f['b'],3)}"
  elif slug=='chemical-kinetics-iodine-clock-persulfate':
   slope= f['m']
   k_prime= slope * 1e-2
@@ -742,6 +764,26 @@ def worked(c,row):
    f"ordinary least-squares linear regression of ln(K_sp) against 1000/T extracts the van 't Hoff slope m_slope = −13.241 K "
    f"and intercept b = 39.723, isolating ΔH° = +110.1 kJ/mol and ΔS° = +330.3 J/(mol·K) with R² = 1.00000, "
    f"confirming the accepted literature thermodynamic parameters for borax dissolution."
+  )
+ elif slug=='activation-energy-arrhenius-acetone-iodination':
+  T_c=row['input']
+  dt=row['raw']
+  T_k=T_c + 273.15
+  inv_T=1000.0 / T_k
+  k_calc=0.00200 / dt
+  ln_k=math.log(k_calc)
+  return (
+   f"Representative thermodynamic kinetic calculation for trial at bath temperature T = {T_c:.1f} °C:\n"
+   f"1. Absolute temperature conversion: T(K) = {T_c:.1f} + 273.15 = {T_k:.2f} K.\n"
+   f"2. Reciprocal temperature evaluation: 1000/T = 1000 / {T_k:.2f} = {inv_T:.4f} K⁻¹ (independent axis x).\n"
+   f"3. Effective rate and second-order rate constant derivation:\n"
+   f"   The acid-catalyzed iodination rate r = −d[I₂]/dt = [I₂]₀ / Δt = k · [acetone]₀ · [H⁺]₀.\n"
+   f"   With [acetone]₀ = 1.000 M, [H⁺]₀ = 0.500 M, and [I₂]₀ = 0.00100 M:\n"
+   f"   k = [I₂]₀ / (Δt · [acetone]₀ · [H⁺]₀) = 0.00100 / ({dt:.2f} · 1.000 · 0.500) = 0.00200 / {dt:.2f} = {k_calc:.4e} L·mol⁻¹·s⁻¹.\n"
+   f"4. Logarithmic transformation: y = ln(k) = ln({k_calc:.4e}) = {ln_k:.4f}.\n"
+   f"5. Arrhenius parameters: From the multi-point linear regression y = m·x + b across 20.0 °C to 45.0 °C, "
+   f"   the slope m = −E_a / (1000·R) = −10.120 K yields an Arrhenius activation energy E_a = −m · R = 84.14 kJ·mol⁻¹ "
+   f"   and pre-exponential factor A = 1.54 × 10¹⁰ L·mol⁻¹·s⁻¹, in outstanding agreement with established chemical kinetics literature.\n"
   )
  elif slug=='chemical-kinetics-iodine-clock-persulfate':
   p_mM=row['input']
@@ -1183,6 +1225,39 @@ def uncertainty_text(c):
    "Ordinary least-squares linear regression across six independent temperatures extracts the van 't Hoff slope "
    "m_slope = −13.241 K with an ideal coefficient of determination R² = 1.00000, isolating the standard enthalpy of dissolution "
    "ΔH° = +110.1 kJ/mol and standard entropy of dissolution ΔS° = +330.3 J/(mol·K) within 0.09% of accepted thermodynamic literature."
+  )
+ elif slug=='activation-energy-arrhenius-acetone-iodination':
+  return (
+   "In the spectrophotometric and visual investigation of the acid-catalyzed iodination of acetone governed by "
+   "r = −d[I₂]/dt = k · [acetone]₀ · [H⁺]₀ · [I₂]⁰ = k_eff, experimental uncertainty and metrological systematic controls "
+   "are rigorously analyzed across optoelectronic, thermal, chemical, and stoichiometric dimensions: "
+   "(1) Peltier Thermal Regulation and Constant-Temperature Cell Geometry: Because the reaction rate approximately doubles "
+   "for every 8 °C temperature increase (a thermal sensitivity of ~9.5% per Kelvin at 25 °C), temperature uniformity is the "
+   "single most dominant source of experimental variance. The cuvette holder is encased within a copper-jacketed Peltier thermal block "
+   "regulated by a closed-loop PID controller with continuous recirculating water counter-cooling. Internal solution temperature is "
+   "verified using a miniature NIST-traceable calibrated platinum resistance thermometer (Pt-100 RTD) having a measurement resolution "
+   "of ±0.01 °C. A 0.05 °C drift during a 71 s trial introduces a rate bias of less than 0.45%, which is well within experimental tolerance. "
+   "(2) Optoelectronic Decolorization Latching vs Visual Threshold Variance: In traditional teaching laboratories, stopping the timer "
+   "upon visual disappearance of yellow iodine introduces human motor reaction latency (±0.25 s) and subjective chromatic discernment error, "
+   "especially as the yellow fades to faint straw. The virtual workbench photometer employs a narrow-band 465 nm solid-state LED "
+   "paired with a silicon photodiode and transimpedance amplifier. Complete decolorization is defined electronically at an absorbance threshold "
+   "of A ≤ 0.005 (transmittance T ≥ 98.8%), providing an optoelectronic timing precision of ±0.01 s. For fast trials at 45.0 °C (Δt = 8.46 s), "
+   "a ±0.01 s latching uncertainty represents an error of only 0.12%. "
+   "(3) Enolization Zero-Order Isolation: Maintaining acetone ([acetone]₀ = 1.000 M) and hydrochloric acid ([H⁺]₀ = 0.500 M) in massive "
+   "stoichiometric excess over limiting molecular iodine ([I₂]₀ = 0.00100 M) guarantees that the concentrations of ketone and catalyst "
+   "remain essentially invariant throughout the reaction run (acetone consumption is < 0.10%, acid consumption is strictly 0% due to "
+   "catalytic regeneration). Consequently, the reaction rate is rigorously constant from t = 0 until iodine is virtually exhausted, "
+   "yielding a flawless zero-order linear decay of [I₂] with time: [I₂](t) = [I₂]₀ − k_eff · t. "
+   "(4) Suppression of Triiodide Formation and Evaporative Losses: Iodine is introduced from a standardized stock containing potassium iodide "
+   "(KI) to solubilize molecular iodine as the triiodide complex (I₂ + I⁻ ⇌ I₃⁻, K ≈ 710 M⁻¹ at 25 °C). The equilibrium between free I₂ "
+   "and I₃⁻ is instantaneous on the time scale of enol halogenation, and both species react rapidly with the enol intermediate with identical "
+   "stoichiometry, ensuring that total titratable iodine is consumed without kinetic lag. To prevent volatile loss of acetone (vapor pressure "
+   "30.6 kPa at 25 °C) and molecular iodine sublimation, the reaction cell is fitted with a precision Teflon cap immediately after reagent injection. "
+   "(5) Multi-Temperature Linear Arrhenius Transformation: Evaluating rate constants k(T) across six thermal setpoints spanning 20.0 °C to 45.0 °C "
+   "(293.15 K to 318.15 K) transforms the exponential Arrhenius equation k = A · exp(−E_a / RT) into the linearized coordinate framework "
+   "ln(k) versus (1000/T). Ordinary least-squares regression yields an activation energy E_a = 84.14 kJ·mol⁻¹ and pre-exponential factor "
+   "A = 1.54 × 10¹⁰ L·mol⁻¹·s⁻¹ with an extraordinary correlation coefficient R² ≥ 0.9999, confirming that enolization is governed by a classical "
+   "single-barrier transition state with negligible quantum tunneling."
   )
  elif slug=='chemical-kinetics-iodine-clock-persulfate':
   return (
@@ -2039,6 +2114,135 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    "and proved that pre-warmed filter-plugged pipetting eliminates crystallization and suspended particle errors."
   )
   return abstract, graph_choice, discussion, conclusion
+ elif slug=='activation-energy-arrhenius-acetone-iodination':
+  abstract=(
+   f"The temperature dependence of chemical reaction velocity and the Arrhenius activation energy for the acid-catalyzed iodination of acetone "
+   f"(CH₃COCH₃ + I₂ →[H⁺] CH₃COCH₂I + H⁺ + I⁻) were investigated across six thermal setpoints from T = {rows[0]['input']:.1f} °C (293.15 K) "
+   f"to T = {rows[-1]['input']:.1f} °C (318.15 K) using narrow-band 465 nm spectrophotometry and zero-order iodine decolorization timing. "
+   f"Reactions were carried out with large stoichiometric excesses of acetone ([acetone]₀ = 1.000 M) and hydrochloric acid ([H⁺]₀ = 0.500 M) "
+   f"relative to limiting molecular iodine ([I₂]₀ = 0.00100 M) in a water-jacketed cell regulated to ±0.02 °C with 400 rpm magnetic micro-stirring. "
+   f"Because molecular iodine attacks the enol intermediate in an extraordinarily rapid post-rate-determining elementary step, the reaction rate "
+   f"was strictly zero-order in [I₂], yielding linear absorbance decays with decolorization intervals decreasing smoothly from "
+   f"Δt = {rows[0]['raw']:.2f} s at {rows[0]['input']:.1f} °C to Δt = {rows[-1]['raw']:.2f} s at {rows[-1]['input']:.1f} °C. "
+   f"Second-order rate constants scaled from k = {rows[0]['k']:.4e} L·mol⁻¹·s⁻¹ to k = {rows[-1]['k']:.4e} L·mol⁻¹·s⁻¹. "
+   f"Linear regression of ln(k) against reciprocal temperature (1000/T) yielded a slope m = {f['m']:.3f} K and intercept ln(A) = {f['b']:.3f} "
+   f"with a coefficient of determination R² = {f['r2']:.6f}. The experimental Arrhenius activation energy was determined to be "
+   f"E_a = {-f['m']*8.314462618:.2f} ± {f['slopeSE']*8.314462618:.2f} kJ·mol⁻¹, showing excellent agreement with the reference value of 84.14 kJ·mol⁻¹ "
+   f"(relative error < 0.05%). Application of Eyring transition state theory yielded activation enthalpy ΔH‡ = {-f['m']*8.314462618 - 2.48:.2f} kJ·mol⁻¹ "
+   f"and a substantially negative activation entropy ΔS‡ = -62.4 J·mol⁻¹·K⁻¹, corroborating the electrostrictive ordering of solvent water molecules "
+   f"during rate-determining α-proton abstraction."
+  )
+  error_sources=(
+   "Experimental uncertainties in the thermokinetic evaluation of acetone iodination are systematically categorized across six primary physical factors: "
+   "(1) Thermal Fluctuations and Temperature Gradients: Because the enolization rate constant scales exponentially with temperature "
+   "(dk/dT = k · E_a / (RT²)), a thermal deviation of merely 0.10 °C at 25 °C alters the instantaneous rate constant by 0.95%. Temperature stability "
+   "is safeguarded by immersing the reaction vessel within a high-capacity thermostatic circulating water bath (±0.02 °C) and continuously verifying "
+   "internal cuvette temperature with a calibrated Pt-100 RTD sensor. "
+   "(2) Acetone Volatility and Vapor-Phase Partitioning: Acetone exhibits a high vapor pressure (30.6 kPa at 25 °C, rising to 68.2 kPa at 45 °C). "
+   "In open vessels, headspace evaporation progressively concentrates the remaining liquid solution, distorting [acetone]₀ over prolonged runs. "
+   "This systematic bias is eliminated by sealing the cuvette with a ground-glass or Teflon stopper immediately upon reagent introduction. "
+   "(3) Photodiode Latching Threshold and Optical Path Geometry: Spectrophotometric timing relies on detecting the precise extinction of iodine absorbance "
+   "at 465 nm. Small bubbles generated by turbulent magnetic stirring, meniscus vibrations, or scratches on the optical faces can induce optical scattering, "
+   "artificially shifting the baseline absorbance. Using optical-grade quartz cuvettes, polished 10.00 mm optical windows, and moderate 400 rpm stirring "
+   "maintains an optical signal-to-noise ratio > 1000:1. "
+   "(4) Triiodide Pre-Equilibrium and Ionic Strength: Iodine in aqueous solution exists in equilibrium with triiodide (I₂ + I⁻ ⇌ I₃⁻). Because the formation "
+   "constant K_form ≈ 710 M⁻¹ varies slightly with temperature (ΔH_form° ≈ −19 kJ/mol), the ratio of free I₂ to I₃⁻ shifts between 20 °C and 45 °C. "
+   "However, because both free iodine and triiodide react with the enol intermediate at diffusion-controlled rates far exceeding enolization, this equilibrium "
+   "exerts zero influence on the measured depletion rate. "
+   "(5) Catalyst Concentration Calibration and Reagent Standardization: The rate depends linearly on hydronium ion activity ([H⁺]). Dilution errors in "
+   "hydrochloric acid preparation directly propagate as proportional scale errors into the derived rate constants. All HCl stocks are standardized "
+   "against primary standard sodium carbonate (Na₂CO₃) to four significant figures prior to kinetic profiling. "
+   "(6) Non-Arrhenius Temperature Dependence: The classical Arrhenius model assumes that activation energy is strictly independent of temperature. "
+   "According to transition state theory, the true pre-exponential factor incorporates a linear temperature term (A ∝ T), which introduces a theoretical "
+   "curvature of dE_a/dT = R = 8.314 J·mol⁻¹·K⁻¹. Over the 25 K experimental span investigated, this theoretical variation is less than 0.2 kJ/mol, "
+   "confirming the validity of linear least-squares analysis."
+  )
+  graph_choice=(
+   "The graphical representation of reaction kinetics as a function of temperature requires selecting a linearized coordinate system that minimizes "
+   "heteroscedasticity and separates the energy barrier parameter from the collision frequency factor. In this laboratory, the Arrhenius coordinates "
+   "y = ln(k) versus x = 1000/T (where T is absolute temperature in Kelvin) are chosen based on rigorous thermodynamic and statistical principles: "
+   "(1) Exact Linearization of the Arrhenius Law: Taking the natural logarithm of k = A · exp(−E_a / RT) transforms the exponential curve into the linear "
+   "form ln(k) = ln(A) − [E_a / (1000·R)] · (1000/T). In this coordinate frame, the slope m = −E_a / (1000·R) directly isolates the activation energy, "
+   "while the vertical intercept b = ln(A) reveals the pre-exponential frequency factor without requiring non-linear numerical iterations. "
+   "(2) Uniform Weighting Across Broad Rate Decades: Over the temperature range 20.0 °C to 45.0 °C, the rate constant expands by more than a factor of 15 "
+   "(from 1.57 × 10⁻⁵ to 2.36 × 10⁻⁴ L·mol⁻¹·s⁻¹). Plotting raw k versus T would heavily weight the high-temperature trials in an ordinary least-squares "
+   "regression, essentially ignoring the low-temperature data points. The logarithmic transformation ln(k) compresses this variance, equalizing the "
+   "relative leverage of all observations across the full experimental temperature envelope. "
+   "(3) Reciprocal Temperature Scaling: Plotting against 1000/T rather than 1/T scales the independent coordinate into convenient numerical values "
+   "(3.14 to 3.41 K⁻¹), avoiding rounding truncations during manual slope calculation while maintaining a direct physical mapping to molecular "
+   "Boltzmann thermal energy (k_B·T). The extraordinary linearity observed (R² ≥ 0.9999) validates the fundamental Arrhenius postulate and confirms "
+   "that enolization proceeds via a single, thermally stable transition state."
+  )
+  discussion=(
+   "The experimental determination of Arrhenius activation parameters for the acid-catalyzed iodination of acetone provides profound mechanistic insights "
+   "into organic catalysis, proton transfer kinetics, and the quantum statistical thermodynamics of chemical activation. A comprehensive analysis of "
+   "the experimental data encompasses five interconnected chemical and physical dimensions:\n\n"
+   "1. Mechanistic Anatomy of Ketone Halogenation and Zero-Order Iodine Kinetics:\n"
+   "The halogenation of carbonyl compounds bearing α-hydrogens has been a cornerstone of physical organic chemistry since the pioneering investigations "
+   "of Arthur Lapworth in 1904. The observation that reaction velocity is independent of both the concentration and identity of the halogen (chlorine, "
+   "bromine, and iodine react at identical rates) provides incontrovertible proof that halogenation occurs after the rate-limiting elementary step. "
+   "The mechanism proceeds through two sequential phases: acid-catalyzed enolization followed by rapid electrophilic halogen addition. In the initial "
+   "phase, hydronium ion reversibly protonates the carbonyl oxygen: CH₃COCH₃ + H₃O⁺ ⇌ CH₃C(OH⁺)CH₃ + H₂O (fast pre-equilibrium, K_eq ≈ 10⁻⁷). "
+   "The resulting protonated oxonium ion exhibits greatly enhanced α-carbon acidity due to the strong electron-withdrawing inductive effect of the "
+   "positively charged oxygen atom. In the subsequent rate-determining step, a solvent water molecule acts as a weak Brønsted base to abstract an α-proton, "
+   "concurrently shifting electron density into the C=C double bond to yield the neutral enol intermediate: CH₃C(OH⁺)CH₃ + H₂O →[slow, k₁] CH₃C(OH)=CH₂ + H₃O⁺. "
+   "Once formed, the enol reacts instantaneously with molecular iodine via electrophilic attack: CH₃C(OH)=CH₂ + I₂ →[fast, k₂] CH₃COCH₂I + H⁺ + I⁻. "
+   "Because k₂[I₂] ≫ k₁[H₂O], the steady-state concentration of the enol is extraordinarily small ([enol] ≈ 10⁻¹⁰ M), and the rate of iodine disappearance "
+   "is governed exclusively by the rate of enol formation: −d[I₂]/dt = k₁ · [CH₃C(OH⁺)CH₃] · [H₂O] = k · [acetone] · [H⁺]. Consequently, the reaction "
+   "exhibits clean pseudo-zero-order kinetics with respect to [I₂], linear decolorization profiles, and identical activation parameters regardless of halogen identity.\n\n"
+   "2. Eyring Transition State Theory and Activation Parameters:\n"
+   "While the Arrhenius equation provides a robust empirical description of temperature dependence, Henry Eyring's transition state theory (TST) provides "
+   "a microscopic quantum statistical foundation. According to TST, reacting molecules exist in quasi-thermodynamic equilibrium with an activated complex "
+   "at the saddle point of the potential energy surface: [Reactants] ⇌ [Activated Complex]‡ → Products. The rate constant is expressed as "
+   "k = (k_B·T / h) · exp(−ΔG‡ / RT) = (k_B·T / h) · exp(ΔS‡ / R) · exp(−ΔH‡ / RT). "
+   "For reactions occurring in condensed liquid media, the experimental Arrhenius activation energy relates to the enthalpy of activation by "
+   "ΔH‡ = E_a − RT. At T = 298.15 K, RT = 2.479 kJ·mol⁻¹, which yields an activation enthalpy of ΔH‡ = 84.14 − 2.48 = 81.66 kJ·mol⁻¹. "
+   "The pre-exponential factor A is related to the entropy of activation via A = e · (k_B·T / h) · exp(ΔS‡ / R). Substituting A = 1.541 × 10¹⁰ L·mol⁻¹·s⁻¹ "
+   "and k_B·T / h = 6.212 × 10¹² s⁻¹ at 298.15 K yields exp(ΔS‡ / R) = 1.541 × 10¹⁰ / (2.718 × 6.212 × 10¹²) = 9.13 × 10⁻⁴, corresponding to "
+   "an activation entropy of ΔS‡ = R · ln(9.13 × 10⁻⁴) = −62.4 J·mol⁻¹·K⁻¹. "
+   "This substantial negative activation entropy is mechanistically illuminating: in the transition state, the developing hydronium ion and polarized "
+   "enol moiety induce strong dipole-dipole orientation and electrostrictive compression of surrounding solvent water molecules. The loss of rotational "
+   "and translational freedom among these coordinated solvent molecules produces a marked entropic penalty, reflecting a highly ordered, associative activated complex.\n\n"
+   "3. Solvent Isotope Effects and General Acid Catalysis:\n"
+   "Further validation of the enolization mechanism arises from solvent kinetic isotope effect (KIE) studies. When the reaction is conducted in deuterium oxide "
+   "(D₂O) rather than H₂O, two opposing isotope effects operate: (1) An inverse equilibrium isotope effect on the pre-equilibrium protonation step: because "
+   "D₃O⁺ is a stronger acid than H₃O⁺, acetone is protonated to a greater extent in D₂O by a factor of 1.5 to 2.0 (K_D / K_H ≈ 1.8). "
+   "(2) A primary kinetic isotope effect on the rate-determining α-proton abstraction: breaking the carbon-hydrogen bond in the transition state exhibits "
+   "a normal primary KIE of k_H / k_D ≈ 4.0 due to the loss of C−H zero-point vibrational energy (ν_CH ≈ 2900 cm⁻¹ vs ν_CD ≈ 2100 cm⁻¹). "
+   "The composite observed solvent isotope effect is k(H₂O) / k(D₂O) ≈ 2.1 to 2.5, confirming that C−H bond cleavage is actively occurring in the rate-determining "
+   "activated complex. Furthermore, the reaction is subject to general acid catalysis: weak acids (such as acetic acid or chloroacetic acid) can also "
+   "catalyze enolization, conforming to the Brønsted catalysis law log(k_A) = α · log(K_a) + C with a Brønsted exponent α ≈ 0.50, demonstrating that the "
+   "proton in the transition state is approximately half-transferred between the substrate and the base.\n\n"
+   "4. Comparison with Other Halogens and Ketone Homologs:\n"
+   "Comparing the activation parameters of acetone with other carbonyl compounds illuminates the role of steric and electronic substituents on enolization barriers. "
+   "For cyclohexanone, the enolization activation energy is lower (E_a ≈ 75 kJ·mol⁻¹) because the cyclic chair conformation enforces favorable orbital overlap "
+   "between the α-C−H σ-bond and the carbonyl π* orbital (hyperconjugative stereoelectronic alignment). Conversely, for acetophenone (PhCOCH₃), resonance "
+   "stabilization of the unprotonated ketone by the phenyl ring slightly raises the activation barrier (E_a ≈ 88 kJ·mol⁻¹). "
+   "The invariance of the reaction rate across Cl₂, Br₂, and I₂ underscores the fundamental principle of kinetic bottlenecks in multi-step chemical networks: "
+   "no modification of a reagent participating downstream of the rate-limiting step can accelerate the overall macroscopic reaction velocity.\n\n"
+   "5. Metrological Precision and Educational Implications:\n"
+   "The acid-catalyzed iodination of acetone represents an educational exemplar for teaching kinetic molecular theory and chemical metrology. "
+   "The clean separation of reaction orders (order 1 in acetone, order 1 in H⁺, order 0 in I₂), the visual dramatic clarity of iodine color disappearance, "
+   "and the exceptional linearity of the Arrhenius plot (R² ≥ 0.9999) provide students with unambiguous proof of the power of mathematical modeling in chemistry. "
+   "By integrating electronic spectrophotometric timing with precision thermal regulation, virtual experimentation elevates classical wet-bench exercises "
+   "to professional analytical research standards, illustrating the fundamental connection between microscopic quantum barriers and macroscopic thermodynamic reaction rates."
+  )
+  conclusion=(
+   f"The thermokinetic investigation of the acid-catalyzed iodination of acetone successfully validated the multi-step enolization mechanism, confirmed "
+   f"zero-order kinetics with respect to molecular iodine, and evaluated the Arrhenius and Eyring activation parameters with outstanding analytical precision. "
+   f"Across the temperature span 20.0 °C to 45.0 °C, the measured decolorization times decreased from {rows[0]['raw']:.2f} s to {rows[-1]['raw']:.2f} s, "
+   f"corresponding to second-order rate constants increasing from {rows[0]['k']:.4e} L·mol⁻¹·s⁻¹ to {rows[-1]['k']:.4e} L·mol⁻¹·s⁻¹. "
+   f"Linear regression in Arrhenius coordinates (ln(k) versus 1000/T) demonstrated exceptional linearity (R² = {f['r2']:.6f}) with slope m = {f['m']:.3f} K, "
+   f"yielding an experimental activation energy of E_a = {-f['m']*8.314462618:.2f} ± {f['slopeSE']*8.314462618:.2f} kJ·mol⁻¹ and pre-exponential factor "
+   f"A = {math.exp(f['b']):.3e} L·mol⁻¹·s⁻¹. The experimental E_a deviates from the standard literature benchmark (84.14 kJ·mol⁻¹) by less than 0.05%, "
+   f"confirming the absence of significant systematic thermal or timing biases. Eyring transition state thermodynamic analysis isolated an activation "
+   f"enthalpy of ΔH‡ = {-f['m']*8.314462618 - 2.48:.2f} kJ·mol⁻¹ and a characteristic negative activation entropy of ΔS‡ = -62.4 J·mol⁻¹·K⁻¹, "
+   f"quantifying the significant solvent electrostrictive ordering accompanying the rate-determining abstraction of the α-proton by water. "
+   f"These findings establish the acid-catalyzed halogenation of ketones as a definitive empirical benchmark for demonstrating transition state theory, "
+   f"zero-order kinetic isolation, and Arrhenius temperature dynamics in chemical education."
+  )
+  return abstract, graph_choice, discussion, conclusion
+
  elif slug=='chemical-kinetics-iodine-clock-persulfate':
   abstract=(
    f"The chemical kinetics and reaction dynamics of the peroxodisulfate-iodide redox reaction (S₂O₈²⁻ + 2 I⁻ → 2 SO₄²⁻ + I₂) were investigated "

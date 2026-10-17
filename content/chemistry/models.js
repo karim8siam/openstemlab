@@ -160,6 +160,20 @@ function predict(slug,input){
   const y=round(Math.log(ksp_calc), 4);
   return {raw,ideal:raw,period:1.0,x,y,valid:t>=30.0&&t<=55.0};
  }
+ if(slug==='activation-energy-arrhenius-acetone-iodination'){
+  const T_c=Number(input);
+  const T_k=T_c + 273.15;
+  const R_const=8.314462618;
+  const E_a=84140.0;
+  const A_arr=1.541094e10;
+  const k_ideal=A_arr * Math.exp(-E_a / (R_const * T_k));
+  const dt_ideal=0.00200 / k_ideal;
+  const raw=round(dt_ideal, 2);
+  const k_calc=0.00200 / raw;
+  const x=round(1000.0 / T_k, 4);
+  const y=round(Math.log(k_calc), 4);
+  return {raw,ideal:raw,period:1.0,x,y,valid:T_c>=20.0&&T_c<=45.0};
+ }
  if(slug==='chemical-kinetics-iodine-clock-persulfate'){
   const p_mM=Number(input);
   const p_M=p_mM * 1e-3;
@@ -317,6 +331,14 @@ function reading(slug,input,raw){
   const s_calc=V / 20.0;
   const ksp_calc=4.0 * Math.pow(s_calc, 3);
   y=round(Math.log(ksp_calc), 4);
+ }
+ if(slug==='activation-energy-arrhenius-acetone-iodination'){
+  const T_c=Number(input);
+  const T_k=T_c + 273.15;
+  const raw_val=Number(raw);
+  const k_calc=0.00200 / raw_val;
+  x=round(1000.0 / T_k, 4);
+  y=round(Math.log(k_calc), 4);
  }
  if(slug==='chemical-kinetics-iodine-clock-persulfate'){
   const p_mM=Number(input);
@@ -489,6 +511,13 @@ function estimate(slug,f){
   const dH_est= -f.m * 8.31446;
   const se= f.slopeSE * 8.31446;
   return {value:dH_est,se:se,reference:110.0};
+ }
+ if(slug==='activation-energy-arrhenius-acetone-iodination'){
+  const slope= f.m;
+  const R_const= 8.314462618;
+  const E_a_est= -slope * R_const;
+  const se= f.slopeSE * R_const;
+  return {value:E_a_est,se:se,reference:84.14};
  }
  if(slug==='chemical-kinetics-iodine-clock-persulfate'){
   const slope= f.m;
