@@ -140,6 +140,58 @@ function drawComparativeSim(t,p,v,ink,soft,orange){
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
 
+ if(cfg.slug==='greedy-minimum-spanning-trees'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'MINIMUM SPANNING TREE PARADIGMS & ARCHITECTURES (|V| = '+p.input+')','#e2f0f8',11);
+
+  const n=p.input;
+  const e=4*n;
+  const c_kruskal=Math.round(e * Math.log2(e) + 2 * e * 1.05);
+  const c_prim_fib=Math.round(e + n * Math.log2(n));
+  const c_prim_bin=Math.round((n + e) * Math.log2(n));
+  const c_boruvka=Math.round(e * Math.log2(n));
+  const c_naive_dsu=Math.round(e * Math.log2(e) + e * (n / 4));
+
+  const strategies=[
+   {name:'Kruskal with DSU (Path Comp + Rank)',col:'#10b981',cost:c_kruskal,scale:'O(|E| log |V| + |E|α(|V|))',desc:'Optimal on sparse networks; flat edge array sorting; amortized inverse Ackermann DSU'},
+   {name:'Prim with Fibonacci Heap',col:'#38bdf8',cost:c_prim_fib,scale:'O(|E| + |V| log |V|)',desc:'O(1) amortized decrease_key; vertex-growing tree frontier; optimal on dense graphs'},
+   {name:'Prim with Binary Min-Heap',col:'#f97316',cost:c_prim_bin,scale:'O((|V|+|E|) log |V|)',desc:'Standard binary priority queue; O(log |V|) decrease_key; simple heap implementation'},
+   {name:'Borůvka Parallel Contraction',col:'#a855f7',cost:c_boruvka,scale:'O(|E| log |V|) parallel rounds',desc:'Multi-component simultaneous contraction; ⌈log₂ |V|⌉ rounds; GPU/cluster scalable'},
+   {name:'Kruskal Naive DSU (No Path Comp)',col:'#ef4444',cost:c_naive_dsu,scale:'O(|E| · |V|) degraded DSU',desc:'Degenerate parent chains without path compression; catastrophic tree walk stalls'}
+  ];
+
+  strategies.forEach((item,idx)=>{
+   const rowY=cY+16+idx*42;
+   svg+='<text x="'+(cX+15)+'" y="'+(rowY+12)+'" fill="#dcebf2" font-size="8.5" font-weight="bold">'+item.name+'</text>';
+   const costStr=item.cost>=1000000?(item.cost/1000000).toFixed(1)+'M':item.cost>=1000?(item.cost/1000).toFixed(1)+'k':item.cost;
+   svg+='<text x="'+(cX+cW-15)+'" y="'+(rowY+12)+'" text-anchor="end" fill="'+item.col+'" font-size="8.5" font-family="monospace" font-weight="bold">'+costStr+' ops ('+item.scale+')</text>';
+   
+   const barX=cX+15,barY=rowY+16,barMaxW=cW-30;
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+barMaxW+'" height="7" rx="2" fill="#16242c"/>';
+   const maxVal=Math.max(10000, c_naive_dsu);
+   const frac=Math.min(1.0,Math.log10(item.cost+1)/Math.log10(maxVal+1));
+   const fillW=Math.max(4,frac*barMaxW);
+   svg+='<rect x="'+barX+'" y="'+barY+'" width="'+fillW+'" height="7" rx="2" fill="'+item.col+'"/>';
+  });
+
+  const bX=460,bY=45,bW=220,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+22)+'" fill="#7e9bab" font-size="9">DSU TREE COMPRESSION RATIO</text>';
+  const compressionRatio=(c_naive_dsu / Math.max(1, c_kruskal)).toFixed(1);
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+50)+'" fill="'+orange+'" font-size="22" font-family="monospace" font-weight="bold">'+compressionRatio+'×</text>';
+  svg+='<text x="'+(bX+95)+'" y="'+(bY+46)+'" fill="#dcebf2" font-size="10">Rank & Path Comp</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+65)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+65)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+84)+'" fill="#7e9bab" font-size="9">SPANNING TREE INVARIANT</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+108)+'" fill="'+ink+'" font-size="16" font-family="monospace" font-weight="bold">|E_mst| = '+(n-1)+' Edges</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+124)+'" fill="#8ba5b5" font-size="8">Cayley Theorem: Exactly |V| − 1 edges in tree</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+136)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+136)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+154)+'" fill="#7e9bab" font-size="9">INVERSE ACKERMANN BOUND</text>';
+  svg+=text(bX+bW/2,bY+180,'α(|V|) ≤ 4 for all |V| ≤ 10¹⁰⁰','#10b981',9.5);
+  svg+=text(bX+bW/2,bY+202,'Amortized near O(1) query time',orange,8.5);
+  svg+=text(360,305,'Comparative Invariant: Kruskal + DSU achieves optimal O(|E| log |V|) on sparse graphs, enforcing the Cut Property',soft,10);
+  return svg;
+ }
+
  if(cfg.slug==='dynamic-programming-memoization'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#0b151b" stroke="'+soft+'" stroke-width="1.5" rx="6"/>';
   svg+=text(cX+cW/2,cY-14,'DYNAMIC PROGRAMMING COMPUTATIONAL STRATEGIES (n = '+p.input+', W = 100)','#e2f0f8',11);
@@ -705,6 +757,70 @@ function drawDynamicSandbox(t,p,v,ink,soft,orange){
  const cX=45,cY=45,cW=400,cH=230;
  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+ if(cfg.slug==='greedy-minimum-spanning-trees'){
+  svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
+  svg+=text(cX+cW/2,cY-14,'CUT PROPERTY & CYCLE DETECTION SANDBOX (|V| = '+p.input+')','#e2f0f8',11);
+
+  svg+='<text x="'+(cX+15)+'" y="'+(cY+22)+'" fill="#10b981" font-size="8.5" font-weight="bold">CUT THEOREM: MIN-CROSSING EDGE e* ∈ CUT(S, V\\S) MUST BELONG TO MST</text>';
+
+  const sBoxX=cX+20, sBoxY=cY+40, sBoxW=155, sBoxH=115;
+  svg+='<rect x="'+sBoxX+'" y="'+sBoxY+'" width="'+sBoxW+'" height="'+sBoxH+'" rx="6" fill="#042f2e" stroke="#14b8a6" stroke-width="1.2" stroke-dasharray="3,2"/>';
+  svg+='<text x="'+(sBoxX+12)+'" y="'+(sBoxY+18)+'" fill="#2dd4bf" font-size="8" font-weight="bold">CUT SET S (3 Vertices)</text>';
+
+  const rBoxX=cX+225, rBoxY=cY+40, rBoxW=155, rBoxH=115;
+  svg+='<rect x="'+rBoxX+'" y="'+rBoxY+'" width="'+rBoxW+'" height="'+rBoxH+'" rx="6" fill="#0c1929" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="3,2"/>';
+  svg+='<text x="'+(rBoxX+12)+'" y="'+(rBoxY+18)+'" fill="#7dd3fc" font-size="8" font-weight="bold">CUT SET V \\ S (2 Vertices)</text>';
+
+  const v0={x:sBoxX+35,y:sBoxY+55}, v1={x:sBoxX+120,y:sBoxY+50}, v2={x:sBoxX+75,y:sBoxY+95};
+  const v3={x:rBoxX+45,y:rBoxY+50}, v4={x:rBoxX+115,y:rBoxY+85};
+
+  svg+='<line x1="'+v0.x+'" y1="'+v0.y+'" x2="'+v1.x+'" y2="'+v1.y+'" stroke="#10b981" stroke-width="2"/>';
+  svg+='<text x="'+((v0.x+v1.x)/2)+'" y="'+((v0.y+v1.y)/2-5)+'" fill="#10b981" font-size="6.5" font-family="monospace">w=2</text>';
+
+  svg+='<line x1="'+v0.x+'" y1="'+v0.y+'" x2="'+v2.x+'" y2="'+v2.y+'" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3,2"/>';
+  svg+='<text x="'+((v0.x+v2.x)/2-12)+'" y="'+((v0.y+v2.y)/2+5)+'" fill="#ef4444" font-size="6.5" font-family="monospace">w=8 ✖</text>';
+
+  svg+='<line x1="'+v1.x+'" y1="'+v1.y+'" x2="'+v3.x+'" y2="'+v3.y+'" stroke="'+orange+'" stroke-width="2.5"/>';
+  svg+='<text x="'+((v1.x+v3.x)/2)+'" y="'+((v1.y+v3.y)/2-7)+'" fill="'+orange+'" font-size="8" font-family="monospace" font-weight="bold">w=3 (CUT MIN!)</text>';
+
+  svg+='<line x1="'+v2.x+'" y1="'+v2.y+'" x2="'+v4.x+'" y2="'+v4.y+'" stroke="#475569" stroke-width="1.5" stroke-dasharray="2,2"/>';
+  svg+='<text x="'+((v2.x+v4.x)/2)+'" y="'+((v2.y+v4.y)/2-4)+'" fill="#64748b" font-size="6.5" font-family="monospace">w=7</text>';
+
+  const sbNodes=[
+   {id:'V0',x:v0.x,y:v0.y,col:'#10b981',fill:'#064e3b'},
+   {id:'V1',x:v1.x,y:v1.y,col:orange,fill:'#431407'},
+   {id:'V2',x:v2.x,y:v2.y,col:'#10b981',fill:'#064e3b'},
+   {id:'V3',x:v3.x,y:v3.y,col:orange,fill:'#431407'},
+   {id:'V4',x:v4.x,y:v4.y,col:'#38bdf8',fill:'#0f172a'}
+  ];
+  sbNodes.forEach(nd=>{
+   svg+='<circle cx="'+nd.x+'" cy="'+nd.y+'" r="12" fill="'+nd.fill+'" stroke="'+nd.col+'" stroke-width="2"/>';
+   svg+='<text x="'+nd.x+'" y="'+(nd.y+4)+'" text-anchor="middle" fill="#dcebf2" font-size="7.5" font-weight="bold">'+nd.id+'</text>';
+  });
+
+  const cdX=cX+15,cdY=cY+168,cdW=cW-30,cdH=52;
+  svg+='<rect x="'+cdX+'" y="'+cdY+'" width="'+cdW+'" height="'+cdH+'" rx="4" fill="#050b0e" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(cdX+12)+'" y="'+(cdY+16)+'" fill="#38bdf8" font-size="7.5" font-family="monospace">Candidate Edge (V0, V2, w=8): Find(V0)==Find(V2) ⟶ Both in S ⟶ REJECT (Cycle!)</text>';
+  svg+='<text x="'+(cdX+12)+'" y="'+(cdY+30)+'" fill="#10b981" font-size="7.5" font-family="monospace">Crossing Edge (V1, V3, w=3): Find(V1)!=Find(V3) ⟶ Cut Min Edge ⟶ ACCEPT into MST</text>';
+  svg+='<text x="'+(cdX+12)+'" y="'+(cdY+44)+'" fill="'+orange+'" font-size="7.5" font-family="monospace">DSU Union(Find(V1), Find(V3)): Merges S and V\\S via Union by Rank in O(α(V))</text>';
+
+  const bX=465,bY=45,bW=210,bH=230;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#7e9bab" font-size="9">MIN CROSSING WEIGHT</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+54)+'" fill="'+orange+'" font-size="24" font-family="monospace" font-weight="bold">w = 3</text>';
+  svg+='<text x="'+(bX+85)+'" y="'+(bY+50)+'" fill="#10b981" font-size="11">(Cut Minimum)</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+84)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+84)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+102)+'" fill="#7e9bab" font-size="9">CUT PROPERTY THEOREM</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+124)+'" fill="'+ink+'" font-size="14" font-family="monospace" font-weight="bold">e* = argmin w(u,v)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+140)+'" fill="#8ba5b5" font-size="8">Exchange proof guarantees MST membership</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+154)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+154)+'" stroke="#1e3340"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+172)+'" fill="#7e9bab" font-size="9">CYCLE REJECTION</text>';
+  svg+=text(bX+bW/2,bY+194,'Find(u) == Find(v) ⟹ Cycle','#ef4444',9.5);
+  svg+=text(bX+bW/2,bY+212,'Discarded in O(α(V)) amortized time',orange,8.5);
+  svg+=text(360,305,'Sandbox Invariant: Cut Property guarantees min-crossing edge in MST; DSU Find(u)==Find(v) prevents cycles in O(α(V))',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='dynamic-programming-memoization'){
   svg+='<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" fill="#081116" stroke="'+soft+'" stroke-width="2" rx="6"/>';
@@ -1441,6 +1557,85 @@ function draw(t){
  const ink='#38bdf8',soft='#7e9bab',orange='#f97316';
  if(currentSimMode==='compare'){$('apparatusDiagram').innerHTML=drawComparativeSim(t,p,v,ink,soft,orange);return;}
  if(currentSimMode==='sandbox'){$('apparatusDiagram').innerHTML=drawDynamicSandbox(t,p,v,ink,soft,orange);return;}
+
+ if(cfg.slug==='greedy-minimum-spanning-trees'){
+  let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';
+  const text=(x,y,str,color='#8ba5b5',size=12)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" fill="'+color+'" font-size="'+size+'">'+str+'</text>';
+
+  const n=p.input;
+  const e_count=4*n;
+  const q_lookups=v.raw;
+  const mst_edges=n - 1;
+
+  svg+='<rect x="35" y="38" width="410" height="235" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+=text(240,24,'Minimum Spanning Tree Construction & Disjoint Set Forest Geometry');
+
+  svg+='<text x="50" y="56" fill="#7e9bab" font-size="8.5" font-weight="bold">NETWORK G=(V, E) · |V| = '+n+' · |E| = '+e_count+' EDGES · MST BRANCHES = '+mst_edges+' EDGES</text>';
+
+  const nodes=[
+   {id:'V0',x:75,y:115,col:'#10b981',st:'Root',d:'p:V0'},
+   {id:'V1',x:165,y:80,col:'#10b981',st:'Tree',d:'p:V0'},
+   {id:'V2',x:165,y:155,col:'#10b981',st:'Tree',d:'p:V0'},
+   {id:'V3',x:275,y:80,col:'#10b981',st:'Tree',d:'p:V0'},
+   {id:'V4',x:275,y:155,col:'#10b981',st:'Tree',d:'p:V0'},
+   {id:'V5',x:380,y:115,col:'#10b981',st:'Tree',d:'p:V0'}
+  ];
+
+  const edges=[
+   {u:0,v:1,w:'w:2',col:'#10b981',wCol:'#10b981',wdt:2.5,dash:null},
+   {u:0,v:2,w:'w:4',col:'#10b981',wCol:'#10b981',wdt:2.5,dash:null},
+   {u:1,v:3,w:'w:3',col:'#10b981',wCol:'#10b981',wdt:2.5,dash:null},
+   {u:2,v:4,w:'w:5',col:'#10b981',wCol:'#10b981',wdt:2.5,dash:null},
+   {u:4,v:5,w:'w:1',col:'#10b981',wCol:'#10b981',wdt:2.5,dash:null},
+   {u:1,v:2,w:'w:8 (CYCLE!)',col:'#ef4444',wCol:'#ef4444',wdt:1.5,dash:'3,2'},
+   {u:3,v:5,w:'w:7',col:'#334155',wCol:'#64748b',wdt:1.2,dash:'2,2'},
+   {u:3,v:4,w:'w:6',col:'#334155',wCol:'#64748b',wdt:1.2,dash:'2,2'}
+  ];
+
+  edges.forEach(e=>{
+   const u=nodes[e.u],v=nodes[e.v];
+   const dashAttr=e.dash?' stroke-dasharray="'+e.dash+'"':'';
+   svg+='<line x1="'+u.x+'" y1="'+u.y+'" x2="'+v.x+'" y2="'+v.y+'" stroke="'+e.col+'" stroke-width="'+e.wdt+'"'+dashAttr+'/>';
+   const midX=(u.x+v.x)/2, midY=(u.y+v.y)/2 - 5;
+   svg+='<text x="'+midX+'" y="'+midY+'" text-anchor="middle" fill="'+e.wCol+'" font-size="6.5" font-family="monospace">'+e.w+'</text>';
+  });
+
+  nodes.forEach(nd=>{
+   svg+='<circle cx="'+nd.x+'" cy="'+nd.y+'" r="13" fill="#081016" stroke="'+nd.col+'" stroke-width="2"/>';
+   svg+='<text x="'+nd.x+'" y="'+(nd.y+4)+'" text-anchor="middle" fill="#dcebf2" font-size="8" font-family="monospace" font-weight="bold">'+nd.id+'</text>';
+   svg+='<text x="'+nd.x+'" y="'+(nd.y+21)+'" text-anchor="middle" fill="#64748b" font-size="6" font-family="monospace">'+nd.d+'</text>';
+  });
+
+  const fsX=50,fsY=180,fsW=380,fsH=34;
+  svg+='<rect x="'+fsX+'" y="'+fsY+'" width="'+fsW+'" height="'+fsH+'" rx="4" fill="#081016" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(fsX+10)+'" y="'+(fsY+14)+'" fill="#10b981" font-size="7.5" font-family="monospace">DSU Parent Map: parent[V1..V5] ⟶ V0 (Path Compressed to Root V0)</text>';
+  svg+='<text x="'+(fsX+10)+'" y="'+(fsY+26)+'" fill="'+orange+'" font-size="7.5" font-family="monospace">Cycle Filter: Edge (V1, V2, w=8) ⟶ Find(V1)==Find(V2)==V0 ⟶ Discarded!</text>';
+
+  const cbX=50,cbY=220,cbW=380,cbH=46;
+  svg+='<rect x="'+cbX+'" y="'+cbY+'" width="'+cbW+'" height="'+cbH+'" rx="4" fill="#081016" stroke="#1e3340" stroke-width="1.2"/>';
+  svg+='<text x="'+(cbX+10)+'" y="'+(cbY+14)+'" fill="#38bdf8" font-size="7.5" font-family="monospace">Total DSU Queries: Q(|V|) = 2|E| = 2(4 × '+n+') = '+q_lookups+' lookups</text>';
+  svg+='<text x="'+(cbX+10)+'" y="'+(cbY+26)+'" fill="#dcebf2" font-size="7" font-family="monospace">Linear Model: k_mst = 8.0000 lookups/vertex · Intercept Q_0 = 0.0000</text>';
+  svg+='<text x="'+(cbX+10)+'" y="'+(cbY+38)+'" fill="#8ba5b5" font-size="6.5">Spanning Tree Invariant: |E_mst| = |V| − 1 = '+mst_edges+' edges · Total MST Weight W_mst = 15</text>';
+
+  const bX=465,bY=38,bW=220,bH=235;
+  svg+='<rect x="'+bX+'" y="'+bY+'" width="'+bW+'" height="'+bH+'" rx="6" fill="#0d1820" stroke="'+soft+'" stroke-width="1.5"/>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+24)+'" fill="#7e9bab" font-size="9">TOTAL DSU QUERIES Q(|V|)</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+54)+'" fill="'+orange+'" font-size="24" font-family="monospace" font-weight="bold">'+q_lookups+'</text>';
+  svg+='<text x="'+(bX+95)+'" y="'+(bY+50)+'" fill="#8ba5b5" font-size="11">lookups</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+84)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+84)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+102)+'" fill="#7e9bab" font-size="9">SPANNING TREE TOPOLOGY</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+126)+'" fill="'+ink+'" font-size="16" font-family="monospace" font-weight="bold">|E_mst| = '+mst_edges+' edges</text>';
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+142)+'" fill="#8ba5b5" font-size="8">From |E| = '+e_count+' candidate edges</text>';
+  svg+='<line x1="'+(bX+15)+'" y1="'+(bY+156)+'" x2="'+(bX+bW-15)+'" y2="'+(bY+156)+'" stroke="#1e3340"/>';
+
+  svg+='<text x="'+(bX+15)+'" y="'+(bY+174)+'" fill="#7e9bab" font-size="9">LINEAR QUERY ASYMPTOTE</text>';
+  svg+=text(bX+bW/2,bY+196,'Q(|V|) = 2|E| = 8.0000 · |V|','#10b981',10);
+  svg+=text(bX+bW/2,bY+214,'Linear Coordinate: |V| (vertices)',orange,8.5);
+
+  svg+=text(360,305,'Mathematical Model: Q(|V|) = 8.0000 · |V| + 0.0000 lookups · R² = 1.000000 · Diff = 0.0000%',soft,10);
+  return svg;
+ }
 
  if(cfg.slug==='dynamic-programming-memoization'){
   let svg='<defs><pattern id="labGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#fff" stroke-opacity=".035" fill="none"/></pattern></defs><rect width="720" height="320" fill="url(#labGrid)"/>';

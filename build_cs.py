@@ -81,6 +81,13 @@ def observation(c,value):
   x=n
   y=float(raw)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='greedy-minimum-spanning-trees':
+  v=float(value)
+  e=4.0*v
+  raw=int(round(2.0*e))
+  x=v
+  y=float(raw)
+  return {'input':value,'raw':raw,'x':x,'y':y}
  raise ValueError(f"Unknown CS experiment {slug}")
 
 def fit(rows):
@@ -126,6 +133,8 @@ def estimate(c,f):
   return f['m'],f['slopeSE'],5.0000
  elif slug=='dynamic-programming-memoization':
   return f['m'],f['slopeSE'],100.0000
+ elif slug=='greedy-minimum-spanning-trees':
+  return f['m'],f['slopeSE'],8.0000
  raise ValueError(f"Unknown CS experiment {slug}")
 
 def fmt(v,n=5):
@@ -166,6 +175,9 @@ def formula(c,f):
  elif slug=='dynamic-programming-memoization':
   val=f['m']*c['resultScale']
   return f"k_dp = m = {fmt(val,c['resultDecimals'])} states/item; Intercept T_0 = {fmt(f['b'],c['resultDecimals'])} states (theoretical k_dp = 100.0000, T_0 = 0.0000)"
+ elif slug=='greedy-minimum-spanning-trees':
+  val=f['m']*c['resultScale']
+  return f"k_mst = m = {fmt(val,c['resultDecimals'])} lookups/vertex; Intercept Q_0 = {fmt(f['b'],c['resultDecimals'])} lookups (theoretical k_mst = 8.0000, Q_0 = 0.0000)"
  return ""
 
 def worked(c,row):
@@ -229,6 +241,12 @@ def worked(c,row):
   w_cap=100.0
   t_states=row['raw']
   return f"Item Count n = {int(n)} items; Knapsack Capacity W = 100 weight units; Total Subproblem Grid Cells (n × W) = {int(n)} × 100 = {t_states} states.\nTotal Elementary State Transitions: T(n) = W · n = 100 × {int(n)} = {t_states} state evaluations.\nVerification: Bottom-up 2D tabulation iterates through i in [1 .. {int(n)}] and w in [0 .. 100], evaluating the Bellman optimality recurrence DP[i][w] = max(DP[i-1][w], DP[i-1][w - w_i] + v_i) in exactly Θ(1) arithmetic operations per cell, converging to strictly 100·n = {t_states} operations."
+ elif slug=='greedy-minimum-spanning-trees':
+  v=row['input']
+  e=4.0*float(v)
+  q_lookups=row['raw']
+  mst_edges=int(v)-1
+  return f"Network Vertices |V| = {int(v)} vertices; Candidate Edges |E| = 4 × {int(v)} = {int(e)} edges; MST Tree Branches |E_mst| = |V| − 1 = {mst_edges} edges.\nTotal Disjoint Set Representative Queries: Q(|V|) = 2|E| = 2 × {int(e)} = {q_lookups} lookups.\nVerification: For every candidate edge (u, v) in the sorted edge pool, Kruskal's algorithm invokes Find(u) and Find(v) to test component root equality, performing exactly 2 queries per edge. Across {int(e)} edges, this yields strictly 2 × 4|V| = 8|V| = {q_lookups} lookups."
  return ""
 
 def uncertainty_text(c):
@@ -353,6 +371,17 @@ def uncertainty_text(c):
    "(3) Memory bus transfer overhead and memory footprint: allocating a full (n + 1) × (W + 1) 2D matrix of 64-bit integers incurs DRAM memory allocation latency, which is eliminated by compressing the table into a single 1D reverse-scanned array of length W + 1 that fits entirely inside the CPU L2 cache; and "
    "(4) Call stack frame overhead in Top-Down Memoization: recursive memoization allocates AMD64 stack frames (48–64 bytes/frame) and incurs non-contiguous pointer dereferencing latency, running 2× to 4× slower than iterative Bottom-Up Tabulation. "
    "Ordinary least-squares linear regression of observed tabulation state evaluations against item count n across problem instances from 10 to 150 items yields an empirical scaling slope k_dp = 100.0000 states/item with zero residual variance (R² = 1.00000), verifying the pseudo-polynomial complexity bound Θ(n·W) with mathematical certitude."
+  )
+ elif slug=='greedy-minimum-spanning-trees':
+  return (
+   "In discrete network algorithm analysis, the total Disjoint Set Union query count Q(|V|) = 2|E| = 8.0000·|V| for Kruskal's algorithm is an exact combinatorial invariant for 4-regular edge pools. "
+   "Unlike continuous physical instrumentation, there is no analog sensor noise, thermal drift, or calibration variance in counting discrete DSU Find representative queries or tree edge admissions. "
+   "However, in physical semiconductor microprocessors, wall-clock greedy MST execution latency is strongly modulated by memory hierarchy and pipeline dynamics: "
+   "(1) Pointer chasing cache line misses during Disjoint Set Union Find traversals: walking parent pointers (parent[u]) across large vertex arrays causes cold L1/L2 data cache stalls (~100–250 CPU cycles) prior to path compression; "
+   "(2) Amortized tree flattening via recursive Path Compression: after initial Find operations flatten parent pointers directly to the component root, subsequent queries execute in near-instantaneous L1 cache hit times (<2 CPU cycles); "
+   "(3) Sorting subsystem memory bus contention: sorting |E| = 4|V| candidate edges via introsort or quicksort dominates wall-clock time (O(|E| log |E|)), requiring intensive DRAM memory bandwidth; and "
+   "(4) Priority queue overhead in Prim's algorithm: maintaining binary min-heap keys introduces O(log |V|) sift latency per edge inspection, rendering Kruskal with DSU significantly faster on sparse graphs. "
+   "Ordinary least-squares linear regression of observed DSU queries against vertex count |V| across networks from 50 to 1000 vertices yields an empirical scaling slope k_mst = 8.0000 lookups/vertex with zero residual variance (R² = 1.00000), verifying the asymptotic linear query bound Θ(|V|) with mathematical certitude."
   )
  return ""
 
@@ -755,6 +784,39 @@ def report_narrative(c,rows,f,value,percent,reference):
    f"k_dp = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with an ideal R² = 1.00000. "
    "The investigation established the microarchitectural superiority of Bottom-Up Tabulation and 1D reverse-scanned rolling buffers over naive exponential recursion and recursive memoization, "
    "proving why Dynamic Programming serves as a foundational pillar of modern computer science, computational genomics, and algorithmic operations research."
+  )
+ elif slug=='greedy-minimum-spanning-trees':
+  abstract=(
+   f"Seven benchmark trials were generated across network sizes |V| = {rows[0]['input']} to |V| = {rows[-1]['input']} vertices "
+   f"with candidate edge pool |E| = {4*rows[0]['input']} to |E| = {4*rows[-1]['input']} edges (|E| = 4|V|, DSU queries Q from {rows[0]['raw']} to {rows[-1]['raw']} lookups). "
+   f"An ordinary least-squares regression of disjoint set queries against vertex count yielded an empirical complexity scaling coefficient of "
+   f"{fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']}, demonstrating exact agreement with the theoretical DSU query bound "
+   f"(difference = {percent:.4f}%). The empirical telemetry confirms that Kruskal's algorithm with Path Compression and Union by Rank evaluates "
+   f"component connectivity in near-constant amortized time O(α(|V|)), constructing optimal spanning trees containing exactly |V| - 1 edges while strictly enforcing the Cut Property."
+  )
+  graph_choice=(
+   f"The mathematical regression fits the linear model y = mx + b, where x = |V| represents the network vertex count in vertices, "
+   f"y = Q represents total disjoint set representative lookups, m represents the query scaling factor k_mst, and b represents "
+   f"the baseline query offset (theoretically Q_0 = 0.0000 lookups). The gradient has physical units {c['gradientUnit']}."
+  )
+  discussion=(
+   "The empirical benchmark observations provide rigorous quantitative verification of the greedy Minimum Spanning Tree paradigm and Disjoint Set Union mechanics. "
+   "In Kruskal's algorithm on an undirected graph G = (V, E) with |E| = 4|V| candidate edges, every candidate edge (u, v) is examined in ascending weight order. "
+   "To test whether edge (u, v) connects disjoint subtrees or forms an illegal cycle, the algorithm invokes Find(u) and Find(v), requiring exactly 2 queries per edge. "
+   "The total query count Q(|V|) = 2|E| = 8|V| scales in strict linear proportion to vertex count. The regression slope m = 8.0000 confirms this invariant with zero residual variance (R² = 1.00000). "
+   "Furthermore, across all trials, the resulting spanning tree contains exactly |V| - 1 edges, confirming Cayley's fundamental tree theorem. "
+   "Comparative analysis across MST paradigms elucidates critical architectural trade-offs: Kruskal's algorithm is edge-centric and excels on sparse networks where |E| << |V|², "
+   "as sorting |E| edges takes O(|E| log |V|) and DSU queries execute in near-constant inverse Ackermann time O(α(|V|)). Prim's algorithm is vertex-centric, utilizing a priority queue "
+   "to grow a single cut component in O((|V| + |E|) log |V|) time (or O(|E| + |V| log |V|) with Fibonacci heaps), proving superior on dense graphs where |E| ≈ |V|². "
+   "Borůvka's algorithm provides an embarrassingly parallel formulation, executing in O(log |V|) contraction rounds ideal for distributed GPU clusters. "
+   "Finally, the investigation proves why the Cut Property and Matroid Theory guarantee that greedy local choices yield the globally optimal minimum-weight infrastructure."
+  )
+  conclusion=(
+   "This laboratory investigation quantitatively verified the greedy choice dynamics, Cut Property invariants, and asymptotic scaling of Minimum Spanning Tree algorithms. "
+   f"Through systematic benchmarking across networks from |V| = {rows[0]['input']} to {rows[-1]['input']} vertices, we verified the empirical DSU query scaling factor "
+   f"k_mst = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with an ideal R² = 1.00000. "
+   "The investigation established the microarchitectural efficiency of Disjoint Set Union with Path Compression and Union by Rank, proving why Kruskal's and Prim's algorithms "
+   "form the algorithmic foundation of modern telecommunications routing, clustering in machine learning, and approximation schemes for NP-hard network design."
   )
  else:
   abstract=f"Empirical benchmark trials were generated across input sizes for {c['title']}."
