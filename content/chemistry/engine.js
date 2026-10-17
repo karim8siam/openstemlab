@@ -47,6 +47,9 @@ function update(){
  }else if(cfg.slug==='hess-law-magnesium-calorimetry'){
   $('liveState').textContent='Ready to dissolve '+p.input.toFixed(3)+' g Mg ribbon in 100 mL 1.0 M HCl.';
   message('Set magnesium mass m_Mg, abrade ribbon, charge into Dewar & monitor exothermic rise ΔT₁.');
+ }else if(cfg.slug==='combustion-bomb-calorimetry-benzoic'){
+  $('liveState').textContent='Ready to combust '+p.input.toFixed(3)+' g benzoic acid pellet under 30 atm O2.';
+  message('Set pellet mass m, verify 10 cm fuse wire contact, pressurize bomb to 30 atm O2 & fire.');
  }else{
   $('liveState').textContent='Ready to dispense '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+' of liquid.';
   message('Adjust '+cfg.shortInput+' V, then weigh the dispensed aliquot.');
@@ -78,6 +81,7 @@ $('measure').onclick=async()=>{
  if(cfg.slug==='colligative-freezing-point-depression') msgStart='Cooling in ice bath, stirring at 60 strokes/min, supercooling & extrapolating plateau…';
  if(cfg.slug==='solution-calorimetry-neutralization') msgStart='Dispensing base into Dewar, sealing lid, stirring at 200 rpm, logging exothermic adiabatic curve…';
  if(cfg.slug==='hess-law-magnesium-calorimetry') msgStart='Dropping polished Mg ribbon into 1.0 M HCl, sealing lid, vigorous H2 evolution & logging ΔT₁…';
+ if(cfg.slug==='combustion-bomb-calorimetry-benzoic') msgStart='Discharging 23 V through ignition fuse wire, deflagration in 30 atm O2, logging temperature rise ΔT…';
  message(msgStart);
  await new Promise(resolve=>setTimeout(resolve,400));
  const raw=prediction.raw;
@@ -121,6 +125,12 @@ $('measure').onclick=async()=>{
   const dHf = dH1 - (-146.0) + (-285.83);
   $('liveState').textContent='Reaction complete: ΔT₁ = '+raw.toFixed(3)+' °C for '+p.input.toFixed(3)+' g Mg.';
   message('Calorimetric dissolution complete: ΔT₁ = '+raw.toFixed(3)+' °C (ΔH₁ = '+dH1.toFixed(1)+' kJ/mol, Hess ΔH_f°[MgO] = '+dHf.toFixed(1)+' kJ/mol). Record in notebook.');
+ }else if(cfg.slug==='combustion-bomb-calorimetry-benzoic'){
+  const q_cal = 10.500 * raw;
+  const n_mol = p.input / 122.12;
+  const dU = -q_cal / n_mol;
+  $('liveState').textContent='Combustion complete: ΔT = '+raw.toFixed(3)+' °C for '+p.input.toFixed(3)+' g pellet.';
+  message('Bomb calorimetric combustion complete: ΔT = '+raw.toFixed(3)+' °C (ΔU_comb = '+dU.toFixed(1)+' kJ/mol, ΔH_comb = '+(dU - 1.24).toFixed(1)+' kJ/mol). Record in notebook.');
  }else{
   $('liveState').textContent='Analytical balance stabilized: '+raw.toFixed(cfg.rawDecimals)+' g net mass.';
   message('Gravimetric measurement complete: '+raw.toFixed(cfg.rawDecimals)+' '+cfg.rawUnit+' for '+p.input.toFixed(cfg.inputDecimals)+' '+cfg.inputUnit+'. Record in notebook.');
@@ -362,6 +372,18 @@ function draw(t){
    return;
   }
   $('apparatusDiagram').innerHTML=drawHessBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='combustion-bomb-calorimetry-benzoic'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawBombCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawBombSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawBombBenchView(p,rawVal);
   return;
  }
  if(currentSimMode==='compare'){
@@ -3507,5 +3529,267 @@ function drawHessSandboxView(p, rawVal){
  });
 
  svg += text(360, 305, 'Thermodynamic Invariant: Enthalpy state function eliminates kinetic and combustion path hazards.', '#789c80', 8.5);
+ return svg;
+}
+
+
+// --- LAB 13: CONSTANT-VOLUME OXYGEN BOMB CALORIMETRY ---
+
+function drawBombBenchView(p, rawVal){
+ const m = (p && p.input) ? p.input : 1.000;
+ const M_benzoic = 122.12;
+ const C_cal = 10.500;
+ const dt = rawVal !== null ? rawVal : (3227.0 * m / (M_benzoic * C_cal));
+ const T_init = 25.000;
+ const T_max = T_init + dt;
+ const n_mol = m / M_benzoic;
+ const q_rxn = C_cal * dt;
+ const dU = -q_rxn / n_mol;
+ const dH = dU - 1.24;
+
+ let svg = '';
+ svg += '<rect x="0" y="0" width="720" height="320" fill="#051009"/>';
+ svg += text(360, 24, 'CONSTANT-VOLUME OXYGEN BOMB CALORIMETER (PARR 1341 ASSEMBLY)', '#4ade80', 13);
+ svg += text(360, 39, 'C7H6O2(s) + 15/2 O2(g, 30 atm) -> 7 CO2(g) + 3 H2O(l) | ΔV = 0 => q_v = ΔU_comb° = -3227.0 kJ/mol', '#94a3b8', 9);
+
+ // --- LEFT PANEL: OXYGEN BOMB & WATER BUCKET CUTAWAY ---
+ const bX = 140, bY = 70;
+ // Outer insulated calorimeter jacket
+ svg += '<rect x="'+(bX-75)+'" y="'+(bY+10)+'" width="150" height="195" rx="8" fill="#1e293b" stroke="#334155" stroke-width="2"/>';
+ svg += '<text x="'+bX+'" y="'+(bY+198)+'" text-anchor="middle" fill="#64748b" font-size="7.5">Insulated Calorimeter Jacket</text>';
+
+ // Distilled water bucket (2000.0 g H2O)
+ svg += '<rect x="'+(bX-62)+'" y="'+(bY+26)+'" width="124" height="158" rx="5" fill="#0284c7" fill-opacity="0.25" stroke="#38bdf8" stroke-width="1.2"/>';
+ svg += '<text x="'+(bX-55)+'" y="'+(bY+38)+'" fill="#38bdf8" font-size="7">2000.0 g H2O</text>';
+
+ // Stainless steel combustion bomb body
+ const sX = bX, sY = bY + 55;
+ svg += '<rect x="'+(sX-34)+'" y="'+sY+'" width="68" height="110" rx="6" fill="#475569" stroke="#94a3b8" stroke-width="2"/>';
+ // Threaded bomb cap
+ svg += '<rect x="'+(sX-37)+'" y="'+(sY-12)+'" width="74" height="16" rx="3" fill="#64748b" stroke="#cbd5e1" stroke-width="1.5"/>';
+ svg += '<text x="'+sX+'" y="'+(sY-2)+'" text-anchor="middle" fill="#f8fafc" font-size="6.8" font-weight="bold">FORGED BOMB (30 atm O₂)</text>';
+
+ // Bomb cavity interior
+ svg += '<rect x="'+(sX-26)+'" y="'+(sY+8)+'" width="52" height="92" rx="3" fill="#0f172a"/>';
+
+ // Base water (1.0 mL)
+ svg += '<rect x="'+(sX-24)+'" y="'+(sY+92)+'" width="48" height="6" rx="1" fill="#38bdf8" fill-opacity="0.5"/>';
+
+ // Combustion crucible and support ring
+ svg += '<path d="M '+(sX-14)+' '+(sY+66)+' L '+(sX+14)+' '+(sY+66)+' L '+(sX+11)+' '+(sY+82)+' L '+(sX-11)+' '+(sY+82)+' Z" fill="#94a3b8" stroke="#cbd5e1" stroke-width="1"/>';
+
+ // Benzoic acid pellet in crucible
+ svg += '<rect x="'+(sX-7)+'" y="'+(sY+68)+'" width="14" height="10" rx="1.5" fill="#f8fafc" stroke="#e2e8f0" stroke-width="0.8"/>';
+ // Incandescent combustion flame / glowing wire
+ svg += '<circle cx="'+sX+'" cy="'+(sY+65)+'" r="5" fill="#facc15" fill-opacity="0.8"/>';
+ svg += '<circle cx="'+sX+'" cy="'+(sY+65)+'" r="2.5" fill="#ef4444"/>';
+
+ // Ignition electrodes & fuse wire
+ svg += '<line x1="'+(sX-12)+'" y1="'+(sY+8)+'" x2="'+(sX-12)+'" y2="'+(sY+65)+'" stroke="#cbd5e1" stroke-width="1.5"/>';
+ svg += '<line x1="'+(sX+12)+'" y1="'+(sY+8)+'" x2="'+(sX+12)+'" y2="'+(sY+65)+'" stroke="#cbd5e1" stroke-width="1.5"/>';
+ svg += '<path d="M '+(sX-12)+' '+(sY+65)+' Q '+sX+' '+(sY+69)+' '+(sX+12)+' '+(sY+65)+'" fill="none" stroke="#ef4444" stroke-width="1.2"/>';
+
+ // Oxygen valve and filling stem
+ svg += '<rect x="'+(sX-4)+'" y="'+(sY-22)+'" width="8" height="12" fill="#94a3b8"/>';
+ svg += '<circle cx="'+sX+'" cy="'+(sY-24)+'" r="4" fill="#38bdf8"/>';
+
+ // Impeller stirrer shaft & blades in water bucket
+ svg += '<rect x="'+(bX-48)+'" y="'+(bY+5)+'" width="3" height="150" fill="#94a3b8"/>';
+ svg += '<ellipse cx="'+(bX-46)+'" cy="'+(bY+145)+'" rx="9" ry="3" fill="#64748b"/>';
+ // Stirrer motor
+ svg += '<rect x="'+(bX-55)+'" y="'+(bY-12)+'" width="18" height="14" rx="2" fill="#475569" stroke="#334155"/>';
+ svg += '<text x="'+(bX-46)+'" y="'+(bY-2)+'" text-anchor="middle" fill="#f8fafc" font-size="6">400rpm</text>';
+
+ // Thermistor probe in water
+ svg += '<rect x="'+(bX+45)+'" y="'+(bY+15)+'" width="3.5" height="125" rx="1" fill="#f59e0b"/>';
+ svg += '<circle cx="'+(bX+47)+'" cy="'+(bY+140)+'" r="2.8" fill="#ef4444"/>';
+ svg += '<path d="M '+(bX+47)+' '+(bY+15)+' Q '+(bX+56)+' '+(bY-15)+' '+(bX+85)+' '+(bY-16)+'" fill="none" stroke="#f59e0b" stroke-width="1.5"/>';
+
+
+ // --- RIGHT PANEL: DIGITAL DISPLAY & BOMB THERMOCHEMICAL AUDIT ---
+ const rX = 260, rY = 55, rW = 435, rH = 240;
+ svg += '<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+
+ // Thermistor Display Readout
+ svg += '<rect x="'+(rX+15)+'" y="'+(rY+12)+'" width="200" height="72" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1.2"/>';
+ svg += '<text x="'+(rX+25)+'" y="'+(rY+26)+'" fill="#86efac" font-size="8" font-weight="bold">BOMB WATER BATH THERMISTOR</text>';
+ svg += '<text x="'+(rX+25)+'" y="'+(rY+56)+'" fill="#facc15" font-size="22" font-family="monospace" font-weight="bold">'+T_max.toFixed(3)+' °C</text>';
+ svg += '<text x="'+(rX+140)+'" y="'+(rY+44)+'" fill="#94a3b8" font-size="7.5">T_init = '+T_init.toFixed(3)+' °C</text>';
+ svg += '<text x="'+(rX+140)+'" y="'+(rY+56)+'" fill="#f87171" font-size="7.5" font-weight="bold">ΔT = +'+dt.toFixed(3)+' °C</text>';
+ svg += '<text x="'+(rX+140)+'" y="'+(rY+68)+'" fill="#38bdf8" font-size="7">±0.001 °C Res.</text>';
+
+ // Mini Reaction Thermogram Profile
+ const cX = rX + 225, cY = rY + 12, cW = 195, cH = 72;
+ svg += '<rect x="'+cX+'" y="'+cY+'" width="'+cW+'" height="'+cH+'" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1.2"/>';
+ svg += '<text x="'+(cX+8)+'" y="'+(cY+12)+'" fill="#94a3b8" font-size="7">Thermogram (Pre / 23V Fire / Post-Cooling)</text>';
+ // baseline
+ svg += '<line x1="'+(cX+12)+'" y1="'+(cY+56)+'" x2="'+(cX+45)+'" y2="'+(cY+56)+'" stroke="#38bdf8" stroke-width="1.5"/>';
+ // steep exothermic rise
+ const peakY = cY + 56 - Math.min(42, dt * 9.5);
+ svg += '<path d="M '+(cX+45)+' '+(cY+56)+' Q '+(cX+52)+' '+(cY+56)+' '+(cX+68)+' '+peakY+'" fill="none" stroke="#ef4444" stroke-width="2"/>';
+ // cooling tail
+ svg += '<path d="M '+(cX+68)+' '+peakY+' L '+(cX+185)+' '+(peakY+6)+'" fill="none" stroke="#f59e0b" stroke-width="1.5"/>';
+ svg += '<text x="'+(cX+185)+'" y="'+(peakY-3)+'" text-anchor="end" fill="#facc15" font-size="6.8" font-weight="bold">Extrapolated ΔT = '+dt.toFixed(3)+' °C</text>';
+
+ // Thermochemical State Matrix Grid
+ const gY = rY + 92;
+ const metrics = [
+  {label: 'Benzoic Acid Pellet Mass m', val: m.toFixed(4) + ' g (' + (n_mol*1000).toFixed(2) + ' mmol)', col: '#86efac', sub: 'NIST SRM 39j primary standard (M = 122.12)'},
+  {label: 'Calorimeter Heat Capacity C_cal', val: '10.500 kJ/K (10500 J/K)', col: '#38bdf8', sub: '2000 g H2O (8368 J/K) + bomb (2132 J/K)'},
+  {label: 'Internal Energy ΔU_comb', val: dU.toFixed(1) + ' kJ/mol', col: '#facc15', sub: 'ΔU = -C_cal · ΔT / n (Target: -3227.0)'},
+  {label: 'Enthalpy of Combustion ΔH_comb°', val: dH.toFixed(1) + ' kJ/mol', col: '#f87171', sub: 'ΔH = ΔU + Δn_g·R·T (Δn_g = -0.5 mol)'}
+ ];
+
+ metrics.forEach((mi, idx)=>{
+  const mx = rX + 15 + (idx % 2) * 205;
+  const my = gY + Math.floor(idx / 2) * 52;
+  svg += '<rect x="'+mx+'" y="'+my+'" width="195" height="46" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1"/>';
+  svg += '<text x="'+(mx+10)+'" y="'+(my+13)+'" fill="#94a3b8" font-size="7">'+mi.label+'</text>';
+  svg += '<text x="'+(mx+10)+'" y="'+(my+28)+'" fill="'+mi.col+'" font-size="9" font-weight="bold">'+mi.val+'</text>';
+  svg += '<text x="'+(mx+10)+'" y="'+(my+39)+'" fill="#64748b" font-size="6.5">'+mi.sub+'</text>';
+ });
+
+ // Bottom Verification Banner
+ svg += '<rect x="'+(rX+15)+'" y="'+(rY+200)+'" width="405" height="30" rx="4" fill="#051009" stroke="#162e1e" stroke-width="1"/>';
+ svg += '<text x="'+(rX+217)+'" y="'+(rY+218)+'" text-anchor="middle" fill="#4ade80" font-size="8.2" font-family="monospace" font-weight="bold">Constant-Volume Invariant: ΔT = 2.517 · m => ΔU_comb = -3227.3 kJ/mol (R² = 1.000)</text>';
+
+ svg += text(360, 310, 'Constant-volume bomb calorimetry eliminates pressure-volume work (w = 0) so that q_v = ΔU_comb directly.', '#789c80', 8.5);
+ return svg;
+}
+
+function drawBombCompareView(p, rawVal){
+ let svg = '';
+ svg += '<rect x="0" y="0" width="720" height="320" fill="#051009"/>';
+ svg += text(360, 24, 'COMPARATIVE ANALYSIS OF CALORIMETRIC METHODOLOGIES', '#4ade80', 13);
+ svg += text(360, 39, 'Constant-Volume Oxygen Bomb vs Constant-Pressure Solution vs Differential Scanning (DSC)', '#94a3b8', 9);
+
+ const cards = [
+  {
+   title: '1. Oxygen Bomb Calorimeter',
+   sub: 'Constant-Volume Combustion (★)',
+   color: '#4ade80',
+   border: '#166534',
+   items: [
+    'Thermodynamic Boundary: Rigid steel walls (ΔV = 0)',
+    'Mechanical Work: w = −∫ P dV = 0 identically',
+    'Measured Heat: q_v = ΔU_comb (internal energy)',
+    'Enthalpy Transform: ΔH = ΔU + Δ(n_gas)·R·T',
+    'Operating Pressure: 30 atm (3.0 MPa) pure O2 gas',
+    'Primary Standards: Benzoic acid (NIST SRM 39j)'
+   ]
+  },
+  {
+   title: '2. Solution Dewar Calorimeter',
+   sub: 'Constant-Pressure Reaction',
+   color: '#38bdf8',
+   border: '#0369a1',
+   items: [
+    'Thermodynamic Boundary: Open / vented lid (P = 1 atm)',
+    'Mechanical Work: w = −P_ext ΔV against atmospheric air',
+    'Measured Heat: q_p = ΔH_rxn (enthalpy directly)',
+    'Enthalpy Transform: No conversion needed; q_p = ΔH',
+    'Operating Pressure: 1.0 atm ambient laboratory air',
+    'Primary Applications: Neutralization, Hess cycles, heats of solution'
+   ]
+  },
+  {
+   title: '3. Differential Scanning (DSC)',
+   sub: 'Dynamic Micro-Calorimetry',
+   color: '#facc15',
+   border: '#854d0e',
+   items: [
+    'Thermodynamic Mode: Controlled heating rate dT/dt',
+    'Signal: Differential heat flow dH/dt vs inert reference',
+    'Sample Mass: Microgram to milligram quantities (2–10 mg)',
+    'Sensors: Platinum thermoelectric resistance transducers',
+    'Primary Applications: Polymer glass transition Tg, melting Tm',
+    'Kinetic Capability: Measures reaction activation energy Ea'
+   ]
+  }
+ ];
+
+ cards.forEach((c, idx)=>{
+  const x = 20 + idx * 230, y = 50, w = 220, h = 240;
+  svg += '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="6" fill="#0d1f14" stroke="'+c.border+'" stroke-width="1.5"/>';
+  svg += '<rect x="'+(x+8)+'" y="'+(y+8)+'" width="'+(w-16)+'" height="34" rx="4" fill="#051009"/>';
+  svg += '<text x="'+(x+w/2)+'" y="'+(y+22)+'" text-anchor="middle" fill="'+c.color+'" font-size="9" font-weight="bold">'+c.title+'</text>';
+  svg += '<text x="'+(x+w/2)+'" y="'+(y+35)+'" text-anchor="middle" fill="#94a3b8" font-size="7">'+c.sub+'</text>';
+
+  c.items.forEach((item, ii)=>{
+   const iy = y + 54 + ii * 29;
+   svg += '<circle cx="'+(x+14)+'" cy="'+(iy-3)+'" r="2" fill="'+c.color+'"/>';
+   svg += '<foreignObject x="'+(x+22)+'" y="'+(iy-10)+'" width="'+(w-28)+'" height="29"><p xmlns="http://www.w3.org/1999/xhtml" style="font-size:7.2px;color:#cbd5e1;line-height:1.2;margin:0">'+item+'</p></foreignObject>';
+  });
+ });
+
+ svg += text(360, 305, 'Thermodynamic Distinction: Constant-volume measures ΔU (w = 0); constant-pressure measures ΔH (w = -PΔV).', '#789c80', 8.5);
+ return svg;
+}
+
+function drawBombSandboxView(p, rawVal){
+ const m = (p && p.input) ? p.input : 1.000;
+ const M_benzoic = 122.12;
+ const C_cal = 10.500;
+ const dt = rawVal !== null ? rawVal : (3227.0 * m / (M_benzoic * C_cal));
+ const n_mol = m / M_benzoic;
+ const q_rxn = C_cal * dt;
+ const dU = -q_rxn / n_mol;
+ const dH = dU - 1.24;
+
+ let svg = '';
+ svg += '<rect x="0" y="0" width="720" height="320" fill="#051009"/>';
+ svg += text(360, 24, 'THERMODYNAMIC WORK CONVERSION & FUSE WIRE AUDIT', '#4ade80', 13);
+ svg += text(360, 39, 'Legendre Transform (ΔH = ΔU + Δn_g·R·T) and Certified Thermochemical Corrections', '#94a3b8', 9);
+
+ // --- LEFT PANEL: LEGENDRE TRANSFORM & WORK DIAGRAM ---
+ const lX = 25, lY = 50, lW = 390, lH = 240;
+ svg += '<rect x="'+lX+'" y="'+lY+'" width="'+lW+'" height="'+lH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+18)+'" text-anchor="middle" fill="#86efac" font-size="9.5" font-weight="bold">PRESSURE-VOLUME WORK & STATE TRANSFORMATION</text>';
+
+ // Reaction Stoichiometry Box
+ svg += '<rect x="'+(lX+15)+'" y="'+(lY+30)+'" width="'+(lW-30)+'" height="32" rx="4" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+45)+'" text-anchor="middle" fill="#38bdf8" font-size="8" font-weight="bold">C₇H₆O₂(s) + 7.5 O₂(g) ⟶ 7.0 CO₂(g) + 3.0 H₂O(l)</text>';
+ svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+56)+'" text-anchor="middle" fill="#94a3b8" font-size="6.8">Gaseous Moles: n_reactants = 7.5 mol O₂  |  n_products = 7.0 mol CO₂</text>';
+
+ // Gas Moles Contraction Calculation
+ svg += '<rect x="'+(lX+15)+'" y="'+(lY+70)+'" width="'+(lW-30)+'" height="65" rx="4" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(lX+25)+'" y="'+(lY+84)+'" fill="#facc15" font-size="7.5" font-weight="bold">1. Gas Mole Contraction (Δn_gas):</text>';
+ svg += '<text x="'+(lX+35)+'" y="'+(lY+96)+'" fill="#cbd5e1" font-size="7">Δn_gas = n_gas(products) − n_gas(reactants) = 7.0 − 7.5 = −0.5 mol</text>';
+ svg += '<text x="'+(lX+25)+'" y="'+(lY+112)+'" fill="#facc15" font-size="7.5" font-weight="bold">2. Pressure-Volume Work Equivalent:</text>';
+ svg += '<text x="'+(lX+35)+'" y="'+(lY+124)+'" fill="#cbd5e1" font-size="7">Δ(n_gas)·R·T = (−0.5 mol) × (8.3145 J/mol·K) × (298.15 K) = −1239.5 J = −1.24 kJ/mol</text>';
+
+ // Conversion Formula
+ svg += '<rect x="'+(lX+15)+'" y="'+(lY+142)+'" width="'+(lW-30)+'" height="48" rx="4" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(lX+25)+'" y="'+(lY+156)+'" fill="#4ade80" font-size="8" font-weight="bold">3. Constant-Pressure Enthalpy of Combustion:</text>';
+ svg += '<text x="'+(lX+35)+'" y="'+(lY+170)+'" fill="#86efac" font-size="7.5" font-family="monospace">ΔH_comb° = ΔU_comb° + Δn_g·R·T = '+dU.toFixed(1)+' + (−1.24) = '+dH.toFixed(1)+' kJ/mol</text>';
+ svg += '<text x="'+(lX+35)+'" y="'+(lY+182)+'" fill="#94a3b8" font-size="6.8">Atmospheric compression adds 1.24 kJ/mol of boundary work to the system.</text>';
+
+ // Bottom invariant
+ svg += '<rect x="'+(lX+15)+'" y="'+(lY+198)+'" width="'+(lW-30)+'" height="32" rx="3" fill="#051009" stroke="#162e1e"/>';
+ svg += '<text x="'+(lX+lW/2)+'" y="'+(lY+218)+'" text-anchor="middle" fill="#86efac" font-size="8" font-family="monospace" font-weight="bold">Legendre Identity: H ≡ U + PV => ΔH_comb° = −3228.2 kJ/mol (Accepted NIST)</text>';
+
+
+ // --- RIGHT PANEL: SOURCES OF BIAS & SYSTEM AUDIT ---
+ const rX = 425, rY = 50, rW = 275, rH = 240;
+ svg += '<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="6" fill="#0d1f14" stroke="#22422c" stroke-width="1.5"/>';
+ svg += '<text x="'+(rX+rW/2)+'" y="'+(rY+18)+'" text-anchor="middle" fill="#86efac" font-size="9.5" font-weight="bold">THERMOCHEMICAL AUDIT</text>';
+
+ const lossItems = [
+  {label: 'Ni-Cr Fuse Wire Heat', desc: '10 cm wire burned releases ~35.0 J (e_fuse = 9.6 J/cm)', val: 'Absorbed in intercept', col: '#4ade80'},
+  {label: 'Nitric Acid Side-Reaction', desc: 'Trace N2 impurity forms HNO3 releasing ~15.0 J (titrated)', val: 'Absorbed in intercept', col: '#38bdf8'},
+  {label: 'Regnault-Pfaundler Correction', desc: 'Newton cooling extrapolated to 63.2% reaction midpoint', val: '+0.025 °C Restored', col: '#4ade80'},
+  {label: 'Pellet Compaction Force', desc: '5-ton pressing prevents particle splattering & soot', val: '100% Complete Deflagration', col: '#86efac'},
+  {label: 'OLS Regression Insulation', desc: 'Slope m_slope isolates pure benzoic acid energy', val: 'R² = 1.00000 Unbiased', col: '#facc15'}
+ ];
+
+ lossItems.forEach((li, idx)=>{
+  const ly = rY + 30 + idx * 40;
+  svg += '<rect x="'+(rX+8)+'" y="'+ly+'" width="'+(rW-16)+'" height="34" rx="3" fill="#051009" stroke="#162e1e"/>';
+  svg += '<text x="'+(rX+14)+'" y="'+(ly+12)+'" fill="'+li.col+'" font-size="7.5" font-weight="bold">'+li.label+'</text>';
+  svg += '<text x="'+(rX+14)+'" y="'+(ly+25)+'" fill="#94a3b8" font-size="6.8">'+li.desc+'</text>';
+  svg += '<text x="'+(rX+rW-14)+'" y="'+(ly+12)+'" text-anchor="end" fill="'+li.col+'" font-size="7.5" font-family="monospace">'+li.val+'</text>';
+ });
+
+ svg += text(360, 305, 'Thermodynamic Invariant: Multi-point regression purges fuse wire and nitric acid biases.', '#789c80', 8.5);
  return svg;
 }

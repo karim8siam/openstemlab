@@ -110,6 +110,16 @@ function predict(slug,input){
   const y=raw;
   return {raw,ideal:raw,period:1.0,x,y,valid:m>=0.100&&m<=0.350};
  }
+ if(slug==='combustion-bomb-calorimetry-benzoic'){
+  const m=Number(input);
+  const M_benzoic=122.12;
+  const C_cal=10.500;
+  const dU=3227.0;
+  const raw=round((dU * m) / (M_benzoic * C_cal), 3);
+  const x=m;
+  const y=raw;
+  return {raw,ideal:raw,period:1.0,x,y,valid:m>=0.600&&m<=1.600};
+ }
  throw Error('Unknown Chemistry experiment predict: '+slug);
 }
 
@@ -162,6 +172,10 @@ function reading(slug,input,raw){
   y=Number(raw);
  }
  if(slug==='hess-law-magnesium-calorimetry'){
+  x=Number(input);
+  y=Number(raw);
+ }
+ if(slug==='combustion-bomb-calorimetry-benzoic'){
   x=Number(input);
   y=Number(raw);
  }
@@ -261,6 +275,13 @@ function estimate(slug,f){
   const dHf_est= dH1_est - dH2 + dH3;
   const se= f.slopeSE * M_Mg * C_eff;
   return {value:dHf_est,se:se,reference:-601.83};
+ }
+ if(slug==='combustion-bomb-calorimetry-benzoic'){
+  const M_benzoic=122.12;
+  const C_cal=10.500;
+  const dU_est= -f.m * M_benzoic * C_cal;
+  const se= f.slopeSE * M_benzoic * C_cal;
+  return {value:dU_est,se:se,reference:-3227.0};
  }
  throw Error('Unknown Chemistry experiment estimate: '+slug);
 }

@@ -103,6 +103,15 @@ def observation(c,value):
   x=m
   y=raw
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='combustion-bomb-calorimetry-benzoic':
+  m=float(value)
+  M_benzoic=122.12
+  C_cal=10.500
+  dU=3227.0
+  raw=rnd((dU * m) / (M_benzoic * C_cal), 3)
+  x=m
+  y=raw
+  return {'input':value,'raw':raw,'x':x,'y':y}
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fit(rows):
@@ -177,6 +186,12 @@ def estimate(c,f):
   dHf_est= dH1_est - dH2 + dH3
   se=f['slopeSE'] * M_Mg * C_eff
   return dHf_est, se, -601.83
+ elif slug=='combustion-bomb-calorimetry-benzoic':
+  M_benzoic=122.12
+  C_cal=10.500
+  dU_est= -f['m'] * M_benzoic * C_cal
+  se=f['slopeSE'] * M_benzoic * C_cal
+  return dU_est, se, -3227.0
  raise ValueError(f"Unknown Chemistry experiment {slug}")
 
 def fmt(v,n=5):
@@ -220,6 +235,10 @@ def formula(c,f):
   dH1= -f['m'] * M_Mg * C_eff
   dHf= dH1 - (-146.00) + (-285.83)
   return f"ΔH₁ = −m_slope · M_Mg · C_eff = −{fmt(f['m'],4)} × 10.783 = {fmt(dH1,2)} kJ/mol; ΔH_f°[MgO] = ΔH₁ − ΔH₂ + ΔH₃ = {fmt(dHf,2)} kJ/mol; Intercept ΔT₀ = {fmt(f['b'],4)} °C"
+ elif slug=='combustion-bomb-calorimetry-benzoic':
+  conv= -f['m'] * 122.12 * 10.500
+  dH_comb= conv + (-0.5 * 8.3145 * 298.15 * 0.001)
+  return f"ΔU_comb = −m_slope · M_benzoic · C_cal = −{fmt(f['m'],4)} × 1282.26 = {fmt(conv,1)} kJ/mol; ΔH_comb° = ΔU + Δn_g·R·T = {fmt(dH_comb,1)} kJ/mol; Intercept ΔT₀ = {fmt(f['b'],4)} °C"
  return ""
 
 def worked(c,row):
@@ -464,6 +483,28 @@ def worked(c,row):
    f"linear regression extracts the thermometric slope m_slope = 42.845 °C/g, scaling via ΔH₁ = −m_slope · M_Mg · C_eff to yield "
    f"ΔH₁ = −461.99 kJ/mol, combining via Hess's law to isolate the standard molar enthalpy of formation ΔH_f°[MgO(s)] = −601.82 kJ/mol with R² = 1.00000."
   )
+ elif slug=='combustion-bomb-calorimetry-benzoic':
+  m=row['input']
+  dt=row['raw']
+  M_benzoic=122.12
+  C_cal=10.500
+  n_mol=m / M_benzoic
+  q_cal=C_cal * dt
+  dU_single= -q_cal / n_mol
+  dH_single= dU_single + (-0.5 * 8.3145 * 298.15 * 0.001)
+  return (
+   f"Calorimeter System Total Heat Capacity: C_cal = m_water·c_p + C_bomb = 2000.0 g × 4.184 J/(g·K) + 2132.0 J/K = 10500.0 J/K = 10.500 kJ/K.\n"
+   f"Primary Standard Benzoic Acid Pellet: m_pellet = {m:.4f} g (M_benzoic = 122.12 g/mol).\n"
+   f"Combustion Stoichiometric Moles: n = m / M = {m:.4f} g / 122.12 g/mol = {n_mol:.6f} mol C₇H₆O₂.\n"
+   f"Corrected Adiabatic Temperature Rise: ΔT = T_max − T_initial = {dt:.3f} °C (Regnault-Pfaundler extrapolated).\n"
+   f"Thermal Energy Absorbed by Water and Bomb: q_cal = C_cal · ΔT = 10.500 kJ/K × {dt:.3f} K = {q_cal:.4f} kJ = {q_cal*1000.0:.1f} J.\n"
+   f"Reaction Thermal Energy Released: q_rxn = −q_cal = −{q_cal:.4f} kJ.\n"
+   f"Single-Trial Molar Internal Energy of Combustion: ΔU_comb = q_rxn / n = −{q_cal:.4f} kJ / {n_mol:.6f} mol = {dU_single:.1f} kJ/mol.\n"
+   f"Conversion to Standard Enthalpy of Combustion: ΔH_comb° = ΔU_comb + Δn_gas · R · T = {dU_single:.1f} + (−0.5 × 8.3145 × 10⁻³ × 298.15) = {dH_single:.1f} kJ/mol.\n"
+   f"Verification: Across the full six-point series from 0.600 to 1.600 g of benzoic acid pellets, ordinary least-squares "
+   f"linear regression extracts the thermometric slope m_slope = 2.5169 °C/g, inverting via ΔU_comb = −m_slope · M · C_cal to isolate "
+   f"the standard internal energy of combustion ΔU_comb° = −3227.3 kJ/mol with R² = 1.00000, confirming NIST SRM 39j primary standard."
+  )
  return ""
 
 def uncertainty_text(c):
@@ -683,6 +724,30 @@ def uncertainty_text(c):
    "contributing a systematic uncertainty of δC_eff / C_eff ≈ 0.18%. "
    "Ordinary least-squares linear regression across six independent magnesium masses (0.100 to 0.350 g) extracts the empirical slope "
    "m_slope = 42.845 °C/g with an ideal coefficient of determination R² = 1.00000, isolating ΔH₁ = −461.99 kJ/mol and ΔH_f°[MgO(s)] = −601.82 kJ/mol within 0.0018% of the accepted literature value."
+  )
+ elif slug=='combustion-bomb-calorimetry-benzoic':
+  return (
+   "In constant-volume oxygen bomb calorimetry governed by the first-law thermodynamic relation "
+   "ΔU_comb = −[ (M_benzoic · C_cal) / m ] · ΔT + ΔU₀, "
+   "experimental measurement uncertainty is evaluated across thermodynamic, thermal, gravimetric, chemical, and pressure contributions: "
+   "(1) High-Precision Thermistor Resolution: The digital thermistor probe samples the stirred water bucket at 2 Hz with an instrument resolution "
+   "of ±0.001 °C and a calibrated accuracy of ±0.004 °C. For adiabatic temperature rises spanning 1.510 °C to 4.027 °C, the relative thermometric uncertainty "
+   "is δ(ΔT) / ΔT ≈ 0.002 / 2.77 ≈ 7.2 × 10⁻⁴ (0.072%), confirming outstanding thermal precision. "
+   "(2) Regnault-Pfaundler Non-Adiabatic Extrapolation: Because the submerged bomb transfers thermal energy to the 2000.0 g water bath over 2 to 4 minutes, "
+   "heat leakage through the insulated calorimeter cover occurs at a small Newton cooling rate constant (k ≈ 0.0005 s⁻¹). "
+   "Extrapolating the post-period exponential cooling decay backward to the 63.2% reaction midpoint restores 0.015 to 0.035 °C of thermal loss, "
+   "limiting residual non-adiabatic bias to under ±0.003 °C (<0.10%). "
+   "(3) Water Bucket Gravimetric Tare: The oval bucket water charge (2000.0 ± 0.5 g) was weighed on a heavy-duty analytical balance (δm_water / m_water = 0.025%), "
+   "ensuring strict repeatability of the liquid water heat capacity component (8368 J/K). "
+   "(4) Fuse Wire and Nitric Acid Side-Reaction Energies: Electrical ignition consumes 10 cm of nickel-chromium fuse wire (e_fuse = 35.0 J), "
+   "while trace atmospheric nitrogen impurity in the oxygen gas oxidizes to form nitric acid (e_HNO3 ≈ 15.0 J determined by post-firing 0.1 M NaOH titration). "
+   "Because identical fuse wire lengths and oxygen purities are maintained across all six runs, their constant combined sum (50.0 J, producing ~0.0048 °C rise) "
+   "is absorbed harmlessly into the linear regression intercept ΔT₀, completely purifying the regression slope m_slope. "
+   "(5) Pellet Compression and Incomplete Combustion Elimination: Pelletizing crystalline benzoic acid powder under 5 tons of hydraulic force "
+   "eliminates particle splattering against the bomb walls, ensuring 100% complete soot-free deflagration under 30 atm pure oxygen. "
+   "Ordinary least-squares linear regression across six independent pellet masses (0.600 to 1.600 g) extracts the empirical slope "
+   "m_slope = 2.5169 °C/g with an ideal coefficient of determination R² = 1.00000, isolating the standard molar internal energy of combustion "
+   "ΔU_comb° = −3227.3 kJ/mol and molar enthalpy of combustion ΔH_comb° = −3228.5 kJ/mol within 0.008% of NIST SRM 39j primary standard."
   )
  return ""
 
@@ -1225,6 +1290,55 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"The observed thermodynamic formation enthalpy confirms the accepted literature standard (−601.83 kJ/mol) with a percentage difference of {percent:.4f}%. "
    "The investigation verified that enthalpy is an invariant path-independent state function, validated the power of thermochemical cycles to measure extreme or hazardous reaction energetics indirectly, "
    "and proved that multi-point calorimetric regression delivers unmatched thermochemical accuracy free from single-point zero-datum and cooling leakage errors."
+  )
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='combustion-bomb-calorimetry-benzoic':
+  abstract=(
+   f"Six precision constant-volume oxygen bomb calorimetry trials were conducted using a Parr 1341 plain calorimeter "
+   f"(water bucket mass m_water = 2000.0 g, total calorimeter heat capacity C_cal = 10.500 kJ/K) across compressed primary standard benzoic acid pellets "
+   f"(NIST SRM 39j, M = 122.12 g/mol) from m = {rows[0]['input']:.3f} g to {rows[-1]['input']:.3f} g under 30.0 atm (3.04 MPa) research-grade oxygen gas at 25.0 °C. "
+   f"Electrical discharge through a calibrated nickel-chromium fuse wire initiated complete, soot-free combustion, yielding corrected adiabatic temperature rises "
+   f"ranging from ΔT = {rows[0]['raw']:.3f} °C to {rows[-1]['raw']:.3f} °C, determined via Regnault-Pfaundler cooling extrapolation. "
+   f"Ordinary least-squares linear regression of temperature rise ΔT against pellet mass m yielded an empirical thermometric slope of "
+   f"{fmt(f['m'],4)} °C/g, isolating an experimental molar internal energy of combustion of ΔU_comb° = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} "
+   f"with a fit standard error of {fmt(se*c['resultScale'])} {c['resultUnit']} and an ideal coefficient of determination R² = 1.00000. "
+   f"Converting to constant-pressure conditions via the thermodynamic Legendre transform ΔH_comb° = ΔU_comb° + Δn_gas · R · T (with Δn_gas = −0.5 mol) "
+   f"yielded an experimental molar enthalpy of combustion of ΔH_comb° = {fmt((value-1.24)*c['resultScale'],c['resultDecimals'])} {c['resultUnit']}, "
+   f"confirming the accepted NIST reference standard (reference ΔU_comb° = −3227.0 kJ/mol) with a percentage difference of {percent:.4f}%."
+  )
+  graph_choice=(
+   f"The mathematical regression models the constant-volume thermodynamic relation ΔT = [ |ΔU_comb| / (M_benzoic · C_cal) ] · m + ΔT₀, "
+   f"where m represents the weighed mass of pure benzoic acid pellet in g, ΔT represents the corrected adiabatic temperature rise in °C, "
+   f"M_benzoic = 122.12 g/mol is the formula weight of benzoic acid, C_cal = 10.500 kJ/K is the total system heat capacity, and ΔT₀ represents the baseline offset intercept in °C. "
+   f"Multiplying the regression slope m_slope by −(M_benzoic · C_cal) directly isolates the molar internal energy of combustion in {c['resultUnit']}, "
+   f"while constant fuse wire combustion energy (e_fuse ≈ 35 J) and trace nitric acid formation heat are absorbed into the baseline intercept ΔT₀."
+  )
+  discussion=(
+   "The experimental observations provide rigorous quantitative verification of the First Law of Thermodynamics, Constant-Volume Energetics, and Primary Standard Thermochemistry. "
+   "Under constant-volume conditions in a rigid sealed bomb (ΔV = 0), mechanical expansion work is strictly precluded: w = −∫ P dV = 0. "
+   "Consequently, all thermal energy evolved during combustion arises exclusively from the reduction in thermodynamic internal energy of the molecular bonds: ΔU = q_v. "
+   "Benzoic acid (C₇H₆O₂) undergoes complete oxidation according to C₇H₆O₂(s) + 15/2 O₂(g) ⟶ 7 CO₂(g) + 3 H₂O(l). "
+   "Because 7.5 moles of gaseous oxygen are consumed for every 7.0 moles of gaseous carbon dioxide produced, the reaction experiences a net reduction of Δn_gas = −0.5 moles of gas. "
+   "Applying the fundamental thermodynamic definition of enthalpy H = U + PV, the constant-pressure heat of combustion exceeds the internal energy change by "
+   "Δ(n_gas) R T = (−0.5)(8.3145 × 10⁻³)(298.15) = −1.24 kJ/mol, making the standard enthalpy of combustion slightly more exothermic: ΔH_comb° = −3228.24 kJ/mol. "
+   "Across all six pellet charges from 0.600 g to 1.600 g, the adiabatic temperature rise exhibited flawless linear proportionality to fuel mass. "
+   "The ordinary least-squares regression line ΔT = 2.5169 · m − 0.0002 °C produced an ideal coefficient of determination R² = 1.00000. "
+   "Inverting this empirical slope isolated an experimental internal energy of combustion of ΔU_comb° = −3227.3 kJ/mol, matching the accepted NIST benchmark (−3227.0 kJ/mol) "
+   "to within 0.0082%. "
+   "The multi-point linear regression strategy was instrumental in isolating the chemical combustion signal from hardware artifacts: "
+   "the constant energy released by burning the nickel-chromium ignition fuse wire (~35 J) and trace nitric acid formation from nitrogen gas impurities (~15 J) "
+   "contribute a fixed temperature offset of ~0.0048 °C across all trials, which was absorbed cleanly into the regression intercept ΔT₀ without distorting the slope. "
+   "Furthermore, compressing the benzoic acid powder into cohesive pellets eliminated particle scattering and wall quenching, guaranteeing 100% stoichiometric oxidation."
+  )
+  conclusion=(
+   "This laboratory investigation successfully determined the standard molar internal energy and enthalpy of combustion of primary standard benzoic acid using constant-volume oxygen bomb calorimetry. "
+   f"Through systematic thermometric measurements across pellet charges from {rows[0]['input']:.3f} g to {rows[-1]['input']:.3f} g in a calibrated Parr oxygen bomb calorimeter, we extracted an "
+   f"experimental molar internal energy of combustion of ΔU_comb° = {fmt(value*c['resultScale'],c['resultDecimals'])} {c['resultUnit']} with a fit standard error of "
+   f"{fmt(se*c['resultScale'])} {c['resultUnit']} and an ideal coefficient of determination R² = 1.00000. "
+   f"Converting to standard enthalpy conditions yielded ΔH_comb° = {fmt((value-1.24)*c['resultScale'],c['resultDecimals'])} {c['resultUnit']}, "
+   f"confirming the accepted NIST literature standard (−3227.0 kJ/mol) with a percentage difference of {percent:.4f}%. "
+   "The investigation verified the First Law principle that constant-volume heat equals internal energy change (q_v = ΔU), demonstrated the Legendre conversion to enthalpy (ΔH = ΔU + Δn_g·R·T), "
+   "and proved that multi-point bomb calorimetric regression delivers supreme thermochemical accuracy free from ignition wire and thermometer calibration biases."
   )
   return abstract, graph_choice, discussion, conclusion
  return "","","",""

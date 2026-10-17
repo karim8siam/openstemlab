@@ -2544,5 +2544,217 @@
     "gradientUnit": "°C/g",
     "intro": "Thermochemistry applies the First Law of Thermodynamics (ΔU = q + w) to chemical transformations, establishing that at constant pressure (q_p = ΔH), the heat exchanged by a system equals its change in enthalpy. Because enthalpy H = U + PV is a thermodynamic state function whose value depends exclusively on current equilibrium state variables rather than the reaction pathway, the integral of dH over any closed thermodynamic cycle is identically zero: ∮ dH = 0. Germain Henri Hess formulated this principle as Hess's Law of Constant Heat Summation: the net enthalpy change for a chemical process is the algebraic sum of the enthalpy changes for any sequence of steps leading from the initial reactants to the final products. This state-function invariance provides an indispensable experimental tool for determining the thermodynamic properties of compounds whose direct formation cannot be measured safely or cleanly in a laboratory calorimeter. For instance, the direct synthesis of magnesium oxide from its elements: Mg(s) + 1/2 O₂(g) ⟶ MgO(s) is intensely violent. Burning magnesium ribbon in air or pure oxygen releases enormous heat, producing blinding ultraviolet/visible radiation, flame temperatures exceeding 2800 °C, and thick plumes of aerosolized oxide smoke, while simultaneously reacting with atmospheric nitrogen to form magnesium nitride (Mg₃N₂). Direct solution or bomb calorimetry is impossible. Instead, Hess's Law enables the determination of ΔH_f°[MgO(s)] via a three-step thermochemical cycle executed at room temperature (25.0 °C): (1) Mg(s) + 2 HCl(aq) ⟶ MgCl₂(aq) + H₂(g) [ΔH₁]; (2) MgO(s) + 2 HCl(aq) ⟶ MgCl₂(aq) + H₂O(l) [ΔH₂ = −146.00 kJ/mol]; and (3) H₂(g) + 1/2 O₂(g) ⟶ H₂O(l) [ΔH₃ = −285.83 kJ/mol]. Reversing Reaction 2 and summing with Reactions 1 and 3 algebraically cancels intermediate hydrochloric acid, magnesium chloride, hydrogen gas, and liquid water, yielding identically Mg(s) + 1/2 O₂(g) ⟶ MgO(s) with net formation enthalpy ΔH_f° = ΔH₁ − ΔH₂ + ΔH₃. In this laboratory investigation, students measure the temperature rise ΔT₁ resulting from dissolving varying masses of magnesium ribbon (0.100 g to 0.350 g) in 100.0 mL of standardized 1.0 M HCl inside a calibrated vacuum-jacketed Dewar calorimeter. By applying Regnault-Pfaundler cooling curve extrapolations to correct for quasi-adiabatic heat leakage, ordinary least-squares linear regression extracts the thermometric slope m_slope = 42.845 °C/g, isolating ΔH₁ = −461.99 kJ/mol and ΔH_f°[MgO(s)] = −601.82 kJ/mol within 0.002% of literature.",
     "modelExtra": "The physical chemistry simulation model is governed by the calorimetric first-law relation ΔT₁ = [ |ΔH₁| / (M_Mg · C_eff) ] · m + ΔT₀. System physical parameters: magnesium atomic molar mass M_Mg = 24.305 g/mol; standard hydrochloric acid volume V_acid = 100.00 mL (solution density ρ = 1.015 g/mL, mass m_soln = 101.5 g, solution specific heat capacity c_p = 4.10 J/(g·K)), calorimeter water equivalent heat capacity C_cal = 27.5 J/K. Total effective system heat capacity C_eff = m_soln · c_p + C_cal = 101.5 · 4.10 + 27.5 = 443.65 J/K = 0.44365 kJ/K. Reaction 1 literature dissolution enthalpy: ΔH₁ = −462.00 kJ/mol. Theoretical thermometric slope: m_slope = |ΔH₁| / (M_Mg · C_eff) = 462.00 / (24.305 · 0.44365) = 42.8458 °C/g. For magnesium ribbon masses from m = 0.100 g to 0.350 g, adiabatic temperature rises span ΔT₁ = 4.285 °C to 14.996 °C. Thermochemical cycle reference enthalpies: ΔH₂ [MgO(s) + 2HCl(aq) -> MgCl₂(aq) + H₂O(l)] = −146.00 kJ/mol; ΔH₃ [H₂(g) + 1/2 O₂(g) -> H₂O(l)] = −285.83 kJ/mol. Hess algebraic combination: ΔH_f°[MgO(s)] = ΔH₁ − ΔH₂ + ΔH₃ = −461.99 − (−146.00) + (−285.83) = −601.82 kJ/mol (accepted thermodynamic reference ΔH_f° = −601.83 kJ/mol). Multi-point linear regression insulates the slope from minor non-adiabatic heat leakage, hydrogen gas vapor carry-out (<0.27%), or initial temperature differences between acid and solid magnesium."
+  },
+  {
+    "slug": "combustion-bomb-calorimetry-benzoic",
+    "title": "Determination of the Heat of Combustion of Benzoic Acid via Constant-Volume Oxygen Bomb Calorimetry",
+    "shortTitle": "Bomb Calorimetry of Benzoic Acid",
+    "subject": "chemistry",
+    "number": 13,
+    "published": true,
+    "min": 0.6,
+    "max": 1.6,
+    "step": 0.2,
+    "initial": 1.0,
+    "inputLabel": "Benzoic acid pellet mass m (g)",
+    "shortInput": "pellet mass",
+    "inputUnit": "g",
+    "inputDecimals": 3,
+    "rawLabel": "Corrected adiabatic temperature rise ΔT",
+    "rawUnit": "°C",
+    "rawDecimals": 3,
+    "angle": false,
+    "timed": false,
+    "observationLabel": "Calorimetric temperature rise measurement",
+    "xAxis": "Benzoic acid pellet mass m (g)",
+    "yAxis": "Corrected temperature rise ΔT (°C)",
+    "xScale": 1,
+    "yScale": 1,
+    "target": "InternalEnergyCombustion_BenzoicAcid",
+    "resultUnit": "kJ/mol",
+    "resultScale": 1,
+    "resultDecimals": 1,
+    "emptyX": [
+      0,
+      2.0
+    ],
+    "emptyY": [
+      0,
+      5.0
+    ],
+    "samples": [
+      0.6,
+      0.8,
+      1.0,
+      1.2,
+      1.4,
+      1.6
+    ],
+    "measureLabel": "Ignite fuse, stir & record adiabatic temperature rise",
+    "aim": "Determine the standard molar internal energy of combustion (ΔU_comb°) and molar enthalpy of combustion (ΔH_comb°) of primary standard benzoic acid in a constant-volume oxygen bomb calorimeter, evaluating fuse wire and nitric acid thermochemical corrections, and extracting the combustion energy using ordinary least-squares linear regression.",
+    "fitEquation": "ΔT = [|ΔU_comb| / (M_benzoic · C_cal)] · m + ΔT₀  ==>  ΔT = 2.517 · m",
+    "gradientUnit": "°C/g",
+    "settings": [
+      "Heavy-walled stainless steel combustion bomb (internal volume 350 mL) charged with 30.0 atm (3.04 MPa) research-grade pure oxygen gas.",
+      "Precision oval water jacket bucket loaded with exactly 2000.0 ± 0.5 g distilled water (specific heat c_p = 4.184 J/(g·K)).",
+      "Total calorimeter system heat capacity C_cal = m_water·c_p + C_bomb = 8368 + 2132 = 10500.0 J/K = 10.500 kJ/K.",
+      "NIST SRM 39j primary standard benzoic acid (C7H6O2, M = 122.12 g/mol) pelletized in a stainless steel press with 10 cm Ni-Cr ignition fuse wire."
+    ],
+    "simModes": [
+      {
+        "id": "bench",
+        "icon": "💣",
+        "label": "1. Constant-Volume Oxygen Bomb Calorimeter"
+      },
+      {
+        "id": "compare",
+        "icon": "⚖️",
+        "label": "2. Constant-Volume vs Constant-Pressure vs DSC"
+      },
+      {
+        "id": "sandbox",
+        "icon": "⚡",
+        "label": "3. ΔU to ΔH Conversion & Thermochemical Corrections"
+      }
+    ],
+    "intro": "Calorimetry at constant volume represents the foundational experimental methodology for determining the heats of combustion and standard thermodynamic formation energies of organic compounds, fuels, and foodstuffs. Under constant-volume conditions (ΔV = 0), no mechanical boundary pressure-volume work can be performed on or by the system: w = −∫ P dV = 0. Consequently, the First Law of Thermodynamics simplifies directly to ΔU = q_v, meaning that the thermal energy released by the reaction inside the rigid sealed vessel equals the change in thermodynamic internal energy. The complete combustion of solid benzoic acid (C₇H₆O₂ or C₆H₅COOH, formula weight 122.12 g/mol) in pure oxygen follows: C₇H₆O₂(s) + 15/2 O₂(g) ⟶ 7 CO₂(g) + 3 H₂O(l). Because benzoic acid can be prepared in exceptionally high purity (NIST SRM 39j), does not absorb atmospheric moisture, and ignites cleanly without soot or carbon monoxide formation, it serves as the premier primary thermochemical standard for calibrating bomb calorimeters. The standard molar internal energy of combustion of pure benzoic acid is ΔU_comb° = −3227.0 kJ/mol (specific energy −26.434 kJ/g). The standard molar enthalpy of combustion is related to the internal energy by the Legendre transform: H = U + PV. Assuming ideal gas behavior for the gaseous reactants and products: ΔH_comb° = ΔU_comb° + Δ(n_gas) R T, where Δn_gas = 7 − 7.5 = −0.5 mol of gas per mole of fuel. At 298.15 K, Δ(n_gas) R T = (−0.5)(8.3145 × 10⁻³ kJ/(mol·K))(298.15 K) = −1.24 kJ/mol, yielding ΔH_comb° = −3228.24 kJ/mol. In a modern Parr-style oxygen bomb calorimeter, a compressed benzoic acid pellet is placed in a platinum or stainless steel crucible inside a heavy-walled bomb pressurized to 30.0 atm with pure oxygen. The bomb is submerged in 2000.0 g of water inside an insulated jacket. Electrical firing through a calibrated nickel-chromium fuse wire ignites the sample instantly. By recording the pre-ignition baseline, rapid thermal excursion, and post-combustion Newton cooling tail, the adiabatic temperature rise ΔT is isolated. In this investigation, six pellet charges from 0.600 g to 1.600 g are analyzed via ordinary least-squares regression to extract ΔU_comb° and ΔH_comb° with extraordinary precision, completely free from single-point ignition wire and thermometer calibration biases.",
+    "modelExtra": "The physical simulation model calculates the adiabatic constant-volume temperature rise via ΔT = [ |ΔU_comb| / (M_benzoic · C_cal) ] · m + ΔT₀. Calorimeter parameters: distilled water bucket charge m_water = 2000.0 g (specific heat c_p = 4.184 J/(g·K)), bomb and hardware heat capacity C_bomb = 2132.0 J/K. Total calorimeter system effective heat capacity: C_cal = 2000.0 · 4.184 + 2132.0 = 10500.0 J/K = 10.500 kJ/K. Benzoic acid primary standard molar mass: M = 122.12 g/mol. Accepted standard molar internal energy of combustion: ΔU_comb° = −3227.0 kJ/mol. Theoretical thermometric slope: m_slope = |ΔU_comb| / (M · C_cal) = 3227.0 / (122.12 · 10.500) = 2.51686 °C/g. Across pellet charges m = 0.600 g to 1.600 g, adiabatic temperature rises span ΔT = 1.510 °C to 4.027 °C. Thermodynamic gas mole difference: Δn_gas = 7 CO₂ − 7.5 O₂ = −0.5 mol. Standard molar enthalpy of combustion: ΔH_comb° = ΔU_comb° + Δn_gas · R · T = −3227.0 − 1.24 = −3228.24 kJ/mol. Standard thermochemical corrections: nickel-chromium fuse wire burn energy (q_fuse = 35.0 J) and trace nitric acid formation (q_HNO3 ≈ 15 J) are accounted for; multi-point regression eliminates constant fuse wire offsets into the intercept ΔT₀.",
+    "apparatus": [
+      {
+        "name": "Parr-Type Plain Oxygen Combustion Bomb (350 mL)",
+        "purpose": "A heavy-walled forged stainless steel vessel with threaded screw cap and sealing O-ring designed to safely withstand internal explosion pressures up to 300 atm during rapid oxygen combustion."
+      },
+      {
+        "name": "Precision Oval Water Jacket Bucket and Impeller Stirrer",
+        "purpose": "Holds exactly 2000.0 ± 0.5 g of distilled water around the submerged bomb, circulated by a continuous-speed motorized impeller (400 rpm) to ensure rapid, uniform thermal equilibration."
+      },
+      {
+        "name": "High-Pressure Oxygen Gas Tank with Two-Stage Regulator",
+        "purpose": "Charges the sealed bomb chamber to 30.0 atm (3.04 MPa) of research-grade 99.99% pure oxygen gas to ensure instantaneous, 100% complete combustion without carbon monoxide formation."
+      },
+      {
+        "name": "Calibrated Nickel-Chromium Fuse Wire and Electrical Ignition Box",
+        "purpose": "Delivers a 10 cm loop of certified Ni-Cr fuse wire touching the benzoic acid pellet, pulsed with a 23 V AC discharge to ignite the combustion cleanly with a known, calibrated wire burn heat."
+      },
+      {
+        "name": "Pellet Press and Stainless Steel Die Set",
+        "purpose": "Compresses loose crystalline benzoic acid powder into a dense, coherent cylindrical pellet that burns steadily without splattering unburned particles out of the crucible."
+      },
+      {
+        "name": "NIST-Calibrated Digital Thermistor Thermometer (±0.001 °C)",
+        "purpose": "Monitors the water bucket temperature continuously at 2 Hz during the pre-period baseline (5 min), thermal excursion (2 min), and post-period cooling tail (10 min)."
+      }
+    ],
+    "procedure": [
+      {
+        "title": "Pellet Preparation and Analytical Gravimetry",
+        "text": "Transfer approximately 1.0 g of pure crystalline benzoic acid into the stainless steel pellet die. Compress with the hand press into a firm, coherent cylindrical pellet. Weigh the pellet on an analytical balance to ±0.0001 g and place it in the combustion crucible."
+      },
+      {
+        "title": "Fuse Wire Installation and Bomb Assembly",
+        "text": "Cut exactly 10.0 cm of standard nickel-chromium fuse wire (calibrated heat 9.6 J/cm). Clamp the ends to the two bomb ignition electrodes, forming a loop that rests firmly in light contact with the top of the benzoic acid pellet without touching the crucible walls. Add 1.0 mL distilled water to the bomb base to absorb trace acid gases."
+      },
+      {
+        "title": "Oxygen Purging and Bomb Pressurization",
+        "text": "Carefully screw down the bomb locking ring until hand-tight. Attach the oxygen filling tube, purge the bomb headspace for 10 seconds to displace nitrogen, and slowly pressurize the bomb to 30.0 atm (3.04 MPa) pure oxygen. Check for leaks in a water test sink."
+      },
+      {
+        "title": "Water Bucket Loading and Calorimeter Assembly",
+        "text": "Tare the clean oval water bucket and add exactly 2000.0 ± 0.5 g of distilled water. Lower the pressurized bomb into the bucket using the lifting handle, ensuring no air bubbles escape from the valves. Place the bucket into the insulated jacket, lower the cover, and engage the stirrer drive belt."
+      },
+      {
+        "title": "Baseline Acquisition and Electrical Firing",
+        "text": "Activate the motorized stirrer. Record temperature at 10-second intervals for 5 minutes (300 s) to establish a steady pre-ignition drift rate. Press the firing button to discharge 23 V through the fuse wire. The red indicator lamp flashes, initiating instantaneous deflagration."
+      },
+      {
+        "title": "Thermogram Tracking, Extrapolation and Inspection",
+        "text": "Log the rapid thermal excursion and continue recording the post-period cooling decay for 10 minutes (600 s). Extrapolate the pre- and post-period slopes to the 63.2% reaction midpoint to find corrected ΔT. Depressurize the bomb slowly, measure remaining unburned fuse wire, verify complete soot-free combustion, and extract ΔU_comb via regression."
+      }
+    ],
+    "topics": [
+      {
+        "question": "Why does constant-volume calorimetry directly measure change in internal energy ΔU rather than enthalpy ΔH?",
+        "answer": "Under constant-volume conditions, the rigid stainless steel bomb prevents any volumetric expansion or compression: dV = 0. The mechanical pressure-volume work performed by or on the system is w = −∫ P_ext dV = 0. According to the First Law of Thermodynamics, ΔU = q + w = q_v + 0 = q_v. Thus, the thermal energy evolved inside a constant-volume calorimeter equals the change in thermodynamic internal energy (ΔU_comb) of the reacting system. In contrast, in constant-pressure processes (such as open-beaker or solution calorimetry), the system can perform expansion work against atmospheric pressure: w = −P ΔV, so that q_p = ΔU + P ΔV = ΔH. Therefore, constant-volume bomb calorimetry directly isolates ΔU_comb, which is subsequently converted to ΔH_comb using the thermodynamic Legendre transformation."
+      },
+      {
+        "question": "How is the change in internal energy ΔU converted to the standard molar enthalpy of combustion ΔH?",
+        "answer": "Enthalpy is defined by the Legendre transformation H = U + PV, so for a finite reaction at constant temperature, ΔH = ΔU + Δ(PV). For ideal gases, PV = n R T, while the molar volumes of condensed liquid and solid phases are orders of magnitude smaller and can be neglected. Therefore, Δ(PV) ≈ Δ(n_gas) R T, yielding the classic relation: ΔH_comb = ΔU_comb + Δ(n_gas) R T. In the complete combustion of benzoic acid: C₇H₆O₂(s) + 15/2 O₂(g) ⟶ 7 CO₂(g) + 3 H₂O(l), the net change in gas moles is Δn_gas = 7 (CO₂) − 7.5 (O₂) = −0.5 mol of gas per mole of benzoic acid. At T = 298.15 K, Δ(n_gas) R T = (−0.5 mol) × (8.3145 × 10⁻³ kJ/(mol·K)) × (298.15 K) = −1.24 kJ/mol. Hence, ΔH_comb° = ΔU_comb° − 1.24 kJ/mol = −3227.0 − 1.24 = −3228.24 kJ/mol."
+      },
+      {
+        "question": "Why is benzoic acid selected as the primary international calibration standard (NIST SRM 39j) for bomb calorimetry?",
+        "answer": "Benzoic acid possesses an ideal combination of chemical and physical properties: (1) Exceptional Purity: It can be synthesized and purified by fractional recrystallization and vacuum sublimation to >99.99% purity. (2) Non-Hygroscopic Character: It does not absorb atmospheric moisture during weighing and handling, ensuring exact gravimetric reproducibility. (3) Low Volatility: Its room-temperature vapor pressure is vanishingly small, preventing sublimative mass loss while preparing pellets. (4) Clean Combustion Chemistry: When ignited under 30 atm O₂, it undergoes rapid, 100% complete deflagration without soot, char, or carbon monoxide formation. (5) Mechanical Pelletizability: Its crystals compact easily into coherent pellets that burn steadily without bursting or scattering. Its accepted NIST combustion energy is −26434 J/g (−3227.0 kJ/mol)."
+      },
+      {
+        "question": "What standard thermochemical corrections must be applied to bomb calorimetry data, and how does linear regression handle them?",
+        "answer": "Three primary corrections are recognized in high-precision bomb calorimetry: (1) Fuse Wire Combustion (e_fuse): The burning of the nickel-chromium ignition wire releases approximately 9.6 J per cm burned (typically ~35 J total). (2) Nitric Acid Formation (e_HNO3): Trace nitrogen impurities in the oxygen tank oxidize under high temperature and pressure: N₂ + 5/2 O₂ + H₂O ⟶ 2 HNO₃(aq), releasing ~57.8 kJ/mol of acid formed (~15 J). (3) Soot/Incomplete Combustion: If present, soot must be gravimetrically penalized. Total reaction heat is q_rxn = C_cal · ΔT − e_fuse − e_HNO3. In our multi-point linear regression protocol across six pellet masses (0.600 g to 1.600 g), because the ignition wire length and initial nitrogen traces are kept identical across all trials, their combined constant thermal contribution is absorbed into the regression intercept ΔT₀, leaving the empirical slope m_slope entirely pure and representative of the true benzoic acid combustion energy."
+      },
+      {
+        "question": "Why must loose benzoic acid powder be compressed into a dense pellet before ignition?",
+        "answer": "If loose crystalline benzoic acid powder is placed in the combustion crucible and ignited under 30 atm of oxygen, the violent localized pressure wave from initial deflagration instantly disperses the fine loose powder into the bomb cavity like an aerosol. These flying particles strike the cold, wet stainless steel walls where they are quenched below their ignition temperature, leaving substantial unburned residue, black soot, and carbon monoxide. This ruins the 100% combustion stoichiometry. Compressing the powder into a dense, solid cylindrical pellet ensures that combustion proceeds as a controlled, steady radial burn front from the surface inward, achieving complete oxidation to carbon dioxide and water."
+      },
+      {
+        "question": "What is the purpose of adding 1.0 mL of distilled water to the bomb before charging with oxygen?",
+        "answer": "Adding 1.0 mL of pure water serves two critical thermodynamic functions: (1) Saturated Headspace: It saturates the 350 mL bomb interior with water vapor prior to ignition, ensuring that all water produced by combustion (3 H₂O per molecule of benzoic acid) condenses completely into the liquid phase rather than remaining partly in the vapor state. This ensures that the measured heat corresponds strictly to the standard state of liquid water (ΔH_vap is fully recovered). (2) Trapping Acid Vapors: The water pools at the bottom to rapidly dissolve and scrub trace acidic gases (such as HNO₃ and any traces of H₂SO₄) formed during firing, allowing them to be quantitatively titrated with standard 0.1 M NaOH during post-run analysis."
+      },
+      {
+        "question": "Why is the bomb pressurized to 30 atmospheres (3.0 MPa) of pure oxygen gas rather than atmospheric air?",
+        "answer": "Atmospheric air contains only 21% oxygen and 78% nitrogen by volume. If air were used at 1 atm, the total moles of oxygen inside a 350 mL bomb would be only ~0.003 mol, which is insufficient to combust even 0.05 g of benzoic acid (requiring 0.061 mol O₂ per gram). By charging with 100% pure oxygen at 30 atm, the bomb contains approximately 0.43 mol of O₂—a more than sevenfold stoichiometric excess over the 0.06 mol required for a 1.0 g pellet. This overwhelming chemical activity ensures that combustion is instantaneous, violently exothermic, and drives the reaction to 100% completion without forming carbon monoxide (CO) or soot."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "In constant-volume oxygen bomb calorimetry, which fundamental thermodynamic quantity is measured directly by the calorimeter heat absorption q_cal?",
+        "options": [
+          "Change in Gibbs free energy (ΔG_comb)",
+          "Change in thermodynamic internal energy (ΔU_comb)",
+          "Change in thermodynamic enthalpy (ΔH_comb)",
+          "Change in thermodynamic entropy (ΔS_comb)"
+        ],
+        "correct": 1,
+        "explanation": "Because the bomb has rigid walls that maintain a constant volume (dV = 0), mechanical pressure-volume work is identically zero: w = −∫ P dV = 0. By the First Law of Thermodynamics, ΔU = q_v + w = q_v. Thus, constant-volume calorimetry directly measures ΔU."
+      },
+      {
+        "question": "For the combustion reaction C₇H₆O₂(s) + 15/2 O₂(g) -> 7 CO₂(g) + 3 H₂O(l) at 298.15 K, what is the value of Δ(n_gas) used to calculate ΔH_comb from ΔU_comb?",
+        "options": [
+          "+0.5 mol",
+          "−0.5 mol",
+          "−3.5 mol",
+          "+2.5 mol"
+        ],
+        "correct": 1,
+        "explanation": "Only gaseous species are counted in Δn_gas. The products have 7 moles of CO₂(g) (water is liquid). The reactants have 15/2 = 7.5 moles of O₂(g) (benzoic acid is solid). Therefore, Δn_gas = 7 − 7.5 = −0.5 mol."
+      },
+      {
+        "question": "Given an empirical regression slope of m_slope = 2.517 °C/g in an oxygen bomb calorimeter with heat capacity C_cal = 10.500 kJ/K, what is the molar internal energy of combustion of benzoic acid (M = 122.12 g/mol)?",
+        "options": [
+          "−3227 kJ/mol",
+          "−1460 kJ/mol",
+          "−4620 kJ/mol",
+          "−6018 kJ/mol"
+        ],
+        "correct": 0,
+        "explanation": "ΔU_comb = −m_slope · M · C_cal = −2.51686 °C/g × 122.12 g/mol × 10.500 kJ/K = −3227.0 kJ/mol."
+      },
+      {
+        "question": "If an experimenter burns loose benzoic acid powder instead of a compressed pellet, why does the resulting calculated |ΔU_comb| exhibit severe negative error?",
+        "options": [
+          "Loose powder burns too slowly and absorbs heat from the stirrer",
+          "The initial deflagration scatters loose unburned powder against cold bomb walls, leading to incomplete combustion",
+          "Loose powder dissolves in the 1 mL of base water before firing",
+          "The loose powder decomposes into gaseous ozone"
+        ],
+        "correct": 1,
+        "explanation": "The shock wave of ignition blows loose powder out of the crucible and splatters it onto the chilled stainless steel walls, quenching the reaction and leaving unburned fuel and soot, resulting in lower temperature rise and underestimated combustion energy."
+      }
+    ],
+    "precautions": [
+      "Never exceed 35 atm charging pressure under any circumstances; always use an oxygen tank equipped with an approved high-pressure two-stage regulator and safety relief valve.",
+      "Do not stand over or lean directly above the bomb during electrical firing; keep personnel clear while the firing button is depressed.",
+      "Ensure all bomb threads, closure rings, and sealing O-rings are clean, free of grit, and strictly free of petroleum oil or organic grease; hydrocarbon grease in 30 atm O₂ constitutes a spontaneous detonation hazard.",
+      "Never fire the bomb if gas bubbles are observed escaping from the bomb valves when submerged in the water bucket; a leaking bomb must be vented and rebuilt.",
+      "Discharge electrostatic charges by touching an earth-grounded metal pipe or chassis before handling electrical ignition leads.",
+      "Open the bomb pressure relief needle valve very slowly after the experiment to allow exhaust gases to bleed off gently without spraying droplets."
+    ],
+    "limitations": "The measurement assumes ideal gas behavior for oxygen and carbon dioxide at high dilution upon pressure release, complete recovery of latent heat of condensation for water, and zero net heat exchange with the ambient environment outside the Regnault-Pfaundler extrapolation window. Trace secondary oxidation of nitrogen to nitric acid contributes <0.05% of the total energy, which is safely absorbed into the linear regression intercept."
   }
 ]
