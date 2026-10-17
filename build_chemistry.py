@@ -159,6 +159,19 @@ def observation(c,value):
   v0_mM=raw / 1000.0
   y=rnd(1.0 / v0_mM, 2)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='transference-numbers-hittorf-moving-boundary':
+  t_time=float(value)
+  table_raw={3.00:77.05, 6.00:154.10, 9.00:231.14, 12.00:308.19, 15.00:385.24, 18.00:462.29}
+  table_y={3.00:0.07705, 6.00:0.15410, 9.00:0.23114, 12.00:0.30819, 15.00:0.38524, 18.00:0.46229}
+  key=round(t_time, 2)
+  if key in table_raw:
+   raw=table_raw[key]
+  else:
+   rate_uL=(60.0 * 1000.0 * 0.00500 * 0.8260 * 1000.0) / (96485.3 * 0.1000)
+   raw=round(rate_uL * t_time, 2)
+  x=t_time
+  y=table_y.get(key, rnd(raw / 1000.0, 5))
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='solubility-product-conductometric-silver-halides':
   t=float(value)
   table_raw={20.0:1.352, 25.0:1.890, 30.0:2.594, 35.0:3.506, 40.0:4.672, 45.0:6.148}
@@ -470,6 +483,14 @@ def estimate(c,f):
   ref=0.500
   se=abs(f.get('slopeSE', 0.05) / b) if b > 0 else 0.002
   return KM, se, ref
+ elif slug=='transference-numbers-hittorf-moving-boundary':
+  I=0.00500
+  c_conc=0.1000
+  F=96485.3
+  m=f['m']
+  t_plus=(m * F * c_conc) / (60.0 * 1000.0 * I)
+  se=abs(f.get('slopeSE', 0.00005)) * (F * c_conc) / (60.0 * 1000.0 * I)
+  return t_plus, se, 0.8260
  elif slug=='solubility-product-conductometric-silver-halides':
   R=8.31446
   dH = -f['m'] * R
@@ -618,6 +639,15 @@ def formula(c,f):
   Vmax=1.0 / b
   KM=m / b
   return f"Slope K_M/V_max = {fmt(m,4)} min; Intercept 1/V_max = {fmt(b,4)} min·mM⁻¹ (V_max = {fmt(Vmax*1000.0,2)} μM/min, K_M = {fmt(KM,4)} mM)"
+ elif slug=='transference-numbers-hittorf-moving-boundary':
+  I=0.00500
+  c_conc=0.1000
+  F=96485.3
+  m=f['m']
+  b=f['b']
+  t_plus=(m * F * c_conc) / (60.0 * 1000.0 * I)
+  t_minus=1.0 - t_plus
+  return f"Moving Boundary Fit: V = {fmt(m,7)}·t + {fmt(b,6)} cm³ (dV/dt = {fmt(m,5)} cm³·min⁻¹); Cation Transference Number t₊(H⁺) = {fmt(t_plus,4)}; Anion Transference Number t₋(Cl⁻) = {fmt(t_minus,4)}"
  elif slug=='solubility-product-conductometric-silver-halides':
   R=8.31446
   dH = -f['m'] * R
@@ -1029,6 +1059,49 @@ def worked(c,row):
    f"   Linearized equation: 1/v₀ = (K_M / V_max) · (1/[S]) + 1/V_max.\n"
    f"   Slope m = K_M / V_max = 12.50 min; Y-intercept b = 1/V_max = 25.00 min·mM⁻¹.\n"
    f"   Extracted parameters: V_max = 1/b = 0.0400 mM/min (40.0 μM/min); K_M = m / b = 0.500 mM with R² = 1.00000."
+  )
+ elif slug=='transference-numbers-hittorf-moving-boundary':
+  t_val=row['input']
+  raw=row['raw']
+  x=row['x']
+  y=row['y']
+  I=0.00500
+  c_conc=0.1000
+  F=96485.3
+  m_slope=0.02568267
+  b_int=0.00000
+  t_plus=(m_slope * F * c_conc) / (60.0 * 1000.0 * I)
+  t_minus=1.0 - t_plus
+  return (
+   f"1. Raw Experimental Observables & Capillary Geometry:\\n"
+   f"   Elapsed electrolysis current duration t = {fmt(t_val,2)} min ({fmt(t_val*60.0,1)} s).\\n"
+   f"   Swept capillary volume V = {fmt(raw,2)} μL = {fmt(y,5)} cm³.\\n"
+   f"   Precision capillary internal radius r = 1.000 mm (cross-sectional area A = 0.031416 cm²).\\n"
+   f"   Boundary axial displacement Δx = V / A = {fmt(y / 0.031416, 3)} cm = {fmt((y / 0.031416)*10.0, 2)} mm.\\n"
+   f"\\n"
+   f"2. Electric Charge & Faraday Equivalence Formulation:\\n"
+   f"   Regulated constant galvanostatic current I = 5.000 mA = {fmt(I,5)} A.\\n"
+   f"   Total charge passed Q = I · t_sec = {fmt(I*t_val*60.0, 3)} Coulombs.\\n"
+   f"   Faraday constant F = 96,485.3 C·mol⁻¹.\\n"
+   f"   Total equivalents of charge passed = Q / F = {fmt((I*t_val*60.0)/F, 7)} mol electrons.\\n"
+   f"\\n"
+   f"3. Chemical Transport Across the Moving Boundary:\\n"
+   f"   Leading electrolyte: standardized hydrochloric acid c(HCl) = {fmt(c_conc,4)} M (mol·L⁻¹).\\n"
+   f"   Moles of H⁺ swept out of capillary volume V = c · (V / 1000) = {fmt(c_conc * y / 1000.0, 8)} mol.\\n"
+   f"   Charge carried solely by H⁺ cations Q₊ = n(H⁺) · F = {fmt((c_conc * y / 1000.0) * F, 4)} C.\\n"
+   f"   Single-point apparent cation transference number t₊ = Q₊ / Q = {fmt(((c_conc * y / 1000.0) * F)/(I*t_val*60.0), 4)}.\\n"
+   f"\\n"
+   f"4. Multi-Point Linear Least-Squares Regression Across All Observations:\\n"
+   f"   Linearized moving boundary equation: V(t) = [ (60,000 · I · t₊) / (F · c) ] · t + b.\\n"
+   f"   Regression slope m = dV/dt = {fmt(m_slope,7)} cm³·min⁻¹ ({fmt(m_slope*1000.0, 3)} μL·min⁻¹).\\n"
+   f"   Regression Y-intercept b = {fmt(b_int,6)} cm³ (consistent with zero initial displacement within ±0.00001 cm³).\\n"
+   f"   Coefficient of determination: R² = 1.00000.\\n"
+   f"\\n"
+   f"5. Extraction of Ionic Transference Numbers & Transport Partitioning:\\n"
+   f"   Cation Transference Number: t₊(H⁺) = (m · F · c) / (60,000 · I) = {fmt(t_plus, 4)} (82.60% of total current).\\n"
+   f"   Anion Transference Number: t₋(Cl⁻) = 1.0000 - t₊ = {fmt(t_minus, 4)} (17.40% of total current).\\n"
+   f"   Literature benchmark at 25.00 °C: t₊(H⁺) = 0.8260 (percentage difference = {fmt(abs(t_plus - 0.8260)/0.8260*100.0, 4)}%).\\n"
+   f"   Theoretical limiting ratio at infinite dilution: t₊°(H⁺) = λ₊° / Λₘ° = 349.8 / 426.15 = 0.8208."
   )
  elif slug=='solubility-product-conductometric-silver-halides':
   t=row['input']
@@ -1746,6 +1819,32 @@ def uncertainty_text(c):
    "covariance matrix through the regression parameters gives u(K_M) / K_M = √[ (u(m)/m)² + (u(b)/b)² - 2·cov(m,b)/(m·b) ]. "
    "The high negative correlation between slope and intercept (r ≈ -0.88) substantially attenuates overall uncertainty, yielding an "
    "expanded uncertainty U(K_M) = 0.015 mM (coverage factor k = 2, 95% confidence level)."
+  )
+ elif slug=='transference-numbers-hittorf-moving-boundary':
+  return (
+   "In the high-precision determination of ionic transference numbers by the moving boundary method, metrological uncertainties "
+   "and electrohydrodynamic boundary conditions are rigorously quantified across optical, galvanostatic, thermostatic, and chemical domains: "
+   "(1) Traveling Optical Cathetometer & Reticle Resolution: Boundary meniscus displacement is tracked through an optical cathetometer with a "
+   "vernier drum graduated to 0.01 mm. Sighting repeatability across multiple readings on the sharp Kohlrausch refractive interface contributes a standard "
+   "height uncertainty u(x) = 0.012 mm. Converted through the calibrated capillary bore cross-sectional area (A = 0.031416 cm²), the volume sighting "
+   "uncertainty is u(V_sight) = 0.038 μL (0.000038 cm³). "
+   "(2) Precision Capillary Bore Uniformity & Calibrated Volume: The capillary tube is calibrated via precision mercury slug gravimetry across the entire "
+   "working column height. The bore diameter is certified at 2.000 ± 0.001 mm, yielding a relative bore cross-sectional area uncertainty u(A)/A = 0.08%. "
+   "(3) High-Stability Digital Constant-Current Galvanostat: An unvarying direct current of 5.000 mA is supplied by an advanced solid-state constant-current "
+   "generator with active feedback regulation. Current drift over 20 minutes is maintained below ±0.001 mA, corresponding to a relative uncertainty "
+   "u(I)/I = 0.020%. Compliance voltage adjusts dynamically (typically 115 to 125 V) as the column resistance increases during Cadmium dissolution. "
+   "(4) Thermostatic Regulation & Radial Joule Heating: Electrolysis generates electrical Joule heating (P = I²·R ≈ 0.005² × 24,000 Ω ≈ 0.60 W). An external "
+   "water jacket circulates constant-temperature coolant at 25.00 ± 0.02 °C to dissipate thermal energy. A residual radial temperature gradient (ΔT_radial < 0.04 °C) "
+   "introduces an estimated convective distortion uncertainty of 0.04%. "
+   "(5) Analytical Concentration of Leading HCl: Standardized 0.1000 M hydrochloric acid is prepared from constant-boiling analytical stock and titrated "
+   "against primary standard tris(hydroxymethyl)aminomethane (THAM) with potentiometric end-point detection. The concentration uncertainty is u(c)/c = 0.08%. "
+   "(6) Multi-Point Linear Regression & Covariance Propagation: The empirical boundary displacement rate m = dV/dt = 0.0256826 cm³·min⁻¹ is evaluated by "
+   "ordinary least-squares regression over six discrete time coordinates (3.00 to 18.00 min). The standard error of the slope is s_m = 0.0000015 cm³·min⁻¹ "
+   "(relative uncertainty 0.006%), yielding a coefficient of determination R² = 1.000000. Propagation through the moving boundary formula "
+   "u_r(t₊) = √[ (u(m)/m)² + (u(I)/I)² + (u(c)/c)² + (u(A)/A)² ] gives a combined relative standard uncertainty u_r(t₊) = 0.14%. "
+   "For an empirical cation transference number t₊ = 0.8260, the expanded uncertainty at the 95% confidence level (coverage factor k = 2) is "
+   "U(t₊) = 0.0024 (0.29%), confirming exceptional agreement with the authoritative literature benchmark (0.8260 ± 0.0020) and validating the "
+   "metrological supremacy of moving boundary cathetometry."
   )
  elif slug=='solubility-product-conductometric-silver-halides':
   return (
@@ -2959,6 +3058,74 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"and (3) near-perfect linearity (R² = {r2_val:.5f}). These results rigorously confirm the validity of the Briggs-Haldane steady-state catalytic "
    f"mechanism, demonstrate the high fidelity of initial-rate spectrophotometric enzymology, and establish an authoritative baseline for analyzing "
    f"reversible enzyme inhibition mechanisms."
+  )
+  
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='transference-numbers-hittorf-moving-boundary':
+  m_val=f['m']
+  b_val=f['b']
+  t_plus_val=value
+  t_minus_val=1.0 - t_plus_val
+  r2_val=f['r2']
+  
+  abstract=(
+   f"The cation transference number (t₊) of hydrogen ions (H⁺) and the anion transference number (t₋) of chloride ions (Cl⁻) in "
+   f"0.1000 M hydrochloric acid were determined at 25.00 ± 0.02 °C using the high-precision moving boundary method. An autogenic boundary "
+   f"was generated between the leading 0.1000 M HCl solution and an in situ formed cadmium chloride (CdCl₂) following electrolyte under "
+   f"a constant galvanostatic direct current of 5.000 ± 0.001 mA. Linear displacement of the sharp refractive index boundary was tracked "
+   f"through a water-jacketed capillary tube (internal radius r = 1.000 mm, cross-sectional area A = 0.031416 cm²) using an optical cathetometer "
+   f"across six uniform time intervals from 3.00 to 18.00 minutes. Multi-point ordinary least-squares regression of swept capillary volume "
+   f"V against elapsed electrolysis time t yielded a displacement slope dV/dt = {fmt(m_val, 7)} cm³·min⁻¹ ({fmt(m_val*1000.0, 3)} μL·min⁻¹) "
+   f"with an exceptional coefficient of determination R² = {fmt(r2_val, 5)} and a near-zero intercept b = {fmt(b_val, 6)} cm³. Application "
+   f"of the fundamental moving boundary equation yielded a cation transference number t₊(H⁺) = {fmt(t_plus_val, 4)} ± 0.0024 and an "
+   f"evaluated anion transference number t₋(Cl⁻) = {fmt(t_minus_val, 4)} ± 0.0024. The empirical result exhibits complete concordance with "
+   f"the authoritative literature reference value of 0.8260 (percentage difference = {fmt(abs(t_plus_val - 0.8260)/0.8260*100.0, 4)}%), "
+   f"demonstrating that hydrogen ions carry over 82.6% of the electrical current in aqueous hydrochloric acid due to the anomalously rapid "
+   f"Grotthuss structural proton-hopping mechanism."
+  )
+  
+  graph_choice=(
+   f"The primary analytical visualization presents the swept capillary volume V (in cm³, converted from raw cathetometer microliter readings) "
+   f"as a function of elapsed current duration t (in minutes). A linear Cartesian coordinate system is selected based directly on the "
+   f"first-principles moving boundary rate equation V(t) = [ (60,000 · I · t₊) / (F · c) ] · t. Under strictly constant galvanostatic current "
+   f"and unvarying electrolyte concentration, this theoretical governing equation dictates an invariant, constant volumetric displacement rate, "
+   f"demanding a linear plot passing through the origin. Linear least-squares regression across all six experimental points reveals rigorous linearity "
+   f"(R² = {fmt(r2_val, 5)}), verifying that the Kohlrausch regulating condition maintains an unvarying boundary velocity throughout the entire 18-minute run. "
+   f"The linear slope dV/dt = {fmt(m_val, 7)} cm³·min⁻¹ allows direct, unbiased extraction of t₊ without the compounding volumetric errors "
+   f"characteristic of single-point or post-electrolysis chemical titration techniques."
+  )
+  
+  discussion=(
+   f"The experimental results provide profound mechanistic insights into electrokinetic transport phenomena and confirm the metrological "
+   f"authority of the moving boundary method. In typical aqueous symmetrical electrolytes such as potassium chloride (KCl), ionic mobilities "
+   f"are nearly identical (u₊ = 7.62 × 10⁻⁴ cm²·s⁻¹·V⁻¹, u₋ = 7.91 × 10⁻⁴ cm²·s⁻¹·V⁻¹), resulting in balanced transference numbers (t₊ = 0.4906, "
+   f"t₋ = 0.5094 at 25 °C). In stark contrast, our experimental finding for 0.1000 M HCl demonstrates an extreme conduction asymmetry: "
+   f"t₊(H⁺) = {fmt(t_plus_val, 4)} and t₋(Cl⁻) = {fmt(t_minus_val, 4)}. Over 82.6% of the total electrical current is transported by hydrogen cations, "
+   f"and less than 17.4% by chloride anions.\n\n"
+   f"This massive disparity cannot be explained by classical Stokesian hydrodynamic drag. Under Stokes' law, an ion's drift velocity is inversely "
+   f"proportional to its solvated hydrodynamic radius (u = |z|e / (6πηr_h)). Because hydronium ions (H₃O⁺) are strongly hydrated by water molecules, "
+   f"hydrodynamic translation of an intact [H(H₂O)₄]⁺ cluster would yield an ionic mobility comparable to that of sodium or lithium (u ≈ 5 × 10⁻⁴ cm²·s⁻¹·V⁻¹), "
+   f"predicting a transference number near 0.45. Instead, hydrogen ions conduct via the Grotthuss proton-hopping mechanism (structural diffusion). "
+   f"An excess proton transfers concertedly along pre-existing hydrogen bonds between neighboring water molecules within fluctuating Zundel [H₅O₂]⁺ "
+   f"and Eigen [H₉O₄]⁺ clusters. This rapid quantum-like charge translocation circumvents the hydrodynamic viscous resistance of the bulk solvent, "
+   f"elevating the limiting ionic conductivity of H⁺ (λ° = 349.8 S·cm²·mol⁻¹) to more than four times that of chloride (λ° = 76.35 S·cm²·mol⁻¹).\n\n"
+   f"The self-sharpening stability of the moving boundary was rigorously observed throughout the 18-minute electrolysis. According to Kohlrausch's "
+   f"regulating principle, because the following cadmium chloride electrolyte has a substantially lower conductivity than hydrochloric acid "
+   f"(κ(CdCl₂) << κ(HCl)), continuity of electric current (I = κ · A · E) requires a significantly higher electric field gradient in the following "
+   f"solution (E₂ ≈ 4.8 V/cm) than in the leading solution (E₁ ≈ 1.2 V/cm). Any slower Cd²⁺ ion that accidentally diffuses forward across the boundary "
+   f"enters the lower electric field of the HCl zone, where its drift velocity immediately diminishes, allowing the advancing boundary to overtake it. "
+   f"Conversely, any fast H⁺ ion that lags behind into the CdCl₂ zone encounters the intense electric field E₂, which accelerates it forward back into "
+   f"the leading phase. This automatic restoring force maintained an optical boundary sharpness below 0.05 mm, preventing diffusive broadening and "
+   f"yielding the near-perfect regression correlation R² = {fmt(r2_val, 5)}."
+  )
+  
+  conclusion=(
+   f"The cation transference number of hydrogen ions in 0.1000 M hydrochloric acid at 25.00 °C was successfully determined as t₊(H⁺) = {fmt(t_plus_val, 4)} ± 0.0024 "
+   f"via precision moving boundary cathetometry, with an evaluated chloride anion transference number t₋(Cl⁻) = {fmt(t_minus_val, 4)} ± 0.0024. "
+   f"The experimental displacement rate dV/dt = {fmt(m_val, 7)} cm³·min⁻¹ demonstrated exceptional linearity (R² = {fmt(r2_val, 5)}) across the entire 18-minute "
+   f"electrolysis run, matching the authoritative reference benchmark (0.8260) with a relative deviation of only {fmt(abs(t_plus_val - 0.8260)/0.8260*100.0, 4)}%. "
+   f"The quantitative results definitively corroborate the Kohlrausch self-sharpening regulating theory and provide rigorous experimental validation "
+   f"of the Grotthuss proton-hopping conduction mechanism in aqueous solutions."
   )
   
   return abstract, graph_choice, discussion, conclusion

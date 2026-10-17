@@ -172,6 +172,22 @@ function predict(slug,input){
   const y=round(1.0 / v0_mM, 2);
   return {raw,ideal:raw,period:1.0,x,y,valid:s_val>=0.10&&s_val<=4.00};
  }
+ if(slug==='transference-numbers-hittorf-moving-boundary'){
+  const t_time=Number(input);
+  const table_raw={3.00:77.05, 6.00:154.10, 9.00:231.14, 12.00:308.19, 15.00:385.24, 18.00:462.29};
+  const table_y={3.00:0.07705, 6.00:0.15410, 9.00:0.23114, 12.00:0.30819, 15.00:0.38524, 18.00:0.46229};
+  const key=round(t_time, 2);
+  let raw_val;
+  if(table_raw.hasOwnProperty(key)){
+   raw_val=table_raw[key];
+  } else {
+   const rate_uL=(60.0 * 1000.0 * 0.00500 * 0.8260 * 1000.0) / (96485.3 * 0.1000);
+   raw_val=round(rate_uL * t_time, 2);
+  }
+  const x=t_time;
+  const y=table_y.hasOwnProperty(key)?table_y[key]:round(raw_val / 1000.0, 5);
+  return {raw:raw_val,ideal:raw_val,period:1.0,x,y,valid:t_time>=1.00&&t_time<=25.00};
+ }
  if(slug==='solubility-product-conductometric-silver-halides'){
   const t=Number(input);
   const table_raw={20.0:1.352, 25.0:1.890, 30.0:2.594, 35.0:3.506, 40.0:4.672, 45.0:6.148};
@@ -512,6 +528,14 @@ function reading(slug,input,raw){
   const v0_mM=raw_val / 1000.0;
   y=round(1.0 / v0_mM, 2);
  }
+ if(slug==='transference-numbers-hittorf-moving-boundary'){
+  const t_time=Number(input);
+  const raw_val=Number(raw);
+  const key=round(t_time, 2);
+  const table_y={3.00:0.07705, 6.00:0.15410, 9.00:0.23114, 12.00:0.30819, 15.00:0.38524, 18.00:0.46229};
+  x=t_time;
+  y=table_y.hasOwnProperty(key)?table_y[key]:round(raw_val / 1000.0, 5);
+ }
  if(slug==='solubility-product-conductometric-silver-halides'){
   const t=Number(input);
   const raw_val=Number(raw);
@@ -788,6 +812,14 @@ function estimate(slug,f){
   const KM=f.m / f.b;
   const se=Math.abs(f.slopeSE / f.b);
   return {value:KM,se:se,reference:0.500};
+ }
+ if(slug==='transference-numbers-hittorf-moving-boundary'){
+  const I=0.00500;
+  const c_conc=0.1000;
+  const F=96485.3;
+  const t_plus=(f.m * F * c_conc) / (60.0 * 1000.0 * I);
+  const se=Math.abs(f.slopeSE || 0.00005) * (F * c_conc) / (60.0 * 1000.0 * I);
+  return {value:t_plus,se:se,reference:0.8260};
  }
  if(slug==='solubility-product-conductometric-silver-halides'){
   const R=8.31446;

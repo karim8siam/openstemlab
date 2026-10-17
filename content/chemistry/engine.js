@@ -7,6 +7,12 @@ function header(title, subtitle=''){
 function text(x, y, str, col='#94a3b8', sz=8.5, anchor='middle', weight='normal'){
  return '<text x="'+x+'" y="'+y+'" text-anchor="'+anchor+'" fill="'+col+'" font-size="'+sz+'" font-weight="'+weight+'">'+str+'</text>';
 }
+function rect(x, y, w, h, fill='#000', stroke='none', strokeWidth=0, rx=0){
+ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'"'+(stroke!=='none'?' stroke="'+stroke+'" stroke-width="'+strokeWidth+'"':'')+(rx>0?' rx="'+rx+'"':'')+'/>';
+}
+function circle(cx, cy, r, fill='#000', stroke='none', strokeWidth=0){
+ return '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="'+fill+'"'+(stroke!=='none'?' stroke="'+stroke+'" stroke-width="'+strokeWidth+'"':'')+'/>';
+}
 
 let rows=[],measurement=null,busy=false,clearPending=false;
 try{const saved=JSON.parse(localStorage.getItem('openstemlab-'+cfg.slug+'-v1')||'[]');if(Array.isArray(saved))rows=saved.filter(r=>r&&Number.isFinite(r.input)&&r.input>=cfg.min&&r.input<=cfg.max&&Number.isFinite(r.raw)&&r.raw>0).slice(0,100).map(r=>model.reading(cfg.slug,r.input,r.raw));}catch{}
@@ -79,6 +85,18 @@ function update(){
    return;
   }
   $('apparatusDiagram').innerHTML=drawEnzymeKineticsBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='transference-numbers-hittorf-moving-boundary'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawMovingBoundaryCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawMovingBoundarySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawMovingBoundaryBenchView(p,rawVal);
   return;
  }
  if(cfg.slug==='solubility-product-conductometric-silver-halides'){
@@ -210,7 +228,19 @@ function update(){
   const dA_dt = v0_uM * 0.0185;
   $('liveState').textContent='Photometric trace recorded: v₀ = '+v0_uM.toFixed(2)+' μM/min (dA/dt = '+(dA_dt/1000).toFixed(4)+' AU/min).';
   message('Assay complete: v₀ = '+v0_uM.toFixed(2)+' μM/min (1/v₀ = '+inv_v0.toFixed(2)+' min/mM, 1/[S] = '+inv_s.toFixed(2)+' mM⁻¹). Record in notebook.');
- }else if(cfg.slug==='solubility-product-conductometric-silver-halides'){
+ }else if(cfg.slug==='transference-numbers-hittorf-moving-boundary'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawMovingBoundaryCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawMovingBoundarySandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawMovingBoundaryBenchView(p,rawVal);
+  return;
+ }
+ if(cfg.slug==='solubility-product-conductometric-silver-halides'){
   const t = p.input;
   const rawKappa = raw;
   const T = t + 273.15;
@@ -11570,6 +11600,330 @@ function drawSolubilitySandboxView(p, rawVal) {
 
  // Summary
  svg += text(300, 312, 'Le Chatelier Shift: Molar solubility triples from 10.6 μM at 20 °C to 30.5 μM at 45 °C due to endothermic dissolution.', '#789c80', 8);
+
+ return svg;
+}
+
+// ======================================================================
+// Lab 35: Determination of Ionic Transference Numbers by Moving Boundary Method
+// ======================================================================
+
+function drawMovingBoundaryBenchView(p, rawVal) {
+ var t = p.input || 6.00;
+ var rawV = rawVal || 154.10; // in uL
+ var V_cm3 = rawV / 1000.0;
+ var I_mA = 5.000;
+ var c_M = 0.1000;
+ var F_const = 96485.3;
+ var Q_coul = I_mA * 0.001 * t * 60.0;
+ var t_plus = (V_cm3 * F_const * c_M) / (t * 60.0 * I_mA * 0.001);
+ var t_minus = 1.0 - t_plus;
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0c131d');
+ svg += '<defs>';
+ svg += '<linearGradient id="jacketGlass35" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#38bdf8" stop-opacity="0.25"/><stop offset="50%" stop-color="#38bdf8" stop-opacity="0.06"/><stop offset="100%" stop-color="#38bdf8" stop-opacity="0.3"/></linearGradient>';
+ svg += '<linearGradient id="cdcl2Grad35" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#c084fc" stop-opacity="0.45"/><stop offset="50%" stop-color="#a855f7" stop-opacity="0.25"/><stop offset="100%" stop-color="#c084fc" stop-opacity="0.5"/></linearGradient>';
+ svg += '<linearGradient id="hclGrad35" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#38bdf8" stop-opacity="0.12"/><stop offset="50%" stop-color="#e0f2fe" stop-opacity="0.05"/><stop offset="100%" stop-color="#38bdf8" stop-opacity="0.15"/></linearGradient>';
+ svg += '</defs>';
+
+ // Header Banner
+ svg += text(20, 24, 'LABORATORY BENCH: MOVING BOUNDARY TRANSFERENCE NUMBERS (HCl / CdCl₂)', '#e2e8f0', 12, 'bold');
+ svg += text(20, 40, 'Water-Jacketed Capillary (r = 1.000 mm, 25.00 °C) · Autogenic Cadmium Anode · Precision Digital Galvanostat (5.000 mA)', '#38bdf8', 9);
+
+ // --- LEFT REGION: APPARATUS COLUMN & CATHETOMETER (x: 20 to 330) ---
+ // Lab Stand & Base
+ svg += rect(35, 292, 130, 14, '#334155', '#1e293b', 1.5);
+ svg += rect(55, 50, 8, 245, '#64748b');
+ svg += rect(59, 75, 45, 6, '#475569');
+ svg += rect(59, 265, 45, 6, '#475569');
+
+ // Outer Thermostatic Water Jacket (Circulating at 25.0 °C)
+ var jX = 90, jY = 70, jW = 60, jH = 205;
+ svg += rect(jX, jY, jW, jH, 'url(#jacketGlass35)', '#0284c7', 1.5, 6);
+ // Jacket circulating coolant ports
+ svg += rect(jX - 12, jY + 160, 12, 10, '#0ea5e9', '#0284c7', 1);
+ svg += text(jX - 18, jY + 168, '25°C IN', '#7dd3fc', 6.5, 'bold');
+ svg += rect(jX + jW, jY + 25, 12, 10, '#0ea5e9', '#0284c7', 1);
+ svg += text(jX + jW + 14, jY + 33, 'OUT', '#7dd3fc', 6.5, 'bold');
+
+ // Central Calibrated Capillary Tube (r = 1.00 mm, width = 16px)
+ var cX = jX + (jW - 16) / 2; // 112
+ var cY = jY + 5; // 75
+ var cW = 16;
+ var cH = jH - 10; // 195
+ svg += rect(cX, cY, cW, cH, '#0f172a', '#94a3b8', 1);
+
+ // Boundary Position Calculation: sweeps from bottom (cY + cH - 15) upwards
+ // At t = 1 min, V ≈ 25.68 uL -> dy ≈ 10px; at t = 18 min, V ≈ 462 uL -> dy ≈ 140px; at t = 25 min, dy ≈ 170px
+ var bMaxY = cY + cH - 15; // 255 (anode top)
+ var bMinY = cY + 15;      // 90
+ var sweptFrac = Math.min(1.0, Math.max(0.0, t / 25.0));
+ var bY = bMaxY - sweptFrac * 160;
+
+ // Lower Following Electrolyte: CdCl₂ (dense, autogenic, violet-tinted)
+ svg += rect(cX + 1, bY, cW - 2, bMaxY - bY, 'url(#cdcl2Grad35)');
+ // Upper Leading Electrolyte: 0.1000 M HCl (light, fast H⁺, clear cyan tint)
+ svg += rect(cX + 1, cY + 5, cW - 2, bY - (cY + 5), 'url(#hclGrad35)');
+
+ // Moving Boundary Meniscus (Sharp Kohlrausch Interface)
+ svg += '<line x1="'+(cX-2)+'" y1="'+bY+'" x2="'+(cX+cW+2)+'" y2="'+bY+'" stroke="#facc15" stroke-width="2"/>';
+ svg += '<line x1="'+(cX-4)+'" y1="'+(bY-1)+'" x2="'+(cX+cW+4)+'" y2="'+(bY-1)+'" stroke="#ffffff" stroke-width="1" stroke-dasharray="2,1"/>';
+
+ // Anode Assembly at Bottom: Pure Cadmium Metal Cylinder (Cd -> Cd²⁺ + 2e⁻)
+ svg += rect(cX - 2, bMaxY, cW + 4, 18, '#64748b', '#cbd5e1', 1.2);
+ svg += text(cX + cW/2, bMaxY + 12, 'Cd', '#f8fafc', 7.5, 'bold', 'middle');
+ // Anode Lead (+) to Galvanostat
+ svg += '<line x1="'+(cX + cW/2)+'" y1="'+(bMaxY + 18)+'" x2="'+(cX + cW/2)+'" y2="295" stroke="#ef4444" stroke-width="1.8"/>';
+ svg += '<circle cx="'+(cX + cW/2)+'" cy="295" r="3.5" fill="#ef4444"/>';
+ svg += text(cX + cW/2 + 10, 298, '(+) Anode', '#ef4444', 6.5, 'bold');
+
+ // Cathode Assembly at Top: Bulb with Ag/AgCl Non-Gassing Gauze
+ svg += '<ellipse cx="'+(cX + cW/2)+'" cy="'+(cY - 2)+'" rx="14" ry="10" fill="#0f172a" stroke="#94a3b8" stroke-width="1"/>';
+ svg += rect(cX + 2, cY - 8, cW - 4, 10, '#334155', '#94a3b8', 1);
+ svg += '<line x1="'+(cX + cW/2)+'" y1="'+(cY - 12)+'" x2="'+(cX + cW/2)+'" y2="52" stroke="#38bdf8" stroke-width="1.8"/>';
+ svg += '<circle cx="'+(cX + cW/2)+'" cy="52" r="3.5" fill="#38bdf8"/>';
+ svg += text(cX + cW/2 + 10, 55, '(−) Ag/AgCl Cathode', '#38bdf8', 6.5, 'bold');
+
+ // Optical Cathetometer (Traveling Telescope)
+ var telX = 185;
+ svg += rect(telX, 45, 6, 250, '#94a3b8', '#64748b', 1); // vertical scale pillar
+ // Vernier slide & telescope body
+ svg += rect(telX - 8, bY - 14, 22, 28, '#334155', '#e2e8f0', 1.2, 2);
+ svg += rect(telX - 35, bY - 7, 28, 14, '#1e293b', '#cbd5e1', 1.2); // optical barrel
+ svg += circle(telX - 35, bY, 7, '#0284c7', '#38bdf8', 1.2); // objective lens
+ svg += text(telX + 2, bY + 4, 'VERN', '#facc15', 5.5, 'bold', 'middle');
+ // Sight Line from Cathetometer to Boundary Interface
+ svg += '<line x1="'+(telX - 35)+'" y1="'+bY+'" x2="'+(cX + cW + 4)+'" y2="'+bY+'" stroke="#ef4444" stroke-width="1" stroke-dasharray="2,2"/>';
+ svg += '<circle cx="'+(cX + cW + 4)+'" cy="'+bY+'" r="2.5" fill="#ef4444"/>';
+ svg += text(telX - 18, bY - 10, 'Optical Reticle', '#f87171', 6, 'bold', 'middle');
+
+ // Labels for Electrolyte Phases
+ svg += text(cX - 8, cY + 30, '0.1000 M HCl (Leading)', '#38bdf8', 7, 'end');
+ svg += text(cX - 8, bMaxY - 20, 'CdCl₂ (Following)', '#c084fc', 7, 'end');
+ svg += text(cX + cW + 8, bY + 3, 'Sharp Boundary', '#facc15', 7, 'start', 'bold');
+
+ // --- RIGHT REGION: INSTRUMENT TELEMETRY & LIVE REGRESSION (x: 235 to 700) ---
+ // Galvanostat & Power Unit (x: 235, y: 55, w: 180, h: 110)
+ var gX = 235, gY = 55, gW = 180, gH = 110;
+ svg += rect(gX, gY, gW, gH, '#131d2e', '#334155', 1.5, 6);
+ svg += rect(gX + 10, gY + 10, gW - 20, 36, '#09131f', '#0284c7', 1, 4);
+ svg += text(gX + gW/2, gY + 28, '5.000 mA', '#38bdf8', 16, 'middle', 'bold');
+ svg += text(gX + gW/2, gY + 40, 'GALVANOSTAT CONSTANT CURRENT', '#94a3b8', 6, 'middle');
+
+ svg += text(gX + 15, gY + 62, 'Compliance Voltage: 118.4 V DC', '#cbd5e1', 7);
+ svg += text(gX + 15, gY + 76, 'Elapsed Time t: ' + t.toFixed(2) + ' min', '#facc15', 7.5, 'start', 'bold');
+ svg += text(gX + 15, gY + 90, 'Total Charge Q: ' + Q_coul.toFixed(3) + ' Coulombs', '#4ade80', 7);
+ svg += text(gX + 15, gY + 103, 'Cooling Bath: 25.00 ± 0.05 °C', '#7dd3fc', 7);
+
+ // Cathetometer Optical Reticle Zoom View (x: 235, y: 175, w: 180, h: 118)
+ var rX = 235, rY = 175, rW = 180, rH = 118;
+ svg += rect(rX, rY, rW, rH, '#131d2e', '#334155', 1.5, 6);
+ svg += text(rX + rW/2, rY + 15, 'CATHETOMETER RETICLE VIEW', '#818cf8', 7.5, 'middle', 'bold');
+ // Circular ocular field
+ svg += circle(rX + rW/2, rY + 62, 38, '#0b1320', '#6366f1', 1.5);
+ // Crosshairs
+ svg += '<line x1="'+(rX + rW/2 - 38)+'" y1="'+(rY + 62)+'" x2="'+(rX + rW/2 + 38)+'" y2="'+(rY + 62)+'" stroke="#ef4444" stroke-width="1"/>';
+ svg += '<line x1="'+(rX + rW/2)+'" y1="'+(rY + 62 - 38)+'" x2="'+(rX + rW/2)+'" y2="'+(rY + 62 + 38)+'" stroke="#ef4444" stroke-width="1"/>';
+ // Simulated meniscus inside reticle
+ svg += '<path d="M '+(rX + rW/2 - 25)+' '+(rY + 62)+' Q '+(rX + rW/2)+' '+(rY + 66)+' '+(rX + rW/2 + 25)+' '+(rY + 62)+'" fill="none" stroke="#facc15" stroke-width="2"/>';
+ svg += text(rX + rW/2, rY + 110, 'Swept V = ' + rawV.toFixed(2) + ' μL (' + V_cm3.toFixed(5) + ' cm³)', '#facc15', 7, 'middle', 'bold');
+
+ // Live Real-Time Regression Plot: V vs t (x: 435, y: 55, w: 270, h: 238)
+ var pX = 475, pY = 75, pW = 215, pH = 175;
+ svg += rect(pX - 35, pY - 20, pW + 45, pH + 50, '#131d2e', '#334155', 1, 6);
+ svg += text(pX + pW/2, pY - 6, 'MOVING BOUNDARY: V vs ELAPSED TIME t', '#38bdf8', 8, 'middle', 'bold');
+
+ // Axes
+ svg += '<line x1="'+pX+'" y1="'+(pY+pH)+'" x2="'+(pX+pW)+'" y2="'+(pY+pH)+'" stroke="#475569" stroke-width="1.2"/>';
+ svg += '<line x1="'+pX+'" y1="'+pY+'" x2="'+pX+'" y2="'+(pY+pH)+'" stroke="#475569" stroke-width="1.2"/>';
+
+ // Grid lines & Axis labels
+ var tMax = 25.0, vMax = 0.650;
+ function mapX(val) { return pX + (val / tMax) * pW; }
+ function mapY(val) { return (pY + pH) - (val / vMax) * pH; }
+
+ for (var ti = 5; ti <= 25; ti += 5) {
+  var gx = mapX(ti);
+  svg += '<line x1="'+gx+'" y1="'+pY+'" x2="'+gx+'" y2="'+(pY+pH)+'" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(gx, pY + pH + 12, ti.toString(), '#94a3b8', 6.5, 'middle');
+ }
+ for (var vi = 0.1; vi <= 0.6; vi += 0.1) {
+  var gy = mapY(vi);
+  svg += '<line x1="'+pX+'" y1="'+gy+'" x2="'+(pX+pW)+'" y2="'+gy+'" stroke="#1e293b" stroke-width="1"/>';
+  svg += text(pX - 6, gy + 3, vi.toFixed(1), '#94a3b8', 6.5, 'end');
+ }
+
+ // Linear Fit Line: V = 0.0256826 * t
+ var lineX1 = mapX(0.0), lineY1 = mapY(0.0);
+ var lineX2 = mapX(25.0), lineY2 = mapY(0.02568267 * 25.0);
+ svg += '<line x1="'+lineX1+'" y1="'+lineY1+'" x2="'+lineX2+'" y2="'+lineY2+'" stroke="#38bdf8" stroke-width="2"/>';
+
+ // Discrete Sample Data Points
+ var sampleT = [3.00, 6.00, 9.00, 12.00, 15.00, 18.00];
+ var sampleV = [0.07705, 0.15410, 0.23114, 0.30819, 0.38524, 0.46229];
+ for (var i = 0; i < sampleT.length; i++) {
+  var sx = mapX(sampleT[i]);
+  var sy = mapY(sampleV[i]);
+  svg += circle(sx, sy, 3.5, '#38bdf8', '#ffffff', 1);
+ }
+
+ // Active Current Point
+ var curX = mapX(t);
+ var curY = mapY(V_cm3);
+ svg += circle(curX, curY, 5.5, '#ef4444', '#facc15', 1.5);
+ svg += text(curX + 6, curY - 6, t.toFixed(1) + ' min: ' + rawV.toFixed(1) + ' μL', '#fef08a', 7, 'start', 'bold');
+
+ // Axis Titles
+ svg += text(pX + pW/2, pY + pH + 22, 'Elapsed Electrolysis Time t (min)', '#94a3b8', 7, 'middle');
+ svg += '<text x="'+(pX - 22)+'" y="'+(pY + pH/2)+'" text-anchor="middle" fill="#94a3b8" font-size="7" transform="rotate(-90 '+(pX-22)+' '+(pY+pH/2)+')">Swept Capillary Volume V (cm³)</text>';
+
+ // Summary footer note
+ svg += text(360, 316, 'Kohlrausch Invariant: Slope dV/dt = 0.02568 cm³·min⁻¹ isolates cation transference number t₊(H⁺) = 0.8260 with R² = 1.00000.', '#789c80', 8, 'middle');
+
+ return svg;
+}
+
+function drawMovingBoundaryCompareView(p, rawVal) {
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0c131d');
+
+ svg += text(20, 24, 'COMPARATIVE METROLOGY: EXPERIMENTAL DETERMINATION OF TRANSFERENCE NUMBERS', '#e2e8f0', 12, 'bold');
+ svg += text(20, 40, 'Moving Boundary Method vs Hittorf Compartment Titration vs Infinite-Dilution Kohlrausch Conductance Ratio', '#38bdf8', 9);
+
+ var panels = [
+  {
+   title: '1. Moving Boundary Method',
+   sub: 'Direct Optical Cathetometry',
+   color: '#38bdf8',
+   val: 't₊(H⁺) = 0.8260 ± 0.0012',
+   pts: [
+    'Direct real-time meniscus displacement tracking',
+    'Kohlrausch self-sharpening eliminates diffusion error',
+    'Short electrolysis duration (15 to 20 minutes)',
+    'Sub-0.1% experimental precision (R² = 1.00000)'
+   ],
+   x: 20
+  },
+  {
+   title: '2. Hittorf Method',
+   sub: 'Compartment Chemical Titrations',
+   color: '#facc15',
+   val: 't₊(H⁺) = 0.825 ± 0.015',
+   pts: [
+    'Prolonged electrolysis (2 to 5 hours required)',
+    'Post-run volumetric drain & chemical titrations',
+    'Vulnerable to inter-compartment convection & diffusion',
+    'Moderate precision (±1.5% to ±2.0% typical error)'
+   ],
+   x: 250
+  },
+  {
+   title: '3. Kohlrausch Ratio Λ°',
+   sub: 'Theoretical Infinite Dilution',
+   color: '#4ade80',
+   val: 't₊°(H⁺) = 0.8208 (λ°₊ / Λ°ₘ)',
+   pts: [
+    'Ratio: λ°(H⁺) / [λ°(H⁺) + λ°(Cl⁻)] = 349.8 / 426.15',
+    'Grotthuss proton hopping dominates electrical transport',
+    'Valid strictly at hypothetical infinite dilution (c -> 0)',
+    'Differs from 0.1 M value (0.8260) due to interionic forces'
+   ],
+   x: 480
+  }
+ ];
+
+ for (var i = 0; i < panels.length; i++) {
+  var pan = panels[i];
+  svg += rect(pan.x, 55, 220, 235, '#131d2e', '#334155', 1, 6);
+  svg += text(pan.x + 110, 78, pan.title, pan.color, 9, 'middle', 'bold');
+  svg += text(pan.x + 110, 92, pan.sub, '#94a3b8', 7, 'middle');
+
+  svg += rect(pan.x + 15, 105, 190, 32, '#09131f', pan.color, 1, 4);
+  svg += text(pan.x + 105, 125, pan.val, pan.color, 9.5, 'middle', 'bold');
+
+  for (var j = 0; j < pan.pts.length; j++) {
+   svg += circle(pan.x + 22, 155 + j * 24, 2.5, pan.color);
+   var words = pan.pts[j];
+   svg += text(pan.x + 30, 158 + j * 24, words, '#cbd5e1', 6.5, 'start');
+  }
+ }
+
+ svg += text(360, 314, 'Conclusion: The moving boundary method achieves authoritative primary metrology by virtue of the self-sharpening boundary interface.', '#789c80', 8, 'middle');
+
+ return svg;
+}
+
+function drawMovingBoundarySandboxView(p, rawVal) {
+ var t = p.input || 6.00;
+ var rawV = rawVal || 154.10;
+ var I_mA = 5.000;
+ var c_M = 0.1000;
+
+ var svg = '';
+ svg += rect(0, 0, 720, 330, '#0c131d');
+
+ svg += text(20, 24, 'KOHLRAUSCH REGULATING CONDITION & SELF-SHARPENING RESTORATION DYNAMICS', '#e2e8f0', 12, 'bold');
+ svg += text(20, 40, 'Electric Field Discontinuity Across Interface · Automatic Boundary Repair Mechanics · Continuity of Current', '#38bdf8', 9);
+
+ // Left: Theory Diagram of Interface & Electric Field Profile (x: 20 to 330)
+ var lX = 20, lY = 55, lW = 310, lH = 240;
+ svg += rect(lX, lY, lW, lH, '#131d2e', '#334155', 1, 6);
+ svg += text(lX + lW/2, lY + 18, 'ELECTRIC FIELD GRADIENT E(z) ACROSS COLUMN', '#facc15', 8, 'middle', 'bold');
+
+ // Plot of E vs z inside capillary
+ var epX = lX + 45, epY = lY + 35, epW = 240, epH = 95;
+ svg += '<line x1="'+epX+'" y1="'+(epY+epH)+'" x2="'+(epX+epW)+'" y2="'+(epY+epH)+'" stroke="#475569" stroke-width="1"/>';
+ svg += '<line x1="'+epX+'" y1="'+epY+'" x2="'+epX+'" y2="'+(epY+epH)+'" stroke="#475569" stroke-width="1"/>';
+
+ var splitX = epX + epW * 0.45;
+ // E in CdCl2 (following, lower conductivity -> higher E)
+ svg += '<line x1="'+epX+'" y1="'+(epY + 20)+'" x2="'+splitX+'" y2="'+(epY + 20)+'" stroke="#c084fc" stroke-width="2.5"/>';
+ // Step drop at boundary
+ svg += '<line x1="'+splitX+'" y1="'+(epY + 20)+'" x2="'+splitX+'" y2="'+(epY + 70)+'" stroke="#facc15" stroke-width="1.5" stroke-dasharray="2,2"/>';
+ // E in HCl (leading, higher conductivity -> lower E)
+ svg += '<line x1="'+splitX+'" y1="'+(epY + 70)+'" x2="'+(epX+epW)+'" y2="'+(epY + 70)+'" stroke="#38bdf8" stroke-width="2.5"/>';
+
+ svg += text(epX + 30, epY + 14, 'E₂ = 4.8 V/cm (CdCl₂)', '#c084fc', 6.5, 'start', 'bold');
+ svg += text(splitX + 15, epY + 64, 'E₁ = 1.2 V/cm (HCl)', '#38bdf8', 6.5, 'start', 'bold');
+ svg += text(splitX, epY + epH + 10, 'Boundary Meniscus', '#facc15', 6.5, 'middle');
+
+ // Restoration Force Explanations
+ svg += rect(lX + 10, lY + 145, lW - 20, 85, '#09131f', '#334155', 1, 4);
+ svg += text(lX + 20, lY + 160, '1. Slower Cd²⁺ Diffuses Ahead into HCl Zone:', '#cbd5e1', 6.5, 'start', 'bold');
+ svg += text(lX + 30, lY + 172, 'Enters weaker field E₁ -> Velocity v = u·E drops -> Boundary overtakes it.', '#94a3b8', 6);
+ svg += text(lX + 20, lY + 192, '2. Faster H⁺ Lags Behind into CdCl₂ Zone:', '#cbd5e1', 6.5, 'start', 'bold');
+ svg += text(lX + 30, lY + 204, 'Enters intense field E₂ -> Velocity accelerates -> Catches up to boundary.', '#94a3b8', 6);
+ svg += text(lX + lW/2, lY + 222, 'Result: Self-repairing optical knife-edge (thickness < 0.05 mm)', '#4ade80', 6.5, 'middle', 'bold');
+
+ // Right: Interactive Boundary Displacement Simulator (x: 345 to 700)
+ var rX = 345, rY = 55, rW = 355, rH = 240;
+ svg += rect(rX, rY, rW, rH, '#131d2e', '#334155', 1, 6);
+ svg += text(rX + rW/2, rY + 18, 'STEADY-STATE ELECTROPHORETIC DRIFT RATE', '#38bdf8', 8, 'middle', 'bold');
+
+ // Formula display card
+ svg += rect(rX + 15, rY + 30, rW - 30, 48, '#09131f', '#0284c7', 1, 4);
+ svg += text(rX + rW/2, rY + 48, 'dV/dt = (60000 · I · t₊) / (F · c) = 0.02568 cm³·min⁻¹', '#facc15', 8.5, 'middle', 'bold');
+ svg += text(rX + rW/2, rY + 65, 'Boundary Linear Drift Speed: v = (dV/dt) / A = 0.817 mm·min⁻¹', '#38bdf8', 7, 'middle');
+
+ // Numerical Table of State Parameters
+ var stateParams = [
+  ['Electrolysis Current I', '5.000 mA (regulated galvanostatic)'],
+  ['Leading HCl Concentration', '0.1000 M (analytical standard)'],
+  ['Swept Capillary Area A', '0.03142 cm² (r = 1.000 mm precision bore)'],
+  ['Hydrogen Cation Transport Number t₊', '0.8260 (82.60% of total electrical charge)'],
+  ['Chloride Anion Transport Number t₋', '0.1740 (17.40% of total electrical charge)'],
+  ['Current Elapsed Time t', t.toFixed(2) + ' min (' + (t * 60).toFixed(0) + ' seconds)'],
+  ['Total Swept Capillary Volume V', rawV.toFixed(2) + ' μL (' + (rawV/1000.0).toFixed(5) + ' cm³)']
+ ];
+
+ for (var k = 0; k < stateParams.length; k++) {
+  var rowY = rY + 92 + k * 18;
+  svg += text(rX + 25, rowY, stateParams[k][0] + ':', '#94a3b8', 6.5, 'start');
+  svg += text(rX + rW - 25, rowY, stateParams[k][1], '#cbd5e1', 6.5, 'end', 'bold');
+ }
+
+ svg += text(360, 314, 'Kohlrausch Condition ensures dynamic boundary stability: c₂/c₁ = (t₊₂/t₊₁) · (z₁/z₂).', '#789c80', 8, 'middle');
 
  return svg;
 }
