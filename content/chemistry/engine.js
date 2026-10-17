@@ -81,6 +81,18 @@ function update(){
   $('apparatusDiagram').innerHTML=drawEnzymeKineticsBenchView(p,rawVal);
   return;
  }
+ if(cfg.slug==='clock-reaction-landolt-iodate-sulfite'){
+  if(currentSimMode==='compare'){
+   $('apparatusDiagram').innerHTML=drawLandoltCompareView(p,rawVal);
+   return;
+  }
+  if(currentSimMode==='sandbox'){
+   $('apparatusDiagram').innerHTML=drawLandoltSandboxView(p,rawVal);
+   return;
+  }
+  $('apparatusDiagram').innerHTML=drawLandoltBenchView(p,rawVal);
+  return;
+ }
  if(cfg.slug==='second-order-saponification-conductivity'){
   $('liveState').textContent='Ready to record conductivity at elapsed time t = '+p.input.toFixed(1)+' min.';
   message('Set reaction elapsed time t, immerse 1.00 kHz conductivity cell & record specific conductance κ_t.');
@@ -102,6 +114,9 @@ function update(){
   const dA_dt = v0_uM * 0.0185;
   $('liveState').textContent='Photometric trace recorded: v₀ = '+v0_uM.toFixed(2)+' μM/min (dA/dt = '+(dA_dt/1000).toFixed(4)+' AU/min).';
   message('Assay complete: v₀ = '+v0_uM.toFixed(2)+' μM/min (1/v₀ = '+inv_v0.toFixed(2)+' min/mM, 1/[S] = '+inv_s.toFixed(2)+' mM⁻¹). Record in notebook.');
+ }else if(cfg.slug==='clock-reaction-landolt-iodate-sulfite'){
+  $('liveState').textContent='Ready to trigger Landolt clock with [IO₃⁻]₀ = '+p.input.toFixed(2)+' mM.';
+  message('Mix iodate and bisulfite-starch solutions at 25.00 °C (400 rpm) & measure induction time Δt.');
  }else if(cfg.slug==='second-order-saponification-conductivity'){
   const t = p.input;
   const kappa = raw;

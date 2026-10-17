@@ -159,6 +159,14 @@ def observation(c,value):
   v0_mM=raw / 1000.0
   y=rnd(1.0 / v0_mM, 2)
   return {'input':value,'raw':raw,'x':x,'y':y}
+ elif slug=='clock-reaction-landolt-iodate-sulfite':
+  io3=float(value)
+  k_prime=0.00500
+  table={4.00:50.00, 6.00:33.33, 8.00:25.00, 10.00:20.00, 14.00:14.29, 20.00:10.00}
+  raw=table.get(round(io3, 2), round(1.0 / (k_prime * io3), 2))
+  x=io3
+  y=rnd(1.0 / raw, 4)
+  return {'input':value,'raw':raw,'x':x,'y':y}
  elif slug=='second-order-saponification-conductivity':
   t=float(value)
   c_0=0.0200
@@ -368,6 +376,11 @@ def estimate(c,f):
   ref=0.500
   se=abs(f.get('slopeSE', 0.05) / b) if b > 0 else 0.002
   return KM, se, ref
+ elif slug=='clock-reaction-landolt-iodate-sulfite':
+  slope=f['m']
+  k_val=slope * 1000.0
+  se=f['slopeSE'] * 1000.0
+  return k_val, se, 5.000
  elif slug=='second-order-saponification-conductivity':
   slope= f['m']
   se= f['slopeSE']
@@ -472,6 +485,9 @@ def formula(c,f):
   Vmax=1.0 / b
   KM=m / b
   return f"Slope K_M/V_max = {fmt(m,4)} min; Intercept 1/V_max = {fmt(b,4)} min·mM⁻¹ (V_max = {fmt(Vmax*1000.0,2)} μM/min, K_M = {fmt(KM,4)} mM)"
+ elif slug=='clock-reaction-landolt-iodate-sulfite':
+  k_val=f['m'] * 1000.0
+  return f"Slope k' = {fmt(f['m'],6)} s⁻¹·mM⁻¹ (k = Slope × 1000 = {fmt(k_val,3)} L·mol⁻¹·s⁻¹); Intercept b = {fmt(f['b'],5)} s⁻¹"
  elif slug=='second-order-saponification-conductivity':
   return f"Slope k = {fmt(f['m'],4)} L·mol⁻¹·min⁻¹; Intercept 1/c₀ = {fmt(f['b'],2)} L·mol⁻¹"
  elif slug=='first-order-kinetics-ester-hydrolysis':
@@ -849,6 +865,27 @@ def worked(c,row):
    f"   Linearized equation: 1/v₀ = (K_M / V_max) · (1/[S]) + 1/V_max.\n"
    f"   Slope m = K_M / V_max = 12.50 min; Y-intercept b = 1/V_max = 25.00 min·mM⁻¹.\n"
    f"   Extracted parameters: V_max = 1/b = 0.0400 mM/min (40.0 μM/min); K_M = m / b = 0.500 mM with R² = 1.00000."
+  )
+ elif slug=='clock-reaction-landolt-iodate-sulfite':
+  io3=row['input']
+  raw=row['raw']
+  x=row['x']
+  y=row['y']
+  r0=(1.200 / (3.0 * raw)) * 1000.0
+  return (
+   f"Representative calculation for Landolt clock run at initial [IO₃⁻]₀ = {io3:.2f} mM:\n"
+   f"1. Experimental Induction Period: Δt = {raw:.2f} s until abrupt blue-black starch-triiodide flash.\n"
+   f"2. Limiting Bisulfite Reductant: [HSO₃⁻]₀ = 1.200 mM = 1.200 × 10⁻³ M; buffer pH = 4.50.\n"
+   f"3. Stoichiometric Iodate Consumption during Induction:\n"
+   f"   IO₃⁻ + 3 HSO₃⁻ ⟶ I⁻ + 3 SO₄²⁻ + 3 H⁺ ⟹ Δ[IO₃⁻] = ⅓ [HSO₃⁻]₀ = 0.400 mM.\n"
+   f"4. Initial Consumption Rate:\n"
+   f"   r₀ = Δ[IO₃⁻] / Δt = 0.400 mM / {raw:.2f} s = {r0:.3f} μM/s = {r0/1000.0:.6f} mM/s.\n"
+   f"5. Linear Reciprocal Coordinates:\n"
+   f"   Abscissa: x = [IO₃⁻]₀ = {io3:.2f} mM.\n"
+   f"   Ordinate: y = 1/Δt = 1 / {raw:.2f} s = {y:.4f} s⁻¹.\n"
+   f"6. Apparent Rate Constant Isolation:\n"
+   f"   Linear least-squares regression: y = k' · x + b gives slope k' = 0.00500 s⁻¹·mM⁻¹.\n"
+   f"   Apparent second-order constant: k = k' × 1000 = 5.000 L·mol⁻¹·s⁻¹ (R² = 1.00000)."
   )
  elif slug=='second-order-saponification-conductivity':
   t=row['input']
@@ -1381,6 +1418,25 @@ def uncertainty_text(c):
    "covariance matrix through the regression parameters gives u(K_M) / K_M = √[ (u(m)/m)² + (u(b)/b)² - 2·cov(m,b)/(m·b) ]. "
    "The high negative correlation between slope and intercept (r ≈ -0.88) substantially attenuates overall uncertainty, yielding an "
    "expanded uncertainty U(K_M) = 0.015 mM (coverage factor k = 2, 95% confidence level)."
+  )
+ elif slug=='clock-reaction-landolt-iodate-sulfite':
+  return (
+   "In the kinetic investigation of the Landolt iodine clock reaction, metrological uncertainties and experimental controls "
+   "are rigorously quantified across temporal, volumetric, chemical, and physical dimensions: "
+   "(1) Timing Resolution and Photodiode Triggering: The optical photodiode transmission timer operates with a hardware sampling "
+   "rate of 1.0 kHz (uncertainty ± 0.001 s). For clock induction times ranging from 10.00 s to 50.00 s, the electronic timing "
+   "uncertainty is completely negligible (< 0.01%). Manual reagent pouring introduces a hydrodynamic mixing latency of 0.20 ± 0.05 s, "
+   "which contributes an expanded relative uncertainty u_r(Δt) ranging from 0.40% at [IO₃⁻] = 4.00 mM to 2.0% at [IO₃⁻] = 20.00 mM. "
+   "(2) Volumetric Reagent Dispensing: Potassium iodate and sodium bisulfite aliquots dispensed using Class A calibrated burettes "
+   "(tolerance ±0.03 mL on 50 mL deliveries) and volumetric pipettes carry a combined relative standard uncertainty u_r(c) = 0.35%. "
+   "(3) Thermostatic Thermal Regulation: The reaction displays strong Arrhenius temperature dependence (activation energy E_a ≈ 80 kJ/mol), "
+   "corresponding to approximately 8.2% variation in reaction velocity per degree Celsius. Regulating the reaction vessel inside a "
+   "closed-loop circulating water jacket at 25.00 ± 0.05 °C restricts thermal rate variance to u_r(T) = 0.05 × 8.2% = 0.41%. "
+   "(4) Atmospheric Bisulfite Protection: Aqueous sodium bisulfite is sensitive to aerial oxidation by dissolved oxygen. Preparing "
+   "fresh stock daily under argon purging ensures that active bisulfite titer remains constant within ±0.20% across all experimental trials. "
+   "(5) Linear Regression and Apparent Rate Constant Propagation: Plotting 1/Δt against [IO₃⁻]₀ across six concentration levels yields "
+   "an ideal coefficient of determination (R² = 1.00000). Propagation of the slope standard error through k = k' × 1000 isolates the "
+   "apparent rate constant k = 5.000 ± 0.015 L·mol⁻¹·s⁻¹ (expanded uncertainty U(k) = 0.030 L·mol⁻¹·s⁻¹ at 95% confidence level, k_cov = 2)."
   )
  elif slug=='second-order-saponification-conductivity':
   return (
@@ -2377,6 +2433,63 @@ def report_narrative(c,rows,f,value,percent,reference,se):
    f"and (3) near-perfect linearity (R² = {r2_val:.5f}). These results rigorously confirm the validity of the Briggs-Haldane steady-state catalytic "
    f"mechanism, demonstrate the high fidelity of initial-rate spectrophotometric enzymology, and establish an authoritative baseline for analyzing "
    f"reversible enzyme inhibition mechanisms."
+  )
+  
+  return abstract, graph_choice, discussion, conclusion
+ elif slug=='clock-reaction-landolt-iodate-sulfite':
+  slope_val=f['m']
+  k_val=slope_val * 1000.0
+  r2_val=f['r2']
+  
+  abstract=(
+   f"The autocatalytic kinetics and reaction orders of the classic Landolt iodine clock reaction were investigated at 25.00 ± 0.05 °C "
+   f"in 0.100 M sodium acetate / acetic acid buffer (pH 4.50) using automated high-speed photodiode optical transmission timing. "
+   f"Six experimental runs were executed with initial potassium iodate concentrations varying from [IO₃⁻]₀ = {rows[0]['input']:.2f} mM "
+   f"to {rows[-1]['input']:.2f} mM under constant limiting sodium bisulfite concentration ([HSO₃⁻]₀ = 1.200 mM) and 0.20% amylose starch. "
+   f"The observed induction periods (Δt) ranged systematically from {rows[0]['raw']:.2f} s down to {rows[-1]['raw']:.2f} s. "
+   f"Linear regression in reciprocal clock coordinates (1/Δt versus [IO₃⁻]₀) demonstrated ideal linearity (R² = {r2_val:.5f}), "
+   f"definitively establishing first-order kinetics with respect to iodate (order p = 1.000). The slope isolated an apparent rate constant "
+   f"k = {k_val:.3f} ± {f['slopeSE']*1000.0:.3f} L·mol⁻¹·s⁻¹, matching the authoritative literature benchmark ({reference:.3f} L·mol⁻¹·s⁻¹) "
+   f"with a percentage difference of {percent:.3f}%. These results rigorously validate the three-step Landolt mechanism and confirm the "
+   f"absence of premature iodine accumulation prior to bisulfite exhaustion."
+  )
+
+  graph_choice=(
+   f"The primary analytical graphic illustrates the linear reciprocal induction relationship: reciprocal clock time y = 1/Δt (in s⁻¹) "
+   f"plotted as a function of initial iodate concentration x = [IO₃⁻]₀ (in mM). According to the integrated Landolt rate equation, "
+   f"1/Δt = k' · [IO₃⁻]₀, where the slope k' = {slope_val:.6f} s⁻¹·mM⁻¹ directly defines the apparent rate parameter and the vertical "
+   f"intercept b = {f['b']:.5f} s⁻¹ is zero within experimental uncertainty. The regression line displays near-perfect linearity (R² = {r2_val:.5f}), "
+   f"with all six data points distributed with sub-millisecond residual deviations across a fivefold concentration span. A secondary "
+   f"comparative plot presents the non-linear hyperbolic decay of raw induction time Δt against [IO₃⁻]₀, clearly illustrating the dramatic "
+   f"acceleration of the clock as iodate concentration increases."
+  )
+
+  discussion=(
+   f"Quantitative analysis of the experimental induction times provides deep mechanistic validation of the Landolt autocatalytic cycle. "
+   f"Throughout the induction period, the solution remains completely transparent because the rate of iodine reduction by bisulfite "
+   f"(Step 3: I₂ + HSO₃⁻ + H₂O → 2 I⁻ + SO₄²⁻ + 3 H⁺) is orders of magnitude faster than the Dushman reaction (Step 2: IO₃⁻ + 5 I⁻ + 6 H⁺ → 3 I₂ + 3 H₂O). "
+   f"As a consequence, the steady-state concentration of molecular iodine is held at less than 10⁻¹⁰ M. The sudden blue-black flash occurs "
+   f"only when the limiting bisulfite pool ([HSO₃⁻]₀ = 1.200 mM) is fully consumed, allowing iodine to surge and form the deeply colored "
+   f"starch-triiodide inclusion complex in under 50 milliseconds.\n\n"
+   f"The observed first-order dependence on iodate concentration is rigorously demonstrated by the linear relationship between 1/Δt and [IO₃⁻]₀. "
+   f"At [IO₃⁻]₀ = 4.00 mM, the induction time is Δt = 50.00 s, corresponding to an initial iodate consumption rate r₀ = 8.00 μM/s. "
+   f"When the iodate concentration is elevated fivefold to 20.00 mM, the induction time contracts exactly fivefold to Δt = 10.00 s, "
+   f"yielding an initial rate of 40.00 μM/s. The extracted rate constant k = {k_val:.3f} L·mol⁻¹·s⁻¹ shows exceptional concordance with the "
+   f"standard reference value of {reference:.3f} L·mol⁻¹·s⁻¹ (difference = {percent:.3f}%), confirming that the initial reduction of iodate by "
+   f"bisulfite governs the overall rate of induction.\n\n"
+   f"Maintaining the reaction at pH 4.50 using a 0.100 M acetate buffer was essential to prevent autocatalytic acid runaway. Because the "
+   f"reaction releases 3 moles of H⁺ per mole of iodate consumed, an unbuffered system would experience rapid pH decline, causing severe "
+   f"kinetic acceleration and curvature in the reciprocal plot. The strict adherence to linearity confirms that the buffer successfully "
+   f"neutralized all generated hydronium ions, preserving constant pseudo-order kinetic conditions."
+  )
+
+  conclusion=(
+   f"The reaction kinetics and autocatalytic mechanism of the Landolt iodine clock reaction were definitively characterized at 25.00 °C "
+   f"and pH 4.50. Continuous optical photodiode timing across six iodate concentrations established: (1) strict first-order dependence "
+   f"on iodate concentration (order p = 1.000); (2) an apparent rate constant k = {k_val:.3f} ± {se:.3f} L·mol⁻¹·s⁻¹ ({slope_val:.6f} s⁻¹·mM⁻¹), "
+   f"differing by only {percent:.3f}% from the accepted literature standard ({reference:.3f} L·mol⁻¹·s⁻¹); and (3) an exceptional linear fit "
+   f"(R² = {r2_val:.5f}). These results confirm the rapid scavenger role of bisulfite, demonstrate the power of clock reactions for initial-rate "
+   f"kinetics, and provide an authoritative pedagogical model for studying non-linear chemical dynamics."
   )
   
   return abstract, graph_choice, discussion, conclusion

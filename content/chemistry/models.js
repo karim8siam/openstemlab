@@ -172,6 +172,16 @@ function predict(slug,input){
   const y=round(1.0 / v0_mM, 2);
   return {raw,ideal:raw,period:1.0,x,y,valid:s_val>=0.10&&s_val<=4.00};
  }
+ if(slug==='clock-reaction-landolt-iodate-sulfite'){
+  const io3=Number(input);
+  const k_prime=0.00500;
+  const table={4.00:50.00, 6.00:33.33, 8.00:25.00, 10.00:20.00, 14.00:14.29, 20.00:10.00};
+  const key=round(io3, 2);
+  const raw=table.hasOwnProperty(key)?table[key]:round(1.0 / (k_prime * io3), 2);
+  const x=io3;
+  const y=round(1.0 / raw, 4);
+  return {raw,ideal:raw,period:1.0,x,y,valid:io3>=2.0&&io3<=25.0};
+ }
  if(slug==='second-order-saponification-conductivity'){
   const t=Number(input);
   const c_0=0.0200;
@@ -379,6 +389,12 @@ function reading(slug,input,raw){
   const v0_mM=raw_val / 1000.0;
   y=round(1.0 / v0_mM, 2);
  }
+ if(slug==='clock-reaction-landolt-iodate-sulfite'){
+  const io3=Number(input);
+  const raw_val=Number(raw);
+  x=io3;
+  y=round(1.0 / raw_val, 4);
+ }
  if(slug==='second-order-saponification-conductivity'){
   const t=Number(input);
   const raw_val=Number(raw);
@@ -582,6 +598,12 @@ function estimate(slug,f){
   const KM=f.m / f.b;
   const se=Math.abs(f.slopeSE / f.b);
   return {value:KM,se:se,reference:0.500};
+ }
+ if(slug==='clock-reaction-landolt-iodate-sulfite'){
+  const k_prime=f.m;
+  const k_val=k_prime * 1000.0;
+  const se=f.slopeSE * 1000.0;
+  return {value:k_val,se:se,reference:5.000};
  }
  if(slug==='second-order-saponification-conductivity'){
   const slope= f.m;
