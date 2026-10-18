@@ -1,0 +1,7 @@
+experiment,dispensed_volume_mL,net_mass_g,x_metric,fitted_mass_g,residual_g
+three-component-liquid-liquid-ternary-phase,0.2,2.0000,0.2000,0.5000,0.0000
+three-component-liquid-liquid-ternary-phase,0.4,7.2000,0.4000,0.9000,0.0000
+three-component-liquid-liquid-ternary-phase,0.6,15.6000,0.6000,1.3000,0.0000
+three-component-liquid-liquid-ternary-phase,0.8,27.2000,0.8000,1.7000,0.0000
+three-component-liquid-liquid-ternary-phase,1.0,42.0000,1.0000,2.1000,0.0000
+three-component-liquid-liquid-ternary-phase,1.2,60.0000,1.2000,2.5000,0.0000

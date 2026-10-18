@@ -1,0 +1,8 @@
+experiment,key_length_n,key_comparisons,x_metric,fitted_comparisons,residual
+trie-prefix-trees,4,5,4.0000,5.0000,0.0000
+trie-prefix-trees,8,9,8.0000,9.0000,0.0000
+trie-prefix-trees,12,13,12.0000,13.0000,0.0000
+trie-prefix-trees,16,17,16.0000,17.0000,0.0000
+trie-prefix-trees,24,25,24.0000,25.0000,0.0000
+trie-prefix-trees,32,33,32.0000,33.0000,0.0000
+trie-prefix-trees,48,49,48.0000,49.0000,0.0000

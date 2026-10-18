@@ -1,0 +1,8 @@
+experiment,item_count_n,key_comparisons,x_metric,fitted_comparisons,residual
+dynamic-programming-memoization,10,1000,10.0000,1000.0000,0.0000
+dynamic-programming-memoization,20,2000,20.0000,2000.0000,0.0000
+dynamic-programming-memoization,30,3000,30.0000,3000.0000,0.0000
+dynamic-programming-memoization,50,5000,50.0000,5000.0000,0.0000
+dynamic-programming-memoization,75,7500,75.0000,7500.0000,0.0000
+dynamic-programming-memoization,100,10000,100.0000,10000.0000,0.0000
+dynamic-programming-memoization,150,15000,150.0000,15000.0000,0.0000

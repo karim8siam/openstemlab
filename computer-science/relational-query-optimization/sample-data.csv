@@ -1,0 +1,8 @@
+experiment,cardinality_n,key_comparisons,x_metric,fitted_comparisons,residual
+relational-query-optimization,1000,2000,1000.0000,2000.0000,0.0000
+relational-query-optimization,2000,4000,2000.0000,4000.0000,0.0000
+relational-query-optimization,3000,6000,3000.0000,6000.0000,0.0000
+relational-query-optimization,4000,8000,4000.0000,8000.0000,0.0000
+relational-query-optimization,5000,10000,5000.0000,10000.0000,0.0000
+relational-query-optimization,6000,12000,6000.0000,12000.0000,0.0000
+relational-query-optimization,7000,14000,7000.0000,14000.0000,0.0000

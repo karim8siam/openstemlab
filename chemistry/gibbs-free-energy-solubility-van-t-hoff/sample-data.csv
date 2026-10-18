@@ -1,0 +1,7 @@
+experiment,dispensed_volume_mL,net_mass_g,x_metric,fitted_mass_g,residual_g
+gibbs-free-energy-solubility-van-t-hoff,30.0,3.3700,3.2987,-3.9547,-0.0015
+gibbs-free-energy-solubility-van-t-hoff,35.0,4.2700,3.2452,-3.2463,0.0002
+gibbs-free-energy-solubility-van-t-hoff,40.0,5.3700,3.1934,-2.5604,0.0020
+gibbs-free-energy-solubility-van-t-hoff,45.0,6.7000,3.1432,-1.8957,0.0011
+gibbs-free-energy-solubility-van-t-hoff,50.0,8.3000,3.0945,-1.2509,-0.0012
+gibbs-free-energy-solubility-van-t-hoff,55.0,10.2200,3.0474,-0.6273,-0.0006

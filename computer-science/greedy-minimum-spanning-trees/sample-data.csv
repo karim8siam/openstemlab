@@ -1,0 +1,8 @@
+experiment,vertex_count_n,key_comparisons,x_metric,fitted_comparisons,residual
+greedy-minimum-spanning-trees,50,400,50.0000,400.0000,0.0000
+greedy-minimum-spanning-trees,100,800,100.0000,800.0000,0.0000
+greedy-minimum-spanning-trees,200,1600,200.0000,1600.0000,0.0000
+greedy-minimum-spanning-trees,300,2400,300.0000,2400.0000,0.0000
+greedy-minimum-spanning-trees,500,4000,500.0000,4000.0000,0.0000
+greedy-minimum-spanning-trees,750,6000,750.0000,6000.0000,0.0000
+greedy-minimum-spanning-trees,1000,8000,1000.0000,8000.0000,0.0000

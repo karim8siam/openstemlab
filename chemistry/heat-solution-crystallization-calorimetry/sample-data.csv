@@ -1,0 +1,7 @@
+experiment,dispensed_volume_mL,net_mass_g,x_metric,fitted_mass_g,residual_g
+heat-solution-crystallization-calorimetry,2.0,1.5480,2.0000,1.5482,-0.0002
+heat-solution-crystallization-calorimetry,3.0,2.3220,3.0000,2.3220,-0.0000
+heat-solution-crystallization-calorimetry,4.0,3.0960,4.0000,3.0959,0.0001
+heat-solution-crystallization-calorimetry,5.0,3.8700,5.0000,3.8698,0.0002
+heat-solution-crystallization-calorimetry,6.0,4.6440,6.0000,4.6436,0.0004
+heat-solution-crystallization-calorimetry,7.0,5.4170,7.0000,5.4175,-0.0005

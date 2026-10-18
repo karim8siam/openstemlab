@@ -1,0 +1,7 @@
+experiment,dispensed_volume_mL,net_mass_g,x_metric,fitted_mass_g,residual_g
+limiting-reactant-precipitation,4.0,0.0934,4.0000,0.0934,0.0000
+limiting-reactant-precipitation,8.0,0.1867,8.0000,0.1867,-0.0000
+limiting-reactant-precipitation,12.0,0.2801,12.0000,0.2801,0.0000
+limiting-reactant-precipitation,16.0,0.3734,16.0000,0.3734,-0.0000
+limiting-reactant-precipitation,20.0,0.4668,20.0000,0.4668,0.0000
+limiting-reactant-precipitation,24.0,0.5601,24.0000,0.5601,-0.0000

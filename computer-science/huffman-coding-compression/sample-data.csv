@@ -1,0 +1,8 @@
+experiment,stream_length_n,key_comparisons,x_metric,fitted_comparisons,residual
+huffman-coding-compression,500,1314,500.0000,1314.0000,0.0000
+huffman-coding-compression,1000,2564,1000.0000,2564.0000,0.0000
+huffman-coding-compression,2000,5064,2000.0000,5064.0000,0.0000
+huffman-coding-compression,5000,12564,5000.0000,12564.0000,0.0000
+huffman-coding-compression,10000,25064,10000.0000,25064.0000,0.0000
+huffman-coding-compression,20000,50064,20000.0000,50064.0000,0.0000
+huffman-coding-compression,50000,125064,50000.0000,125064.0000,0.0000

@@ -1,0 +1,8 @@
+experiment,N_n,key_comparisons,x_metric,fitted_comparisons,residual
+fast-fourier-transform,64,192,384.0000,192.0000,0.0000
+fast-fourier-transform,128,448,896.0000,448.0000,0.0000
+fast-fourier-transform,256,1024,2048.0000,1024.0000,0.0000
+fast-fourier-transform,512,2304,4608.0000,2304.0000,0.0000
+fast-fourier-transform,1024,5120,10240.0000,5120.0000,0.0000
+fast-fourier-transform,2048,11264,22528.0000,11264.0000,0.0000
+fast-fourier-transform,4096,24576,49152.0000,24576.0000,0.0000

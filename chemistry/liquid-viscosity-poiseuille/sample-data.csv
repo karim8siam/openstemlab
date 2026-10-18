@@ -1,0 +1,7 @@
+experiment,dispensed_volume_mL,net_mass_g,x_metric,fitted_mass_g,residual_g
+liquid-viscosity-poiseuille,10.0,0.5990,10.0000,0.5992,-0.0002
+liquid-viscosity-poiseuille,15.0,0.8990,15.0000,0.8990,-0.0000
+liquid-viscosity-poiseuille,20.0,1.1990,20.0000,1.1988,0.0002
+liquid-viscosity-poiseuille,25.0,1.4990,25.0000,1.4986,0.0004
+liquid-viscosity-poiseuille,30.0,1.7980,30.0000,1.7983,-0.0003
+liquid-viscosity-poiseuille,35.0,2.0980,35.0000,2.0981,-0.0001

@@ -1,0 +1,7 @@
+experiment,dispensed_volume_mL,net_mass_g,x_metric,fitted_mass_g,residual_g
+vapor-pressure-liquid-clausius-clapeyron,30.0,12.3400,3.2987,2.5130,-0.0002
+vapor-pressure-liquid-clausius-clapeyron,40.0,20.1200,3.1934,3.0014,0.0003
+vapor-pressure-liquid-clausius-clapeyron,50.0,31.8200,3.0945,3.4602,-0.0001
+vapor-pressure-liquid-clausius-clapeyron,60.0,48.9500,3.0017,3.8907,0.0001
+vapor-pressure-liquid-clausius-clapeyron,70.0,73.4400,2.9142,4.2966,-0.0001
+vapor-pressure-liquid-clausius-clapeyron,78.0,99.9300,2.8478,4.6046,-0.0001

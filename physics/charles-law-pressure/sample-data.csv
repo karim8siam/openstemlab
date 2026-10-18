@@ -1,0 +1,6 @@
+dataset,input_°C,observed_kPa,x_SI,y_SI,fit_y_SI,residual_y_SI
+simulated_demo,0.0,101.33,0.0,101330.0,101326.0,4.0
+simulated_demo,20.0,108.74,20.0,108740.0,108744.0,-4.0
+simulated_demo,40.0,116.16,40.0,116160.0,116162.0,-2.0
+simulated_demo,60.0,123.58,60.0,123580.0,123580.0,0.0
+simulated_demo,80.0,131.0,80.0,131000.0,130998.0,2.0

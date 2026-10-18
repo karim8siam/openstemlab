@@ -1,0 +1,8 @@
+experiment,point_count_n,key_comparisons,x_metric,fitted_comparisons,residual
+computational-geometry-convex-hull,50,100,50.0000,100.0000,0.0000
+computational-geometry-convex-hull,100,200,100.0000,200.0000,0.0000
+computational-geometry-convex-hull,200,400,200.0000,400.0000,0.0000
+computational-geometry-convex-hull,500,1000,500.0000,1000.0000,0.0000
+computational-geometry-convex-hull,1000,2000,1000.0000,2000.0000,0.0000
+computational-geometry-convex-hull,2000,4000,2000.0000,4000.0000,0.0000
+computational-geometry-convex-hull,5000,10000,5000.0000,10000.0000,0.0000

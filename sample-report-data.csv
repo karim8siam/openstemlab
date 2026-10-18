@@ -1,0 +1,6 @@
+dataset,material,intensity_percent,wavelength_nm,frequency_Hz,last_nonzero_collector_V,last_nonzero_current_nA,first_zero_collector_V,stopping_potential_V,voltage_spacing_V
+simulated_demo,Sodium,50,500,599584915999999.875,-0.19,0.026132312,-0.20,0.20,0.01
+simulated_demo,Sodium,50,450,666205462222222.125,-0.47,0.001199450,-0.48,0.48,0.01
+simulated_demo,Sodium,50,400,749481144999999.875,-0.81,0.001220758,-0.82,0.82,0.01
+simulated_demo,Sodium,50,350,856549879999999.875,-1.26,0.000028244,-1.27,1.27,0.01
+simulated_demo,Sodium,50,300,999308193333333.250,-1.85,0.000015297,-1.86,1.86,0.01

@@ -1,0 +1,7 @@
+experiment,dispensed_volume_mL,net_mass_g,x_metric,fitted_mass_g,residual_g
+heat-capacity-ratio-gases-clement-desormes,15.0,4.2900,15.0000,4.2852,0.0048
+heat-capacity-ratio-gases-clement-desormes,20.0,5.7100,20.0000,5.7138,-0.0038
+heat-capacity-ratio-gases-clement-desormes,25.0,7.1400,25.0000,7.1424,-0.0024
+heat-capacity-ratio-gases-clement-desormes,30.0,8.5700,30.0000,8.5710,-0.0010
+heat-capacity-ratio-gases-clement-desormes,35.0,10.0000,35.0000,9.9995,0.0005
+heat-capacity-ratio-gases-clement-desormes,40.0,11.4300,40.0000,11.4281,0.0019

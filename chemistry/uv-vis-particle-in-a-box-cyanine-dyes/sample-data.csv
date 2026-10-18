@@ -1,0 +1,7 @@
+experiment,dispensed_volume_mL,net_mass_g,x_metric,fitted_mass_g,residual_g
+uv-vis-particle-in-a-box-cyanine-dyes,0.0,327.6300,5.1429,327.6292,0.0008
+uv-vis-particle-in-a-box-cyanine-dyes,1.0,453.0100,7.1111,453.0127,-0.0027
+uv-vis-particle-in-a-box-cyanine-dyes,2.0,579.1400,9.0909,579.1352,0.0048
+uv-vis-particle-in-a-box-cyanine-dyes,3.0,705.6500,11.0769,705.6526,-0.0026
+uv-vis-particle-in-a-box-cyanine-dyes,4.0,832.4100,13.0667,832.4121,-0.0021
+uv-vis-particle-in-a-box-cyanine-dyes,5.0,959.3200,15.0588,959.3181,0.0019
