@@ -5,3 +5,66 @@
 .lab-see-more-btn{padding:13px 32px;font-size:13px;font-weight:600;border-radius:6px;cursor:pointer;border:1px solid #cbd6bd;background:#fffef8;color:#314f38;box-shadow:0 1px 3px rgba(0,0,0,0.04);transition:all .2s ease}
 .lab-see-more-btn:hover{background:#314f38;color:#fffef8;border-color:#314f38;transform:translateY(-1px);box-shadow:0 3px 8px rgba(0,0,0,0.08)}
 .lab-see-more-btn:active{transform:translateY(0)}
+
+/* ==========================================================================
+   OPENSTEM UNIFIED INITIATIVE · ECOSYSTEM STYLES
+   ========================================================================== */
+
+.ecosystem-section{background:#0b1720;border:1px solid #19313e;border-radius:14px;padding:46px 40px;margin:50px 0;color:#e2e8f0;box-shadow:0 8px 30px rgba(0,0,0,0.12)}
+.ecosystem-header{max-width:760px;margin-bottom:32px}
+.ecosystem-header .eyebrow{color:#38bdf8;font-size:9.5px;letter-spacing:1.8px;font-weight:700;display:block;margin-bottom:12px}
+.ecosystem-header h2{color:#f8fafc;font-size:clamp(26px,2.8vw,34px);font-weight:700;letter-spacing:-1px;line-height:1.25;margin:0 0 14px}
+.ecosystem-header p{color:#94a3b8;font-size:13.5px;line-height:1.75;margin:0}
+
+.ecosystem-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.ecosystem-card{background:#101f2b;border:1px solid #1a3543;border-radius:12px;padding:26px 24px;display:flex;flex-direction:column;min-height:280px;transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}
+.ecosystem-card:hover{transform:translateY(-3px);border-color:#38bdf8;box-shadow:0 12px 30px -8px rgba(0,0,0,0.45)}
+
+.eco-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.eco-icon{font-size:26px;line-height:1}
+.eco-badge{display:inline-flex;align-items:center;gap:4px;font-size:8.5px;font-weight:700;padding:3.5px 9px;border-radius:9999px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.35);color:#34d399;letter-spacing:0.3px}
+.eco-badge.eco-badge-discord{background:rgba(99,102,241,0.16);border:1px solid rgba(99,102,241,0.45);color:#818cf8}
+
+.ecosystem-card h3{font-size:17px;font-weight:700;color:#f8fafc;font-family:'Manrope',Arial,sans-serif;letter-spacing:-0.4px;margin:0 0 12px;line-height:1.35}
+.ecosystem-card p{font-size:12px;color:#94a3b8;line-height:1.75;flex:1;margin:0}
+.eco-link{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:#38bdf8;margin-top:20px;text-decoration:none;transition:color .15s}
+.eco-link:hover{color:#7dd3fc;text-decoration:underline}
+
+/* Header companion navigation */
+.header-links .nav-companion{color:#435c4a;font-weight:600;transition:color .15s}
+.header-links .nav-companion:hover{color:#2e5c49}
+.header-links .nav-discord{display:inline-flex;align-items:center;gap:5px;background:rgba(88,101,242,0.08);border:1px solid rgba(88,101,242,0.32);color:#5865f2;font-weight:600;padding:6px 12px;border-radius:5px;transition:background .15s,color .15s}
+.header-links .nav-discord:hover{background:#5865f2;color:#fff}
+.discord-svg{display:inline-block;vertical-align:middle}
+
+/* Multi-column Global Footer */
+.site-footer{display:flex;flex-direction:column;border-top:1px solid var(--line);padding:45px 0 35px;color:#78866e;font-size:11px}
+.footer-columns{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:35px;margin-bottom:35px}
+.footer-col-brand .footer-logo{display:flex;align-items:center;gap:10px;font-family:'Manrope',Arial,sans-serif;font-size:21px;font-weight:800;letter-spacing:-1px;color:var(--ink);margin-bottom:12px}
+.footer-col-brand .footer-logo em{font-style:normal;color:var(--orange)}
+.footer-col-brand .footer-mission{font-size:11.5px;color:#6b7b65;line-height:1.75;max-width:320px;margin-bottom:16px}
+.footer-contact{font-size:10.5px;color:#78866e}
+.footer-contact span{display:block;margin-bottom:4px}
+.footer-email{color:var(--orange);font-weight:600;font-size:11.5px}
+.footer-email:hover{text-decoration:underline}
+.footer-col h4{font-family:'Manrope',Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:-0.2px;color:var(--ink);margin:0 0 14px}
+.footer-col nav{display:flex;flex-direction:column;gap:9px}
+.footer-col nav a{color:#6c7d66;transition:color .15s;font-size:11.5px}
+.footer-col nav a:hover{color:#2e5c49;text-decoration:underline}
+.footer-bottom{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:20px;font-size:10.5px;color:#85927c;flex-wrap:wrap;gap:12px}
+.footer-bottom-links{display:flex;gap:8px}
+.footer-bottom-links a{color:#6c7d66}
+.footer-bottom-links a:hover{color:var(--orange);text-decoration:underline}
+
+@media(max-width:1100px){
+  .ecosystem-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .footer-columns{grid-template-columns:1fr 1fr;gap:28px}
+}
+@media(max-width:700px){
+  .ecosystem-section{padding:30px 20px;margin:35px 0}
+  .ecosystem-grid{grid-template-columns:1fr;gap:14px}
+  .ecosystem-card{padding:20px;min-height:auto}
+  .footer-columns{grid-template-columns:1fr;gap:25px}
+  .footer-bottom{flex-direction:column;align-items:flex-start;gap:8px}
+}
+
