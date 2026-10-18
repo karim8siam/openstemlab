@@ -158,8 +158,8 @@
     "category": "Life & health",
     "practical_type": "Pharmaceutical analytical and formulation laboratories",
     "display_mode": "Wet lab",
-    "example_topics_json": "[\"Assay and calibration calculations\", \"Spectrophotometric concentration measurement\", \"Chromatographic separation interpretation\", \"Analytical accuracy and precision\"]",
-    "content_status": "planned"
+    "example_topics_json": "[\"Paracetamol tablet compression tensile strength\", \"Van 't Hoff aqueous dissolution enthalpy\", \"USP Apparatus II paddle dissolution rate\", \"UV-Vis spectrophotometric Beer-Lambert assay\", \"Limulus amebocyte lysate bacterial endotoxin\"]",
+    "content_status": "live"
   },
   {
     "slug": "veterinary-medicine",
@@ -167,8 +167,8 @@
     "category": "Life & health",
     "practical_type": "Veterinary diagnostic laboratory and clinical skills",
     "display_mode": "Diagnostic lab",
-    "example_topics_json": "[\"Virtual blood-film observation\", \"Urinalysis result interpretation\", \"Laboratory quality-control calculations\", \"Microscopic parasite identification\"]",
-    "content_status": "planned"
+    "example_topics_json": "[\"Canine microhematocrit packed cell volume\", \"McMaster chamber fecal nematode egg count\", \"Kirby-Bauer veterinary antibiotic disk diffusion\", \"Canine stifle cranial drawer laxity\", \"Equine synovial fluid mucin clot viscosity\"]",
+    "content_status": "live"
   },
   {
     "slug": "food-nutrition",

@@ -99,6 +99,14 @@ def run_audit(target_slugs=None, verbose=True):
         food_nutrition_configs = json.loads((ROOT / 'content/food_nutrition/experiments.json').read_text())
         for c in food_nutrition_configs: c['subject'] = 'food-nutrition'
         configs.extend(food_nutrition_configs)
+    if (ROOT / 'content/pharmacy_pharmaceutical_sciences/experiments.json').exists():
+        pharmacy_pharmaceutical_sciences_configs = json.loads((ROOT / 'content/pharmacy_pharmaceutical_sciences/experiments.json').read_text())
+        for c in pharmacy_pharmaceutical_sciences_configs: c['subject'] = 'pharmacy-pharmaceutical-sciences'
+        configs.extend(pharmacy_pharmaceutical_sciences_configs)
+    if (ROOT / 'content/veterinary_medicine/experiments.json').exists():
+        veterinary_medicine_configs = json.loads((ROOT / 'content/veterinary_medicine/experiments.json').read_text())
+        for c in veterinary_medicine_configs: c['subject'] = 'veterinary-medicine'
+        configs.extend(veterinary_medicine_configs)
     
     # Identify benchmarks vs new targets
     known_benchmarks = [
@@ -372,6 +380,16 @@ def run_audit(target_slugs=None, verbose=True):
     if (fs.existsSync('content/food_nutrition/experiments.json') && fs.existsSync('content/food_nutrition/models.js')) {
         foodNutritionModels = require('./content/food_nutrition/models.js');
         foodNutritionConfigs = JSON.parse(fs.readFileSync('content/food_nutrition/experiments.json', 'utf8'));
+    }
+    let pharmacyPharmaceuticalSciencesModels = null, pharmacyPharmaceuticalSciencesConfigs = [];
+    if (fs.existsSync('content/pharmacy_pharmaceutical_sciences/experiments.json') && fs.existsSync('content/pharmacy_pharmaceutical_sciences/models.js')) {
+        pharmacyPharmaceuticalSciencesModels = require('./content/pharmacy_pharmaceutical_sciences/models.js');
+        pharmacyPharmaceuticalSciencesConfigs = JSON.parse(fs.readFileSync('content/pharmacy_pharmaceutical_sciences/experiments.json', 'utf8'));
+    }
+    let veterinaryMedicineModels = null, veterinaryMedicineConfigs = [];
+    if (fs.existsSync('content/veterinary_medicine/experiments.json') && fs.existsSync('content/veterinary_medicine/models.js')) {
+        veterinaryMedicineModels = require('./content/veterinary_medicine/models.js');
+        veterinaryMedicineConfigs = JSON.parse(fs.readFileSync('content/veterinary_medicine/experiments.json', 'utf8'));
     }
     let errs = [];
     physConfigs.forEach(c => {
@@ -682,8 +700,36 @@ def run_audit(target_slugs=None, verbose=True):
             errs.push(c.slug + ': exception ' + e.message);
         }
     });
+    pharmacyPharmaceuticalSciencesConfigs.forEach(c => {
+        try {
+            const p = pharmacyPharmaceuticalSciencesModels.predict(c.slug, c.initial);
+            if (!p.valid) errs.push(c.slug + ': initial predict invalid');
+            const rows = c.samples.map(v => pharmacyPharmaceuticalSciencesModels.reading(c.slug, v, pharmacyPharmaceuticalSciencesModels.predict(c.slug, v).raw));
+            const fit = pharmacyPharmaceuticalSciencesModels.fit(rows);
+            if (!fit || fit.r2 < 0.999) errs.push(c.slug + ': r2 < 0.999 (' + (fit ? fit.r2 : 'null') + ')');
+            const est = pharmacyPharmaceuticalSciencesModels.estimate(c.slug, fit);
+            const diff = Math.abs(est.value - est.reference) / Math.abs(est.reference) * 100;
+            if (diff > 0.3) errs.push(c.slug + ': regression diff > 0.3% (' + diff.toFixed(4) + '%)');
+        } catch(e) {
+            errs.push(c.slug + ': exception ' + e.message);
+        }
+    });
+    veterinaryMedicineConfigs.forEach(c => {
+        try {
+            const p = veterinaryMedicineModels.predict(c.slug, c.initial);
+            if (!p.valid) errs.push(c.slug + ': initial predict invalid');
+            const rows = c.samples.map(v => veterinaryMedicineModels.reading(c.slug, v, veterinaryMedicineModels.predict(c.slug, v).raw));
+            const fit = veterinaryMedicineModels.fit(rows);
+            if (!fit || fit.r2 < 0.999) errs.push(c.slug + ': r2 < 0.999 (' + (fit ? fit.r2 : 'null') + ')');
+            const est = veterinaryMedicineModels.estimate(c.slug, fit);
+            const diff = Math.abs(est.value - est.reference) / Math.abs(est.reference) * 100;
+            if (diff > 0.3) errs.push(c.slug + ': regression diff > 0.3% (' + diff.toFixed(4) + '%)');
+        } catch(e) {
+            errs.push(c.slug + ': exception ' + e.message);
+        }
+    });
     if (errs.length) { console.error(JSON.stringify(errs)); process.exit(1); }
-    console.log('All ' + (physConfigs.length + csConfigs.length + chemConfigs.length + mathConfigs.length + statsConfigs.length + aeroConfigs.length + agriConfigs.length + biomedConfigs.length + chemengConfigs.length + civilConfigs.length + electricalConfigs.length + eceConfigs.length + mechanicalConfigs.length + textileConfigs.length + archaeologyConfigs.length + geographyConfigs.length + psychologyConfigs.length + agricultureForestryConfigs.length + basicMedicalSciencesConfigs.length + biologicalSciencesConfigs.length + dentistryOralHealthConfigs.length + foodNutritionConfigs.length) + ' experiment models passed validation.');
+    console.log('All ' + (physConfigs.length + csConfigs.length + chemConfigs.length + mathConfigs.length + statsConfigs.length + aeroConfigs.length + agriConfigs.length + biomedConfigs.length + chemengConfigs.length + civilConfigs.length + electricalConfigs.length + eceConfigs.length + mechanicalConfigs.length + textileConfigs.length + archaeologyConfigs.length + geographyConfigs.length + psychologyConfigs.length + agricultureForestryConfigs.length + basicMedicalSciencesConfigs.length + biologicalSciencesConfigs.length + dentistryOralHealthConfigs.length + foodNutritionConfigs.length + pharmacyPharmaceuticalSciencesConfigs.length + veterinaryMedicineConfigs.length) + ' experiment models passed validation.');
     """
     js_proc = subprocess.run(['node', '-e', js_test_code], cwd=ROOT, capture_output=True, text=True)
     if js_proc.returncode != 0:

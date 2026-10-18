@@ -47,6 +47,10 @@ def experiment_index(experiments):
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/dentistry_oral_health/experiments.json').read_text())})
  if (ROOT/'content/food_nutrition/experiments.json').exists():
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/food_nutrition/experiments.json').read_text())})
+ if (ROOT/'content/pharmacy_pharmaceutical_sciences/experiments.json').exists():
+  configs.update({c['slug']:c for c in json.loads((ROOT/'content/pharmacy_pharmaceutical_sciences/experiments.json').read_text())})
+ if (ROOT/'content/veterinary_medicine/experiments.json').exists():
+  configs.update({c['slug']:c for c in json.loads((ROOT/'content/veterinary_medicine/experiments.json').read_text())})
  index=[]
  aliases={'simple-pendulum':'gravity g oscillation bob string time period','bifilar-suspension':'rotation inertia rod oscillation strings','young-modulus':'youngs modulus elasticity stress strain wire stretching','stokes-viscosity':'stokes law fluid liquid sphere terminal velocity','convex-lens':'optics focal length lens image uv method','photoelectric-effect':'photon light planck constant stopping potential work function','ohms-law':'ohm ohms law current voltage resistor resistance circuit ammeter voltmeter','metre-bridge':'meter metre wheatstone bridge null galvanometer unknown resistance','rc-charging':'capacitor capacitance resistor rc charge time constant exponential','glass-slab':'refraction refractive index apparent real depth glass microscope','diffraction-grating':'diffraction interference grating spectrum wavelength laser light','hookes-law':'hooke hookes law spring constant stiffness elasticity elongation extension load force','density-measurement':'density mass volume archimedes copper displacement solid balance cylinder','vernier-micrometer':'vernier caliper micrometer screw gauge least count zero error pi circumference diameter length measurement metrology','friction-laws':'friction laws amontons coulomb sliding kinetic static normal force coefficient dynamometer','principle-of-moments':'principle moments torque center gravity lever parallel forces fulcrum meter rule rotational equilibrium balance steelyard','force-table':'force table concurrent forces vector addition resultant equilibrant components pulleys ring equilibrium parallelogram law','equilibrium-forces':'parallel forces non-concurrent rigid body equilibrium beam reactions dynamometers support moments translational rotational static equilibrium',
   'free-fall':'free fall acceleration gravity g spark timer drop tower kinematics uniformly accelerated motion plummet photogate',
@@ -821,7 +825,69 @@ def experiment_index(experiments):
     'emulsion-stability-centrifugal-creaming-index': 'food emulsion creaming stability centrifugation droplet flocculation oil-in-water surfactant turbidity phase separation',
     'thermal-death-time-d-value-bacterial-inactivation': 'thermal death time d value bacterial inactivation decimal reduction thermal processing pasteurization kinetics z value',
     'glycemic-index-in-vitro-starch-amylolysis': 'in vitro starch amylolysis glycemic index alpha amylase amyloglucosidase dns reducing sugars maltose digestion rate',
-    'dietary-energy-bomb-calorimetry-enthalpy': 'bomb calorimetry gross caloric energy heat of combustion benzoic acid parr oxygen bomb dewar water equivalent atwater'}
+    'dietary-energy-bomb-calorimetry-enthalpy': 'bomb calorimetry gross caloric energy heat of combustion benzoic acid parr oxygen bomb dewar water equivalent atwater',
+    'paracetamol-tablet-compression-force-tensile-strength': 'paracetamol tablet compression force diametral tensile fracture strength fell newton tablet press hardness porosity friability',
+    'benzoic-acid-aqueous-solubility-temperature-van-t-hoff': 'benzoic acid aqueous solubility temperature van t hoff dissolution enthalpy preformulation saturation thermodynamics spectrophotometry',
+    'drug-octanol-water-partition-coefficient-shake-flask': 'octanol water partition coefficient shake flask ibuprofen lipophilicity log p membrane permeation biopharmaceutics',
+    'usp-apparatus-2-paddle-dissolution-rate': 'usp apparatus 2 paddle dissolution rate release kinetics aspirin tablets simulated gastric fluid dissolution tester',
+    'sodium-lauryl-sulfate-micellization-conductometry': 'sodium lauryl sulfate sls critical micelle concentration cmc conductometry surfactant micellization specific conductivity',
+    'pharmaceutical-suspension-flocculation-zeta-potential': 'pharmaceutical suspension flocculation zeta potential electrophoretic mobility colloidal stability aluminum chloride dlvo theory',
+    'hydrophilic-polymer-matrix-swelling-erosion-kinetics': 'hydrophilic polymer matrix swelling erosion kinetics hpmc hypromellose gravimetric hydrogel controlled drug release',
+    'pharmaceutical-powder-flowability-carr-compressibility': 'pharmaceutical powder flowability carr compressibility index hausner ratio bulk tapped density graduated cylinder',
+    'uv-vis-spectrophotometric-paracetamol-beer-lambert': 'uv vis spectrophotometry paracetamol assay beer lambert law molar absorptivity quartz cuvette compendial quality',
+    'hplc-isocratic-separation-caffeine-paracetamol': 'hplc reversed phase isocratic separation caffeine paracetamol c18 column peak area retention time chromatography',
+    'non-aqueous-potentiometric-titration-weak-base': 'non aqueous potentiometric titration weak base ephedrine hydrochloride perchloric acid glacial acetic acid glass electrode',
+    'karl-fischer-coulometric-water-determination': 'karl fischer coulometric titration water determination moisture content generator electrode sulfur dioxide iodine assay',
+    'first-order-accelerated-chemical-stability-arrhenius': 'accelerated chemical stability arrhenius equation aspirin hydrolysis rate constant activation energy thermal degradation',
+    'gas-chromatography-residual-solvent-headspace': 'gas chromatography residual solvent headspace flame ionization detector fid methanol ethanol acetone flame ionization',
+    'fluorescence-spectroscopy-quinine-quantum-yield': 'fluorescence spectroscopy quinine sulfate quantum yield emission spectrofluorometer excitation emission fluorometry',
+    'potassium-permanganate-redox-titration-hydrogen-peroxide': 'potassium permanganate redox titration hydrogen peroxide volumetric assay self indicator endpoint manganese',
+    'one-compartment-intravenous-bolus-clearance': 'one compartment intravenous iv bolus elimination rate constant clearance elimination half life plasma concentration',
+    'plasma-protein-binding-equilibrium-dialysis': 'plasma protein binding equilibrium dialysis warfarin human serum albumin free fraction semipermeable membrane',
+    'in-vitro-transwell-caco-2-apparent-permeability': 'transwell caco 2 apparent permeability coefficient papp cell monolayer apical basolateral intestinal drug transport',
+    'hepatic-microsomal-cytochrome-p450-metabolism': 'hepatic microsomal cytochrome p450 cyp450 metabolism intrinsic clearance nadph regenerating system phase 1 oxidation',
+    'urinary-excretion-cumulative-pharmacokinetic-clearance': 'urinary drug excretion cumulative pharmacokinetic renal clearance fraction excreted unchanged rate constant',
+    'oral-bioavailability-area-under-curve-trapezoidal': 'oral bioavailability absolute bioavailability area under curve auc trapezoidal rule iv oral systemic exposure',
+    'drug-excipient-compatibility-differential-scanning-calorimetry': 'drug excipient compatibility differential scanning calorimetry dsc eutectic melting point thermal endotherm',
+    'topical-gel-in-vitro-franz-cell-skin-permeation': 'topical gel in vitro franz diffusion cell skin permeation steady state flux receptor medium silicone membrane',
+    'isolated-ileum-acetylcholine-graded-dose-response': 'isolated organ bath guinea pig ileum acetylcholine graded dose response ec50 agonist isometric transducer',
+    'scherer-schild-regression-competitive-antagonist-pa2': 'schild regression competitive antagonist pa2 atropine acetylcholine concentration ratio antagonist potency organ bath',
+    'bacterial-endotoxin-gel-clot-limulus-amebocyte-lysate': 'bacterial endotoxin gel clot limulus amebocyte lysate lal assay coagulogen lipopolysaccharide sterile pyrogen',
+    'heparin-anti-factor-xa-chromogenic-potency': 'heparin anti factor xa chromogenic assay antithrombin iii residual factor xa optical density anticoagulant',
+    'phytochemical-alkaloid-acid-base-gravimetric-extraction': 'phytochemical total alkaloid acid base liquid liquid extraction cinchona bark quinine gravimetric residue',
+    'folin-ciocalteu-herbal-flavonoid-antioxidant-spectrophotometry': 'ginkgo biloba total flavonoid glycosides aluminum chloride spectrophotometry quercetin equivalent herbal standardization',
+    'particulate-matter-light-obscuration-ophthalmic': 'sterile ophthalmic particulate matter light obscuration particle counter laser photodiode usp 788 subvisible particles',
+    'canine-microhematocrit-packed-cell-volume-refractometry': 'canine microhematocrit packed cell volume pcv total plasma protein refractometer capillary tube veterinary hematology',
+    'feline-complete-blood-count-hemocytometer-erythrocyte': 'feline complete blood count cbc hemocytometer erythrocyte count rbc red blood cells neubauer chamber',
+    'equine-peritoneal-fluid-refractometric-total-protein': 'equine peritoneal fluid refractometric total protein abdominocentesis colic transudate exudate goldberg refractometer',
+    'canine-urinalysis-refractometric-specific-gravity': 'canine urinalysis urine specific gravity usg optical refractometer renal concentrating capacity tubular function',
+    'veterinary-blood-gas-potentiometric-pco2-henderson-hasselbalch': 'veterinary blood gas potentiometric pco2 ph henderson hasselbalch severinghaus electrode respiratory acidosis alkalosis',
+    'avian-reptilian-natt-herrick-manual-thrombocyte-count': 'avian reptilian natt herrick manual thrombocyte count nucleated red cells hemocytometer exotic animal hematology',
+    'bovine-mastitis-california-mastitis-test-somatic-cell': 'bovine mastitis california mastitis test cmt paddle somatic cell count scc raw milk subclinical mastitis',
+    'canine-pancreatic-lipase-immunoreactivity-elisa': 'canine pancreatic lipase immunoreactivity cpli sandwich elisa pancreatitis canine acinar microplate reader',
+    'mcmaster-chamber-fecal-egg-count-nematode': 'mcmaster counting chamber fecal egg count fec strongyle nematode flotation sodium nitrate epb ruminant veterinary parasitology',
+    'baermann-technique-lungworm-larval-sedimentation': 'baermann apparatus technique lungworm dictyocaulus muellerius larval sedimentation warm water thermotropism hydrotropism',
+    'modified-knott-test-microfilariae-concentration': 'modified knott test microfilariae concentration dirofilaria immitis canine heartworm formalin methylene blue parasite',
+    'kirby-bauer-veterinary-antibiotic-zone-inhibition': 'kirby bauer veterinary disk diffusion antibiotic zone of inhibition mueller hinton agar clsi veterinary susceptibility',
+    'veterinary-bacterial-colony-cfu-serial-dilution': 'veterinary bacterial colony count cfu serial ten fold dilution spread plate agar clostridium staphylococcus',
+    'canine-parvovirus-fecal-antigen-lateral-flow': 'canine parvovirus fecal antigen lateral flow immunochromatographic strip strip reader capsid gold conjugate',
+    'bovine-brucellosis-rose-bengal-agglutination': 'bovine brucellosis rose bengal test rbt rapid plate agglutination brucella abortus antigen herd serology',
+    'equine-infectious-anemia-coggins-agar-gel-diffusion': 'equine infectious anemia eia coggins test agar gel immunodiffusion agid precipitin band lentivirus serology',
+    'veterinary-propofol-anesthetic-induction-dose-mac': 'veterinary propofol anesthetic induction dose righting reflex gabaa receptor syringe pump veterinary anesthesia',
+    'isoflurane-minimum-alveolar-concentration-mac-canine': 'isoflurane minimum alveolar concentration mac canine tail clamp vaporizer infrared gas analyzer veterinary anesthesia',
+    'veterinary-xylazine-alpha2-adrenergic-sedation-reversal': 'veterinary xylazine sedation alpha2 adrenergic agonist heart rate bradycardia atipamezole yohimbine reversal',
+    'canine-theobromine-chocolate-toxicity-toxicokinetics': 'canine theobromine chocolate toxicity toxicokinetics methylxanthine plasma concentration cardiac tachycardia toxicology',
+    'rodenticide-anticoagulant-prothrombin-time-prolongation': 'rodenticide anticoagulant second generation brodifacoum prothrombin time pt prolongation coagulometer vitamin k antagonism',
+    'organophosphate-toxicity-blood-cholinesterase-inhibition': 'organophosphate carbamate toxicity whole blood acetylcholinesterase ache inhibition ellman assay spectrophotometry',
+    'veterinary-nsaid-cyclooxygenase-inhibition-assay': 'veterinary nsaid meloxicam carprofen cyclooxygenase cox2 cox1 inhibition whole blood prostanoid elisa',
+    'feline-methimazole-hyperthyroidism-t4-radioimmunoassay': 'feline methimazole hyperthyroidism total thyroxine t4 competitive radioimmunoassay thyroid peroxidase tracer',
+    'bovine-rumen-fluid-volatile-fatty-acids-titration': 'bovine rumen fluid volatile fatty acids vfa steam distillation titration acetic propionic butyric ruminant nutrition',
+    'bovine-milk-progesterone-ovulation-timing-elisa': 'bovine raw milk progesterone ovulation timing luteal function estrus competitive elisa microplate reader',
+    'equine-semen-progressive-motility-computer-assisted': 'equine stallion semen progressive motility computer assisted sperm analysis casa heated stage artificial insemination',
+    'canine-electrocardiogram-mean-electrical-axis': 'canine electrocardiogram ecg mean electrical axis mea einthoven triangle lead i lead iii cardiac vector',
+    'veterinary-orthopedic-bone-plate-four-point-bending': 'veterinary orthopedic dynamic compression bone plate dcp four point bending structural flexural rigidity servohydraulic',
+    'equine-joint-synovial-fluid-mucin-clot-viscosity': 'equine joint synovial fluid mucin clot test ostwald capillary viscometer hyaluronic acid arthrocentesis osteoarthritis',
+    'canine-craniocaudal-stifle-drawer-joint-laxity': 'canine stifle cranial drawer laxity tibial translation anterior cruciate ligament rupture ccl tplo arthrometer'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):
@@ -887,6 +953,12 @@ def experiment_index(experiments):
   elif '/food-nutrition/' in exp.get('page_path',''):
    sub='food-nutrition'
    sub_name='Food & Nutrition'
+  elif '/pharmacy-pharmaceutical-sciences/' in exp.get('page_path',''):
+   sub='pharmacy-pharmaceutical-sciences'
+   sub_name='Pharmacy & Pharmaceutical Sciences'
+  elif '/veterinary-medicine/' in exp.get('page_path',''):
+   sub='veterinary-medicine'
+   sub_name='Veterinary Medicine'
   else:
    sub='physics'
    sub_name='Physics'
