@@ -19,6 +19,8 @@ def experiment_index(experiments):
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/agricultural/experiments.json').read_text())})
  if (ROOT/'content/biomedical/experiments.json').exists():
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/biomedical/experiments.json').read_text())})
+ if (ROOT/'content/chemeng/experiments.json').exists():
+  configs.update({c['slug']:c for c in json.loads((ROOT/'content/chemeng/experiments.json').read_text())})
  index=[]
  aliases={'simple-pendulum':'gravity g oscillation bob string time period','bifilar-suspension':'rotation inertia rod oscillation strings','young-modulus':'youngs modulus elasticity stress strain wire stretching','stokes-viscosity':'stokes law fluid liquid sphere terminal velocity','convex-lens':'optics focal length lens image uv method','photoelectric-effect':'photon light planck constant stopping potential work function','ohms-law':'ohm ohms law current voltage resistor resistance circuit ammeter voltmeter','metre-bridge':'meter metre wheatstone bridge null galvanometer unknown resistance','rc-charging':'capacitor capacitance resistor rc charge time constant exponential','glass-slab':'refraction refractive index apparent real depth glass microscope','diffraction-grating':'diffraction interference grating spectrum wavelength laser light','hookes-law':'hooke hookes law spring constant stiffness elasticity elongation extension load force','density-measurement':'density mass volume archimedes copper displacement solid balance cylinder','vernier-micrometer':'vernier caliper micrometer screw gauge least count zero error pi circumference diameter length measurement metrology','friction-laws':'friction laws amontons coulomb sliding kinetic static normal force coefficient dynamometer','principle-of-moments':'principle moments torque center gravity lever parallel forces fulcrum meter rule rotational equilibrium balance steelyard','force-table':'force table concurrent forces vector addition resultant equilibrant components pulleys ring equilibrium parallelogram law','equilibrium-forces':'parallel forces non-concurrent rigid body equilibrium beam reactions dynamometers support moments translational rotational static equilibrium',
   'free-fall':'free fall acceleration gravity g spark timer drop tower kinematics uniformly accelerated motion plummet photogate',
@@ -340,7 +342,53 @@ def experiment_index(experiments):
     'cardiac-pacemaker-pulse-generator-chronaxie-strength-duration': 'implantable cardiac pacemaker lapicque strength duration chronaxie rheobase pacing threshold capture',
     'external-defibrillator-rlc-damped-sinusoidal-pulse': 'external defibrillator rlc damped sinusoidal discharge transthoracic impedance ventricular fibrillation',
     'biphasic-functional-electrical-stimulator-charge-balance': 'biphasic functional electrical stimulation fes charge balance injection neuroprosthesis cathodic',
-    'hearing-aid-electroacoustic-frequency-response-gain': 'digital hearing aid electroacoustic 2 cc coupler sound pressure level gain ansi s3.22 wdrc'}
+    'hearing-aid-electroacoustic-frequency-response-gain': 'digital hearing aid electroacoustic 2 cc coupler sound pressure level gain ansi s3.22 wdrc',
+    'venturi-meter-bernoulli-discharge-coefficient': 'venturi meter bernoulli equation discharge coefficient throat differential pressure head manometer flow rate cd',
+    'orifice-meter-flow-metering-pressure-loss': 'orifice meter flow metering permanent pressure loss vena contracta discharge coefficient flange taps beta ratio',
+    'pipe-friction-factor-reynolds-moody-chart': 'pipe friction factor reynolds number moody chart darcy weisbach head loss relative roughness laminar turbulent',
+    'fluidized-bed-minimum-fluidization-ergun': 'fluidized bed minimum fluidization velocity ergun equation particulate fluidization bed expansion pressure drop voidage',
+    'packed-bed-pressure-drop-kozeny-carman': 'packed bed pressure drop kozeny carman equation interstitial velocity specific surface area porous media permeability',
+    'centrifugal-slurry-pump-characteristic-curves': 'centrifugal slurry pump characteristic head capacity curve shut off head bep hydraulic efficiency pump affinity',
+    'falling-film-viscometer-non-newtonian-power-law': 'falling film viscometer non newtonian power law ostwald de waele flow behavior index consistency rheology shear thinning',
+    'rotameter-calibration-variable-area-flowmeter': 'rotameter calibration variable area flowmeter float equilibrium drag force annular area flow coefficient metering',
+    'shell-and-tube-heat-exchanger-lmtd-effectiveness': 'shell and tube heat exchanger lmtd log mean temperature difference effectiveness ntu overall heat transfer coefficient u',
+    'concentric-pipe-heat-exchanger-countercurrent': 'concentric pipe double pipe heat exchanger counter current parallel flow thermal duty temperature profile heat recovery',
+    'plate-and-frame-heat-exchanger-thermal-efficiency': 'plate and frame heat exchanger thermal efficiency corrugated chevron plates overall heat transfer coefficient fouling compact',
+    'natural-and-forced-convection-finned-tube': 'natural and forced convection finned tube extended surface nusselt reynolds grashof heat transfer coefficient crossflow',
+    'thermal-conductivity-radial-steady-state-fourier': 'thermal conductivity radial heat conduction fourier law cylindrical coordinate steady state temperature gradient insulation',
+    'unsteady-state-transient-heat-conduction-lumped': 'unsteady state transient heat conduction lumped capacitance biot number thermal time constant quenching cooling curve',
+    'boiling-heat-transfer-nukiyama-curve': 'boiling heat transfer nukiyama boiling curve nucleate boiling critical heat flux film boiling pool boiling superheat',
+    'tubular-falling-film-evaporator-steam-economy': 'tubular falling film evaporator steam economy evaporation capacity single effect concentration vapor recompression',
+    'fractional-distillation-mccabe-thiele-reflux': 'fractional distillation mccabe thiele method reflux ratio operating lines q line minimum reflux tray efficiency azeotrope',
+    'gas-absorption-packed-column-mass-transfer-kga': 'gas absorption packed column volumetric mass transfer coefficient kga two film theory htu ntu henrys law co2 scrubbing',
+    'liquid-liquid-extraction-ternary-tie-lines': 'liquid liquid extraction ternary phase diagram tie lines distribution coefficient partition ratio raffinate extract plait point',
+    'batch-rotary-drum-vacuum-filtration-cake-resistance': 'batch rotary drum vacuum filtration ruth filtration equation specific cake resistance filter medium resistance leaf filter',
+    'solid-liquid-leaching-crosscurrent-stage-efficiency': 'solid liquid leaching solvent extraction crosscurrent multi stage washing efficiency underflow overflow recovery',
+    'adsorption-isotherm-activated-carbon-langmuir-freundlich': 'adsorption isotherm activated carbon langmuir freundlich monolayer capacity adsorption equilibrium breakthrough microporous',
+    'crossflow-membrane-ultrafiltration-gel-polarization': 'crossflow membrane ultrafiltration gel layer concentration polarization transmembrane pressure tmp permeate flux resistance',
+    'tray-dryer-drying-rate-curve-constant-falling-rate': 'tray dryer drying rate curve constant rate period falling rate period critical moisture content bound moisture psychrometry',
+    'continuous-stirred-tank-reactor-cstr-saponification': 'continuous stirred tank reactor cstr saponification reaction kinetics space time conversion backmix second order rate constant',
+    'plug-flow-tubular-reactor-pfr-residence-time': 'plug flow tubular reactor pfr residence time conversion profile isothermal integral reactor first order kinetics',
+    'reactors-in-series-cstr-cascade-conversion': 'reactors in series cstr cascade intermediate conversion tank volume optimization step transition chemical kinetics',
+    'residence-time-distribution-rtd-axial-dispersion': 'residence time distribution rtd tracer pulse stimulus response axial dispersion peclet number variance mean residence time',
+    'heterogeneous-catalytic-fixed-bed-thiele-modulus': 'heterogeneous catalytic fixed bed thiele modulus internal diffusion effectiveness factor weisz modulus pellet size',
+    'batch-isothermal-reactor-rate-constant-arrhenius': 'batch isothermal reactor reaction rate constant arrhenius equation activation energy pre exponential factor temperature dependency',
+    'aerated-bioreactor-oxygen-mass-transfer-kla': 'aerated stirred bioreactor oxygen volumetric mass transfer coefficient kla dynamic gassing out fermentation sparging tip speed',
+    'enzyme-membrane-reactor-continuous-biocatalysis': 'enzyme membrane reactor continuous biocatalysis lineweaver burk michaelis menten ultrafiltration enzyme retention turnover',
+    'vapor-liquid-equilibrium-vle-wilson-margules': 'vapor liquid equilibrium vle wilson margules activity coefficients thermodynamic consistency othmer still gibbs duhem',
+    'differential-scanning-calorimetry-dsc-glass-transition': 'differential scanning calorimetry dsc glass transition temperature tg heat capacity step polymer relaxation kinetics',
+    'bomb-calorimeter-heat-of-combustion-hydrocarbons': 'oxygen bomb calorimeter standard heat of combustion benzoic acid higher heating value regnault pfaundler energy equivalent',
+    'partial-molar-volume-binary-solution-dilatometry': 'partial molar volume apparent molar volume binary solution ethanol water dilatometry pycnometry excess volume contraction',
+    'solid-liquid-equilibrium-sle-eutectic-phase-diagram': 'solid liquid equilibrium sle binary eutectic phase diagram cooling curve liquidus freezing point depression schroder van laar',
+    'excess-enthalpy-of-mixing-isothermal-titration-calorimetry': 'excess enthalpy of mixing heat of mixing isothermal titration calorimetry itc redlich kister exothermic cross association',
+    'gas-solubility-henry-law-pressure-decay': 'gas solubility henrys law pressure decay isochoric autoclave carbon dioxide dissolution vapor liquid equilibrium',
+    'first-order-gravity-drained-tank-level-dynamics': 'gravity drained surge tank liquid level dynamics first order process transfer function time constant hydraulic resistance',
+    'two-tank-interacting-liquid-level-system': 'two tank interacting liquid level system second order overdamped dynamics coupled state space process gain inter tank resistance',
+    'feedback-pid-temperature-control-tuning-ziegler-nichols': 'feedback pid temperature control tuning ziegler nichols ultimate gain ultimate period closed loop frequency response stability',
+    'pneumatic-control-valve-flow-characteristic-hysteresis': 'pneumatic diaphragm globe control valve inherent flow characteristic linear trim stem packing hysteresis rangeability cv',
+    'feedforward-plus-feedback-ratio-flow-control': 'feedforward feedback ratio flow control stoichiometric stream blending wild stream disturbance rejection static mixer',
+    'continuous-crystallization-msmpr-crystal-size-distribution': 'continuous crystallization msmpr population balance crystal size distribution csd growth rate nucleation mccabe delta l',
+    'sedimentation-and-centrifugal-clarification-stokes': 'hindered sedimentation batch settling kynch zone settling velocity stokes law solids flux clarifier thickener coe clevenger'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):
@@ -364,6 +412,9 @@ def experiment_index(experiments):
   elif '/biomedical-engineering/' in exp.get('page_path',''):
    sub='biomedical-engineering'
    sub_name='Biomedical Engineering'
+  elif '/chemical-process-engineering/' in exp.get('page_path',''):
+   sub='chemical-process-engineering'
+   sub_name='Chemical & Process Engineering'
   else:
    sub='physics'
    sub_name='Physics'

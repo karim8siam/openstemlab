@@ -43,6 +43,10 @@ def run_audit(target_slugs=None, verbose=True):
         biomed_configs = json.loads((ROOT / 'content/biomedical/experiments.json').read_text())
         for c in biomed_configs: c['subject'] = 'biomedical-engineering'
         configs.extend(biomed_configs)
+    if (ROOT / 'content/chemeng/experiments.json').exists():
+        chemeng_configs = json.loads((ROOT / 'content/chemeng/experiments.json').read_text())
+        for c in chemeng_configs: c['subject'] = 'chemical-process-engineering'
+        configs.extend(chemeng_configs)
     
     # Identify benchmarks vs new targets
     known_benchmarks = [

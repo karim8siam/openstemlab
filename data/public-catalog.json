@@ -23,7 +23,7 @@
     "category": "Natural sciences",
     "practical_type": "hands-on",
     "display_mode": "Wet lab",
-    "example_topics_json": "[\"Acid–base titration and buffers\", \"Calorimetry and enthalpy changes\", \"Reaction kinetics\", \"Spectrophotometry and electrochemical cells\"]",
+    "example_topics_json": "[\"Acid\u2013base titration and buffers\", \"Calorimetry and enthalpy changes\", \"Reaction kinetics\", \"Spectrophotometry and electrochemical cells\"]",
     "content_status": "planned"
   },
   {
@@ -60,7 +60,7 @@
     "practical_type": "mixed",
     "display_mode": "Engineering lab",
     "example_topics_json": "[\"Venturi flow and Bernoulli balance\", \"Pump performance curve\", \"Forced-convection heat transfer\", \"Transient fin-temperature measurement\"]",
-    "content_status": "planned"
+    "content_status": "live"
   },
   {
     "slug": "textile-engineering",
