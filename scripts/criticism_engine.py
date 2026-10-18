@@ -31,6 +31,10 @@ def run_audit(target_slugs=None, verbose=True):
         stats_configs = json.loads((ROOT / 'content/stats/experiments.json').read_text())
         for c in stats_configs: c['subject'] = 'statistics-probability'
         configs.extend(stats_configs)
+    if (ROOT / 'content/aerospace/experiments.json').exists():
+        aero_configs = json.loads((ROOT / 'content/aerospace/experiments.json').read_text())
+        for c in aero_configs: c['subject'] = 'aerospace-aeronautical-engineering'
+        configs.extend(aero_configs)
     
     # Identify benchmarks vs new targets
     known_benchmarks = [
@@ -220,6 +224,11 @@ def run_audit(target_slugs=None, verbose=True):
         statsModels = require('./content/stats/models.js');
         statsConfigs = JSON.parse(fs.readFileSync('content/stats/experiments.json', 'utf8'));
     }
+    let aeroModels = null, aeroConfigs = [];
+    if (fs.existsSync('content/aerospace/experiments.json') && fs.existsSync('content/aerospace/models.js')) {
+        aeroModels = require('./content/aerospace/models.js');
+        aeroConfigs = JSON.parse(fs.readFileSync('content/aerospace/experiments.json', 'utf8'));
+    }
     let errs = [];
     physConfigs.forEach(c => {
         try {
@@ -291,8 +300,22 @@ def run_audit(target_slugs=None, verbose=True):
             errs.push(c.slug + ': exception ' + e.message);
         }
     });
+    aeroConfigs.forEach(c => {
+        try {
+            const p = aeroModels.predict(c.slug, c.initial);
+            if (!p.valid) errs.push(c.slug + ': initial predict invalid');
+            const rows = c.samples.map(v => aeroModels.reading(c.slug, v, aeroModels.predict(c.slug, v).raw));
+            const fit = aeroModels.fit(rows);
+            if (!fit || fit.r2 < 0.999) errs.push(c.slug + ': r2 < 0.999 (' + (fit ? fit.r2 : 'null') + ')');
+            const est = aeroModels.estimate(c.slug, fit);
+            const diff = Math.abs(est.value - est.reference) / Math.abs(est.reference) * 100;
+            if (diff > 0.3) errs.push(c.slug + ': regression diff > 0.3% (' + diff.toFixed(4) + '%)');
+        } catch(e) {
+            errs.push(c.slug + ': exception ' + e.message);
+        }
+    });
     if (errs.length) { console.error(JSON.stringify(errs)); process.exit(1); }
-    console.log('All ' + (physConfigs.length + csConfigs.length + chemConfigs.length + mathConfigs.length + statsConfigs.length) + ' experiment models passed validation.');
+    console.log('All ' + (physConfigs.length + csConfigs.length + chemConfigs.length + mathConfigs.length + statsConfigs.length + aeroConfigs.length) + ' experiment models passed validation.');
     """
     js_proc = subprocess.run(['node', '-e', js_test_code], cwd=ROOT, capture_output=True, text=True)
     if js_proc.returncode != 0:

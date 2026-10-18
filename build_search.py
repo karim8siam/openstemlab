@@ -13,6 +13,8 @@ def experiment_index(experiments):
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/math/experiments.json').read_text())})
  if (ROOT/'content/stats/experiments.json').exists():
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/stats/experiments.json').read_text())})
+ if (ROOT/'content/aerospace/experiments.json').exists():
+  configs.update({c['slug']:c for c in json.loads((ROOT/'content/aerospace/experiments.json').read_text())})
  index=[]
  aliases={'simple-pendulum':'gravity g oscillation bob string time period','bifilar-suspension':'rotation inertia rod oscillation strings','young-modulus':'youngs modulus elasticity stress strain wire stretching','stokes-viscosity':'stokes law fluid liquid sphere terminal velocity','convex-lens':'optics focal length lens image uv method','photoelectric-effect':'photon light planck constant stopping potential work function','ohms-law':'ohm ohms law current voltage resistor resistance circuit ammeter voltmeter','metre-bridge':'meter metre wheatstone bridge null galvanometer unknown resistance','rc-charging':'capacitor capacitance resistor rc charge time constant exponential','glass-slab':'refraction refractive index apparent real depth glass microscope','diffraction-grating':'diffraction interference grating spectrum wavelength laser light','hookes-law':'hooke hookes law spring constant stiffness elasticity elongation extension load force','density-measurement':'density mass volume archimedes copper displacement solid balance cylinder','vernier-micrometer':'vernier caliper micrometer screw gauge least count zero error pi circumference diameter length measurement metrology','friction-laws':'friction laws amontons coulomb sliding kinetic static normal force coefficient dynamometer','principle-of-moments':'principle moments torque center gravity lever parallel forces fulcrum meter rule rotational equilibrium balance steelyard','force-table':'force table concurrent forces vector addition resultant equilibrant components pulleys ring equilibrium parallelogram law','equilibrium-forces':'parallel forces non-concurrent rigid body equilibrium beam reactions dynamometers support moments translational rotational static equilibrium',
   'free-fall':'free fall acceleration gravity g spark timer drop tower kinematics uniformly accelerated motion plummet photogate',
@@ -208,7 +210,49 @@ def experiment_index(experiments):
     'metropolis-hastings-mcmc-sampling': 'metropolis hastings markov chain monte carlo mcmc posterior sampling acceptance probability proposal distribution burn in',
     'autoregressive-ar1-time-series-stationarity': 'autoregressive ar1 time series stationarity autocorrelation function acf yule walker lag pacf lag 1 dependence',
     'principal-component-analysis-covariance-svd': 'principal component analysis pca covariance matrix singular value decomposition svd dimensionality reduction eigenvectors eigenvalues',
-    'receiver-operating-characteristic-confusion-matrix': 'receiver operating characteristic roc curve confusion matrix sensitivity specificity precision recall auc classification metrics'}
+    'receiver-operating-characteristic-confusion-matrix': 'receiver operating characteristic roc curve confusion matrix sensitivity specificity precision recall auc classification metrics',
+    'wind-tunnel-calibration-dynamic-pressure': 'wind tunnel calibration pitot static tube manometer dynamic pressure dynamic head airspeed nozzle test section barometric density',
+    'symmetric-airfoil-pressure-distribution-naca0012': 'symmetric airfoil pressure distribution naca 0012 angle of attack chord pressure coefficient cp integration sectional lift coefficient multi tube manometer',
+    'cambered-airfoil-pitching-moment-naca4412': 'cambered airfoil pitching moment naca 4412 aerodynamic center quarter chord pitching moment coefficient zero lift angle of attack camber line',
+    'direct-force-balance-aerodynamic-polars': 'direct force balance aerodynamic polars lift drag polar drag coefficient zero lift parasite drag induced drag factor multi component load cell sting balance',
+    'boundary-layer-velocity-profile-flat-plate': 'boundary layer velocity profile flat plate blasius profile boundary layer thickness displacement thickness momentum thickness skin friction coefficient micromanometer traverse',
+    'wake-survey-momentum-deficit-profile-drag': 'wake survey momentum deficit profile drag pitot rake total head total pressure loss betz jones momentum integral wake deficit',
+    'finite-wing-aspect-ratio-induced-drag': 'finite wing aspect ratio induced drag downwash wingtip vortices prandtl lifting line theory oswald span efficiency factor lift curve slope elliptic loading',
+    'high-lift-trailing-edge-flap-deflection': 'high lift trailing edge flap deflection plain flap fowler slotted flap maximum lift coefficient stall angle camber increase pitch trim',
+    'boundary-layer-flow-separation-smoke-visualization': 'boundary layer flow separation smoke visualization adverse pressure gradient stall separation bubble streaklines smoke wire tufts separation point',
+    'circular-cylinder-crossflow-vortex-shedding': 'circular cylinder crossflow vortex shedding karman vortex street strouhal number shedding frequency hot wire anemometer subcritical reynolds number wake instability',
+    'converging-diverging-nozzle-mach-area-relation': 'converging diverging nozzle mach area relation de laval nozzle sonic throat supersonic expansion isentropic flow area ratio static pressure ratio',
+    'normal-shock-wave-jump-conditions': 'normal shock wave jump conditions rankine hugoniot relations supersonic pitot tube rayleigh pitot formula stagnation pressure loss entropy increase mach number',
+    'oblique-shock-theta-beta-mach-relation': 'oblique shock wave theta beta mach relation wedge flow shock angle deflection angle compression shock supersonic wave angle detached bow shock',
+    'prandtl-meyer-supersonic-expansion-fan': 'prandtl meyer supersonic expansion fan centered expansion wave turning angle mach angle isentropic flow expansion prandtl meyer function supersonic corner',
+    'supersonic-wind-tunnel-schlieren-optical-imaging': 'supersonic wind tunnel schlieren optical imaging knife edge z type mirror parabolic collimating mirror density gradient refractivity shock wave visualization',
+    'subsonic-compressibility-prandtl-glauert-rule': 'subsonic compressibility prandtl glauert rule compressibility correction critical mach number pressure coefficient velocity potential linearized compressible flow',
+    'transonic-critical-mach-number-drag-divergence': 'transonic flow critical mach number drag divergence mach number wave drag sonic boom shock stall local supersonic pocket buffet boundary',
+    'shock-tube-wave-propagation-incident-mach': 'shock tube wave propagation incident shock mach number piezoelectric pressure transducers diaphragm burst expansion fan contact discontinuity wave speed',
+    'standard-atmosphere-airspeed-calibration': 'standard atmosphere isa airspeed calibration indicated airspeed calibrated airspeed equivalent airspeed true airspeed altimeter pitot static lapse rate',
+    'steady-level-flight-power-required-curves': 'steady level flight power required curves thrust required thrust available minimum power velocity parasite induced power polar minimum drag speed',
+    'aircraft-rate-of-climb-flight-envelope': 'aircraft rate of climb flight envelope excess power climb angle service ceiling absolute ceiling best rate of climb vy best angle vx',
+    'longitudinal-static-stability-neutral-point': 'longitudinal static stability neutral point center of gravity margin static margin pitching moment slope downwash wing tail interaction stick fixed',
+    'elevator-control-power-stick-free-trim': 'elevator control power stick free trim elevator effectiveness control authority hinge moment trim tab floating angle stick force gradient',
+    'lateral-directional-weathercock-dihedral-effect': 'lateral directional stability weathercock stability dihedral effect yawing moment rolling moment sideslip angle vertical tail dihedral sweepback',
+    'longitudinal-dynamic-modes-phugoid-short-period': 'longitudinal dynamic modes phugoid short period natural frequency damping ratio state space pitch oscillation state matrix eigenvalues',
+    'lateral-directional-dynamic-modes-dutch-roll-spiral': 'lateral directional dynamic modes dutch roll spiral divergence roll subsidence coupled yaw roll lateral stability derivatives',
+    'propeller-momentum-blade-element-thrust-efficiency': 'propeller momentum blade element thrust propulsive efficiency advance ratio thrust coefficient power coefficient induced velocity actuator disk',
+    'gas-turbine-joule-brayton-thermodynamic-cycle': 'gas turbine joule brayton thermodynamic cycle compressor pressure ratio turbine inlet temperature thermal efficiency specific work isentropic efficiency enthalpy',
+    'turbofan-bypass-ratio-propulsive-efficiency': 'turbofan bypass ratio propulsive efficiency specific thrust core stream bypass stream specific fuel consumption sfc exhaust velocity',
+    'axial-compressor-cascade-diffusion-stall-margin': 'axial compressor cascade diffusion stall margin de haller number lieblein diffusion factor blade camber total pressure loss blade incidence stall boundary',
+    'ramjet-supersonic-inlet-rayleigh-heating': 'ramjet supersonic inlet rayleigh line heating heat addition thermal choking total temperature total pressure combustion chamber mach deceleration',
+    'solid-rocket-motor-grain-geometry-ballistics': 'solid rocket motor grain geometry ballistics saint robert vieille burn rate law pressure exponent chamber pressure thrust time trace neutral progressive regressive burning',
+    'liquid-rocket-thrust-chamber-characteristic-velocity': 'liquid rocket thrust chamber characteristic velocity c star thrust coefficient propellant mass flow stagnation chamber pressure injector c-star combustion efficiency',
+    'rocket-nozzle-altitude-compensation-flow-separation': 'rocket nozzle altitude compensation flow separation summerfield criterion overexpanded underexpanded oblique shock separation plume structure nozzle pressure ratio',
+    'unsymmetrical-bending-aircraft-wing-spars': 'unsymmetrical bending aircraft wing spars principal axes of inertia product of inertia spar beam flexural stresses neutral axis cantilever wing spar strain gauges',
+    'shear-center-determination-thin-walled-open-sections': 'shear center determination thin walled open sections c channel shear flow shear center offset twist free bending dial indicators flexural center',
+    'torsion-shear-flow-multi-cell-wing-boxes': 'torsion shear flow multi cell wing boxes bredt batho theory rate of twist internal shear webs torque cell twist stiffness structural box',
+    'euler-buckling-southwell-plot-aircraft-struts': 'euler buckling southwell plot aircraft struts critical buckling load initial imperfection column stability bifurcation pin ended strut deflection load',
+    'aeroelastic-torsional-divergence-wing-rigidity': 'aeroelastic torsional divergence wing torsional rigidity divergence dynamic pressure wing twist aerodynamic pitching moment structural stiffness aeroelastic stability',
+    'classical-two-degree-of-freedom-airfoil-flutter': 'classical two degree of freedom airfoil flutter pitch plunge flutter flutter speed critical frequency coalescence unsteady aerodynamics theodorsen aeroelastic flutter',
+    'keplerian-two-body-orbit-determination': 'keplerian two body orbit determination orbital mechanics vis viva equation semi major axis orbital period specific energy eccentricity periapsis apoapsis gravitational parameter',
+    'hohmann-transfer-interplanetary-orbital-maneuvers': 'hohmann transfer interplanetary orbital maneuvers coplanar transfer delta v delta v1 delta v2 transfer ellipse semi major axis orbital insertion orbital mechanics'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):
@@ -223,6 +267,9 @@ def experiment_index(experiments):
   elif '/statistics-probability/' in exp.get('page_path',''):
    sub='statistics-probability'
    sub_name='Statistics & Probability'
+  elif '/aerospace-aeronautical-engineering/' in exp.get('page_path',''):
+   sub='aerospace-aeronautical-engineering'
+   sub_name='Aerospace & Aeronautical Engineering'
   else:
    sub='physics'
    sub_name='Physics'
