@@ -23,7 +23,7 @@
     "category": "Natural sciences",
     "practical_type": "hands-on",
     "display_mode": "Wet lab",
-    "example_topics_json": "[\"Acid\u2013base titration and buffers\", \"Calorimetry and enthalpy changes\", \"Reaction kinetics\", \"Spectrophotometry and electrochemical cells\"]",
+    "example_topics_json": "[\"Acid–base titration and buffers\", \"Calorimetry and enthalpy changes\", \"Reaction kinetics\", \"Spectrophotometry and electrochemical cells\"]",
     "content_status": "planned"
   },
   {
@@ -51,7 +51,7 @@
     "practical_type": "mixed",
     "display_mode": "Engineering lab",
     "example_topics_json": "[\"Concrete slump and compressive-strength tests\", \"Aggregate sieve analysis\", \"Steel tensile testing\", \"Soil compaction and permeability\"]",
-    "content_status": "planned"
+    "content_status": "live"
   },
   {
     "slug": "chemical-process-engineering",

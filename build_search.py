@@ -21,6 +21,8 @@ def experiment_index(experiments):
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/biomedical/experiments.json').read_text())})
  if (ROOT/'content/chemeng/experiments.json').exists():
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/chemeng/experiments.json').read_text())})
+ if (ROOT/'content/civil/experiments.json').exists():
+  configs.update({c['slug']:c for c in json.loads((ROOT/'content/civil/experiments.json').read_text())})
  index=[]
  aliases={'simple-pendulum':'gravity g oscillation bob string time period','bifilar-suspension':'rotation inertia rod oscillation strings','young-modulus':'youngs modulus elasticity stress strain wire stretching','stokes-viscosity':'stokes law fluid liquid sphere terminal velocity','convex-lens':'optics focal length lens image uv method','photoelectric-effect':'photon light planck constant stopping potential work function','ohms-law':'ohm ohms law current voltage resistor resistance circuit ammeter voltmeter','metre-bridge':'meter metre wheatstone bridge null galvanometer unknown resistance','rc-charging':'capacitor capacitance resistor rc charge time constant exponential','glass-slab':'refraction refractive index apparent real depth glass microscope','diffraction-grating':'diffraction interference grating spectrum wavelength laser light','hookes-law':'hooke hookes law spring constant stiffness elasticity elongation extension load force','density-measurement':'density mass volume archimedes copper displacement solid balance cylinder','vernier-micrometer':'vernier caliper micrometer screw gauge least count zero error pi circumference diameter length measurement metrology','friction-laws':'friction laws amontons coulomb sliding kinetic static normal force coefficient dynamometer','principle-of-moments':'principle moments torque center gravity lever parallel forces fulcrum meter rule rotational equilibrium balance steelyard','force-table':'force table concurrent forces vector addition resultant equilibrant components pulleys ring equilibrium parallelogram law','equilibrium-forces':'parallel forces non-concurrent rigid body equilibrium beam reactions dynamometers support moments translational rotational static equilibrium',
   'free-fall':'free fall acceleration gravity g spark timer drop tower kinematics uniformly accelerated motion plummet photogate',
@@ -388,7 +390,57 @@ def experiment_index(experiments):
     'pneumatic-control-valve-flow-characteristic-hysteresis': 'pneumatic diaphragm globe control valve inherent flow characteristic linear trim stem packing hysteresis rangeability cv',
     'feedforward-plus-feedback-ratio-flow-control': 'feedforward feedback ratio flow control stoichiometric stream blending wild stream disturbance rejection static mixer',
     'continuous-crystallization-msmpr-crystal-size-distribution': 'continuous crystallization msmpr population balance crystal size distribution csd growth rate nucleation mccabe delta l',
-    'sedimentation-and-centrifugal-clarification-stokes': 'hindered sedimentation batch settling kynch zone settling velocity stokes law solids flux clarifier thickener coe clevenger'}
+    'sedimentation-and-centrifugal-clarification-stokes': 'hindered sedimentation batch settling kynch zone settling velocity stokes law solids flux clarifier thickener coe clevenger',
+    'concrete-slump-test-workability-abrams-cone': 'concrete slump test abrams cone workability fresh concrete consistency tamping rod slump loss astm c143',
+    'compressive-strength-concrete-cylinders-curing-age': 'compressive strength concrete cylinder crushing test curing age water cement ratio hydration maturity astm c39',
+    'flexural-tensile-strength-concrete-modulus-rupture': 'flexural tensile strength concrete beam modulus of rupture third point loading astm c78 four point bending',
+    'splitting-tensile-strength-concrete-brazilian-test': 'splitting tensile strength concrete cylinder brazilian test indirect tension diametral compression astm c496',
+    'sieve-analysis-fine-aggregate-fineness-modulus': 'sieve analysis fine aggregate sand fineness modulus gradation curve uniformity coefficient d10 d60 astm c136',
+    'specific-gravity-water-absorption-coarse-aggregate': 'specific gravity water absorption coarse aggregate gravel pycnometer relative density bulk dry saturated surface dry astm c127',
+    'setting-time-portland-cement-vicat-needle': 'setting time portland cement vicat needle initial set final set penetration hydration gypsum astm c191',
+    'standard-consistency-portland-cement-paste': 'standard consistency normal consistency portland cement paste vicat plunger depth penetration astm c187',
+    'soundness-of-cement-le-chatelier-autoclave-expansion': 'soundness cement le chatelier autoclave expansion free lime unslaked magnesia boiling water volume stability',
+    'tensile-testing-structural-mild-steel-rebar': 'tensile test structural mild steel rebar yield stress ultimate strength elongation young modulus necking stress strain astm a615',
+    'charpy-v-notch-impact-toughness-structural-steel': 'charpy v notch impact test toughness ductile brittle transition temperature pendulum energy absorption structural steel astm e23',
+    'brinell-and-rockwell-hardness-structural-alloys': 'brinell rockwell hardness test structural alloys indentation ball indenter diamond cone hardness number astm e10 e18',
+    'deflection-simply-supported-structural-beam': 'deflection simply supported beam point load dial gauge bending moment curvature flexural rigidity ei beam theory',
+    'maxwell-betti-reciprocal-deflection-theorem': 'maxwell betti reciprocal theorem deflection structural beam influence coefficients reciprocity elastic virtual work',
+    'euler-critical-buckling-load-structural-columns': 'euler critical buckling load column slenderness ratio effective length pin pinned fixed end conditions bifurcation instability',
+    'torsion-shear-modulus-solid-circular-shaft': 'torsion shear modulus solid circular shaft polar moment of inertia torque angle of twist polar section modulus',
+    'double-shear-bolted-structural-connections': 'double shear bolted connection structural steel lap joint shear strength bearing failure pin clevis tear out',
+    'photoelastic-stress-concentration-notched-plate': 'photoelasticity stress concentration factor notched plate polariscope isochromatic fringe order optical birefringence',
+    'standard-proctor-compaction-moisture-density': 'standard proctor compaction test optimum moisture content omc maximum dry density dry unit weight soil compaction curve astm d698',
+    'direct-shear-box-soil-friction-angle': 'direct shear box test soil shear strength internal friction angle cohesion mohr coulomb failure envelope shear stress astm d3080',
+    'constant-head-soil-permeability-darcy': 'constant head permeability test darcy law hydraulic conductivity sand discharge seepage velocity astm d2434',
+    'one-dimensional-consolidation-oedometer-test': 'one dimensional consolidation oedometer test void ratio compression index settlement coefficient of consolidation cv preconsolidation astm d2435',
+    'unconfined-compressive-strength-cohesive-soil': 'unconfined compressive strength ucs cohesive soil undrained shear strength qu cu clay stress strain axial load astm d2166',
+    'triaxial-consolidated-undrained-shear-test': 'triaxial test consolidated undrained cu shear test pore water pressure skempton parameter b effective stress path deviator stress mohr circle astm d4767',
+    'atterberg-limits-casagrande-liquid-limit': 'atterberg limits casagrande liquid limit plastic limit plasticity index blow count thread rolling soil classification uscs astm d4318',
+    'in-situ-field-density-sand-cone-method': 'in situ field density sand cone method dry density relative compaction ottawa sand calibration hole volume unit weight astm d1556',
+    'california-bearing-ratio-cbr-subgrade-soils': 'california bearing ratio cbr test subgrade soil penetration resistance piston load standard crushed stone pavement design astm d1883',
+    'flow-over-sharp-crested-rectangular-v-notch-weirs': 'flow sharp crested rectangular v notch weir discharge coefficient head open channel flow Francis equation notch discharge',
+    'hydraulic-jump-energy-dissipation-open-channel': 'hydraulic jump energy dissipation open channel flume froude number conjugate depths sequent depth head loss standing wave',
+    'manning-roughness-coefficient-open-tilting-flume': 'manning roughness coefficient open channel tilting flume flow depth bed slope wetted perimeter chezy gauckler manning',
+    'pipe-friction-darcy-weisbach-head-loss': 'pipe friction darcy weisbach head loss friction factor moody chart reynolds number pressure drop piezometer laminar turbulent',
+    'minor-losses-pipe-expansions-valves-fittings': 'minor losses pipe expansions contraction valves fittings loss coefficient k value resistance head loss differential manometer',
+    'jar-test-coagulation-flocculation-turbidity-removal': 'jar test coagulation flocculation turbidity removal alum dosage rapid mixing slow paddle floc settling jar test apparatus nephelometric',
+    'biochemical-oxygen-demand-bod5-depletion-kinetics': 'biochemical oxygen demand bod5 depletion kinetics dissolved oxygen do bottle incubation 20 celsius ultimate bod rate constant deoxygenation',
+    'total-suspended-solids-tss-gravimetric-filtration': 'total suspended solids tss gravimetric filtration glass fiber filter dried residue 105 celsius turbidity water quality tare weight',
+    'activated-sludge-sedimentation-sludge-volume-index': 'activated sludge sedimentation sludge volume index svi 30 minute settling mlss mixed liquor suspended solids clarifier bulking',
+    'los-angeles-abrasion-test-aggregate-degradation': 'los angeles abrasion test aggregate degradation steel balls rotating drum percent wear toughness impact degradation astm c131',
+    'aggregate-impact-and-crushing-value-ten-percent-fines': 'aggregate impact value aiv aggregate crushing value acv ten percent fines tfa shock load compaction resistance is 2386',
+    'marshall-stability-and-flow-asphalt-mixtures': 'marshall stability flow test asphalt concrete hot mix asphalt hma bituminous mixture load resistance flow value deformation astm d6927',
+    'bitumen-penetration-grade-test-standard-needle': 'bitumen penetration grade test standard needle 100g 5 seconds 25 celsius consistency binder grading astm d5',
+    'softening-point-bituminous-binders-ring-and-ball': 'softening point bituminous binders ring and ball apparatus steel ball glycerol water bath bitumen temperature susceptibility astm d36',
+    'ductility-testing-of-bituminous-paving-materials': 'ductility test bituminous paving material briquette mould elongation tensile thread water bath 25 celsius binder cohesion astm d113',
+    'pavement-skid-resistance-british-pendulum-tester': 'pavement skid resistance british pendulum tester bpn friction slider microtexture wet roadway safety astm e303',
+    'total-station-electronic-distance-measurement-edm': 'total station electronic distance measurement edm prism reflector phase shift carrier wave horizontal angle zenith vertical distance surveying',
+    'differential-leveling-two-peg-collimation-error': 'differential leveling two peg test collimation error dumpy level auto level backsight foresight line of sight adjustment benchmark elevation',
+    'closed-traverse-bowditch-compass-rule-adjustment': 'closed traverse survey bowditch compass rule adjustment latitude departure linear misclosure closing error coordinate adjustment',
+    'free-vibration-natural-frequency-shear-frame': 'free vibration natural frequency shear building frame single degree of freedom sdof logarithmic decrement damping ratio accelerometer mass stiffness',
+    'forced-vibration-resonance-shake-table-amplification': 'forced vibration resonance shake table dynamic amplification factor daf frequency response excitation harmonic base acceleration',
+    'ultrasonic-pulse-velocity-concrete-quality-upv': 'ultrasonic pulse velocity upv concrete quality non destructive testing ndt p wave travel time transducer concrete integrity astm c597',
+    'rebound-hammer-schmidt-concrete-compressive-strength': 'rebound hammer schmidt hammer concrete compressive strength non destructive testing ndt rebound number surface hardness calibration astm c805'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):
@@ -415,6 +467,9 @@ def experiment_index(experiments):
   elif '/chemical-process-engineering/' in exp.get('page_path',''):
    sub='chemical-process-engineering'
    sub_name='Chemical & Process Engineering'
+  elif '/civil-engineering/' in exp.get('page_path',''):
+   sub='civil-engineering'
+   sub_name='Civil Engineering'
   else:
    sub='physics'
    sub_name='Physics'

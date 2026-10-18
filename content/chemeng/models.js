@@ -70,51 +70,51 @@ function predict(slug, input){
   if (p.type === 'linear_prop') {
     const x = round(inp, 4);
     const y = round(p.slope * x, 4);
-    return { input: inp, raw: y, x: x, y: y };
+    return { valid: true, input: inp, raw: y, x: x, y: y };
   }
 
   if (p.type === 'linear_affine') {
     const x = round(inp, 4);
     const y = round(p.slope * x + (p.intercept || 0), 4);
-    return { input: inp, raw: y, x: x, y: y };
+    return { valid: true, input: inp, raw: y, x: x, y: y };
   }
 
   if (p.type === 'square_input') {
     const x = round(inp * inp, 4);
     const y = round(p.slope * x + (p.intercept || 0), 4);
-    return { input: inp, raw: y, x: x, y: y };
+    return { valid: true, input: inp, raw: y, x: x, y: y };
   }
 
   if (p.type === 'log_input') {
     const x = round(Math.log(inp), 4);
     const y = round(p.slope * x + (p.intercept || 0), 4);
-    return { input: inp, raw: y, x: x, y: y };
+    return { valid: true, input: inp, raw: y, x: x, y: y };
   }
 
   if (p.type === 'log_decay') {
     const x = round(inp, 4);
     const raw = round(Math.exp(-p.rate * x), 5);
     const y = round(-p.rate * x, 4);
-    return { input: inp, raw: raw, x: x, y: y };
+    return { valid: true, input: inp, raw: raw, x: x, y: y };
   }
 
   if (p.type === 'inverse_input') {
     const x = round(1.0 / inp, 4);
     const y = round(p.slope * x + (p.intercept || 0), 4);
-    return { input: inp, raw: y, x: x, y: y };
+    return { valid: true, input: inp, raw: y, x: x, y: y };
   }
 
   if (p.type === 'arrhenius_inv_t') {
     const absT = inp + 273.15;
     const x = round(1000.0 / absT, 4);
     const y = round(p.slope * x + (p.intercept || 0), 4);
-    return { input: inp, raw: y, x: x, y: y };
+    return { valid: true, input: inp, raw: y, x: x, y: y };
   }
 
   if (p.type === 'power_input') {
     const x = round(inp ** p.power, 4);
     const y = round(p.slope * x + (p.intercept || 0), 4);
-    return { input: inp, raw: y, x: x, y: y };
+    return { valid: true, input: inp, raw: y, x: x, y: y };
   }
 
   throw Error('Unknown parameter type: ' + p.type);

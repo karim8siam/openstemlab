@@ -47,6 +47,10 @@ def run_audit(target_slugs=None, verbose=True):
         chemeng_configs = json.loads((ROOT / 'content/chemeng/experiments.json').read_text())
         for c in chemeng_configs: c['subject'] = 'chemical-process-engineering'
         configs.extend(chemeng_configs)
+    if (ROOT / 'content/civil/experiments.json').exists():
+        civil_configs = json.loads((ROOT / 'content/civil/experiments.json').read_text())
+        for c in civil_configs: c['subject'] = 'civil-engineering'
+        configs.extend(civil_configs)
     
     # Identify benchmarks vs new targets
     known_benchmarks = [
@@ -251,6 +255,16 @@ def run_audit(target_slugs=None, verbose=True):
         biomedModels = require('./content/biomedical/models.js');
         biomedConfigs = JSON.parse(fs.readFileSync('content/biomedical/experiments.json', 'utf8'));
     }
+    let chemengModels = null, chemengConfigs = [];
+    if (fs.existsSync('content/chemeng/experiments.json') && fs.existsSync('content/chemeng/models.js')) {
+        chemengModels = require('./content/chemeng/models.js');
+        chemengConfigs = JSON.parse(fs.readFileSync('content/chemeng/experiments.json', 'utf8'));
+    }
+    let civilModels = null, civilConfigs = [];
+    if (fs.existsSync('content/civil/experiments.json') && fs.existsSync('content/civil/models.js')) {
+        civilModels = require('./content/civil/models.js');
+        civilConfigs = JSON.parse(fs.readFileSync('content/civil/experiments.json', 'utf8'));
+    }
     let errs = [];
     physConfigs.forEach(c => {
         try {
@@ -364,8 +378,36 @@ def run_audit(target_slugs=None, verbose=True):
             errs.push(c.slug + ': exception ' + e.message);
         }
     });
+    chemengConfigs.forEach(c => {
+        try {
+            const p = chemengModels.predict(c.slug, c.initial);
+            if (!p.valid) errs.push(c.slug + ': initial predict invalid');
+            const rows = c.samples.map(v => chemengModels.reading(c.slug, v, chemengModels.predict(c.slug, v).raw));
+            const fit = chemengModels.fit(rows);
+            if (!fit || fit.r2 < 0.999) errs.push(c.slug + ': r2 < 0.999 (' + (fit ? fit.r2 : 'null') + ')');
+            const est = chemengModels.estimate(c.slug, fit);
+            const diff = Math.abs(est.value - est.reference) / Math.abs(est.reference) * 100;
+            if (diff > 0.3) errs.push(c.slug + ': regression diff > 0.3% (' + diff.toFixed(4) + '%)');
+        } catch(e) {
+            errs.push(c.slug + ': exception ' + e.message);
+        }
+    });
+    civilConfigs.forEach(c => {
+        try {
+            const p = civilModels.predict(c.slug, c.initial);
+            if (!p.valid) errs.push(c.slug + ': initial predict invalid');
+            const rows = c.samples.map(v => civilModels.reading(c.slug, v, civilModels.predict(c.slug, v).raw));
+            const fit = civilModels.fit(rows);
+            if (!fit || fit.r2 < 0.999) errs.push(c.slug + ': r2 < 0.999 (' + (fit ? fit.r2 : 'null') + ')');
+            const est = civilModels.estimate(c.slug, fit);
+            const diff = Math.abs(est.value - est.reference) / Math.abs(est.reference) * 100;
+            if (diff > 0.3) errs.push(c.slug + ': regression diff > 0.3% (' + diff.toFixed(4) + '%)');
+        } catch(e) {
+            errs.push(c.slug + ': exception ' + e.message);
+        }
+    });
     if (errs.length) { console.error(JSON.stringify(errs)); process.exit(1); }
-    console.log('All ' + (physConfigs.length + csConfigs.length + chemConfigs.length + mathConfigs.length + statsConfigs.length + aeroConfigs.length + agriConfigs.length + biomedConfigs.length) + ' experiment models passed validation.');
+    console.log('All ' + (physConfigs.length + csConfigs.length + chemConfigs.length + mathConfigs.length + statsConfigs.length + aeroConfigs.length + agriConfigs.length + biomedConfigs.length + chemengConfigs.length + civilConfigs.length) + ' experiment models passed validation.');
     """
     js_proc = subprocess.run(['node', '-e', js_test_code], cwd=ROOT, capture_output=True, text=True)
     if js_proc.returncode != 0:
