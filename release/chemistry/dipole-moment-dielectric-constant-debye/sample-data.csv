@@ -1,0 +1,7 @@
+experiment,dispensed_volume_mL,net_mass_g,x_metric,fitted_mass_g,residual_g
+dipole-moment-dielectric-constant-debye,0.0,28.0650,0.0100,28.0649,0.0001
+dipole-moment-dielectric-constant-debye,0.0,28.6400,0.0200,28.6401,-0.0001
+dipole-moment-dielectric-constant-debye,0.0,29.5030,0.0350,29.5030,0.0000
+dipole-moment-dielectric-constant-debye,0.1,30.3660,0.0500,30.3659,0.0001
+dipole-moment-dielectric-constant-debye,0.1,31.5160,0.0700,31.5163,-0.0003
+dipole-moment-dielectric-constant-debye,0.1,32.6670,0.0900,32.6668,0.0002

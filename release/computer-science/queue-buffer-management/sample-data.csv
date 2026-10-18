@@ -1,0 +1,8 @@
+experiment,batch_size_n,key_comparisons,x_metric,fitted_comparisons,residual
+queue-buffer-management,256,16640,256.0000,16640.0000,0.0000
+queue-buffer-management,512,33024,512.0000,33024.0000,0.0000
+queue-buffer-management,1024,65792,1024.0000,65792.0000,0.0000
+queue-buffer-management,2048,131328,2048.0000,131328.0000,0.0000
+queue-buffer-management,4096,262400,4096.0000,262400.0000,0.0000
+queue-buffer-management,8192,524544,8192.0000,524544.0000,0.0000
+queue-buffer-management,16384,1048832,16384.0000,1048832.0000,0.0000

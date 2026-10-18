@@ -1,0 +1,7 @@
+experiment,dispensed_volume_mL,net_mass_g,x_metric,fitted_mass_g,residual_g
+hess-law-magnesium-calorimetry,0.1,4.2850,0.1000,4.2848,0.0002
+hess-law-magnesium-calorimetry,0.1,6.4270,0.1500,6.4270,0.0000
+hess-law-magnesium-calorimetry,0.2,8.5690,0.2000,8.5692,-0.0002
+hess-law-magnesium-calorimetry,0.2,10.7110,0.2500,10.7114,-0.0004
+hess-law-magnesium-calorimetry,0.3,12.8540,0.3000,12.8537,0.0003
+hess-law-magnesium-calorimetry,0.3,14.9960,0.3500,14.9959,0.0001

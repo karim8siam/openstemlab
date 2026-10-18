@@ -1,0 +1,7 @@
+experiment,dispensed_volume_mL,net_mass_g,x_metric,fitted_mass_g,residual_g
+isoelectric-point-amphoteric-amino-acids,5.0,5.3680,-0.6020,5.3680,0.0000
+isoelectric-point-amphoteric-amino-acids,7.5,5.6020,-0.3680,5.6020,0.0000
+isoelectric-point-amphoteric-amino-acids,10.0,5.7940,-0.1760,5.7940,0.0000
+isoelectric-point-amphoteric-amino-acids,12.5,5.9700,0.0000,5.9700,0.0000
+isoelectric-point-amphoteric-amino-acids,15.0,6.1460,0.1760,6.1460,0.0000
+isoelectric-point-amphoteric-amino-acids,17.5,6.3380,0.3680,6.3380,0.0000

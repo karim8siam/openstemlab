@@ -1,0 +1,8 @@
+experiment,array_size_n,key_comparisons,x_metric,fitted_comparisons,residual
+quadratic-sorting-algorithms,10,45,90.0000,45.0000,0.0000
+quadratic-sorting-algorithms,20,190,380.0000,190.0000,0.0000
+quadratic-sorting-algorithms,30,435,870.0000,435.0000,0.0000
+quadratic-sorting-algorithms,40,780,1560.0000,780.0000,0.0000
+quadratic-sorting-algorithms,50,1225,2450.0000,1225.0000,0.0000
+quadratic-sorting-algorithms,60,1770,3540.0000,1770.0000,0.0000
+quadratic-sorting-algorithms,70,2415,4830.0000,2415.0000,0.0000

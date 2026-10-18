@@ -1,0 +1,7 @@
+experiment,dispensed_volume_mL,net_mass_g,x_metric,fitted_mass_g,residual_g
+second-order-saponification-conductivity,3.0,4.0790,3.0000,69.8325,-0.0225
+second-order-saponification-conductivity,6.0,3.5800,6.0000,89.6309,-0.0309
+second-order-saponification-conductivity,10.0,3.1790,10.0000,116.0288,0.0112
+second-order-saponification-conductivity,15.0,2.8780,15.0000,149.0261,0.0239
+second-order-saponification-conductivity,20.0,2.6860,20.0000,182.0235,0.0765
+second-order-saponification-conductivity,30.0,2.4560,30.0000,248.0182,-0.0582

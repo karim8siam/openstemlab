@@ -4,11 +4,11 @@
 /create_catalog_db.py
 /package_outputs.py
 
-# Generated previews, production output and downloadable archives
+# Generated previews and outputs
 /dist/
-/release/
 /outputs/
 *.zip
+!/release/*.zip
 
 # Local hosting identity, credentials, environment and caches
 /.openai/

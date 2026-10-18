@@ -1,0 +1,8 @@
+experiment,queens_N_n,key_comparisons,x_metric,fitted_comparisons,residual
+backtracking-n-queens-sat,4,16,4.0000,16.0000,0.0000
+backtracking-n-queens-sat,6,24,6.0000,24.0000,0.0000
+backtracking-n-queens-sat,8,32,8.0000,32.0000,0.0000
+backtracking-n-queens-sat,10,40,10.0000,40.0000,0.0000
+backtracking-n-queens-sat,12,48,12.0000,48.0000,0.0000
+backtracking-n-queens-sat,14,56,14.0000,56.0000,0.0000
+backtracking-n-queens-sat,16,64,16.0000,64.0000,0.0000

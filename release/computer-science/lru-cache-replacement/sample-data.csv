@@ -1,0 +1,8 @@
+experiment,C_n,key_comparisons,x_metric,fitted_comparisons,residual
+lru-cache-replacement,4,24,4.0000,24.0000,0.0000
+lru-cache-replacement,8,48,8.0000,48.0000,0.0000
+lru-cache-replacement,12,72,12.0000,72.0000,0.0000
+lru-cache-replacement,16,96,16.0000,96.0000,0.0000
+lru-cache-replacement,20,120,20.0000,120.0000,0.0000
+lru-cache-replacement,24,144,24.0000,144.0000,0.0000
+lru-cache-replacement,28,168,28.0000,168.0000,0.0000

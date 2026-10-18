@@ -1,0 +1,7 @@
+experiment,dispensed_volume_mL,net_mass_g,x_metric,fitted_mass_g,residual_g
+polarography-dropping-mercury-ilkovic,0.2,1.2700,0.2000,1.2737,-0.0037
+polarography-dropping-mercury-ilkovic,0.5,3.1900,0.5000,3.1853,0.0047
+polarography-dropping-mercury-ilkovic,1.0,6.3700,1.0000,6.3713,-0.0013
+polarography-dropping-mercury-ilkovic,1.5,9.5600,1.5000,9.5573,0.0027
+polarography-dropping-mercury-ilkovic,2.0,12.7400,2.0000,12.7432,-0.0032
+polarography-dropping-mercury-ilkovic,2.5,15.9300,2.5000,15.9292,0.0008

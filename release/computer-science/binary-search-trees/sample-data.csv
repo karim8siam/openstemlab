@@ -1,0 +1,8 @@
+experiment,Key_Count_n,key_comparisons,x_metric,fitted_comparisons,residual
+binary-search-trees,64,7,6.0000,7.0000,0.0000
+binary-search-trees,128,8,7.0000,8.0000,0.0000
+binary-search-trees,256,9,8.0000,9.0000,0.0000
+binary-search-trees,512,10,9.0000,10.0000,0.0000
+binary-search-trees,1024,11,10.0000,11.0000,0.0000
+binary-search-trees,2048,12,11.0000,12.0000,0.0000
+binary-search-trees,4096,13,12.0000,13.0000,0.0000

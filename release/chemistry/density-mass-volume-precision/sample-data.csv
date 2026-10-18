@@ -1,0 +1,8 @@
+experiment,dispensed_volume_mL,net_mass_g,x_metric,fitted_mass_g,residual_g
+density-mass-volume-precision,5.0,4.9910,5.0000,4.9910,0.0000
+density-mass-volume-precision,10.0,9.9820,10.0000,9.9820,0.0000
+density-mass-volume-precision,15.0,14.9730,15.0000,14.9730,0.0000
+density-mass-volume-precision,20.0,19.9640,20.0000,19.9640,0.0000
+density-mass-volume-precision,25.0,24.9550,25.0000,24.9550,0.0000
+density-mass-volume-precision,30.0,29.9460,30.0000,29.9460,0.0000
+density-mass-volume-precision,35.0,34.9370,35.0000,34.9370,0.0000

@@ -1,0 +1,8 @@
+experiment,recursion_depth_n,key_comparisons,x_metric,fitted_comparisons,residual
+stack-adt-recursion,128,8320,128.0000,8320.0000,0.0000
+stack-adt-recursion,256,16512,256.0000,16512.0000,0.0000
+stack-adt-recursion,512,32896,512.0000,32896.0000,0.0000
+stack-adt-recursion,1024,65664,1024.0000,65664.0000,0.0000
+stack-adt-recursion,2048,131200,2048.0000,131200.0000,0.0000
+stack-adt-recursion,4096,262272,4096.0000,262272.0000,0.0000
+stack-adt-recursion,8192,524416,8192.0000,524416.0000,0.0000

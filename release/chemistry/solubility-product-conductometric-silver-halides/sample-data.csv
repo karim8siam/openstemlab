@@ -1,0 +1,7 @@
+experiment,dispensed_volume_mL,net_mass_g,x_metric,fitted_mass_g,residual_g
+solubility-product-conductometric-silver-halides,20.0,1.3520,3.4112,-22.9048,-0.0002
+solubility-product-conductometric-silver-halides,25.0,1.8900,3.3540,-22.4543,0.0003
+solubility-product-conductometric-silver-halides,30.0,2.5940,3.2987,-22.0187,-0.0003
+solubility-product-conductometric-silver-halides,35.0,3.5060,3.2452,-21.5972,0.0002
+solubility-product-conductometric-silver-halides,40.0,4.6720,3.1934,-21.1892,0.0002
+solubility-product-conductometric-silver-halides,45.0,6.1480,3.1432,-20.7938,-0.0002

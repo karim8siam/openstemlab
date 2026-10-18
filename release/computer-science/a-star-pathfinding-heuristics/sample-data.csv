@@ -1,0 +1,8 @@
+experiment,D_n,key_comparisons,x_metric,fitted_comparisons,residual
+a-star-pathfinding-heuristics,10,30,10.0000,30.0000,0.0000
+a-star-pathfinding-heuristics,20,60,20.0000,60.0000,0.0000
+a-star-pathfinding-heuristics,30,90,30.0000,90.0000,0.0000
+a-star-pathfinding-heuristics,40,120,40.0000,120.0000,0.0000
+a-star-pathfinding-heuristics,50,150,50.0000,150.0000,0.0000
+a-star-pathfinding-heuristics,60,180,60.0000,180.0000,0.0000
+a-star-pathfinding-heuristics,70,210,70.0000,210.0000,0.0000

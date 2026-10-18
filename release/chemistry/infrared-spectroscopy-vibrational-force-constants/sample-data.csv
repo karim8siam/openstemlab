@@ -1,0 +1,7 @@
+experiment,dispensed_volume_mL,net_mass_g,x_metric,fitted_mass_g,residual_g
+infrared-spectroscopy-vibrational-force-constants,1.0,2885.5930,1.0000,2885.5928,0.0002
+infrared-spectroscopy-vibrational-force-constants,2.0,2884.6710,4.0000,2884.6712,-0.0002
+infrared-spectroscopy-vibrational-force-constants,3.0,2883.1350,9.0000,2883.1352,-0.0002
+infrared-spectroscopy-vibrational-force-constants,4.0,2880.9850,16.0000,2880.9848,0.0002
+infrared-spectroscopy-vibrational-force-constants,5.0,2878.2200,25.0000,2878.2201,-0.0001
+infrared-spectroscopy-vibrational-force-constants,6.0,2874.8410,36.0000,2874.8409,0.0001

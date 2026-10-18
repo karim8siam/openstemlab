@@ -1,0 +1,7 @@
+experiment,dispensed_volume_mL,net_mass_g,x_metric,fitted_mass_g,residual_g
+clock-reaction-landolt-iodate-sulfite,4.0,50.0000,4.0000,0.0200,0.0000
+clock-reaction-landolt-iodate-sulfite,6.0,33.3300,6.0000,0.0300,0.0000
+clock-reaction-landolt-iodate-sulfite,8.0,25.0000,8.0000,0.0400,0.0000
+clock-reaction-landolt-iodate-sulfite,10.0,20.0000,10.0000,0.0500,0.0000
+clock-reaction-landolt-iodate-sulfite,14.0,14.2900,14.0000,0.0700,0.0000
+clock-reaction-landolt-iodate-sulfite,20.0,10.0000,20.0000,0.1000,0.0000

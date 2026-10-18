@@ -1,0 +1,7 @@
+dataset,input_V,observed_cm,x_SI,y_SI,fit_y_SI,residual_y_SI
+simulated_demo,0.4,20.0,0.2,0.4,0.4,0.0
+simulated_demo,0.65,32.5,0.325,0.65,0.65,0.0
+simulated_demo,0.9,45.0,0.45,0.9,0.9,0.0
+simulated_demo,1.0186,50.93,0.5093,1.0186,1.0186,0.0
+simulated_demo,1.25,62.5,0.625,1.25,1.25,0.0
+simulated_demo,1.5,75.0,0.75,1.5,1.5,0.0

@@ -1,0 +1,7 @@
+experiment,dispensed_volume_mL,net_mass_g,x_metric,fitted_mass_g,residual_g
+electrochemical-cell-thermodynamics-nernst,15.0,1101.1300,288.1500,1101.1324,-0.0024
+electrochemical-cell-thermodynamics-nernst,20.0,1100.5800,293.1500,1100.5761,0.0039
+electrochemical-cell-thermodynamics-nernst,25.0,1100.0200,298.1500,1100.0198,0.0002
+electrochemical-cell-thermodynamics-nernst,30.0,1099.4600,303.1500,1099.4635,-0.0035
+electrochemical-cell-thermodynamics-nernst,35.0,1098.9100,308.1500,1098.9072,0.0028
+electrochemical-cell-thermodynamics-nernst,40.0,1098.3500,313.1500,1098.3510,-0.0010

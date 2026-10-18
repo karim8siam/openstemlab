@@ -1,0 +1,8 @@
+experiment,text_length_n,key_comparisons,x_metric,fitted_comparisons,residual
+string-matching-automata,500,520,500.0000,520.0000,0.0000
+string-matching-automata,1000,1020,1000.0000,1020.0000,0.0000
+string-matching-automata,2000,2020,2000.0000,2020.0000,0.0000
+string-matching-automata,4000,4020,4000.0000,4020.0000,0.0000
+string-matching-automata,6000,6020,6000.0000,6020.0000,0.0000
+string-matching-automata,8000,8020,8000.0000,8020.0000,0.0000
+string-matching-automata,10000,10020,10000.0000,10020.0000,0.0000

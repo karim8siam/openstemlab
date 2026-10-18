@@ -1,0 +1,7 @@
+experiment,dispensed_volume_mL,net_mass_g,x_metric,fitted_mass_g,residual_g
+potentiometric-redox-titration-fe-ce,5.0,644.3600,-1.3863,644.3659,-0.0059
+potentiometric-redox-titration-fe-ce,8.0,660.6200,-0.7538,660.6236,-0.0036
+potentiometric-redox-titration-fe-ce,10.0,669.6200,-0.4055,669.5763,0.0437
+potentiometric-redox-titration-fe-ce,12.5,679.9900,0.0000,679.9993,-0.0093
+potentiometric-redox-titration-fe-ce,15.0,690.3800,0.4055,690.4222,-0.0422
+potentiometric-redox-titration-fe-ce,20.0,715.6500,1.3863,715.6327,0.0173

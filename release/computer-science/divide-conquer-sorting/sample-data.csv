@@ -1,0 +1,8 @@
+experiment,array_size_n,key_comparisons,x_metric,fitted_comparisons,residual
+divide-conquer-sorting,64,321,320.0000,321.0000,0.0000
+divide-conquer-sorting,128,769,768.0000,769.0000,0.0000
+divide-conquer-sorting,256,1793,1792.0000,1793.0000,0.0000
+divide-conquer-sorting,512,4097,4096.0000,4097.0000,0.0000
+divide-conquer-sorting,1024,9217,9216.0000,9217.0000,0.0000
+divide-conquer-sorting,2048,20481,20480.0000,20481.0000,0.0000
+divide-conquer-sorting,4096,45057,45056.0000,45057.0000,0.0000

@@ -1,0 +1,7 @@
+experiment,dispensed_volume_mL,net_mass_g,x_metric,fitted_mass_g,residual_g
+heterogeneous-catalysis-langmuir-hinshelwood,10.0,0.7139,0.1000,1.4002,0.0006
+heterogeneous-catalysis-langmuir-hinshelwood,15.0,0.9379,0.0667,1.0671,-0.0009
+heterogeneous-catalysis-langmuir-hinshelwood,25.0,1.2500,0.0400,0.8000,0.0000
+heterogeneous-catalysis-langmuir-hinshelwood,40.0,1.5392,0.0250,0.6499,-0.0002
+heterogeneous-catalysis-langmuir-hinshelwood,60.0,1.7638,0.0167,0.5668,0.0002
+heterogeneous-catalysis-langmuir-hinshelwood,100.0,1.9997,0.0100,0.4998,0.0003

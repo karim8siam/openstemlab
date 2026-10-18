@@ -1,0 +1,8 @@
+experiment,dispensed_volume_mL,net_mass_g,x_metric,fitted_mass_g,residual_g
+hydrate-stoichiometric-composition,1.5,0.5411,0.9589,0.5412,-0.0001
+hydrate-stoichiometric-composition,2.5,0.9019,1.5981,0.9019,0.0000
+hydrate-stoichiometric-composition,3.5,1.2627,2.2373,1.2626,0.0001
+hydrate-stoichiometric-composition,4.5,1.6234,2.8766,1.6234,-0.0000
+hydrate-stoichiometric-composition,5.5,1.9842,3.5158,1.9842,0.0000
+hydrate-stoichiometric-composition,6.5,2.3449,4.1551,2.3450,-0.0001
+hydrate-stoichiometric-composition,7.5,2.7057,4.7943,2.7057,0.0000

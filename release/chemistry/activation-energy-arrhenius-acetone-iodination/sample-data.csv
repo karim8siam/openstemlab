@@ -1,0 +1,7 @@
+experiment,dispensed_volume_mL,net_mass_g,x_metric,fitted_mass_g,residual_g
+activation-energy-arrhenius-acetone-iodination,20.0,127.4400,3.4112,-11.0622,-0.0001
+activation-energy-arrhenius-acetone-iodination,25.0,71.4300,3.3540,-10.4832,-0.0001
+activation-energy-arrhenius-acetone-iodination,30.0,40.8100,3.2987,-9.9235,-0.0000
+activation-energy-arrhenius-acetone-iodination,35.0,23.7400,3.2452,-9.3820,0.0002
+activation-energy-arrhenius-acetone-iodination,40.0,14.0500,3.1934,-8.8577,0.0005
+activation-energy-arrhenius-acetone-iodination,45.0,8.4600,3.1432,-8.3495,-0.0005

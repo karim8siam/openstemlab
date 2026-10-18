@@ -1,0 +1,7 @@
+experiment,dispensed_volume_mL,net_mass_g,x_metric,fitted_mass_g,residual_g
+conductometric-titration-strong-weak-acids,1.0,4.8000,1.0000,4.8471,0.0029
+conductometric-titration-strong-weak-acids,2.5,4.2100,2.5000,4.3143,-0.0043
+conductometric-titration-strong-weak-acids,4.0,3.6300,4.0000,3.7814,-0.0014
+conductometric-titration-strong-weak-acids,5.5,3.0800,5.5000,3.2486,0.0014
+conductometric-titration-strong-weak-acids,7.0,2.5400,7.0000,2.7157,0.0043
+conductometric-titration-strong-weak-acids,8.5,2.0100,8.5000,2.1829,-0.0029

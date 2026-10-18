@@ -1,0 +1,8 @@
+experiment,node_count_n,key_comparisons,x_metric,fitted_comparisons,residual
+linked-list-architectures,128,4160,128.0000,4160.0000,0.0000
+linked-list-architectures,256,8256,256.0000,8256.0000,0.0000
+linked-list-architectures,512,16448,512.0000,16448.0000,0.0000
+linked-list-architectures,1024,32832,1024.0000,32832.0000,0.0000
+linked-list-architectures,2048,65600,2048.0000,65600.0000,0.0000
+linked-list-architectures,4096,131136,4096.0000,131136.0000,0.0000
+linked-list-architectures,8192,262208,8192.0000,262208.0000,0.0000

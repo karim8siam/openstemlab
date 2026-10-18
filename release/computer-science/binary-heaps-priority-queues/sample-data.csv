@@ -1,0 +1,8 @@
+experiment,Array_Size_n,key_comparisons,x_metric,fitted_comparisons,residual
+binary-heaps-priority-queues,64,116,58.0000,116.0000,0.0000
+binary-heaps-priority-queues,128,242,121.0000,242.0000,0.0000
+binary-heaps-priority-queues,256,496,248.0000,496.0000,0.0000
+binary-heaps-priority-queues,512,1006,503.0000,1006.0000,0.0000
+binary-heaps-priority-queues,1024,2028,1014.0000,2028.0000,0.0000
+binary-heaps-priority-queues,2048,4074,2037.0000,4074.0000,0.0000
+binary-heaps-priority-queues,4096,8168,4084.0000,8168.0000,0.0000

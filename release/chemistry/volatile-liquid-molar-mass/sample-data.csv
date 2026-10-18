@@ -1,0 +1,7 @@
+experiment,dispensed_volume_mL,net_mass_g,x_metric,fitted_mass_g,residual_g
+volatile-liquid-molar-mass,125.0,0.3436,125.0000,0.3436,0.0000
+volatile-liquid-molar-mass,175.0,0.4810,175.0000,0.4810,-0.0000
+volatile-liquid-molar-mass,225.0,0.6184,225.0000,0.6184,-0.0000
+volatile-liquid-molar-mass,275.0,0.7559,275.0000,0.7559,0.0000
+volatile-liquid-molar-mass,325.0,0.8933,325.0000,0.8933,0.0000
+volatile-liquid-molar-mass,375.0,1.0307,375.0000,1.0307,-0.0000

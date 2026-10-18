@@ -1,0 +1,7 @@
+experiment,dispensed_volume_mL,net_mass_g,x_metric,fitted_mass_g,residual_g
+transference-numbers-hittorf-moving-boundary,3.0,77.0500,3.0000,0.0770,0.0000
+transference-numbers-hittorf-moving-boundary,6.0,154.1000,6.0000,0.1541,0.0000
+transference-numbers-hittorf-moving-boundary,9.0,231.1400,9.0000,0.2311,-0.0000
+transference-numbers-hittorf-moving-boundary,12.0,308.1900,12.0000,0.3082,-0.0000
+transference-numbers-hittorf-moving-boundary,15.0,385.2400,15.0000,0.3852,0.0000
+transference-numbers-hittorf-moving-boundary,18.0,462.2900,18.0000,0.4623,0.0000
