@@ -23,11 +23,11 @@ python3 build.py --production
 
 Deploy the **contents of `release/`** over HTTPS with directory-index support and genuine 404 responses. `dist/` is a localhost preview with `noindex` directives and must not be deployed to production.
 
-The configured production origin is `https://openstemlab.online`, in `site-config.json`. Change this before deploying to another domain. Building does not configure DNS, hosting or Google Search Console.
+The configured production origin is `https://openstemlab.org`, in `site-config.json`. Change this before deploying to another domain. Building does not configure DNS, hosting or Google Search Console.
 
-The sitemap currently contains 36 canonical HTML pages: the homepage, experiment directory, Physics collection and three pages for each of eleven experiments. Planned department pages remain `noindex` and outside the sitemap. Search filtering does not generate indexable query URLs. Lessons and reports are rendered as crawlable HTML, with descriptive titles, canonical URLs and internal links.
+The sitemap currently contains 2,713 canonical HTML pages: the homepage, experiment directory, all 26 subject faculties, and three pages for each of 894 experiments. Planned department pages remain `noindex` and outside the sitemap. Search filtering does not generate indexable query URLs. Lessons and reports are rendered as crawlable HTML, with descriptive titles, canonical URLs and internal links.
 
-After public deployment, verify DNS/HTTPS and every canonical page, verify domain ownership in Google Search Console, and submit `https://openstemlab.online/sitemap.xml`. Submission does not guarantee indexing or rankings.
+After public deployment, verify DNS/HTTPS and every canonical page, verify domain ownership in Google Search Console, and submit `https://openstemlab.org/sitemap.xml`. Submission does not guarantee indexing or rankings.
 
 ## Physics experiments
 

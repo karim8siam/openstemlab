@@ -2,7 +2,7 @@
 
 The user prioritizes organic Google Search traffic. Preserve this requirement in all future work.
 
-- Production origin: https://openstemlab.online, configured in site-config.json. Domain selection is not evidence of domain ownership or deployment.
+- Production origin: https://openstemlab.org, configured in site-config.json. Domain selection is not evidence of domain ownership or deployment.
 - Follow Google's Search Essentials and official Search Central guidance. Prioritize useful, accurate student content, clear provenance and sources; avoid keyword stuffing, invented credentials and ranking guarantees.
 - Educational lessons and worked examples must have crawlable links, distinct descriptive titles, canonical URLs and actual HTML content readable without JavaScript.
 - Maintain sitemap.xml with absolute canonical production page URLs. Add new public indexable pages to the builder's pages registry. Exclude fragment states, private notebooks, exports and noncanonical duplicates. Do not invent lastmod dates.
