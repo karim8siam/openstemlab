@@ -15,6 +15,8 @@ def experiment_index(experiments):
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/stats/experiments.json').read_text())})
  if (ROOT/'content/aerospace/experiments.json').exists():
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/aerospace/experiments.json').read_text())})
+ if (ROOT/'content/agricultural/experiments.json').exists():
+  configs.update({c['slug']:c for c in json.loads((ROOT/'content/agricultural/experiments.json').read_text())})
  index=[]
  aliases={'simple-pendulum':'gravity g oscillation bob string time period','bifilar-suspension':'rotation inertia rod oscillation strings','young-modulus':'youngs modulus elasticity stress strain wire stretching','stokes-viscosity':'stokes law fluid liquid sphere terminal velocity','convex-lens':'optics focal length lens image uv method','photoelectric-effect':'photon light planck constant stopping potential work function','ohms-law':'ohm ohms law current voltage resistor resistance circuit ammeter voltmeter','metre-bridge':'meter metre wheatstone bridge null galvanometer unknown resistance','rc-charging':'capacitor capacitance resistor rc charge time constant exponential','glass-slab':'refraction refractive index apparent real depth glass microscope','diffraction-grating':'diffraction interference grating spectrum wavelength laser light','hookes-law':'hooke hookes law spring constant stiffness elasticity elongation extension load force','density-measurement':'density mass volume archimedes copper displacement solid balance cylinder','vernier-micrometer':'vernier caliper micrometer screw gauge least count zero error pi circumference diameter length measurement metrology','friction-laws':'friction laws amontons coulomb sliding kinetic static normal force coefficient dynamometer','principle-of-moments':'principle moments torque center gravity lever parallel forces fulcrum meter rule rotational equilibrium balance steelyard','force-table':'force table concurrent forces vector addition resultant equilibrant components pulleys ring equilibrium parallelogram law','equilibrium-forces':'parallel forces non-concurrent rigid body equilibrium beam reactions dynamometers support moments translational rotational static equilibrium',
   'free-fall':'free fall acceleration gravity g spark timer drop tower kinematics uniformly accelerated motion plummet photogate',
@@ -252,7 +254,49 @@ def experiment_index(experiments):
     'aeroelastic-torsional-divergence-wing-rigidity': 'aeroelastic torsional divergence wing torsional rigidity divergence dynamic pressure wing twist aerodynamic pitching moment structural stiffness aeroelastic stability',
     'classical-two-degree-of-freedom-airfoil-flutter': 'classical two degree of freedom airfoil flutter pitch plunge flutter flutter speed critical frequency coalescence unsteady aerodynamics theodorsen aeroelastic flutter',
     'keplerian-two-body-orbit-determination': 'keplerian two body orbit determination orbital mechanics vis viva equation semi major axis orbital period specific energy eccentricity periapsis apoapsis gravitational parameter',
-    'hohmann-transfer-interplanetary-orbital-maneuvers': 'hohmann transfer interplanetary orbital maneuvers coplanar transfer delta v delta v1 delta v2 transfer ellipse semi major axis orbital insertion orbital mechanics'}
+    'hohmann-transfer-interplanetary-orbital-maneuvers': 'hohmann transfer interplanetary orbital maneuvers coplanar transfer delta v delta v1 delta v2 transfer ellipse semi major axis orbital insertion orbital mechanics',
+    'tractor-drawbar-pull-tractive-efficiency': 'tractor drawbar pull wheel slip net traction tractive efficiency asabe dynamometer',
+    'moldboard-plow-draft-specific-resistance': 'moldboard plow draft specific soil resistance furrow area tillage gorjatschkin',
+    'disc-plow-side-draft-penetration': 'disc plow side draft soil penetration depth furrow tillage implement',
+    'rotary-tiller-rotor-torque-specific-energy': 'rotary tiller rotor torque specific energy pto shaft tines kinematics',
+    'fluted-roller-seed-drill-metering-calibration': 'fluted roller seed drill metering calibration mass discharge exposure length',
+    'precision-planter-seed-spacing-uniformity': 'precision planter seed spacing uniformity singulation forward travel speed',
+    'hydraulic-spray-nozzle-droplet-distribution': 'hydraulic spray nozzle droplet distribution atomization liquid pressure flow rate',
+    'reciprocating-cutterbar-knife-velocity-ratio': 'reciprocating cutterbar knife velocity ratio sickle bar cutting kinematics',
+    'axial-flow-threshing-cylinder-grain-separation': 'axial flow threshing cylinder grain separation rotor velocity concave clearance',
+    'combine-cleaning-shoe-aerodynamic-chaff-separation': 'combine cleaning shoe aerodynamic chaff separation fan airflow chaffer sieve',
+    'double-ring-infiltrometer-kostiakov-infiltration': 'double ring infiltrometer kostiakov infiltration cumulative water intake soil',
+    'constant-head-soil-hydraulic-conductivity': 'constant head soil hydraulic conductivity darcy velocity permeameter ksat',
+    'soil-moisture-retention-pf-curve': 'soil moisture retention pf curve matric suction volumetric water content tensiometer',
+    'parshall-flume-open-channel-flow-measurement': 'parshall flume open channel flow measurement upstream gauge head discharge',
+    'v-notch-sharp-crested-weir-discharge': 'v notch sharp crested weir discharge thomson weir head discharge coefficient',
+    'centrifugal-irrigation-pump-characteristic-curves': 'centrifugal irrigation pump characteristic curves affinity laws shutoff head rpm',
+    'drip-irrigation-emitter-discharge-uniformity': 'drip irrigation emitter discharge uniformity manufacturing variation pressure flow exponent',
+    'agricultural-sprinkler-christiansen-uniformity': 'agricultural sprinkler christiansen uniformity coefficient operating pressure catchment',
+    'rainfall-simulator-runoff-soil-loss-usle': 'rainfall simulator runoff soil loss usle erodibility index sediment yield',
+    'grain-moisture-content-oven-drying-method': 'grain moisture content oven drying method gravimetric dry basis mass loss',
+    'equilibrium-moisture-content-sorption-isotherms': 'equilibrium moisture content sorption isotherms henderson model relative humidity desiccant',
+    'thin-layer-grain-drying-kinetics-page-model': 'thin layer grain drying kinetics page model moisture ratio drying rate',
+    'air-grain-psychrometrics-drying-potential': 'air grain psychrometrics drying potential dry bulb temperature wet bulb evaporative capacity',
+    'aerodynamic-terminal-velocity-pneumatic-separation': 'aerodynamic terminal velocity pneumatic separation vertical air column drag coefficient',
+    'physical-gravimetric-properties-agricultural-grains': 'physical gravimetric properties agricultural grains bulk density true density pycnometer',
+    'grain-internal-friction-angle-of-repose': 'grain internal friction angle of repose funnel flow bulk handling cone slope',
+    'hammer-mill-size-reduction-rittinger-bond-laws': 'hammer mill size reduction rittinger bond laws grinding comminution energy screen',
+    'paddy-rubber-roll-husking-head-rice-yield': 'paddy rubber roll husking head rice yield roll speed differential dehusking',
+    'janssen-deep-bin-grain-pressure-distribution': 'janssen deep bin grain pressure distribution wall friction silo lateral vertical stress',
+    'greenhouse-thermal-heat-loss-overall-u-factor': 'greenhouse thermal heat loss overall u factor transmission glazing polythene',
+    'evaporative-cooling-pad-saturation-efficiency': 'evaporative cooling pad saturation efficiency water evaporation face air velocity wet pad',
+    'fruit-vegetable-respiration-heat-rate-cold-storage': 'fruit vegetable respiration heat rate cold storage carbon dioxide evolution ndir',
+    'livestock-housing-sensible-heat-balance-ventilation': 'livestock housing sensible heat balance minimum winter ventilation swine barn',
+    'agricultural-timber-roof-truss-load-deflection': 'agricultural timber roof truss load deflection fink truss whiffletree flexural compliance',
+    'anaerobic-digester-biogas-yield-methane-kinetics': 'anaerobic digester biogas yield mesophilic methane kinetics volatile solids cstr',
+    'cone-penetrometer-soil-strength-hardpan-profiling': 'cone penetrometer soil strength hardpan profiling asabe cone index compaction',
+    'bekker-theory-off-road-terramechanics-rigid-wheel-sinkage': 'bekker theory off road terramechanics rigid wheel sinkage bevameter plate',
+    'flat-plate-solar-air-collector-thermal-efficiency': 'flat plate solar air collector thermal efficiency hottel whillier bliss grain drying',
+    'downdraft-biomass-gasifier-cold-gas-efficiency': 'downdraft biomass gasifier cold gas efficiency syngas heating value equivalence ratio',
+    'vegetable-oil-biodiesel-transesterification-yield': 'vegetable oil biodiesel transesterification yield fame ester conversion molar ratio viscosity',
+    'solar-pv-submersible-water-pump-hydraulic-performance': 'solar pv submersible water pump hydraulic performance array power bldc mppt',
+    'variable-rate-precision-fertilizer-fluted-roller-kinetics': 'variable rate precision fertilizer fluted roller kinetics isobus stepper motor mass flow'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):
@@ -270,6 +314,9 @@ def experiment_index(experiments):
   elif '/aerospace-aeronautical-engineering/' in exp.get('page_path',''):
    sub='aerospace-aeronautical-engineering'
    sub_name='Aerospace & Aeronautical Engineering'
+  elif '/agricultural-engineering/' in exp.get('page_path',''):
+   sub='agricultural-engineering'
+   sub_name='Agricultural Engineering'
   else:
    sub='physics'
    sub_name='Physics'
