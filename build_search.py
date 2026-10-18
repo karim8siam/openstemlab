@@ -41,6 +41,8 @@ def experiment_index(experiments):
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/agriculture_forestry/experiments.json').read_text())})
  if (ROOT/'content/basic_medical_sciences/experiments.json').exists():
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/basic_medical_sciences/experiments.json').read_text())})
+ if (ROOT/'content/biological_sciences/experiments.json').exists():
+  configs.update({c['slug']:c for c in json.loads((ROOT/'content/biological_sciences/experiments.json').read_text())})
  index=[]
  aliases={'simple-pendulum':'gravity g oscillation bob string time period','bifilar-suspension':'rotation inertia rod oscillation strings','young-modulus':'youngs modulus elasticity stress strain wire stretching','stokes-viscosity':'stokes law fluid liquid sphere terminal velocity','convex-lens':'optics focal length lens image uv method','photoelectric-effect':'photon light planck constant stopping potential work function','ohms-law':'ohm ohms law current voltage resistor resistance circuit ammeter voltmeter','metre-bridge':'meter metre wheatstone bridge null galvanometer unknown resistance','rc-charging':'capacitor capacitance resistor rc charge time constant exponential','glass-slab':'refraction refractive index apparent real depth glass microscope','diffraction-grating':'diffraction interference grating spectrum wavelength laser light','hookes-law':'hooke hookes law spring constant stiffness elasticity elongation extension load force','density-measurement':'density mass volume archimedes copper displacement solid balance cylinder','vernier-micrometer':'vernier caliper micrometer screw gauge least count zero error pi circumference diameter length measurement metrology','friction-laws':'friction laws amontons coulomb sliding kinetic static normal force coefficient dynamometer','principle-of-moments':'principle moments torque center gravity lever parallel forces fulcrum meter rule rotational equilibrium balance steelyard','force-table':'force table concurrent forces vector addition resultant equilibrant components pulleys ring equilibrium parallelogram law','equilibrium-forces':'parallel forces non-concurrent rigid body equilibrium beam reactions dynamometers support moments translational rotational static equilibrium',
   'free-fall':'free fall acceleration gravity g spark timer drop tower kinematics uniformly accelerated motion plummet photogate',
@@ -743,7 +745,37 @@ def experiment_index(experiments):
     'pharmacokinetics-one-compartment-elimination-half-life': 'pharmacokinetics one compartment elimination half life ke t1/2 volume of distribution vd intravenous bolus',
     'antimicrobial-susceptibility-kirby-bauer-zone-diameter': 'antimicrobial susceptibility kirby bauer zone diameter agar disc diffusion mic antibiotic resistance mueller-hinton',
     'enzyme-kinetics-michaelis-menten-lineweaver-burk': 'enzyme kinetics michaelis menten lineweaver burk vmax km alkaline phosphatase double reciprocal plot',
-    'cardiac-glycoside-ouabain-na-k-atpase-inhibition': 'cardiac glycoside ouabain na k atpase inhibition ic50 sodium potassium pump myocardial membrane'}
+    'cardiac-glycoside-ouabain-na-k-atpase-inhibition': 'cardiac glycoside ouabain na k atpase inhibition ic50 sodium potassium pump myocardial membrane',
+    'microscope-micrometry-cell-size-calibration': 'microscope micrometry ocular reticle stage micrometer calibration calibration factor cell size allium epidermal cell morphometry',
+    'osmosis-dialysis-tubing-sucrose-water-potential': 'osmosis dialysis tubing sucrose concentration water potential solute potential semipermeable membrane van t hoff equilibrium osmolarity',
+    'plant-cell-plasmolysis-incipient-osmotic-pressure': 'plant cell plasmolysis incipient plasmolysis osmotic pressure rhoeo epidermal peel protoplast protoplasmic detachment hypertonic turgor',
+    'erythrocyte-hemolysis-solute-permeability-overton': 'erythrocyte hemolysis solute permeability overton rule partition coefficient spectrophotometer spectrophotometric lysis red blood cell lipid bilayer',
+    'mitotic-index-allium-cepa-cell-cycle-kinetics': 'mitotic index allium cepa onion root tip squashing feulgen aceto orcein cell cycle kinetics prophase metaphase anaphase telophase interphase',
+    'chloroplast-hill-reaction-dcip-photoreduction': 'chloroplast hill reaction dcip photoreduction electron transport thylakoid membrane spectrophotometry photosystem light-dependent water splitting',
+    'catalase-enzyme-kinetics-substrate-concentration': 'catalase enzyme kinetics substrate concentration hydrogen peroxide initial reaction rate michaelis menten oxygen evolution disk flotation',
+    'temperature-coefficient-q10-enzyme-catalysis': 'temperature coefficient q10 enzyme catalysis activation energy arrhenius thermal denaturation optimal temperature kinetic rate multiplier',
+    'ph-optimum-salivary-amylase-starch-digestion': 'ph optimum salivary amylase starch digestion maltose iodine test spectrophotometric starch-iodine colorimetry enzyme active site protonation',
+    'yeast-fermentation-rate-durham-tube-respirometry': 'yeast fermentation rate durham tube respirometry saccharomyces cerevisiae carbon dioxide evolution anaerobic glycolysis substrate utilization',
+    'cellular-respiration-germinating-seeds-respirometer': 'cellular respiration germinating seeds respirometer oxygen consumption potassium hydroxide carbon dioxide absorption metabolic rate pisum sativum',
+    'succinate-dehydrogenase-mitochondrial-electron-transport': 'succinate dehydrogenase mitochondrial electron transport complex ii dcip reduction malonate competitive inhibition krebs cycle oxidative phosphorylation',
+    'agarose-gel-electrophoresis-dna-fragment-migration': 'agarose gel electrophoresis dna fragment migration base pairs logarithmic mobility restriction digest ethidium bromide molecular ladder',
+    'spectrophotometric-dna-quantification-purity-ratio': 'spectrophotometric dna quantification purity ratio absorbance a260 a280 beer lambert law protein contamination nucleic acid concentration',
+    'bacterial-transformation-plasmid-competent-efficiency': 'bacterial transformation plasmid competent efficiency heat shock calcium chloride escherichia coli ampicillin selection colony forming units cfu',
+    'mendelian-dihybrid-cross-drosophila-chi-square': 'mendelian dihybrid cross drosophila chi square test goodness of fit independent assortment phenotypic ratio wild type vestigial sepia',
+    'polytene-chromosome-puff-transcription-mapping': 'polytene chromosome puff transcription mapping salivary gland chironomus drosophila ecdysone rna synthesis balbiani ring giant chromosome',
+    'pcr-amplification-cycle-efficiency-kinetics': 'pcr amplification cycle efficiency kinetics thermocycler primer annealing denaturation extension exponential amplification cycle threshold ct',
+    'bacterial-growth-curve-turbidimetric-spectrophotometry': 'bacterial growth curve turbidimetric spectrophotometry optical density od600 lag log exponential stationary death phase generation doubling time',
+    'serial-dilution-pour-plate-colony-forming-units': 'serial dilution pour plate colony forming units cfu microbial enumeration spread plate agar viable cell titer standard plate count',
+    'gram-staining-peptidoglycan-cell-wall-differentiation': 'gram staining peptidoglycan cell wall differentiation crystal violet iodine decolorization safranin positive negative bacterial taxonomy',
+    'bacteriophage-plaque-assay-titer-quantification': 'bacteriophage plaque assay titer quantification plaque forming units pfu lytic cycle serial dilution top agar lawn clearance double agar overlay',
+    'nitrogen-fixation-acetylene-reduction-rhizobium': 'nitrogen fixation acetylene reduction rhizobium gas chromatography nitrogenase ethylene leghemoglobin root nodule symbiotic fixation',
+    'bacterial-motility-soft-agar-chemotaxis-gradient': 'bacterial motility soft agar chemotaxis gradient flagellar swimming run and tumble attractant swarm plate ring expansion escherichia coli',
+    'photosynthetic-light-response-curve-light-saturation': 'photosynthetic light response curve light saturation photosynthetic photon flux density ppfd quantum yield light compensation point assimilation rate net co2',
+    'potometer-transpiration-rate-vpd-environmental-stress': 'potometer transpiration rate vpd vapor pressure deficit bubble potometer xylem water flux boundary layer resistance transpiration stream',
+    'stomata-density-conductance-carbon-dioxide-diffusion': 'stomata density conductance carbon dioxide diffusion nail polish epidermal impression stomatal frequency pore dimensions gas diffusion resistance',
+    'plant-pigment-rf-values-paper-chromatography': 'plant pigment rf values paper chromatography retention factor chlorophyll a chlorophyll b carotenoids xanthophylls solvent front petroleum ether acetone',
+    'seed-dormancy-gibberellic-acid-alpha-amylase-induction': 'seed dormancy gibberellic acid alpha amylase induction barley aleurone starch radial diffusion zone hormone signaling seed germination',
+    'plankton-primary-productivity-light-dark-bottle-winkler': 'plankton primary productivity light dark bottle winkler method dissolved oxygen gross net primary production respiration aquatic trophic dynamics'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):
@@ -800,6 +832,9 @@ def experiment_index(experiments):
   elif '/basic-medical-sciences/' in exp.get('page_path',''):
    sub='basic-medical-sciences'
    sub_name='Basic Medical Sciences'
+  elif '/biological-sciences/' in exp.get('page_path',''):
+   sub='biological-sciences'
+   sub_name='Biological Sciences'
   else:
    sub='physics'
    sub_name='Physics'

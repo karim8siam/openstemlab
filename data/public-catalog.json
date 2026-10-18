@@ -131,8 +131,8 @@
     "category": "Life & health",
     "practical_type": "Wet laboratory, microscopy and experimental biology",
     "display_mode": "Wet lab",
-    "example_topics_json": "[\"Microscope calibration and cell observation\", \"Enzyme activity versus conditions\", \"Osmosis and membrane transport\", \"Mitosis and meiosis observations\"]",
-    "content_status": "planned"
+    "example_topics_json": "[\"Microscope reticle calibration & cell sizing\", \"Catalase kinetics & substrate saturation\", \"Agarose gel DNA electrophoretic migration\", \"Bacterial growth curve & turbidimetry\", \"Photosynthetic light response curve & quantum yield\"]",
+    "content_status": "live"
   },
   {
     "slug": "basic-medical-sciences",
