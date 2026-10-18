@@ -32,8 +32,8 @@
     "category": "Engineering",
     "practical_type": "mixed",
     "display_mode": "Engineering lab",
-    "example_topics_json": "[\"Stress and strain measurement\", \"Free and forced vibration\", \"Heat-transfer measurement\", \"Fluid-flow measurement\"]",
-    "content_status": "planned"
+    "example_topics_json": "[\"Solid mechanics & materials testing\", \"Fluid mechanics & hydraulic machinery\", \"Thermodynamics & heat transfer\", \"Dynamics, kinematics & mechanical vibrations\", \"Machine design, tribology & metrology\", \"Mechatronics, controls & industrial HVAC\"]",
+    "content_status": "live"
   },
   {
     "slug": "electrical-electronics-engineering",

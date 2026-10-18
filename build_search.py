@@ -27,6 +27,8 @@ def experiment_index(experiments):
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/electrical/experiments.json').read_text())})
  if (ROOT/'content/ece/experiments.json').exists():
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/ece/experiments.json').read_text())})
+ if (ROOT/'content/mechanical/experiments.json').exists():
+  configs.update({c['slug']:c for c in json.loads((ROOT/'content/mechanical/experiments.json').read_text())})
  index=[]
  aliases={'simple-pendulum':'gravity g oscillation bob string time period','bifilar-suspension':'rotation inertia rod oscillation strings','young-modulus':'youngs modulus elasticity stress strain wire stretching','stokes-viscosity':'stokes law fluid liquid sphere terminal velocity','convex-lens':'optics focal length lens image uv method','photoelectric-effect':'photon light planck constant stopping potential work function','ohms-law':'ohm ohms law current voltage resistor resistance circuit ammeter voltmeter','metre-bridge':'meter metre wheatstone bridge null galvanometer unknown resistance','rc-charging':'capacitor capacitance resistor rc charge time constant exponential','glass-slab':'refraction refractive index apparent real depth glass microscope','diffraction-grating':'diffraction interference grating spectrum wavelength laser light','hookes-law':'hooke hookes law spring constant stiffness elasticity elongation extension load force','density-measurement':'density mass volume archimedes copper displacement solid balance cylinder','vernier-micrometer':'vernier caliper micrometer screw gauge least count zero error pi circumference diameter length measurement metrology','friction-laws':'friction laws amontons coulomb sliding kinetic static normal force coefficient dynamometer','principle-of-moments':'principle moments torque center gravity lever parallel forces fulcrum meter rule rotational equilibrium balance steelyard','force-table':'force table concurrent forces vector addition resultant equilibrant components pulleys ring equilibrium parallelogram law','equilibrium-forces':'parallel forces non-concurrent rigid body equilibrium beam reactions dynamometers support moments translational rotational static equilibrium',
   'free-fall':'free fall acceleration gravity g spark timer drop tower kinematics uniformly accelerated motion plummet photogate',
@@ -524,7 +526,58 @@ def experiment_index(experiments):
     'finite-impulse-response-fir-digital-filter-design-window-method': 'finite impulse response fir digital filter window method kaiser stopband attenuation transition width',
     'infinite-impulse-response-iir-bilinear-transformation-filter': 'infinite impulse response iir bilinear transformation bzt butterworth pre warping frequency digital filter',
     'direct-sequence-spread-spectrum-dsss-processing-gain': 'direct sequence spread spectrum dsss processing gain gold code chipping rate jamming margin cdma',
-    'shannon-hartley-channel-capacity-and-entropy-limits': 'shannon hartley channel capacity entropy limits awgn bandwidth snr trade off bps hz'}
+    'shannon-hartley-channel-capacity-and-entropy-limits': 'shannon hartley channel capacity entropy limits awgn bandwidth snr trade off bps hz',
+    'tensile-test-ductile-materials-young-modulus': 'tensile test ductile materials young modulus universal testing machine utm mild steel stress strain yield strength hooke necking fracture',
+    'shear-modulus-torsion-solid-circular-shaft': 'shear modulus torsion solid circular shaft polar moment inertia angle of twist torque shear stress hollow shaft modulus of rigidity',
+    'brinell-and-vickers-hardness-testing': 'brinell vickers hardness testing indentation diamond pyramid steel ball indenter hard metals brinell number hb vhn dph metallurgical hardness',
+    'charpy-and-izod-impact-toughness-testing': 'charpy izod impact toughness testing pendulum notched specimen ductile brittle transition impact energy joules fracture toughness dynamic load',
+    'flexural-three-point-bending-elastic-deflection': 'flexural three point bending elastic deflection simply supported beam young modulus flexural rigidity center load dial indicator strain',
+    'cantilever-beam-bending-stress-distribution': 'cantilever beam bending stress distribution strain gauge bending moment neutral axis flexure formula euler bernoulli strain bridge',
+    'buckling-of-slender-columns-euler-formula': 'buckling slender columns euler critical load effective length end fixity slenderness ratio bifurcation compressive instability strut',
+    'thin-walled-pressure-vessel-hoop-longitudinal-stress': 'thin walled pressure vessel hoop stress longitudinal stress cylinder internal pressure biaxial strain rosette burst pressure',
+    'fatigue-testing-rotating-bending-sn-curve': 'fatigue testing rotating bending sn curve wöhler endurance limit cyclic stress reverse bending fatigue life cycles stress amplitude',
+    'bernoulli-theorem-demonstration-venturi-tube': 'bernoulli theorem demonstration venturi tube total head piezometer static dynamic pressure kinetic energy continuity equation converging diverging',
+    'pipe-friction-factor-darcy-weisbach-reynolds': 'pipe friction factor darcy weisbach reynolds number moody chart head loss pressure drop laminar turbulent boundary layer hydraulic gradient',
+    'discharge-coefficient-orifice-and-mouthpiece': 'discharge coefficient orifice mouthpiece vena contracta coefficient of velocity contraction flow meter tank jet trajectory bernoulli',
+    'flow-measurement-rectangular-and-v-notch-weir': 'flow measurement rectangular v notch weir open channel hydraulics crest head over weir discharge coefficient triangular notch flume',
+    'centrifugal-pump-operating-characteristics': 'centrifugal pump operating characteristics head capacity curve brake power manometric efficiency impeller rpm npsh throttling',
+    'pelton-wheel-impulse-turbine-performance': 'pelton wheel impulse turbine performance spear nozzle spear valve bucket runner brake power mechanical efficiency hydraulic torque',
+    'francis-reaction-turbine-efficiency-characteristics': 'francis reaction turbine efficiency characteristics radial inflow runner guide vanes draft tube hydraulic efficiency unit power specific speed',
+    'reynolds-number-laminar-turbulent-transition-dye': 'reynolds number laminar turbulent transition dye filament critical velocity reynolds apparatus glass tube viscous shear poiseuille',
+    'impact-of-jet-on-flat-and-hemispherical-vanes': 'impact jet flat hemispherical vanes hydrodynamic force linear momentum momentum conservation reaction force nozzle jet velocity vane angle',
+    'thermal-conductivity-metals-fourier-linear-conduction': 'thermal conductivity metals fourier linear conduction one dimensional heat flux temperature gradient guarded hot plate brass copper heat transfer',
+    'radial-heat-conduction-thick-composite-cylinder': 'radial heat conduction thick composite cylinder cylindrical coordinates thermal resistance log mean area thermal contact resistance lag insulation',
+    'natural-convection-heat-transfer-vertical-cylinder': 'natural convection heat transfer vertical cylinder free convection grashof prandtl rayleigh number nusselt boundary layer buoyant heat transfer',
+    'forced-convection-heat-transfer-pin-fin': 'forced convection heat transfer pin fin extended surface fin efficiency fin effectiveness wind tunnel convective coefficient crossflow cooling',
+    'stefan-boltzmann-radiation-constant-verification': 'stefan boltzmann radiation constant verification blackbody radiation thermal emission fourth power temperature hemispherical emissivity radiative flux',
+    'parallel-and-counter-flow-concentric-tube-heat-exchanger': 'parallel counter flow concentric tube heat exchanger double pipe log mean temperature difference lmtd overall heat transfer coefficient effectiveness ntu',
+    'vapour-compression-refrigeration-cycle-cop': 'vapour compression refrigeration cycle cop coefficient performance enthalpy evaporator condenser compressor expansion valve ph diagram ton refrigeration',
+    'marcets-boiler-saturated-steam-pressure-temperature': 'marcets boiler saturated steam pressure temperature clausius clapeyron latent heat vaporization enthalpy mercury manometer saturation curve steam tables',
+    'single-cylinder-four-stroke-petrol-engine-brake-thermal-efficiency': 'single cylinder four stroke petrol engine brake thermal efficiency otto cycle indicated power dynamometer specific fuel consumption mechanical efficiency sfc',
+    'single-degree-of-freedom-undamped-free-vibration': 'single degree of freedom undamped free vibration natural frequency mass spring harmonic oscillator stiffness eigenvalue periodic motion period',
+    'viscous-damped-free-vibration-logarithmic-decrement': 'viscous damped free vibration logarithmic decrement damping ratio damping coefficient dashpot damped natural frequency underdamped exponential decay',
+    'forced-harmonic-vibration-amplitude-resonance': 'forced harmonic vibration amplitude resonance excitation frequency magnification factor phase angle dynamic response vibration isolation',
+    'torsional-vibration-single-rotor-shaft': 'torsional vibration single rotor shaft torsional stiffness moment inertia polar angular oscillation natural frequency twisting shaft',
+    'whirling-critical-speed-rotating-shaft': 'whirling critical speed rotating shaft dynamic instability centrifugal unbalance resonance critical rpm de laval shaft deflections bearing stiffness',
+    'static-and-dynamic-balancing-rotating-masses': 'static dynamic balancing rotating masses unbalance couple shaking force vector polygon reference planes counterweights balancing machine',
+    'epicyclic-gear-train-velocity-ratio-torque': 'epicyclic gear train velocity ratio torque planetary gears sun planet carrier ring gear tabular method gear ratio holding torque transmission',
+    'cam-follower-kinematics-jump-phenomenon': 'cam follower kinematics jump phenomenon lift profile follower displacement velocity acceleration spring pre-load jump speed surface contact',
+    'gyroscopic-precession-couple-and-torque': 'gyroscopic precession couple torque angular momentum spin axis precession axis right hand rule couple active reactive gyroscope motor rpm',
+    'pin-on-disc-wear-and-friction-coefficient': 'pin on disc wear friction coefficient tribometer normal load sliding friction coefficient wear volume archard equation friction torque lvdt',
+    'journal-bearing-hydrodynamic-lubrication-sommerfeld': 'journal bearing hydrodynamic lubrication sommerfeld number reynolds lubrication oil film pressure wedge action petroff equation shaft attitude angle',
+    'belt-friction-capstan-belt-drive-slip': 'belt friction capstan belt drive slip eytelwein formula coefficient friction angle of lap flat v belt belt tension ratio creep',
+    'disc-brake-friction-and-stopping-torque': 'disc brake friction stopping torque caliper pad contact normal force braking torque stopping time energy dissipation friction coefficient rotor',
+    'surface-roughness-profilometry-ra-rz-measurement': 'surface roughness profilometry ra rz measurement stylus profilometer cutoff length sampling length mean line average roughness texture metrology',
+    'screw-thread-pitch-micrometer-and-three-wire-method': 'screw thread pitch micrometer three wire method effective pitch diameter best wire size thread angle thread gauge lead pitch micrometer',
+    'sine-bar-precision-angle-measurement-slip-gauges': 'sine bar precision angle measurement slip gauges gauge blocks surface plate dial indicator trigonometry sine angle taper measurement metrology',
+    'metal-cutting-chip-formation-orthogonal-cutting-dynamometer': 'metal cutting chip formation orthogonal cutting dynamometer merchant circle cutting force thrust force shear angle shear strain rake angle chip thickness ratio',
+    'pneumatic-actuator-flow-rate-and-cylinder-thrust': 'pneumatic actuator flow rate cylinder thrust double acting pneumatic cylinder pressure flow control directional valve piston thrust compressed air',
+    'hydraulic-linear-actuator-load-velocity-characteristics': 'hydraulic linear actuator load velocity characteristics spool valve volumetric flow pressure drop actuator velocity hydraulic power fluid circuit',
+    'pid-temperature-controller-tuning-process-oven': 'pid temperature controller tuning process oven proportional integral derivative ziegler nichols process loop overshoot settling time thermocouple',
+    'strain-gauge-rosette-principal-stress-analysis': 'strain gauge rosette principal stress analysis 45 60 degree rectangular delta rosette mohr circle principal strains principal stresses biaxial strain',
+    'cooling-tower-evaporative-cooling-range-approach': 'cooling tower evaporative cooling range approach psychrometric wet bulb temperature cooling range heat dissipation drift loss packing water flow rate',
+    'air-conditioning-psychrometric-sensible-latent-cooling': 'air conditioning psychrometric sensible latent cooling sensible heat factor shf psychrometric chart cooling coil enthalpy humidity ratio bypass factor',
+    'solar-thermal-flat-plate-collector-efficiency-hottel-whillier': 'solar thermal flat plate collector efficiency hottel whillier bliss equation solar irradiance heat removal factor thermal loss coefficient incident radiation absorber plate'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):
@@ -560,6 +613,9 @@ def experiment_index(experiments):
   elif '/electronics-communication/' in exp.get('page_path',''):
    sub='electronics-communication'
    sub_name='Electronics & Communication'
+  elif '/mechanical-engineering/' in exp.get('page_path',''):
+   sub='mechanical-engineering'
+   sub_name='Mechanical Engineering'
   else:
    sub='physics'
    sub_name='Physics'
