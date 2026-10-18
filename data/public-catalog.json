@@ -68,8 +68,8 @@
     "category": "Engineering",
     "practical_type": "hands-on",
     "display_mode": "Engineering lab",
-    "example_topics_json": "[\"Yarn tensile strength\", \"Yarn twist and linear density\", \"Fabric air permeability\", \"Colour-fastness testing\"]",
-    "content_status": "planned"
+    "example_topics_json": "[\"Yarn manufacturing & fiber science\", \"Fabric manufacturing & mechanics\", \"Textile wet processing & dyeing\", \"Fabric comfort & physical testing\", \"Textile tribology & durability\", \"Technical textiles & color science\"]",
+    "content_status": "live"
   },
   {
     "slug": "electronics-communication",

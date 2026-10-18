@@ -29,6 +29,8 @@ def experiment_index(experiments):
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/ece/experiments.json').read_text())})
  if (ROOT/'content/mechanical/experiments.json').exists():
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/mechanical/experiments.json').read_text())})
+ if (ROOT/'content/textile/experiments.json').exists():
+  configs.update({c['slug']:c for c in json.loads((ROOT/'content/textile/experiments.json').read_text())})
  index=[]
  aliases={'simple-pendulum':'gravity g oscillation bob string time period','bifilar-suspension':'rotation inertia rod oscillation strings','young-modulus':'youngs modulus elasticity stress strain wire stretching','stokes-viscosity':'stokes law fluid liquid sphere terminal velocity','convex-lens':'optics focal length lens image uv method','photoelectric-effect':'photon light planck constant stopping potential work function','ohms-law':'ohm ohms law current voltage resistor resistance circuit ammeter voltmeter','metre-bridge':'meter metre wheatstone bridge null galvanometer unknown resistance','rc-charging':'capacitor capacitance resistor rc charge time constant exponential','glass-slab':'refraction refractive index apparent real depth glass microscope','diffraction-grating':'diffraction interference grating spectrum wavelength laser light','hookes-law':'hooke hookes law spring constant stiffness elasticity elongation extension load force','density-measurement':'density mass volume archimedes copper displacement solid balance cylinder','vernier-micrometer':'vernier caliper micrometer screw gauge least count zero error pi circumference diameter length measurement metrology','friction-laws':'friction laws amontons coulomb sliding kinetic static normal force coefficient dynamometer','principle-of-moments':'principle moments torque center gravity lever parallel forces fulcrum meter rule rotational equilibrium balance steelyard','force-table':'force table concurrent forces vector addition resultant equilibrant components pulleys ring equilibrium parallelogram law','equilibrium-forces':'parallel forces non-concurrent rigid body equilibrium beam reactions dynamometers support moments translational rotational static equilibrium',
   'free-fall':'free fall acceleration gravity g spark timer drop tower kinematics uniformly accelerated motion plummet photogate',
@@ -577,7 +579,39 @@ def experiment_index(experiments):
     'strain-gauge-rosette-principal-stress-analysis': 'strain gauge rosette principal stress analysis 45 60 degree rectangular delta rosette mohr circle principal strains principal stresses biaxial strain',
     'cooling-tower-evaporative-cooling-range-approach': 'cooling tower evaporative cooling range approach psychrometric wet bulb temperature cooling range heat dissipation drift loss packing water flow rate',
     'air-conditioning-psychrometric-sensible-latent-cooling': 'air conditioning psychrometric sensible latent cooling sensible heat factor shf psychrometric chart cooling coil enthalpy humidity ratio bypass factor',
-    'solar-thermal-flat-plate-collector-efficiency-hottel-whillier': 'solar thermal flat plate collector efficiency hottel whillier bliss equation solar irradiance heat removal factor thermal loss coefficient incident radiation absorber plate'}
+    'solar-thermal-flat-plate-collector-efficiency-hottel-whillier': 'solar thermal flat plate collector efficiency hottel whillier bliss equation solar irradiance heat removal factor thermal loss coefficient incident radiation absorber plate',
+    'cotton-fiber-length-uniformity-comb-sorter': 'cotton fiber length uniformity baer comb sorter span length 2.5 50 percent short fiber content uhml fiber diagram velvet plate',
+    'fiber-tensile-strength-stelometer-bundle-test': 'cotton fiber bundle tensile strength stelometer pressley vise tenacity elongation break 1 8 inch gauge ribbon mass',
+    'yarn-linear-density-count-wrap-reel-analytical-balance': 'yarn linear density count wrap reel analytical balance tex denier english cotton count ne metric count skein mass',
+    'yarn-twist-determination-untwist-retwist-method': 'yarn twist determination untwist retwist method turns per meter tpm twist multiplier direction s z twist contraction ring spun',
+    'single-yarn-tensile-strength-elongation-cre': 'single yarn tensile strength elongation cre constant rate extension tenacity breaking force work of rupture bollard clamps',
+    'yarn-lea-strength-count-strength-product-csp': 'yarn lea strength count strength product csp skein 120 yards pendulum tester spinning quality factor lbf ne',
+    'warp-sizing-percentage-size-add-on-tensile-gain': 'warp sizing size add on percentage tensile strength gain pva starch weavability hairiness reduction sizing machine',
+    'fabric-areal-density-gsm-thickness-micrometer': 'fabric areal density gsm grams per square meter thickness micrometer circular cutter weight fabric mass cover factor',
+    'fabric-tensile-strip-grab-test-astm-d5034': 'fabric tensile strip grab test astm d5034 breaking force elongation crimp decrimping warp weft tensile testing',
+    'fabric-tearing-strength-elmendorf-ballistic-pendulum': 'fabric tearing strength elmendorf ballistic pendulum astm d1424 tear propagation energy loss multi ply falling pendulum',
+    'fabric-bursting-strength-hydraulic-diaphragm-tester': 'fabric bursting strength hydraulic diaphragm tester knitted nonwoven multiaxial distension dome apex height pressure kpa',
+    'weft-knitted-fabric-loop-length-stitch-density': 'weft knitted fabric loop length stitch density tightness factor courses wales single jersey unravelling mundens constants',
+    'enzymatic-desizing-efficiency-tegewa-iodine-scale': 'enzymatic desizing efficiency tegewa iodine scale starch degradation alpha amylase size removal colorimetric rating',
+    'scouring-loss-absorbency-capillary-wicking-test': 'alkaline scouring loss absorbency capillary wicking test wettability cotton wax saponification strip wicking height washburn',
+    'hydrogen-peroxide-bleaching-whiteness-berger-cielab': 'hydrogen peroxide bleaching whiteness berger cielab kinetics perhydroxyl ion chromophore degradation stabilizing silicate',
+    'reactive-dye-exhaustion-kinetics-beer-lambert-absorbance': 'reactive dye exhaustion kinetics beer lambert absorbance uv vis spectrophotometer fixation yield dye bath concentration substantivity',
+    'color-fastness-to-washing-iso-105-c06-grey-scale': 'color fastness washing iso 105 c06 grey scale rotawash laundering multi fiber adjacent fabric staining fading cielab',
+    'color-fastness-to-crocking-rubbing-aatcc-crockmeter': 'color fastness crocking rubbing aatcc crockmeter dry wet friction rubbing finger transfer stain chromatic transference',
+    'fabric-air-permeability-differential-pressure-flow': 'fabric air permeability differential pressure flow resistance darcy flow rate orifice plate pressure drop breathability',
+    'fabric-water-vapor-permeability-cup-dish-method': 'fabric water vapor permeability cup dish method wvtr transmission rate breathability evaporative resistance ficking moisture',
+    'fabric-water-repellency-spray-rating-contact-angle': 'fabric water repellency spray rating contact angle aatcc 22 hydrophobic finish fluorocarbon sessile drop goniometer cassie baxter',
+    'fabric-bending-length-flexural-rigidity-shirley-stiffness': 'fabric bending length flexural rigidity shirley stiffness tester cantilever overhang 41.5 degree incline peirce formula handle',
+    'fabric-crease-recovery-angle-shirley-recovery-tester': 'fabric crease recovery angle shirley recovery tester wrinkle resistance dmdheu resin cross linking elastic recovery angle',
+    'fabric-drape-coefficient-digital-drape-meter': 'fabric drape coefficient digital drape meter cusick 3d formability shadow node wave silhouette apparel drape percentage',
+    'fabric-abrasion-resistance-martindale-mass-loss': 'fabric abrasion resistance martindale mass loss lissajous wear rate cycle breakdown upholstery wool abradant',
+    'fabric-pilling-resistance-ici-pilling-box': 'fabric pilling resistance ici pilling box cork liner tumbling fuzz pill count propensity knitted synthetic blend',
+    'fabric-dimensional-stability-laundering-shrinkage': 'fabric dimensional stability laundering shrinkage relaxation felting wascator warp weft percentage shrinkage distortion',
+    'seam-slippage-strength-woven-fabrics-fixed-load': 'seam slippage strength woven fabrics fixed load seam opening gap displacement yarn pull out lockstitch seam rupture',
+    'nonwoven-fabric-tensile-strength-anisotropy-ratio': 'nonwoven fabric tensile strength anisotropy ratio spunbond basis weight machine direction cross direction thermal calender',
+    'thermal-resistance-clo-value-guarded-hotplate': 'thermal resistance clo value guarded hotplate iso 11092 sweating skin model insulation batt thickness heat flux rct',
+    'ultraviolet-protection-factor-upf-transmittance-spectrophotometry': 'ultraviolet protection factor upf transmittance spectrophotometry uv a uv b blocking protective textiles as nzs 4399',
+    'spectrophotometric-color-matching-cielab-kubelka-munk': 'spectrophotometric color matching cielab kubelka munk k s color strength reflectance d65 standard illuminant delta e metamerism'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):
@@ -616,6 +650,9 @@ def experiment_index(experiments):
   elif '/mechanical-engineering/' in exp.get('page_path',''):
    sub='mechanical-engineering'
    sub_name='Mechanical Engineering'
+  elif '/textile-engineering/' in exp.get('page_path',''):
+   sub='textile-engineering'
+   sub_name='Textile Engineering'
   else:
    sub='physics'
    sub_name='Physics'
