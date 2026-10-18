@@ -77,8 +77,8 @@
     "category": "Engineering",
     "practical_type": "mixed",
     "display_mode": "Engineering lab",
-    "example_topics_json": "[\"Amplitude modulation and demodulation\", \"Frequency-domain signal measurement\", \"Digital modulation simulation\", \"Communication bandwidth investigation\"]",
-    "content_status": "planned"
+    "example_topics_json": "[\"Analog modulation & superheterodyne systems\", \"Pulse modulation & digital baseband\", \"Digital passband modulation (BPSK, QPSK, QAM)\", \"Antennas, microwave propagation & RF\", \"Optical fiber communication & optoelectronics\", \"Digital signal processing & information theory\"]",
+    "content_status": "live"
   },
   {
     "slug": "aerospace-aeronautical-engineering",

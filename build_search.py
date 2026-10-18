@@ -25,6 +25,8 @@ def experiment_index(experiments):
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/civil/experiments.json').read_text())})
  if (ROOT/'content/electrical/experiments.json').exists():
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/electrical/experiments.json').read_text())})
+ if (ROOT/'content/ece/experiments.json').exists():
+  configs.update({c['slug']:c for c in json.loads((ROOT/'content/ece/experiments.json').read_text())})
  index=[]
  aliases={'simple-pendulum':'gravity g oscillation bob string time period','bifilar-suspension':'rotation inertia rod oscillation strings','young-modulus':'youngs modulus elasticity stress strain wire stretching','stokes-viscosity':'stokes law fluid liquid sphere terminal velocity','convex-lens':'optics focal length lens image uv method','photoelectric-effect':'photon light planck constant stopping potential work function','ohms-law':'ohm ohms law current voltage resistor resistance circuit ammeter voltmeter','metre-bridge':'meter metre wheatstone bridge null galvanometer unknown resistance','rc-charging':'capacitor capacitance resistor rc charge time constant exponential','glass-slab':'refraction refractive index apparent real depth glass microscope','diffraction-grating':'diffraction interference grating spectrum wavelength laser light','hookes-law':'hooke hookes law spring constant stiffness elasticity elongation extension load force','density-measurement':'density mass volume archimedes copper displacement solid balance cylinder','vernier-micrometer':'vernier caliper micrometer screw gauge least count zero error pi circumference diameter length measurement metrology','friction-laws':'friction laws amontons coulomb sliding kinetic static normal force coefficient dynamometer','principle-of-moments':'principle moments torque center gravity lever parallel forces fulcrum meter rule rotational equilibrium balance steelyard','force-table':'force table concurrent forces vector addition resultant equilibrant components pulleys ring equilibrium parallelogram law','equilibrium-forces':'parallel forces non-concurrent rigid body equilibrium beam reactions dynamometers support moments translational rotational static equilibrium',
   'free-fall':'free fall acceleration gravity g spark timer drop tower kinematics uniformly accelerated motion plummet photogate',
@@ -492,7 +494,37 @@ def experiment_index(experiments):
     'closed-loop-pid-dc-motor-speed-servomechanism': 'closed loop pid dc motor speed servomechanism proportional integral derivative feedback control disturbance rejection ziegler nichols',
     'bode-plot-and-nyquist-stability-criterion': 'frequency response analysis bode plot magnitude phase margin nyquist stability criterion open loop transfer function encirclements',
     'linear-variable-differential-transformer-lvdt-transducer': 'linear variable differential transformer lvdt displacement transducer sensitivity calibration null voltage phase sensitive demodulation',
-    'strain-gauge-quarter-half-full-wheatstone-bridge': 'piezoresistive foil strain gauge wheatstone bridge quarter half full bridge temperature compensation gauge factor cantilever beam'}
+    'strain-gauge-quarter-half-full-wheatstone-bridge': 'piezoresistive foil strain gauge wheatstone bridge quarter half full bridge temperature compensation gauge factor cantilever beam',
+    'amplitude-modulation-and-demodulation-envelope-detector': 'amplitude modulation demodulation envelope detector index sidebands carrier diodes audio',
+    'frequency-modulation-and-demodulation-foster-seeley-discriminator': 'frequency modulation demodulation foster seeley discriminator carson bandwidth bessel deviation',
+    'double-sideband-suppressed-carrier-dsbsc-balanced-modulator': 'double sideband suppressed carrier dsbsc balanced modulator ring diode product carrier null',
+    'single-sideband-suppressed-carrier-ssbsc-filter-method': 'single sideband suppressed carrier ssbsc filter method crystal ladder usb lsb sideband rejection',
+    'superheterodyne-receiver-intermediate-frequency-and-selectivity': 'superheterodyne receiver if intermediate frequency 455 khz mixer local oscillator selectivity',
+    'sampling-theorem-and-pulse-amplitude-modulation-pam': 'nyquist shannon sampling theorem pulse amplitude modulation pam flat top aliasing sinc reconstruction',
+    'pulse-width-and-pulse-position-modulation-pwm-ppm': 'pulse width modulation pulse position modulation pwm ppm duty cycle ramp comparator monostable',
+    'pulse-code-modulation-pcm-and-quantization-noise': 'pulse code modulation pcm quantization noise sqnr uniform adc bit resolution companding',
+    'delta-modulation-and-adaptive-delta-modulation-slope-overload': 'delta modulation adaptive delta modulation slope overload granular noise integrator step size tracking',
+    'line-coding-techniques-and-eye-diagram-analysis': 'line coding nrz rz manchester eye diagram jitter intersymbol interference isi noise margin',
+    'amplitude-shift-keying-ask-ook-coherent-detection': 'amplitude shift keying ask ook on off keying coherent detection bandwidth first null bit rate',
+    'frequency-shift-keying-fsk-and-phase-locked-loop-detection': 'frequency shift keying bfsk fsk phase locked loop pll mark space tone demodulation',
+    'binary-phase-shift-keying-bpsk-and-costas-loop-carrier-recovery': 'binary phase shift keying bpsk costas loop carrier recovery antipodal constellation matched filter',
+    'quadrature-phase-shift-keying-qpsk-constellation-mapping': 'quadrature phase shift keying qpsk constellation dibit in phase quadrature iq symbol rate',
+    'quadrature-amplitude-modulation-16qam-error-vector-magnitude': 'quadrature amplitude modulation 16qam qam error vector magnitude evm constellation snr ber',
+    'half-wave-dipole-antenna-radiation-pattern-and-gain': 'half wave dipole antenna radiation pattern gain polar e plane h plane far field beamwidth',
+    'horn-antenna-directivity-and-absolute-gain-measurement': 'pyramidal horn antenna directivity gain friis transmission three antenna aperture microwave x band',
+    'rectangular-waveguide-te10-cutoff-frequency-and-guide-wavelength': 'rectangular waveguide te10 cutoff frequency guide wavelength slotted line dispersion phase velocity',
+    'voltage-standing-wave-ratio-vswr-and-slotted-line-impedance': 'voltage standing wave ratio vswr slotted line complex impedance smith chart reflection coefficient',
+    'microstrip-line-characteristic-impedance-and-effective-dielectric-constant': 'microstrip line characteristic impedance effective dielectric constant fr4 substrate capacitance phase velocity',
+    'optical-fiber-numerical-aperture-and-acceptance-angle': 'optical fiber numerical aperture na acceptance angle cone total internal reflection far field',
+    'optical-fiber-attenuation-and-cutback-loss-measurement': 'optical fiber attenuation cutback loss measurement db km spectral rayleigh scattering photometer',
+    'fiber-optic-macro-and-micro-bending-losses': 'fiber optic macro bending micro bending loss curvature radius mandrel radiative evanescent cladding',
+    'semiconductor-laser-diode-optical-power-current-pi-curve': 'semiconductor laser diode optical power current li curve threshold dfb slope efficiency tec',
+    'pin-photodiode-responsivity-and-quantum-efficiency': 'pin photodiode responsivity quantum efficiency ingaas 1550 nm photocurrent dark current nep',
+    'discrete-fourier-transform-dft-and-fft-spectral-leakage': 'discrete fourier transform dft fft fast fourier transform spectral leakage windowing hanning hamming',
+    'finite-impulse-response-fir-digital-filter-design-window-method': 'finite impulse response fir digital filter window method kaiser stopband attenuation transition width',
+    'infinite-impulse-response-iir-bilinear-transformation-filter': 'infinite impulse response iir bilinear transformation bzt butterworth pre warping frequency digital filter',
+    'direct-sequence-spread-spectrum-dsss-processing-gain': 'direct sequence spread spectrum dsss processing gain gold code chipping rate jamming margin cdma',
+    'shannon-hartley-channel-capacity-and-entropy-limits': 'shannon hartley channel capacity entropy limits awgn bandwidth snr trade off bps hz'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):
@@ -525,6 +557,9 @@ def experiment_index(experiments):
   elif '/electrical-electronics-engineering/' in exp.get('page_path',''):
    sub='electrical-electronics-engineering'
    sub_name='Electrical & Electronics Engineering'
+  elif '/electronics-communication/' in exp.get('page_path',''):
+   sub='electronics-communication'
+   sub_name='Electronics & Communication'
   else:
    sub='physics'
    sub_name='Physics'

@@ -55,6 +55,10 @@ def run_audit(target_slugs=None, verbose=True):
         electrical_configs = json.loads((ROOT / 'content/electrical/experiments.json').read_text())
         for c in electrical_configs: c['subject'] = 'electrical-electronics-engineering'
         configs.extend(electrical_configs)
+    if (ROOT / 'content/ece/experiments.json').exists():
+        ece_configs = json.loads((ROOT / 'content/ece/experiments.json').read_text())
+        for c in ece_configs: c['subject'] = 'electronics-communication'
+        configs.extend(ece_configs)
     
     # Identify benchmarks vs new targets
     known_benchmarks = [
@@ -274,6 +278,11 @@ def run_audit(target_slugs=None, verbose=True):
         electricalModels = require('./content/electrical/models.js');
         electricalConfigs = JSON.parse(fs.readFileSync('content/electrical/experiments.json', 'utf8'));
     }
+    let eceModels = null, eceConfigs = [];
+    if (fs.existsSync('content/ece/experiments.json') && fs.existsSync('content/ece/models.js')) {
+        eceModels = require('./content/ece/models.js');
+        eceConfigs = JSON.parse(fs.readFileSync('content/ece/experiments.json', 'utf8'));
+    }
     let errs = [];
     physConfigs.forEach(c => {
         try {
@@ -429,8 +438,22 @@ def run_audit(target_slugs=None, verbose=True):
             errs.push(c.slug + ': exception ' + e.message);
         }
     });
+    eceConfigs.forEach(c => {
+        try {
+            const p = eceModels.predict(c.slug, c.initial);
+            if (!p.valid) errs.push(c.slug + ': initial predict invalid');
+            const rows = c.samples.map(v => eceModels.reading(c.slug, v, eceModels.predict(c.slug, v).raw));
+            const fit = eceModels.fit(rows);
+            if (!fit || fit.r2 < 0.999) errs.push(c.slug + ': r2 < 0.999 (' + (fit ? fit.r2 : 'null') + ')');
+            const est = eceModels.estimate(c.slug, fit);
+            const diff = Math.abs(est.value - est.reference) / Math.abs(est.reference) * 100;
+            if (diff > 0.3) errs.push(c.slug + ': regression diff > 0.3% (' + diff.toFixed(4) + '%)');
+        } catch(e) {
+            errs.push(c.slug + ': exception ' + e.message);
+        }
+    });
     if (errs.length) { console.error(JSON.stringify(errs)); process.exit(1); }
-    console.log('All ' + (physConfigs.length + csConfigs.length + chemConfigs.length + mathConfigs.length + statsConfigs.length + aeroConfigs.length + agriConfigs.length + biomedConfigs.length + chemengConfigs.length + civilConfigs.length + electricalConfigs.length) + ' experiment models passed validation.');
+    console.log('All ' + (physConfigs.length + csConfigs.length + chemConfigs.length + mathConfigs.length + statsConfigs.length + aeroConfigs.length + agriConfigs.length + biomedConfigs.length + chemengConfigs.length + civilConfigs.length + electricalConfigs.length + eceConfigs.length) + ' experiment models passed validation.');
     """
     js_proc = subprocess.run(['node', '-e', js_test_code], cwd=ROOT, capture_output=True, text=True)
     if js_proc.returncode != 0:
