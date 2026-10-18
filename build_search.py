@@ -23,6 +23,8 @@ def experiment_index(experiments):
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/chemeng/experiments.json').read_text())})
  if (ROOT/'content/civil/experiments.json').exists():
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/civil/experiments.json').read_text())})
+ if (ROOT/'content/electrical/experiments.json').exists():
+  configs.update({c['slug']:c for c in json.loads((ROOT/'content/electrical/experiments.json').read_text())})
  index=[]
  aliases={'simple-pendulum':'gravity g oscillation bob string time period','bifilar-suspension':'rotation inertia rod oscillation strings','young-modulus':'youngs modulus elasticity stress strain wire stretching','stokes-viscosity':'stokes law fluid liquid sphere terminal velocity','convex-lens':'optics focal length lens image uv method','photoelectric-effect':'photon light planck constant stopping potential work function','ohms-law':'ohm ohms law current voltage resistor resistance circuit ammeter voltmeter','metre-bridge':'meter metre wheatstone bridge null galvanometer unknown resistance','rc-charging':'capacitor capacitance resistor rc charge time constant exponential','glass-slab':'refraction refractive index apparent real depth glass microscope','diffraction-grating':'diffraction interference grating spectrum wavelength laser light','hookes-law':'hooke hookes law spring constant stiffness elasticity elongation extension load force','density-measurement':'density mass volume archimedes copper displacement solid balance cylinder','vernier-micrometer':'vernier caliper micrometer screw gauge least count zero error pi circumference diameter length measurement metrology','friction-laws':'friction laws amontons coulomb sliding kinetic static normal force coefficient dynamometer','principle-of-moments':'principle moments torque center gravity lever parallel forces fulcrum meter rule rotational equilibrium balance steelyard','force-table':'force table concurrent forces vector addition resultant equilibrant components pulleys ring equilibrium parallelogram law','equilibrium-forces':'parallel forces non-concurrent rigid body equilibrium beam reactions dynamometers support moments translational rotational static equilibrium',
   'free-fall':'free fall acceleration gravity g spark timer drop tower kinematics uniformly accelerated motion plummet photogate',
@@ -440,7 +442,57 @@ def experiment_index(experiments):
     'free-vibration-natural-frequency-shear-frame': 'free vibration natural frequency shear building frame single degree of freedom sdof logarithmic decrement damping ratio accelerometer mass stiffness',
     'forced-vibration-resonance-shake-table-amplification': 'forced vibration resonance shake table dynamic amplification factor daf frequency response excitation harmonic base acceleration',
     'ultrasonic-pulse-velocity-concrete-quality-upv': 'ultrasonic pulse velocity upv concrete quality non destructive testing ndt p wave travel time transducer concrete integrity astm c597',
-    'rebound-hammer-schmidt-concrete-compressive-strength': 'rebound hammer schmidt hammer concrete compressive strength non destructive testing ndt rebound number surface hardness calibration astm c805'}
+    'rebound-hammer-schmidt-concrete-compressive-strength': 'rebound hammer schmidt hammer concrete compressive strength non destructive testing ndt rebound number surface hardness calibration astm c805',
+    'thevenin-and-norton-equivalent-circuits': 'thevenin norton equivalent circuit active linear dc network open circuit voltage short circuit current internal resistance rth voc isc',
+    'superposition-theorem-independent-sources': 'superposition theorem independent voltage current sources multi loop linear dc network branch current algebraic sum',
+    'maximum-power-transfer-theorem-dc-circuits': 'maximum power transfer theorem dc circuit internal resistance matching load efficiency jacobi law',
+    'transient-response-series-rl-and-rc-circuits': 'transient step response series rl rc circuit time constant tau exponential charging discharging natural response',
+    'series-and-parallel-rlc-resonance': 'series parallel rlc circuit resonance resonant frequency quality factor bandwidth dynamic voltage magnification impedance curve',
+    'reciprocity-and-millman-theorems': 'reciprocity millman theorem linear bilateral network transfer impedance parallel generator bus reduction',
+    'two-port-network-z-and-y-parameters': 'two port network parameters impedance z admittance y hybrid h transmission abcd matrix driving point transfer',
+    'ac-power-factor-improvement-synchronous-condenser': 'ac power factor improvement correction parallel capacitor bank synchronous condenser reactive power compensation var',
+    'three-phase-power-measurement-two-wattmeter': 'three phase power measurement two wattmeter method blondel theorem balanced unbalanced load star delta phase angle',
+    'pn-junction-diode-forward-reverse-characteristics': 'pn junction diode static forward reverse vi characteristics shockley diode equation barrier potential ideality factor reverse saturation current',
+    'zener-diode-voltage-regulator-line-load-regulation': 'zener diode breakdown voltage shunt voltage regulator line load regulation avalanche zener impedance ripple rejection',
+    'bjt-common-emitter-input-output-characteristics': 'bjt bipolar junction transistor common emitter input output static characteristics forward current gain beta early effect h parameters',
+    'jfet-and-mosfet-drain-and-transfer-characteristics': 'jfet junction field effect transistor mosfet drain transfer characteristics pinch off voltage transconductance gm shockley square law',
+    'op-amp-inverting-and-non-inverting-closed-loop-gain': 'operational amplifier op amp inverting non inverting closed loop voltage gain negative feedback virtual ground ua741',
+    'op-amp-active-filters-butterworth-sallen-key': 'second order active filter sallen key butterworth low pass high pass frequency response roll off attenuation cutoff',
+    'bjt-rc-coupled-audio-amplifier-frequency-response': 'two stage rc coupled bjt small signal audio amplifier frequency response midband voltage gain bandwidth lower upper cutoff',
+    'wien-bridge-and-rc-phase-shift-oscillators': 'wien bridge rc phase shift sine wave audio oscillator barkhausen stability criterion loop gain frequency tuning',
+    'astable-and-monostable-multivibrators-555-timer': 'ic 555 precision timer astable multivibrator monostable pulse generator square wave clock duty cycle timing capacitor',
+    'truth-tables-and-de-morgans-laws-logic-gates': 'digital logic gates and or not nand nor xor truth tables boolean algebra de morgan laws universal logic',
+    'combinational-adders-and-subtractors-arithmetic-logic': 'half adder full adder 4 bit parallel binary carry lookahead arithmetic logic circuit 74ls83 twos complement',
+    'multiplexers-demultiplexers-and-data-routing': 'multiplexer 8 to 1 mux 74151 demultiplexer 3 to 8 decoder 74138 data routing combinational synthesis priority encoder',
+    'synchronous-and-asynchronous-binary-counters': 'synchronous asynchronous binary ripple counter decade counter 7490 74193 clock skew dynamic power dissipation',
+    'digital-flip-flops-sr-jk-d-t-propagation-timing': 'digital flip flops sr jk d t edge triggered setup time hold time propagation delay metastability clock to q',
+    'shift-registers-siso-sipo-piso-pipo-ring-johnson': 'universal shift register 74hc194 siso sipo piso pipo ring counter johnson counter serial parallel conversion',
+    'digital-to-analog-and-analog-to-digital-converters': 'digital to analog converter dac r 2r ladder analog to digital converter adc successive approximation sar resolution dnl inl',
+    'microprocessor-instruction-cycle-bus-timing': 'microprocessor bus architecture 8085 8086 ale address latch enable t state machine cycle instruction fetch timing',
+    'microcontroller-gpio-timer-interrupts-pwm': 'embedded microcontroller arm cortex avr gpio timer interrupts hardware pwm pulse width modulation duty cycle',
+    'dc-shunt-motor-speed-control-armature-field': 'dc shunt motor speed control armature voltage control field flux weakening ward leonard speed torque characteristics',
+    'dc-series-motor-torque-speed-characteristics': 'dc series traction motor electromechanical torque speed characteristics torque proportional armature current squared dynamometer',
+    'open-circuit-and-short-circuit-tests-transformer': 'single phase transformer open circuit short circuit tests equivalent circuit core loss magnetizing reactance leakage impedance',
+    'three-phase-transformer-connections-and-polarity': 'three phase transformer connections star delta delta star vector groups yd11 dy1 transformation ratio polarity',
+    'three-phase-squirrel-cage-induction-motor-load-test': 'three phase squirrel cage induction motor direct load test torque slip speed curve breakdown torque efficiency',
+    'synchronous-generator-open-circuit-short-circuit-v-curves': 'three phase synchronous generator alternator open circuit short circuit characteristics occ scc synchronous impedance zs voltage regulation',
+    'synchronous-motor-v-and-inverted-v-curves': 'synchronous motor v curves inverted v curves armature current field excitation power factor synchronous condenser',
+    'single-phase-capacitor-start-induction-motor': 'single phase induction motor capacitor start capacitor run starting torque auxiliary winding centrifugal switch double revolving field',
+    'switched-reluctance-and-stepper-motor-step-angle': 'hybrid stepper motor switched reluctance motor step angle resolution holding torque microstepping drive pulse frequency',
+    'transmission-line-abcd-parameters-ferranti-effect': 'transmission line abcd parameters pi model voltage regulation ferranti effect surge impedance loading charging current',
+    'earth-fault-and-overcurrent-relay-idmt-characteristics': 'inverse definite minimum time idmt overcurrent earth fault relay protective coordination iec 60255 plug setting multiplier psm',
+    'dielectric-breakdown-strength-transformer-insulating-oil': 'transformer mineral insulating oil dielectric breakdown voltage strength iec 60156 astm d877 sphere gap electrodes oil tester',
+    'photovoltaic-pv-cell-iv-and-pv-characteristics': 'solar photovoltaic pv cell module iv pv characteristics maximum power point tracking mppt short circuit current open circuit voltage fill factor',
+    'wind-turbine-generator-power-coefficient-betz-limit': 'wind turbine generator aerodynamic power curve power coefficient cp tip speed ratio betz limit wind velocity cubed',
+    'high-voltage-impulse-generator-marx-circuit': 'high voltage impulse generator marx multistage circuit 1.2 50 us lightning impulse switching spark gap sphere multiplier',
+    'harmonic-distortion-measurement-fft-spectrum': 'power quality analysis total harmonic distortion thd fft harmonic spectrum phase controlled rectifier firing angle ieee 519',
+    'scr-triac-phase-angle-firing-control-r-rl-loads': 'silicon controlled rectifier scr triac phase angle firing control resistive inductive rl load controlled rectification ujt trigger',
+    'buck-boost-dc-dc-converter-duty-cycle-efficiency': 'buck boost dc dc switched mode power converter smps pwm duty ratio inductor current ripple step down step up',
+    'single-phase-spwm-inverter-total-harmonic-distortion': 'single phase full bridge sinusoidal pulse width modulation spwm inverter h bridge igbt modulation index fundamental rms harmonic filter',
+    'closed-loop-pid-dc-motor-speed-servomechanism': 'closed loop pid dc motor speed servomechanism proportional integral derivative feedback control disturbance rejection ziegler nichols',
+    'bode-plot-and-nyquist-stability-criterion': 'frequency response analysis bode plot magnitude phase margin nyquist stability criterion open loop transfer function encirclements',
+    'linear-variable-differential-transformer-lvdt-transducer': 'linear variable differential transformer lvdt displacement transducer sensitivity calibration null voltage phase sensitive demodulation',
+    'strain-gauge-quarter-half-full-wheatstone-bridge': 'piezoresistive foil strain gauge wheatstone bridge quarter half full bridge temperature compensation gauge factor cantilever beam'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):
@@ -470,6 +522,9 @@ def experiment_index(experiments):
   elif '/civil-engineering/' in exp.get('page_path',''):
    sub='civil-engineering'
    sub_name='Civil Engineering'
+  elif '/electrical-electronics-engineering/' in exp.get('page_path',''):
+   sub='electrical-electronics-engineering'
+   sub_name='Electrical & Electronics Engineering'
   else:
    sub='physics'
    sub_name='Physics'

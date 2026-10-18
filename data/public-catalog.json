@@ -41,8 +41,8 @@
     "category": "Engineering",
     "practical_type": "mixed",
     "display_mode": "Engineering lab",
-    "example_topics_json": "[\"Operational amplifier measurements\", \"Diode current-voltage characteristics\", \"Rectifiers and regulators\", \"MOSFET and BJT characterization\"]",
-    "content_status": "planned"
+    "example_topics_json": "[\"DC and AC circuit analysis & network theorems\", \"Analog electronics, op-amps & semiconductor devices\", \"Digital electronics, counters & microprocessors\", \"Electrical machines, transformers & induction motors\", \"Power systems, protection relays & renewable energy\", \"Control systems, power electronics & instrumentation\"]",
+    "content_status": "live"
   },
   {
     "slug": "civil-engineering",
