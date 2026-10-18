@@ -17,6 +17,8 @@ def experiment_index(experiments):
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/aerospace/experiments.json').read_text())})
  if (ROOT/'content/agricultural/experiments.json').exists():
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/agricultural/experiments.json').read_text())})
+ if (ROOT/'content/biomedical/experiments.json').exists():
+  configs.update({c['slug']:c for c in json.loads((ROOT/'content/biomedical/experiments.json').read_text())})
  index=[]
  aliases={'simple-pendulum':'gravity g oscillation bob string time period','bifilar-suspension':'rotation inertia rod oscillation strings','young-modulus':'youngs modulus elasticity stress strain wire stretching','stokes-viscosity':'stokes law fluid liquid sphere terminal velocity','convex-lens':'optics focal length lens image uv method','photoelectric-effect':'photon light planck constant stopping potential work function','ohms-law':'ohm ohms law current voltage resistor resistance circuit ammeter voltmeter','metre-bridge':'meter metre wheatstone bridge null galvanometer unknown resistance','rc-charging':'capacitor capacitance resistor rc charge time constant exponential','glass-slab':'refraction refractive index apparent real depth glass microscope','diffraction-grating':'diffraction interference grating spectrum wavelength laser light','hookes-law':'hooke hookes law spring constant stiffness elasticity elongation extension load force','density-measurement':'density mass volume archimedes copper displacement solid balance cylinder','vernier-micrometer':'vernier caliper micrometer screw gauge least count zero error pi circumference diameter length measurement metrology','friction-laws':'friction laws amontons coulomb sliding kinetic static normal force coefficient dynamometer','principle-of-moments':'principle moments torque center gravity lever parallel forces fulcrum meter rule rotational equilibrium balance steelyard','force-table':'force table concurrent forces vector addition resultant equilibrant components pulleys ring equilibrium parallelogram law','equilibrium-forces':'parallel forces non-concurrent rigid body equilibrium beam reactions dynamometers support moments translational rotational static equilibrium',
   'free-fall':'free fall acceleration gravity g spark timer drop tower kinematics uniformly accelerated motion plummet photogate',
@@ -296,7 +298,49 @@ def experiment_index(experiments):
     'downdraft-biomass-gasifier-cold-gas-efficiency': 'downdraft biomass gasifier cold gas efficiency syngas heating value equivalence ratio',
     'vegetable-oil-biodiesel-transesterification-yield': 'vegetable oil biodiesel transesterification yield fame ester conversion molar ratio viscosity',
     'solar-pv-submersible-water-pump-hydraulic-performance': 'solar pv submersible water pump hydraulic performance array power bldc mppt',
-    'variable-rate-precision-fertilizer-fluted-roller-kinetics': 'variable rate precision fertilizer fluted roller kinetics isobus stepper motor mass flow'}
+    'variable-rate-precision-fertilizer-fluted-roller-kinetics': 'variable rate precision fertilizer fluted roller kinetics isobus stepper motor mass flow',
+    'thermistor-wheatstone-bridge-clinical-thermometer': 'thermistor wheatstone bridge clinical temperature thermometer core body steinhart hart medical instrumentation',
+    'strain-gauge-cantilever-medical-force-sensor': 'strain gauge cantilever beam medical force sensor piezoresistive gauge factor full bridge load cell',
+    'piezoelectric-pulse-transducer-arterial-compliance': 'piezoelectric pvdf arterial pulse transducer pulse wave compliance pressure signal',
+    'ag-agcl-biopotential-electrode-half-cell-impedance': 'ag agcl biopotential electrode skin impedance half cell warburg impedance interface frequency',
+    'instrumentation-amplifier-cmrr-ecg-front-end': 'instrumentation amplifier cmrr ecg front end common mode rejection operational amplifier differential gain',
+    'clark-oxygen-polarographic-electrode-blood-po2': 'clark polarographic oxygen electrode blood po2 partial pressure dissolved oxygen reduction current amperometric',
+    'linear-variable-differential-transformer-displacement': 'lvdt linear variable differential transformer displacement sensor chest expansion respiration core position',
+    'hall-effect-blood-flowmeter-electromagnetic-probe': 'electromagnetic blood flowmeter probe faraday induction transverse voltage lumen perfusion velocity',
+    'ecg-einthoven-limb-leads-cardiac-axis': 'einthoven ecg limb leads cardiac vector axis electrical heart dipole frontal plane',
+    'photoplethysmography-ppg-pulse-oximeter-beer-lambert': 'pulse oximeter dual wavelength ppg spo2 photoplethysmography red infrared oxygen saturation beer lambert',
+    'surface-electromyography-semg-muscle-fatigue-frequency': 'semg surface electromyography muscle fatigue median frequency power spectral shift isometric contraction',
+    'electroencephalography-eeg-alpha-attenuation-power': 'eeg electroencephalography occipital alpha rhythm photoperiod attenuation power spectrum eye closure berger',
+    'galvanic-skin-response-gsr-electrodermal-activity': 'galvanic skin response gsr electrodermal activity conductance sympathetic autonomic nervous arousal',
+    'amperometric-glucose-biosensor-michaelis-menten': 'enzymatic amperometric glucose biosensor glucose oxidase michaelis menten calibration current diabetes',
+    'surface-plasmon-resonance-immunosensor-antibody-binding': 'surface plasmon resonance spr immunosensor antibody antigen binding resonance angle gold chip',
+    'impedance-pneumography-respiratory-tidal-volume': 'transthoracic electrical impedance pneumography respiratory tidal volume ventilation chest breathing',
+    'digital-notch-filter-60hz-powerline-interference': 'ecg digital iir notch filter 60hz 50hz powerline interference noise rejection signal processing',
+    'cortical-bone-tensile-elastic-modulus': 'cortical bone tensile testing young modulus stress strain extensometer elasticity osteon haversian',
+    'articular-cartilage-confined-compression-creep': 'articular cartilage confined compression creep aggregate modulus biphasic mow porous permeable platen',
+    'titanium-alloy-orthopaedic-implant-four-point-bending': 'titanium alloy orthopaedic bone plate four point bending compliance astm f382 flexural rigidity',
+    'uhmwpe-artificial-joint-pin-on-disk-wear': 'uhmwpe artificial joint bearing pin on disk wear factor archard polyethylene osteolysis joint replacement',
+    'hydrogel-scaffold-swelling-degradation-kinetics': 'biodegradable hydrogel scaffold hydrolytic degradation kinetics plga tissue engineering mass loss',
+    'skeletal-muscle-isometric-length-tension-curve': 'skeletal muscle isometric active length tension curve sarcomere sliding filament tetanic contraction',
+    'ligament-viscoelastic-stress-relaxation-fung': 'viscoelastic ligament stress relaxation fung quasi linear viscoelasticity qlv reduced relaxation acl',
+    'gait-analysis-force-plate-ground-reaction-forces': 'instrumented gait analysis force plate ground reaction forces grf velocity scaling stance phase',
+    'prosthetic-socket-interface-pressure-mapping': 'transtibial prosthetic socket patellar tendon interface pressure mapping thin film piezoresistive',
+    'blood-viscosity-cone-and-plate-rheometer-casson': 'blood viscosity cone and plate rheometer casson fluid non newtonian shear thinning yield stress',
+    'hagen-poiseuille-microvascular-flow-resistance': 'microvascular perfusion hydraulic resistance hagen poiseuille laminar flow capillary network arteriole',
+    'windkessel-lumped-parameter-arterial-compliance': 'two element windkessel lumped parameter arterial compliance diastolic decay pressure runoff aorta',
+    'mechanical-heart-valve-steady-flow-pressure-drop': 'bileaflet mechanical heart valve steady flow pressure drop bernoulli orifice area eoa gorlin',
+    'pulse-wave-velocity-arterial-stiffness-moens-korteweg': 'carotid femoral pulse wave velocity pwv arterial stiffness moens korteweg blood pressure applanation tonometry',
+    'hollow-fiber-hemodialyzer-clearance-mass-transfer': 'hollow fiber hemodialyzer clearance mass transfer coefficient urea artificial kidney counter current dialysis',
+    'centrifugal-rotary-blood-pump-hemolysis-shear-stress': 'centrifugal continuous flow rotary blood pump lvad shut off pressure head maglev impeller',
+    'fahraeus-lindqvist-tube-hematocrit-reduction': 'fahraeus lindqvist effect micro capillary apparent relative blood viscosity cell free layer hematocrit',
+    'ultrasound-transducer-acoustic-beam-profiling': 'medical ultrasound transducer acoustic beam attenuation spatial profiling hydrophone phantom pzt',
+    'x-ray-narrow-beam-linear-attenuation-hvl': 'diagnostic x ray narrow beam linear attenuation half value layer hvl aluminum filtration beer lambert',
+    'doppler-ultrasound-flowmeter-frequency-shift': 'continuous wave doppler ultrasound blood flowmeter frequency shift insonation angle velocimetry',
+    'mri-spin-lattice-relaxation-t1-inversion-recovery': 'magnetic resonance imaging mri spin lattice relaxation t1 mapping inversion recovery bloch equation',
+    'cardiac-pacemaker-pulse-generator-chronaxie-strength-duration': 'implantable cardiac pacemaker lapicque strength duration chronaxie rheobase pacing threshold capture',
+    'external-defibrillator-rlc-damped-sinusoidal-pulse': 'external defibrillator rlc damped sinusoidal discharge transthoracic impedance ventricular fibrillation',
+    'biphasic-functional-electrical-stimulator-charge-balance': 'biphasic functional electrical stimulation fes charge balance injection neuroprosthesis cathodic',
+    'hearing-aid-electroacoustic-frequency-response-gain': 'digital hearing aid electroacoustic 2 cc coupler sound pressure level gain ansi s3.22 wdrc'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):
@@ -317,6 +361,9 @@ def experiment_index(experiments):
   elif '/agricultural-engineering/' in exp.get('page_path',''):
    sub='agricultural-engineering'
    sub_name='Agricultural Engineering'
+  elif '/biomedical-engineering/' in exp.get('page_path',''):
+   sub='biomedical-engineering'
+   sub_name='Biomedical Engineering'
   else:
    sub='physics'
    sub_name='Physics'

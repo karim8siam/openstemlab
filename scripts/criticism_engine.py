@@ -39,6 +39,10 @@ def run_audit(target_slugs=None, verbose=True):
         agri_configs = json.loads((ROOT / 'content/agricultural/experiments.json').read_text())
         for c in agri_configs: c['subject'] = 'agricultural-engineering'
         configs.extend(agri_configs)
+    if (ROOT / 'content/biomedical/experiments.json').exists():
+        biomed_configs = json.loads((ROOT / 'content/biomedical/experiments.json').read_text())
+        for c in biomed_configs: c['subject'] = 'biomedical-engineering'
+        configs.extend(biomed_configs)
     
     # Identify benchmarks vs new targets
     known_benchmarks = [
@@ -238,6 +242,11 @@ def run_audit(target_slugs=None, verbose=True):
         agriModels = require('./content/agricultural/models.js');
         agriConfigs = JSON.parse(fs.readFileSync('content/agricultural/experiments.json', 'utf8'));
     }
+    let biomedModels = null, biomedConfigs = [];
+    if (fs.existsSync('content/biomedical/experiments.json') && fs.existsSync('content/biomedical/models.js')) {
+        biomedModels = require('./content/biomedical/models.js');
+        biomedConfigs = JSON.parse(fs.readFileSync('content/biomedical/experiments.json', 'utf8'));
+    }
     let errs = [];
     physConfigs.forEach(c => {
         try {
@@ -337,8 +346,22 @@ def run_audit(target_slugs=None, verbose=True):
             errs.push(c.slug + ': exception ' + e.message);
         }
     });
+    biomedConfigs.forEach(c => {
+        try {
+            const p = biomedModels.predict(c.slug, c.initial);
+            if (!p.valid) errs.push(c.slug + ': initial predict invalid');
+            const rows = c.samples.map(v => biomedModels.reading(c.slug, v, biomedModels.predict(c.slug, v).raw));
+            const fit = biomedModels.fit(rows);
+            if (!fit || fit.r2 < 0.999) errs.push(c.slug + ': r2 < 0.999 (' + (fit ? fit.r2 : 'null') + ')');
+            const est = biomedModels.estimate(c.slug, fit);
+            const diff = Math.abs(est.value - est.reference) / Math.abs(est.reference) * 100;
+            if (diff > 0.3) errs.push(c.slug + ': regression diff > 0.3% (' + diff.toFixed(4) + '%)');
+        } catch(e) {
+            errs.push(c.slug + ': exception ' + e.message);
+        }
+    });
     if (errs.length) { console.error(JSON.stringify(errs)); process.exit(1); }
-    console.log('All ' + (physConfigs.length + csConfigs.length + chemConfigs.length + mathConfigs.length + statsConfigs.length + aeroConfigs.length + agriConfigs.length) + ' experiment models passed validation.');
+    console.log('All ' + (physConfigs.length + csConfigs.length + chemConfigs.length + mathConfigs.length + statsConfigs.length + aeroConfigs.length + agriConfigs.length + biomedConfigs.length) + ' experiment models passed validation.');
     """
     js_proc = subprocess.run(['node', '-e', js_test_code], cwd=ROOT, capture_output=True, text=True)
     if js_proc.returncode != 0:

@@ -95,8 +95,8 @@
     "category": "Engineering",
     "practical_type": "mixed",
     "display_mode": "Engineering lab",
-    "example_topics_json": "[\"Thermistor Wheatstone-bridge thermometer\", \"Force-sensor calibration\", \"Heart-rate signal measurement\", \"Respiratory-rate measurement\"]",
-    "content_status": "planned"
+    "example_topics_json": "[\"Bioinstrumentation and physiological sensors\", \"Biosignal processing, ECG and pulse oximetry\", \"Orthopaedic biomechanics and biomaterials\", \"Cardiovascular hemodynamics and medical devices\"]",
+    "content_status": "live"
   },
   {
     "slug": "agricultural-engineering",
