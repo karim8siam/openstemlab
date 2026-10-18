@@ -68,3 +68,48 @@
   .footer-bottom{flex-direction:column;align-items:flex-start;gap:8px}
 }
 
+/* Header direct contact link */
+.header-links .nav-contact{display:inline-flex;align-items:center;gap:5px;color:var(--orange);font-weight:600;padding:6px 11px;border-radius:5px;background:rgba(184,81,49,0.06);border:1px solid rgba(184,81,49,0.24);transition:all .15s}
+.header-links .nav-contact:hover{background:var(--orange);color:#fff}
+.mail-svg{display:inline-block;vertical-align:middle}
+
+/* Missing Experiment Banner (After Subjects, Before Ecosystem) */
+.missing-experiment-section{margin:35px 0 50px}
+.missing-exp-card{display:flex;gap:26px;align-items:flex-start;background:#edf3e7;border:1px solid #d1dcc8;border-left:5px solid #2e5c49;border-radius:10px;padding:32px 34px}
+.missing-exp-icon{font-size:36px;line-height:1;flex-shrink:0;padding-top:4px}
+.missing-exp-content{flex:1}
+.missing-exp-content .eyebrow{color:var(--orange);font-size:9px;letter-spacing:1.6px;font-weight:700;display:block;margin-bottom:10px}
+.missing-exp-content h2{font-size:24px;font-weight:700;letter-spacing:-0.7px;color:#223c30;margin:0 0 12px;line-height:1.3}
+.missing-exp-content p{font-size:13px;color:#5c6f59;line-height:1.8;margin:0 0 20px;max-width:880px}
+.missing-exp-action{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.missing-email-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;background:#2e5c49;color:#fff;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;transition:background .15s,transform .15s;box-shadow:0 2px 6px rgba(46,92,73,0.18)}
+.missing-email-btn:hover{background:#234738;color:#fff;transform:translateY(-1px);box-shadow:0 4px 12px rgba(46,92,73,0.25)}
+.missing-exp-note{font-size:11px;color:#70846c}
+
+/* Feedback, Proposals & Corrections Section (Before Footer) */
+.feedback-proposal-section{margin:50px 0 35px;background:#fffef8;border:1px solid #dce4d4;border-radius:12px;padding:42px 38px}
+.feedback-header{max-width:780px;margin-bottom:28px}
+.feedback-header .eyebrow{color:var(--orange);font-size:9.5px;letter-spacing:1.8px;font-weight:700;display:block;margin-bottom:10px}
+.feedback-header h2{font-size:clamp(24px,2.6vw,30px);font-weight:700;letter-spacing:-0.8px;color:var(--ink);margin:0 0 12px;line-height:1.25}
+.feedback-header p{font-size:13px;color:#6d7f6b;line-height:1.8;margin:0}
+.feedback-channels{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.feedback-btn{display:flex;align-items:center;gap:14px;padding:18px 22px;border-radius:8px;text-decoration:none;transition:all .18s ease;border:1px solid transparent}
+.feedback-discord-btn{background:rgba(88,101,242,0.08);border-color:rgba(88,101,242,0.28);color:#4752c4}
+.feedback-discord-btn:hover{background:#5865f2;color:#fff;transform:translateY(-2px);box-shadow:0 6px 18px rgba(88,101,242,0.25)}
+.feedback-email-btn{background:rgba(184,81,49,0.08);border-color:rgba(184,81,49,0.25);color:#9e3d20}
+.feedback-email-btn:hover{background:#b85131;color:#fff;transform:translateY(-2px);box-shadow:0 6px 18px rgba(184,81,49,0.25)}
+.feedback-btn span{display:flex;flex-direction:column;font-size:13px;font-weight:700;line-height:1.35}
+.feedback-btn small{font-size:11px;font-weight:400;opacity:0.85;margin-top:3px}
+.feedback-discord-btn:hover small,.feedback-email-btn:hover small{color:#f8fafc;opacity:0.95}
+
+@media(max-width:750px){
+  .feedback-proposal-section{padding:26px 20px}
+  .feedback-channels{grid-template-columns:1fr;gap:12px}
+  .feedback-btn{padding:14px 16px}
+  .missing-exp-card{flex-direction:column;gap:16px;padding:22px 18px}
+  .missing-exp-content h2{font-size:20px}
+  .missing-exp-action{flex-direction:column;align-items:flex-start;gap:10px}
+  .missing-email-btn{width:100%;justify-content:center}
+}
+
+
