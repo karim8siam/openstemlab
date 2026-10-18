@@ -24,7 +24,7 @@
     "practical_type": "hands-on",
     "display_mode": "Wet lab",
     "example_topics_json": "[\"Acid–base titration and buffers\", \"Calorimetry and enthalpy changes\", \"Reaction kinetics\", \"Spectrophotometry and electrochemical cells\"]",
-    "content_status": "planned"
+    "content_status": "live"
   },
   {
     "slug": "mechanical-engineering",
@@ -87,7 +87,7 @@
     "practical_type": "mixed",
     "display_mode": "Engineering lab",
     "example_topics_json": "[\"Wind-tunnel calibration\", \"Airfoil lift and drag measurements\", \"Surface-pressure distribution\", \"Flow visualization\"]",
-    "content_status": "planned"
+    "content_status": "live"
   },
   {
     "slug": "biomedical-engineering",
@@ -105,7 +105,7 @@
     "practical_type": "mixed",
     "display_mode": "Engineering lab",
     "example_topics_json": "[\"Grain moisture-content measurement\", \"Drying-curve determination\", \"Grain-cleaner performance\", \"Size-reduction particle analysis\"]",
-    "content_status": "planned"
+    "content_status": "live"
   },
   {
     "slug": "marine-ocean-sciences",
@@ -186,7 +186,7 @@
     "practical_type": "Computational mathematics",
     "display_mode": "Computational",
     "example_topics_json": "[\"Root-finding convergence\", \"Numerical integration error\", \"Solving linear systems\", \"Interpolation accuracy\"]",
-    "content_status": "planned"
+    "content_status": "live"
   },
   {
     "slug": "computer-science",
@@ -195,7 +195,7 @@
     "practical_type": "Programming and computational experiments",
     "display_mode": "Computational",
     "example_topics_json": "[\"Sorting algorithm timing\", \"Recursion exploration\", \"Stack and queue operations\", \"Program testing and debugging\"]",
-    "content_status": "planned"
+    "content_status": "live"
   },
   {
     "slug": "statistics-probability",
@@ -204,7 +204,7 @@
     "practical_type": "Data analysis and simulation",
     "display_mode": "Data lab",
     "example_topics_json": "[\"Sampling distributions\", \"Confidence-interval coverage\", \"Randomization tests\", \"Regression diagnostics\"]",
-    "content_status": "planned"
+    "content_status": "live"
   },
   {
     "slug": "psychology",
