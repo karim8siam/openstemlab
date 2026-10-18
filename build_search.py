@@ -31,6 +31,10 @@ def experiment_index(experiments):
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/mechanical/experiments.json').read_text())})
  if (ROOT/'content/textile/experiments.json').exists():
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/textile/experiments.json').read_text())})
+ if (ROOT/'content/archaeology/experiments.json').exists():
+  configs.update({c['slug']:c for c in json.loads((ROOT/'content/archaeology/experiments.json').read_text())})
+ if (ROOT/'content/geography/experiments.json').exists():
+  configs.update({c['slug']:c for c in json.loads((ROOT/'content/geography/experiments.json').read_text())})
  index=[]
  aliases={'simple-pendulum':'gravity g oscillation bob string time period','bifilar-suspension':'rotation inertia rod oscillation strings','young-modulus':'youngs modulus elasticity stress strain wire stretching','stokes-viscosity':'stokes law fluid liquid sphere terminal velocity','convex-lens':'optics focal length lens image uv method','photoelectric-effect':'photon light planck constant stopping potential work function','ohms-law':'ohm ohms law current voltage resistor resistance circuit ammeter voltmeter','metre-bridge':'meter metre wheatstone bridge null galvanometer unknown resistance','rc-charging':'capacitor capacitance resistor rc charge time constant exponential','glass-slab':'refraction refractive index apparent real depth glass microscope','diffraction-grating':'diffraction interference grating spectrum wavelength laser light','hookes-law':'hooke hookes law spring constant stiffness elasticity elongation extension load force','density-measurement':'density mass volume archimedes copper displacement solid balance cylinder','vernier-micrometer':'vernier caliper micrometer screw gauge least count zero error pi circumference diameter length measurement metrology','friction-laws':'friction laws amontons coulomb sliding kinetic static normal force coefficient dynamometer','principle-of-moments':'principle moments torque center gravity lever parallel forces fulcrum meter rule rotational equilibrium balance steelyard','force-table':'force table concurrent forces vector addition resultant equilibrant components pulleys ring equilibrium parallelogram law','equilibrium-forces':'parallel forces non-concurrent rigid body equilibrium beam reactions dynamometers support moments translational rotational static equilibrium',
   'free-fall':'free fall acceleration gravity g spark timer drop tower kinematics uniformly accelerated motion plummet photogate',
@@ -611,7 +615,47 @@ def experiment_index(experiments):
     'nonwoven-fabric-tensile-strength-anisotropy-ratio': 'nonwoven fabric tensile strength anisotropy ratio spunbond basis weight machine direction cross direction thermal calender',
     'thermal-resistance-clo-value-guarded-hotplate': 'thermal resistance clo value guarded hotplate iso 11092 sweating skin model insulation batt thickness heat flux rct',
     'ultraviolet-protection-factor-upf-transmittance-spectrophotometry': 'ultraviolet protection factor upf transmittance spectrophotometry uv a uv b blocking protective textiles as nzs 4399',
-    'spectrophotometric-color-matching-cielab-kubelka-munk': 'spectrophotometric color matching cielab kubelka munk k s color strength reflectance d65 standard illuminant delta e metamerism'}
+    'spectrophotometric-color-matching-cielab-kubelka-munk': 'spectrophotometric color matching cielab kubelka munk k s color strength reflectance d65 standard illuminant delta e metamerism',
+    'radiometric-carbon14-decay-dating-calibration': 'radiocarbon 14c decay dating calibration half life intcal beta scintillation counting bp age',
+    'magnetic-susceptibility-soil-prospection': 'soil magnetic susceptibility prospection hearth burning kiln maghemite bartington ms2 anthropic grid',
+    'electrical-resistivity-pseudosection-archaeological-survey': 'electrical resistivity pseudosection wenner array buried wall masonry ditch apparent resistance geoscan rm85',
+    'stratigraphic-harris-matrix-seriation': 'stratigraphic sequence harris matrix seriation superposition relative dating phasing context units total station',
+    'flint-knapping-conchoidal-fracture-angle': 'flint knapping conchoidal fracture angle lithic reduction striking platform bulb percussion hertzian cone flake',
+    'obsidian-hydration-layer-thickness-chronometry': 'obsidian hydration layer thickness chronometry rim diffusion polarized light filar micrometer dating',
+    'xrf-provenance-obsidian-lithic-sourcing': 'xrf provenance obsidian lithic sourcing trace element rubidium strontium zirconium edxrf volcanic quarry',
+    'ceramic-thin-section-petrography-temper-density': 'ceramic thin section petrography temper density point counting polarized microscope fabric inclusions delesse',
+    'ceramic-thermal-expansion-firing-temperature': 'ceramic thermal expansion firing temperature dilatometry tma sintering irreversible contraction ancient kiln',
+    'archaeomagnetic-inclination-paleointensity': 'archaeomagnetic dating thermal demagnetization paleointensity thellier squid remanent magnetization secular variation',
+    'pottery-water-absorption-open-porosity': 'pottery water absorption open porosity archimedes bulk density boiling immersion hydrostatic balance sintering',
+    'residue-gas-chromatography-lipid-biomarkers': 'organic residue gas chromatography mass spectrometry lipid biomarkers gc ms palmitic stearic ratio fame adipose fat',
+    'dental-cementum-increment-age-seasonality': 'dental cementum increment age seasonality sclerochronology polarized annuli counting kill season cementum bands',
+    'stable-isotope-paleodiet-carbon-nitrogen': 'stable isotope paleodiet carbon nitrogen delta 13c 15n bone collagen trophic level marine c3 c4 plants',
+    'strontium-isotope-ratio-human-mobility': 'strontium isotope ratio human mobility tooth enamel 87sr 86sr tims geological bedrock migration watershed',
+    'osteometric-sex-estimation-femur-diameter': 'osteometric sex estimation femur vertical diameter sliding caliper discriminant score sexual dimorphism skeleton',
+    'soil-phosphorus-spot-test-anthropic-settlement': 'soil phosphorus spot test anthropic settlement phosphate mehlich spectrophotometer midden livestock penning',
+    'sediment-particle-size-settling-settlement-matrix': 'geoarchaeological sediment particle size settling stokes law hydrometer settling velocity sand silt clay',
+    'heavy-fraction-soil-micromorphology-loss-on-ignition': 'soil micromorphology loss on ignition loi organic carbon carbonate muffle furnace occupation floor',
+    'phytolith-morphometric-silica-taxonomic-ratio': 'phytolith morphometric silica taxonomic ratio biogenic opal aspect ratio poaceae wild grass cereal domestication',
+    'river-discharge-velocity-area-current-meter': 'river discharge velocity area current meter stream gauging hydrograph price aa flow rate stage rating',
+    'fluvial-sediment-grain-size-phi-scale': 'fluvial sediment grain size phi scale sieve analysis krumbein wentworth median diameter d50 sorting folk ward',
+    'bedload-transport-critical-shear-stress-shields': 'bedload sediment transport critical shear stress shields parameter tilting flume boundary shear entrainment',
+    'river-hydraulic-geometry-downstream-scaling': 'river downstream hydraulic geometry leopold maddock bankfull width depth velocity exponent scaling drainage basin',
+    'psychrometric-relative-humidity-dew-point': 'atmospheric psychrometry relative humidity dew point whirling hygrometer wet bulb depression vapor pressure',
+    'surface-radiation-budget-albedo-pyranometer': 'surface radiation budget albedo pyranometer shortwave solar flux reflectance kipp zonen land cover energy balance',
+    'soil-heat-flux-thermal-diffusivity': 'soil heat flux thermal diffusivity diurnal temperature wave damping depth thermocouple fourier conduction',
+    'urban-heat-island-canopy-temperature-transect': 'urban heat island uhi canopy temperature transect impervious surface sky view factor microclimate mobile traverse',
+    'soil-moisture-gravimetric-water-content': 'soil moisture gravimetric water content dry bulk density oven drying core sample volumetric moisture porosity',
+    'soil-infiltration-double-ring-infiltrometer': 'soil infiltration double ring infiltrometer horton equation steady state hydraulic conductivity mariotte',
+    'plant-canopy-leaf-area-index-beers-law': 'plant canopy leaf area index lai beers law light extinction ceptometer photosynthetically active radiation par',
+    'species-area-relationship-spatial-biodiversity': 'species area relationship spatial biodiversity sar arrhenius power law nested quadrat island biogeography',
+    'slope-stability-safety-factor-infinite-slope': 'slope stability safety factor infinite slope hillslope geomorphology mohr coulomb landslide failure pore pressure',
+    'soil-erosion-pin-rill-depth-universal-soil-loss': 'soil erosion pin rill depth universal soil loss usle rainfall erosivity sheetwash sediment yield hillslope',
+    'beach-profile-morphodynamics-emery-pole': 'beach profile morphodynamics emery pole two rod leveling cross shore elevation berm sweep zone foreshore',
+    'wave-shoaling-refraction-snells-law': 'wave shoaling refraction snells law coastal hydrodynamics airy wave dispersion bathymetry wave celerity breaker',
+    'gravity-model-spatial-interaction-trade': 'gravity model spatial interaction trade wilson inter city commuter flow distance decay population product',
+    'rank-size-rule-urban-hierarchy-zipf': 'rank size rule urban hierarchy zipfs law city size settlement distribution primate city log log census',
+    'nearest-neighbor-spatial-point-pattern-analysis': 'nearest neighbor spatial point pattern analysis clark evans ratio r poisson spatial dispersion random clustered',
+    'land-surface-temperature-split-window-landsat': 'land surface temperature lst split window landsat tirs thermal infrared satellite brightness temperature emissivity'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):
@@ -653,6 +697,12 @@ def experiment_index(experiments):
   elif '/textile-engineering/' in exp.get('page_path',''):
    sub='textile-engineering'
    sub_name='Textile Engineering'
+  elif '/archaeology/' in exp.get('page_path',''):
+   sub='archaeology'
+   sub_name='Archaeology'
+  elif '/geography/' in exp.get('page_path',''):
+   sub='geography'
+   sub_name='Geography'
   else:
    sub='physics'
    sub_name='Physics'

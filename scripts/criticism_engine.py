@@ -67,6 +67,14 @@ def run_audit(target_slugs=None, verbose=True):
         textile_configs = json.loads((ROOT / 'content/textile/experiments.json').read_text())
         for c in textile_configs: c['subject'] = 'textile-engineering'
         configs.extend(textile_configs)
+    if (ROOT / 'content/archaeology/experiments.json').exists():
+        archaeology_configs = json.loads((ROOT / 'content/archaeology/experiments.json').read_text())
+        for c in archaeology_configs: c['subject'] = 'archaeology'
+        configs.extend(archaeology_configs)
+    if (ROOT / 'content/geography/experiments.json').exists():
+        geography_configs = json.loads((ROOT / 'content/geography/experiments.json').read_text())
+        for c in geography_configs: c['subject'] = 'geography'
+        configs.extend(geography_configs)
     
     # Identify benchmarks vs new targets
     known_benchmarks = [
@@ -301,6 +309,16 @@ def run_audit(target_slugs=None, verbose=True):
         textileModels = require('./content/textile/models.js');
         textileConfigs = JSON.parse(fs.readFileSync('content/textile/experiments.json', 'utf8'));
     }
+    let archaeologyModels = null, archaeologyConfigs = [];
+    if (fs.existsSync('content/archaeology/experiments.json') && fs.existsSync('content/archaeology/models.js')) {
+        archaeologyModels = require('./content/archaeology/models.js');
+        archaeologyConfigs = JSON.parse(fs.readFileSync('content/archaeology/experiments.json', 'utf8'));
+    }
+    let geographyModels = null, geographyConfigs = [];
+    if (fs.existsSync('content/geography/experiments.json') && fs.existsSync('content/geography/models.js')) {
+        geographyModels = require('./content/geography/models.js');
+        geographyConfigs = JSON.parse(fs.readFileSync('content/geography/experiments.json', 'utf8'));
+    }
     let errs = [];
     physConfigs.forEach(c => {
         try {
@@ -498,8 +516,36 @@ def run_audit(target_slugs=None, verbose=True):
             errs.push(c.slug + ': exception ' + e.message);
         }
     });
+    archaeologyConfigs.forEach(c => {
+        try {
+            const p = archaeologyModels.predict(c.slug, c.initial);
+            if (!p.valid) errs.push(c.slug + ': initial predict invalid');
+            const rows = c.samples.map(v => archaeologyModels.reading(c.slug, v, archaeologyModels.predict(c.slug, v).raw));
+            const fit = archaeologyModels.fit(rows);
+            if (!fit || fit.r2 < 0.999) errs.push(c.slug + ': r2 < 0.999 (' + (fit ? fit.r2 : 'null') + ')');
+            const est = archaeologyModels.estimate(c.slug, fit);
+            const diff = Math.abs(est.value - est.reference) / Math.abs(est.reference) * 100;
+            if (diff > 0.3) errs.push(c.slug + ': regression diff > 0.3% (' + diff.toFixed(4) + '%)');
+        } catch(e) {
+            errs.push(c.slug + ': exception ' + e.message);
+        }
+    });
+    geographyConfigs.forEach(c => {
+        try {
+            const p = geographyModels.predict(c.slug, c.initial);
+            if (!p.valid) errs.push(c.slug + ': initial predict invalid');
+            const rows = c.samples.map(v => geographyModels.reading(c.slug, v, geographyModels.predict(c.slug, v).raw));
+            const fit = geographyModels.fit(rows);
+            if (!fit || fit.r2 < 0.999) errs.push(c.slug + ': r2 < 0.999 (' + (fit ? fit.r2 : 'null') + ')');
+            const est = geographyModels.estimate(c.slug, fit);
+            const diff = Math.abs(est.value - est.reference) / Math.abs(est.reference) * 100;
+            if (diff > 0.3) errs.push(c.slug + ': regression diff > 0.3% (' + diff.toFixed(4) + '%)');
+        } catch(e) {
+            errs.push(c.slug + ': exception ' + e.message);
+        }
+    });
     if (errs.length) { console.error(JSON.stringify(errs)); process.exit(1); }
-    console.log('All ' + (physConfigs.length + csConfigs.length + chemConfigs.length + mathConfigs.length + statsConfigs.length + aeroConfigs.length + agriConfigs.length + biomedConfigs.length + chemengConfigs.length + civilConfigs.length + electricalConfigs.length + eceConfigs.length + mechanicalConfigs.length + textileConfigs.length) + ' experiment models passed validation.');
+    console.log('All ' + (physConfigs.length + csConfigs.length + chemConfigs.length + mathConfigs.length + statsConfigs.length + aeroConfigs.length + agriConfigs.length + biomedConfigs.length + chemengConfigs.length + civilConfigs.length + electricalConfigs.length + eceConfigs.length + mechanicalConfigs.length + textileConfigs.length + archaeologyConfigs.length + geographyConfigs.length) + ' experiment models passed validation.');
     """
     js_proc = subprocess.run(['node', '-e', js_test_code], cwd=ROOT, capture_output=True, text=True)
     if js_proc.returncode != 0:

@@ -221,8 +221,8 @@
     "category": "Human & field sciences",
     "practical_type": "Field and spatial investigations",
     "display_mode": "Field & data",
-    "example_topics_json": "[\"Spatial sampling design\", \"Land-use observation\", \"Traffic-count comparison\", \"Geographic survey analysis\"]",
-    "content_status": "planned"
+    "example_topics_json": "[\"Fluvial geomorphology & hydraulics\", \"Meteorology & microclimatology\", \"Biogeography & soil hydrology\", \"Coastal morphodynamics & shoaling\", \"Spatial analysis & remote sensing\"]",
+    "content_status": "live"
   },
   {
     "slug": "archaeology",
@@ -230,7 +230,7 @@
     "category": "Human & field sciences",
     "practical_type": "Field and artifact analysis",
     "display_mode": "Field & lab",
-    "example_topics_json": "[\"Site-grid mapping\", \"Stratigraphic sequence\", \"Sampling strategy comparison\", \"Artifact recording\"]",
-    "content_status": "planned"
+    "example_topics_json": "[\"Site-grid & geophysics survey\", \"Lithic technology & petrography\", \"Pyrotechnology & archaeomagnetism\", \"Bioarchaeology & paleodiet isotopes\", \"Geoarchaeology & micromorphology\"]",
+    "content_status": "live"
   }
 ]
