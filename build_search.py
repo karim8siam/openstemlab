@@ -51,6 +51,10 @@ def experiment_index(experiments):
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/pharmacy_pharmaceutical_sciences/experiments.json').read_text())})
  if (ROOT/'content/veterinary_medicine/experiments.json').exists():
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/veterinary_medicine/experiments.json').read_text())})
+ if (ROOT/'content/earth_space_sciences/experiments.json').exists():
+  configs.update({c['slug']:c for c in json.loads((ROOT/'content/earth_space_sciences/experiments.json').read_text())})
+ if (ROOT/'content/marine_ocean_sciences/experiments.json').exists():
+  configs.update({c['slug']:c for c in json.loads((ROOT/'content/marine_ocean_sciences/experiments.json').read_text())})
  index=[]
  aliases={'simple-pendulum':'gravity g oscillation bob string time period','bifilar-suspension':'rotation inertia rod oscillation strings','young-modulus':'youngs modulus elasticity stress strain wire stretching','stokes-viscosity':'stokes law fluid liquid sphere terminal velocity','convex-lens':'optics focal length lens image uv method','photoelectric-effect':'photon light planck constant stopping potential work function','ohms-law':'ohm ohms law current voltage resistor resistance circuit ammeter voltmeter','metre-bridge':'meter metre wheatstone bridge null galvanometer unknown resistance','rc-charging':'capacitor capacitance resistor rc charge time constant exponential','glass-slab':'refraction refractive index apparent real depth glass microscope','diffraction-grating':'diffraction interference grating spectrum wavelength laser light','hookes-law':'hooke hookes law spring constant stiffness elasticity elongation extension load force','density-measurement':'density mass volume archimedes copper displacement solid balance cylinder','vernier-micrometer':'vernier caliper micrometer screw gauge least count zero error pi circumference diameter length measurement metrology','friction-laws':'friction laws amontons coulomb sliding kinetic static normal force coefficient dynamometer','principle-of-moments':'principle moments torque center gravity lever parallel forces fulcrum meter rule rotational equilibrium balance steelyard','force-table':'force table concurrent forces vector addition resultant equilibrant components pulleys ring equilibrium parallelogram law','equilibrium-forces':'parallel forces non-concurrent rigid body equilibrium beam reactions dynamometers support moments translational rotational static equilibrium',
   'free-fall':'free fall acceleration gravity g spark timer drop tower kinematics uniformly accelerated motion plummet photogate',
@@ -887,7 +891,49 @@ def experiment_index(experiments):
     'canine-electrocardiogram-mean-electrical-axis': 'canine electrocardiogram ecg mean electrical axis mea einthoven triangle lead i lead iii cardiac vector',
     'veterinary-orthopedic-bone-plate-four-point-bending': 'veterinary orthopedic dynamic compression bone plate dcp four point bending structural flexural rigidity servohydraulic',
     'equine-joint-synovial-fluid-mucin-clot-viscosity': 'equine joint synovial fluid mucin clot test ostwald capillary viscometer hyaluronic acid arthrocentesis osteoarthritis',
-    'canine-craniocaudal-stifle-drawer-joint-laxity': 'canine stifle cranial drawer laxity tibial translation anterior cruciate ligament rupture ccl tplo arthrometer'}
+    'canine-craniocaudal-stifle-drawer-joint-laxity': 'canine stifle cranial drawer laxity tibial translation anterior cruciate ligament rupture ccl tplo arthrometer',
+    'mohs-hardness-mineral-scratch-indentation': 'mohs hardness scratch indentation mineral cleavage fracture shear load diamond stylus',
+    'stokes-sediment-grain-size-settling-velocity': 'stokes settling velocity sediment grain size clastic pipette andreasen drag',
+    'mineral-specific-gravity-jolly-balance': 'jolly spring balance specific gravity mineral density archimedes hydrostatic weighing',
+    'snells-law-thin-section-birefringence-petrography': 'thin section petrography birefringence retardation polarized light microscope michel levy',
+    'brinell-rock-compressive-strength-schmidt-hammer': 'schmidt hammer rebound hardness rock compressive strength ucs deere miller geomechanics',
+    'seismic-p-s-travel-time-epicenter-distance': 'seismic p s wave travel time epicenter distance earthquake omori jeffreys bullen',
+    'wadati-benioff-seismic-velocity-ratio': 'wadati benioff seismic velocity ratio vp vs subduction slab poisson ratio',
+    'paleomagnetic-seafloor-spreading-vine-matthews': 'paleomagnetism seafloor spreading vine matthews morley magnetic anomaly reversals rift',
+    'free-air-gravity-bouguer-anomaly-elevation': 'bouguer gravity anomaly free air elevation reduction gravimeter isostasy crustal density',
+    'resistivity-vertical-electrical-sounding-schlumberger': 'vertical electrical sounding schlumberger resistivity apparent resistivity groundwater aquifer geophysics',
+    'keplers-third-law-orbital-harmonic-resonance': 'kepler third law orbital period semi major axis celestial mechanics planetary resonance',
+    'telescope-resolving-power-rayleigh-criterion': 'telescope resolving power rayleigh criterion angular resolution aperture diffraction airy disk',
+    'hertzsprung-russell-stellar-parallax-distance': 'stellar parallax distance parsec hertzsprung russell astrometry baseline angle',
+    'hubbles-law-galaxy-redshift-expansion': 'hubble law galaxy redshift doppler cosmological expansion hubble constant velocity distance',
+    'stefan-boltzmann-blackbody-radiation-temperature': 'stefan boltzmann blackbody radiation thermal flux temperature emissivity radiant energy',
+    'solar-limb-darkening-photometric-profile': 'solar limb darkening photosphere optical depth radiative transfer intensity profile',
+    'barometric-hypsometric-atmospheric-lapse-rate': 'barometric pressure lapse rate hypsometric altitude troposphere hydrostatic radiosonde',
+    'greenhouse-gas-infrared-absorption-beer-lambert': 'greenhouse gas infrared absorption co2 radiative forcing beer lambert ftir spectrometer',
+    'coriolis-deflection-planetary-vorticity-geostrophic': 'coriolis effect planetary vorticity geostrophic wind fluid dynamics rotating turntable deflection',
+    'landsat-ndvi-multispectral-vegetation-reflectance': 'landsat ndvi normalized difference vegetation index multispectral remote sensing red near infrared',
+    'radar-doppler-tropospheric-wind-profiling': 'radar doppler wind profiler nexrad radial velocity vad tropospheric meteorological sounding',
+    'practical-salinity-scale-conductometric-salinometer': 'practical salinity pss 78 conductometric salinometer iapso autosal conductivity ratio unesco',
+    'seawater-density-equation-of-state-temperature': 'seawater density equation of state teos 10 thermal expansion sigma t pycnometry',
+    'shallow-water-wave-celerity-depth-dispersion': 'shallow water wave celerity airy dispersion relation wave flume shoaling depth',
+    'ekman-spiral-wind-drift-surface-current': 'ekman spiral wind drift current surface transport coriolis planetary vorticity',
+    'seawater-sound-velocity-temperature-depth-profile': 'sound speed seawater mackenzie del grosso sofar acoustic thermometry underwater',
+    'coastal-tidal-resonance-harmonic-analysis': 'tidal resonance harmonic analysis estuarine standing wave basin amplification bay fundy',
+    'winkler-dissolved-oxygen-iodometric-titration': 'winkler method dissolved oxygen iodometric titration hypoxia ocean bod thiosulfate',
+    'ocean-acidification-seawater-carbonate-alkalinity': 'ocean acidification carbonate alkalinity gran titration aragonite saturation dic ph',
+    'marine-soluble-reactive-phosphate-molybdenum-blue': 'phosphate soluble reactive nutrient molybdenum blue spectrophotometry ocean redfield ratio',
+    'seawater-nitrate-reduction-cadmium-spectrophotometry': 'nitrate cadmium copper reduction azo dye spectrophotometry ocean nitrogen cycle nutrient',
+    'oceanic-dissolved-silicate-silicomolybdate-spectrophotometry': 'silicate dissolved orthosilicic acid silicomolybdate diatom biosilicification nutrient ocean',
+    'chlorophyll-a-trichromatic-spectrophotometric-assay': 'chlorophyll a trichromatic spectrophotometry phytoplankton primary production pigment acetone',
+    'secchi-disk-seawater-turbidity-photic-zone': 'secchi disk turbidity photic zone diffuse attenuation kd poole atkins water clarity',
+    'marine-bacterial-respiration-microbial-loop': 'bacterial respiration microbial loop dissolved oxygen dark bottle incubation carbon remineralization',
+    'benthic-intertidal-quadrat-species-diversity': 'benthic intertidal quadrat species diversity shannon wiener zonation rocky shore',
+    'zooplankton-settling-volume-biomass-abundance': 'zooplankton settling volume biomass bongo net allometric secondary production copepods',
+    'coastal-beach-profile-emery-rod-sedimentation': 'coastal beach profile emery rod survey sand berm morphodynamics erosion',
+    'marine-sediment-porosity-gravimetric-water-content': 'marine sediment porosity gravimetric water content bulk density athy compaction',
+    'acoustic-doppler-current-profiler-adcp-discharge': 'adcp acoustic doppler current profiler estuarine volumetric discharge velocity shear',
+    'coastal-longshore-current-tracer-dispersion': 'coastal longshore current rhodamine dye tracer dispersion wave radiation stress surf zone',
+    'ctd-rosette-conductivity-temperature-depth-profiler': 'ctd rosette conductivity temperature depth hydrography water mass pycnocline niskin'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):
@@ -959,6 +1005,12 @@ def experiment_index(experiments):
   elif '/veterinary-medicine/' in exp.get('page_path',''):
    sub='veterinary-medicine'
    sub_name='Veterinary Medicine'
+  elif '/earth-space-sciences/' in exp.get('page_path',''):
+   sub='earth-space-sciences'
+   sub_name='Earth & Space Sciences'
+  elif '/marine-ocean-sciences/' in exp.get('page_path',''):
+   sub='marine-ocean-sciences'
+   sub_name='Marine & Ocean Sciences'
   else:
    sub='physics'
    sub_name='Physics'

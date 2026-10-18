@@ -14,8 +14,8 @@
     "category": "Natural sciences",
     "practical_type": "mixed",
     "display_mode": "Field & data",
-    "example_topics_json": "[\"Mineral and rock identification\", \"Plate motion and earthquake data\", \"Topographic maps and geological structures\", \"Photometry and telescope observations\"]",
-    "content_status": "planned"
+    "example_topics_json": "[\"Geology, mineralogy & petrology\", \"Geophysics, seismology & plate tectonics\", \"Planetary sciences, celestial mechanics & telescopes\", \"Atmospheric sciences, climatology & remote sensing\"]",
+    "content_status": "live"
   },
   {
     "slug": "chemistry",
@@ -113,8 +113,8 @@
     "category": "Natural sciences",
     "practical_type": "mixed",
     "display_mode": "Field & lab",
-    "example_topics_json": "[\"Seawater salinity analysis\", \"Water-mass identification\", \"Wave and beach-erosion investigation\", \"Plankton and productivity analysis\"]",
-    "content_status": "planned"
+    "example_topics_json": "[\"Physical oceanography, waves & currents\", \"Chemical oceanography & biogeochemical cycles\", \"Biological oceanography & marine ecology\", \"Marine geology, coastal processes & instrumentation\"]",
+    "content_status": "live"
   },
   {
     "slug": "agriculture-forestry",

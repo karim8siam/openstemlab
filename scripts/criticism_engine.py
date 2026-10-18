@@ -107,6 +107,14 @@ def run_audit(target_slugs=None, verbose=True):
         veterinary_medicine_configs = json.loads((ROOT / 'content/veterinary_medicine/experiments.json').read_text())
         for c in veterinary_medicine_configs: c['subject'] = 'veterinary-medicine'
         configs.extend(veterinary_medicine_configs)
+    if (ROOT / 'content/earth_space_sciences/experiments.json').exists():
+        earth_space_sciences_configs = json.loads((ROOT / 'content/earth_space_sciences/experiments.json').read_text())
+        for c in earth_space_sciences_configs: c['subject'] = 'earth-space-sciences'
+        configs.extend(earth_space_sciences_configs)
+    if (ROOT / 'content/marine_ocean_sciences/experiments.json').exists():
+        marine_ocean_sciences_configs = json.loads((ROOT / 'content/marine_ocean_sciences/experiments.json').read_text())
+        for c in marine_ocean_sciences_configs: c['subject'] = 'marine-ocean-sciences'
+        configs.extend(marine_ocean_sciences_configs)
     
     # Identify benchmarks vs new targets
     known_benchmarks = [
@@ -390,6 +398,16 @@ def run_audit(target_slugs=None, verbose=True):
     if (fs.existsSync('content/veterinary_medicine/experiments.json') && fs.existsSync('content/veterinary_medicine/models.js')) {
         veterinaryMedicineModels = require('./content/veterinary_medicine/models.js');
         veterinaryMedicineConfigs = JSON.parse(fs.readFileSync('content/veterinary_medicine/experiments.json', 'utf8'));
+    }
+    let earthSpaceSciencesModels = null, earthSpaceSciencesConfigs = [];
+    if (fs.existsSync('content/earth_space_sciences/experiments.json') && fs.existsSync('content/earth_space_sciences/models.js')) {
+        earthSpaceSciencesModels = require('./content/earth_space_sciences/models.js');
+        earthSpaceSciencesConfigs = JSON.parse(fs.readFileSync('content/earth_space_sciences/experiments.json', 'utf8'));
+    }
+    let marineOceanSciencesModels = null, marineOceanSciencesConfigs = [];
+    if (fs.existsSync('content/marine_ocean_sciences/experiments.json') && fs.existsSync('content/marine_ocean_sciences/models.js')) {
+        marineOceanSciencesModels = require('./content/marine_ocean_sciences/models.js');
+        marineOceanSciencesConfigs = JSON.parse(fs.readFileSync('content/marine_ocean_sciences/experiments.json', 'utf8'));
     }
     let errs = [];
     physConfigs.forEach(c => {
@@ -728,8 +746,36 @@ def run_audit(target_slugs=None, verbose=True):
             errs.push(c.slug + ': exception ' + e.message);
         }
     });
+    earthSpaceSciencesConfigs.forEach(c => {
+        try {
+            const p = earthSpaceSciencesModels.predict(c.slug, c.initial);
+            if (!p.valid) errs.push(c.slug + ': initial predict invalid');
+            const rows = c.samples.map(v => earthSpaceSciencesModels.reading(c.slug, v, earthSpaceSciencesModels.predict(c.slug, v).raw));
+            const fit = earthSpaceSciencesModels.fit(rows);
+            if (!fit || fit.r2 < 0.999) errs.push(c.slug + ': r2 < 0.999 (' + (fit ? fit.r2 : 'null') + ')');
+            const est = earthSpaceSciencesModels.estimate(c.slug, fit);
+            const diff = Math.abs(est.value - est.reference) / Math.abs(est.reference) * 100;
+            if (diff > 0.3) errs.push(c.slug + ': regression diff > 0.3% (' + diff.toFixed(4) + '%)');
+        } catch(e) {
+            errs.push(c.slug + ': exception ' + e.message);
+        }
+    });
+    marineOceanSciencesConfigs.forEach(c => {
+        try {
+            const p = marineOceanSciencesModels.predict(c.slug, c.initial);
+            if (!p.valid) errs.push(c.slug + ': initial predict invalid');
+            const rows = c.samples.map(v => marineOceanSciencesModels.reading(c.slug, v, marineOceanSciencesModels.predict(c.slug, v).raw));
+            const fit = marineOceanSciencesModels.fit(rows);
+            if (!fit || fit.r2 < 0.999) errs.push(c.slug + ': r2 < 0.999 (' + (fit ? fit.r2 : 'null') + ')');
+            const est = marineOceanSciencesModels.estimate(c.slug, fit);
+            const diff = Math.abs(est.value - est.reference) / Math.abs(est.reference) * 100;
+            if (diff > 0.3) errs.push(c.slug + ': regression diff > 0.3% (' + diff.toFixed(4) + '%)');
+        } catch(e) {
+            errs.push(c.slug + ': exception ' + e.message);
+        }
+    });
     if (errs.length) { console.error(JSON.stringify(errs)); process.exit(1); }
-    console.log('All ' + (physConfigs.length + csConfigs.length + chemConfigs.length + mathConfigs.length + statsConfigs.length + aeroConfigs.length + agriConfigs.length + biomedConfigs.length + chemengConfigs.length + civilConfigs.length + electricalConfigs.length + eceConfigs.length + mechanicalConfigs.length + textileConfigs.length + archaeologyConfigs.length + geographyConfigs.length + psychologyConfigs.length + agricultureForestryConfigs.length + basicMedicalSciencesConfigs.length + biologicalSciencesConfigs.length + dentistryOralHealthConfigs.length + foodNutritionConfigs.length + pharmacyPharmaceuticalSciencesConfigs.length + veterinaryMedicineConfigs.length) + ' experiment models passed validation.');
+    console.log('All ' + (physConfigs.length + csConfigs.length + chemConfigs.length + mathConfigs.length + statsConfigs.length + aeroConfigs.length + agriConfigs.length + biomedConfigs.length + chemengConfigs.length + civilConfigs.length + electricalConfigs.length + eceConfigs.length + mechanicalConfigs.length + textileConfigs.length + archaeologyConfigs.length + geographyConfigs.length + psychologyConfigs.length + agricultureForestryConfigs.length + basicMedicalSciencesConfigs.length + biologicalSciencesConfigs.length + dentistryOralHealthConfigs.length + foodNutritionConfigs.length + pharmacyPharmaceuticalSciencesConfigs.length + veterinaryMedicineConfigs.length + earthSpaceSciencesConfigs.length + marineOceanSciencesConfigs.length) + ' experiment models passed validation.');
     """
     js_proc = subprocess.run(['node', '-e', js_test_code], cwd=ROOT, capture_output=True, text=True)
     if js_proc.returncode != 0:
