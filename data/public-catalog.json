@@ -23,7 +23,7 @@
     "category": "Natural sciences",
     "practical_type": "hands-on",
     "display_mode": "Wet lab",
-    "example_topics_json": "[\"Acid–base titration and buffers\", \"Calorimetry and enthalpy changes\", \"Reaction kinetics\", \"Spectrophotometry and electrochemical cells\"]",
+    "example_topics_json": "[\"Acid\u2013base titration and buffers\", \"Calorimetry and enthalpy changes\", \"Reaction kinetics\", \"Spectrophotometry and electrochemical cells\"]",
     "content_status": "planned"
   },
   {
@@ -140,8 +140,8 @@
     "category": "Life & health",
     "practical_type": "Anatomy and physiology laboratory; experimental and observational exercises",
     "display_mode": "Preclinical lab",
-    "example_topics_json": "[\"Microscopy and tissue identification\", \"Reflex-response observations\", \"Respiratory-volume interpretation\", \"Cardiovascular physiological measurements\"]",
-    "content_status": "planned"
+    "example_topics_json": "[\"Erythrocyte sedimentation & rouleaux dynamics\", \"12-Lead electrocardiography vector axis\", \"Motor nerve conduction velocity & CMAP\", \"Diagnostic spirometry & FEV1/FVC ratio\", \"Enzymatic glucose & Biuret protein photometry\"]",
+    "content_status": "live"
   },
   {
     "slug": "dentistry-oral-health",

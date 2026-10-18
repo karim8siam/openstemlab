@@ -39,6 +39,8 @@ def experiment_index(experiments):
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/psychology/experiments.json').read_text())})
  if (ROOT/'content/agriculture_forestry/experiments.json').exists():
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/agriculture_forestry/experiments.json').read_text())})
+ if (ROOT/'content/basic_medical_sciences/experiments.json').exists():
+  configs.update({c['slug']:c for c in json.loads((ROOT/'content/basic_medical_sciences/experiments.json').read_text())})
  index=[]
  aliases={'simple-pendulum':'gravity g oscillation bob string time period','bifilar-suspension':'rotation inertia rod oscillation strings','young-modulus':'youngs modulus elasticity stress strain wire stretching','stokes-viscosity':'stokes law fluid liquid sphere terminal velocity','convex-lens':'optics focal length lens image uv method','photoelectric-effect':'photon light planck constant stopping potential work function','ohms-law':'ohm ohms law current voltage resistor resistance circuit ammeter voltmeter','metre-bridge':'meter metre wheatstone bridge null galvanometer unknown resistance','rc-charging':'capacitor capacitance resistor rc charge time constant exponential','glass-slab':'refraction refractive index apparent real depth glass microscope','diffraction-grating':'diffraction interference grating spectrum wavelength laser light','hookes-law':'hooke hookes law spring constant stiffness elasticity elongation extension load force','density-measurement':'density mass volume archimedes copper displacement solid balance cylinder','vernier-micrometer':'vernier caliper micrometer screw gauge least count zero error pi circumference diameter length measurement metrology','friction-laws':'friction laws amontons coulomb sliding kinetic static normal force coefficient dynamometer','principle-of-moments':'principle moments torque center gravity lever parallel forces fulcrum meter rule rotational equilibrium balance steelyard','force-table':'force table concurrent forces vector addition resultant equilibrant components pulleys ring equilibrium parallelogram law','equilibrium-forces':'parallel forces non-concurrent rigid body equilibrium beam reactions dynamometers support moments translational rotational static equilibrium',
   'free-fall':'free fall acceleration gravity g spark timer drop tower kinematics uniformly accelerated motion plummet photogate',
@@ -699,7 +701,49 @@ def experiment_index(experiments):
     'forest-stand-basal-area-wedge-prism-relascope': 'forest stand basal area wedge prism relascope bitterlich point sampling variable radius baf silviculture',
     'tree-height-clinometer-hypsometer-allometry': 'tree height clinometer hypsometer allometry suunto trigonometric canopy height merchantable bole forest mensuration',
     'tree-ring-growth-increment-borer-site-index': 'tree ring growth increment borer site index pressler cambial age annual rings dendrochronology forest productivity',
-    'forest-fuel-moisture-timelag-fire-danger': 'forest fuel moisture timelag fire danger 10-hour ponderosa pine fuel stick wildland fire nfdrs equilibrium humidity'}
+    'forest-fuel-moisture-timelag-fire-danger': 'forest fuel moisture timelag fire danger 10-hour ponderosa pine fuel stick wildland fire nfdrs equilibrium humidity',
+    'erythrocyte-sedimentation-rate-westergren': 'erythrocyte sedimentation rate esr westergren rouleaux fibrinogen acute phase reaction hemorheology hematology',
+    'hemoglobin-spectrophotometry-cyanmethemoglobin-drabkin': 'hemoglobin spectrophotometry cyanmethemoglobin drabkin absorbance 540 nm anemia blood photometry hematology',
+    'red-blood-cell-osmotic-fragility-hemolysis': 'red blood cell osmotic fragility hemolysis spherocytosis membrane hypotonic saline osmotic tolerance',
+    'hematocrit-microcentrifugation-packed-cell-volume': 'hematocrit microcentrifugation packed cell volume pcv wintrobe mcv mch mchc erythrocyte indices',
+    'differential-leukocyte-count-leishman-smear': 'differential leukocyte count dlc leishman smear peripheral blood film neutrophil absolute count granulocyte',
+    'bleeding-time-clotting-time-hemostasis': 'bleeding time clotting time hemostasis ivy duke lee-white coagulation cascade platelet plug fibrin',
+    'blood-group-antigen-agglutination-titer': 'blood group antigen agglutination titer abo rh rhesus forward reverse grouping isohemagglutinin',
+    'arterial-blood-pressure-sphygmomanometer-korotkoff': 'arterial blood pressure sphygmomanometer korotkoff sound systolic diastolic mean arterial pressure map auscultation',
+    'electrocardiogram-ecg-intervals-axis-determination': 'electrocardiogram ecg 12-lead intervals pr qrs qtc bazett frontal plane vector axis einthoven',
+    'cardiac-output-fick-principle-oxygen-consumption': 'cardiac output fick principle oxygen consumption vo2 arteriovenous gradient hemodynamics stroke volume',
+    'arterial-pulse-wave-velocity-vascular-compliance': 'arterial pulse wave velocity pwv vascular compliance stiffness moens-korteweg carotid-femoral transit time',
+    'cold-pressor-test-sympathetic-vasoreactivity': 'cold pressor test sympathetic vasoreactivity vasomotor reflex blood pressure rise autonomic stress',
+    'venous-pressure-gaertner-jugular-pulsation': 'venous pressure gaertner jugular pulsation central venous pressure cvp right atrial hydrostatic collapse',
+    'capillary-fragility-hess-rumpel-leede-petechiae': 'capillary fragility hess rumpel leede petechiae tourniquet test microvascular resistance endothelial permeability',
+    'motor-nerve-conduction-velocity-compound-muscle-potential': 'motor nerve conduction velocity mncv compound muscle action potential cmap latency median ulnar electromyography',
+    'h-reflex-hoffmann-monosynaptic-arc-latency': 'h reflex hoffmann monosynaptic arc latency m wave tibial nerve soleus spinal reflex ia afferent',
+    'surface-electromyography-isometric-force-fatigue': 'surface electromyography semg isometric force fatigue root mean square rms motor unit recruitment mvc',
+    'visual-evoked-potentials-p100-latency-reversal': 'visual evoked potentials vep p100 latency pattern reversal retinocortical conduction optic nerve neurophysiology',
+    'pure-tone-audiometry-air-bone-conduction-threshold': 'pure tone audiometry air bone conduction threshold hearing level db hl conductive sensorineural audiogram',
+    'caloric-vestibulo-ocular-reflex-electronystagmography': 'caloric vestibulo ocular reflex vor electronystagmography slow phase velocity nystagmus barany semicircular canal',
+    'cutaneous-two-point-discrimination-weber-esthesiometer': 'cutaneous two point discrimination weber esthesiometer tactile spatial acuity receptive field somatosensory homunculus',
+    'spirometry-forced-vital-capacity-fev1-ratio': 'spirometry forced vital capacity fvc fev1 ratio tiffeneau obstructive restrictive spirogram pulmonary mechanics',
+    'peak-expiratory-flow-wright-meter-airway-resistance': 'peak expiratory flow pefr wright meter airway resistance caliber bronchodilator reversibility asthma',
+    'alveolar-gas-equation-paO2-arterial-oxygen-gradient': 'alveolar gas equation pao2 arterial oxygen gradient a-a gradient ventilation perfusion mismatch shunt',
+    'static-pulmonary-compliance-transpulmonary-pressure': 'static pulmonary compliance transpulmonary pressure lung volume hysteresis pressure-volume curve surfactant',
+    'anatomical-dead-space-fowler-single-breath-nitrogen': 'anatomical dead space fowler single breath nitrogen washout vd conducting airway respiratory gas distribution',
+    'diffusing-capacity-carbon-monoxide-dlco-gas-transfer': 'diffusing capacity carbon monoxide dlco gas transfer single breath alveolocapillary membrane transfer factor',
+    'arterial-blood-gas-henderson-hasselbalch-acid-base': 'arterial blood gas abg henderson hasselbalch acid base ph paco2 bicarbonate nomogram davenport',
+    'creatinine-clearance-glomerular-filtration-rate': 'creatinine clearance glomerular filtration rate gfr jaffe reaction alkaline picrate renal function photometry',
+    'urine-specific-gravity-refractometer-osmolality': 'urine specific gravity refractometer osmolality renal concentrating ability countercurrent multiplication solute',
+    'fractional-excretion-sodium-feNa-acute-kidney-injury': 'fractional excretion sodium fena acute kidney injury prerenal azotemia tubular necrosis reabsorption',
+    'spectrophotometric-blood-glucose-god-pod-enzymatic': 'spectrophotometric blood glucose god pod enzymatic glucose oxidase peroxidase trinder chromophore 505 nm',
+    'serum-total-protein-biuret-albumin-globulin-ratio': 'serum total protein biuret colorimetry albumin globulin ratio a g copper chelation peptide bonds',
+    'serum-bilirubin-jendrassik-grof-diazo-method': 'serum bilirubin jendrassik grof diazo method total conjugated direct azobilirubin jaundice hemolysis',
+    'serum-amylase-caraway-iodometric-starch-hydrolysis': 'serum amylase caraway iodometric starch hydrolysis somogyi units pancreatic enzyme kinetics pancreatitis',
+    'hematoxylin-eosin-tissue-morphometry-epithelium': 'hematoxylin eosin tissue morphometry epithelium ocular reticle micrometer histopathology histology staining',
+    'isolated-ileum-smooth-muscle-acetylcholine-dose-response': 'isolated ileum smooth muscle acetylcholine dose response ec50 organ bath pharmacodynamics muscarinic',
+    'competitive-receptor-antagonism-schild-regression-pa2': 'competitive receptor antagonism schild regression pa2 atropine acetylcholine dose ratio antagonist affinity',
+    'pharmacokinetics-one-compartment-elimination-half-life': 'pharmacokinetics one compartment elimination half life ke t1/2 volume of distribution vd intravenous bolus',
+    'antimicrobial-susceptibility-kirby-bauer-zone-diameter': 'antimicrobial susceptibility kirby bauer zone diameter agar disc diffusion mic antibiotic resistance mueller-hinton',
+    'enzyme-kinetics-michaelis-menten-lineweaver-burk': 'enzyme kinetics michaelis menten lineweaver burk vmax km alkaline phosphatase double reciprocal plot',
+    'cardiac-glycoside-ouabain-na-k-atpase-inhibition': 'cardiac glycoside ouabain na k atpase inhibition ic50 sodium potassium pump myocardial membrane'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):
@@ -753,6 +797,9 @@ def experiment_index(experiments):
   elif '/agriculture-forestry/' in exp.get('page_path',''):
    sub='agriculture-forestry'
    sub_name='Agriculture & Forestry'
+  elif '/basic-medical-sciences/' in exp.get('page_path',''):
+   sub='basic-medical-sciences'
+   sub_name='Basic Medical Sciences'
   else:
    sub='physics'
    sub_name='Physics'
