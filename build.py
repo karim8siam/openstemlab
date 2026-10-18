@@ -112,7 +112,7 @@ for path in [p[0] for p in pages]+physics_urls+cs_urls+chemistry_urls+math_urls+
  seen_paths.add(path)
  url=ET.SubElement(urlset,'{'+ns+'}url')
  ET.SubElement(url,'{'+ns+'}loc').text=base+path
- ET.SubElement(url,'{'+ns+'}lastmod').text='2026-10-17'
+ ET.SubElement(url,'{'+ns+'}lastmod').text='2026-10-18'
  if path in ['/','/experiments/']:
   ET.SubElement(url,'{'+ns+'}changefreq').text='daily'
   ET.SubElement(url,'{'+ns+'}priority').text='1.0'
