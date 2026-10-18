@@ -23,7 +23,7 @@
     "category": "Natural sciences",
     "practical_type": "hands-on",
     "display_mode": "Wet lab",
-    "example_topics_json": "[\"Acid\u2013base titration and buffers\", \"Calorimetry and enthalpy changes\", \"Reaction kinetics\", \"Spectrophotometry and electrochemical cells\"]",
+    "example_topics_json": "[\"Acid–base titration and buffers\", \"Calorimetry and enthalpy changes\", \"Reaction kinetics\", \"Spectrophotometry and electrochemical cells\"]",
     "content_status": "planned"
   },
   {
@@ -149,8 +149,8 @@
     "category": "Life & health",
     "practical_type": "Dental materials laboratory and preclinical technical simulation",
     "display_mode": "Materials lab",
-    "example_topics_json": "[\"Gypsum setting and mixing variables\", \"Impression-material dimensional change\", \"Mechanical properties of restorative materials\", \"Polymerisation and material behaviour\"]",
-    "content_status": "planned"
+    "example_topics_json": "[\"Gypsum water-to-powder setting kinetics\", \"Addition silicone polymerization shrinkage\", \"Composite resin light cure depth\", \"Dentin adhesive microtensile bond strength\", \"Dental implant primary stability torque\"]",
+    "content_status": "live"
   },
   {
     "slug": "pharmacy-pharmaceutical-sciences",
@@ -176,8 +176,8 @@
     "category": "Life & health",
     "practical_type": "Food analysis and nutritional composition laboratory",
     "display_mode": "Food analysis",
-    "example_topics_json": "[\"Moisture-content determination\", \"Vitamin C analysis\", \"Protein and fat content measurement\", \"Titratable acidity and calibration\"]",
-    "content_status": "planned"
+    "example_topics_json": "[\"Kjeldahl crude protein nitrogen titration\", \"Soxhlet crude fat lipid extraction\", \"Vitamin C DCPIP titrimetric quantification\", \"Fruit juice titratable acidity\", \"In vitro starch amylolysis glycemic index\"]",
+    "content_status": "live"
   },
   {
     "slug": "mathematics",

@@ -43,6 +43,10 @@ def experiment_index(experiments):
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/basic_medical_sciences/experiments.json').read_text())})
  if (ROOT/'content/biological_sciences/experiments.json').exists():
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/biological_sciences/experiments.json').read_text())})
+ if (ROOT/'content/dentistry_oral_health/experiments.json').exists():
+  configs.update({c['slug']:c for c in json.loads((ROOT/'content/dentistry_oral_health/experiments.json').read_text())})
+ if (ROOT/'content/food_nutrition/experiments.json').exists():
+  configs.update({c['slug']:c for c in json.loads((ROOT/'content/food_nutrition/experiments.json').read_text())})
  index=[]
  aliases={'simple-pendulum':'gravity g oscillation bob string time period','bifilar-suspension':'rotation inertia rod oscillation strings','young-modulus':'youngs modulus elasticity stress strain wire stretching','stokes-viscosity':'stokes law fluid liquid sphere terminal velocity','convex-lens':'optics focal length lens image uv method','photoelectric-effect':'photon light planck constant stopping potential work function','ohms-law':'ohm ohms law current voltage resistor resistance circuit ammeter voltmeter','metre-bridge':'meter metre wheatstone bridge null galvanometer unknown resistance','rc-charging':'capacitor capacitance resistor rc charge time constant exponential','glass-slab':'refraction refractive index apparent real depth glass microscope','diffraction-grating':'diffraction interference grating spectrum wavelength laser light','hookes-law':'hooke hookes law spring constant stiffness elasticity elongation extension load force','density-measurement':'density mass volume archimedes copper displacement solid balance cylinder','vernier-micrometer':'vernier caliper micrometer screw gauge least count zero error pi circumference diameter length measurement metrology','friction-laws':'friction laws amontons coulomb sliding kinetic static normal force coefficient dynamometer','principle-of-moments':'principle moments torque center gravity lever parallel forces fulcrum meter rule rotational equilibrium balance steelyard','force-table':'force table concurrent forces vector addition resultant equilibrant components pulleys ring equilibrium parallelogram law','equilibrium-forces':'parallel forces non-concurrent rigid body equilibrium beam reactions dynamometers support moments translational rotational static equilibrium',
   'free-fall':'free fall acceleration gravity g spark timer drop tower kinematics uniformly accelerated motion plummet photogate',
@@ -775,7 +779,49 @@ def experiment_index(experiments):
     'stomata-density-conductance-carbon-dioxide-diffusion': 'stomata density conductance carbon dioxide diffusion nail polish epidermal impression stomatal frequency pore dimensions gas diffusion resistance',
     'plant-pigment-rf-values-paper-chromatography': 'plant pigment rf values paper chromatography retention factor chlorophyll a chlorophyll b carotenoids xanthophylls solvent front petroleum ether acetone',
     'seed-dormancy-gibberellic-acid-alpha-amylase-induction': 'seed dormancy gibberellic acid alpha amylase induction barley aleurone starch radial diffusion zone hormone signaling seed germination',
-    'plankton-primary-productivity-light-dark-bottle-winkler': 'plankton primary productivity light dark bottle winkler method dissolved oxygen gross net primary production respiration aquatic trophic dynamics'}
+    'plankton-primary-productivity-light-dark-bottle-winkler': 'plankton primary productivity light dark bottle winkler method dissolved oxygen gross net primary production respiration aquatic trophic dynamics',
+    'gypsum-water-powder-ratio-setting-time': 'gypsum water powder ratio setting time vicat needle gillmore needles plaster stone dental casting',
+    'dental-alginate-gelation-temperature-kinetics': 'alginate hydrocolloid impression mixing water temperature gelation time sol gel irreversible',
+    'elastomeric-impression-polymerization-shrinkage': 'addition silicone polyvinyl siloxane pvs polymerization shrinkage linear dimensional change impression elastomer filler',
+    'composite-resin-light-cure-depth-irradiance': 'composite resin light cure depth irradiance led curing unit degree conversion microhardness depth cure barcol',
+    'diametral-tensile-strength-resin-composite': 'composite conversion diametral tensile strength dts polymer matrix filler load microhardness universal testing',
+    'dental-amalgam-creep-compliance-viscoelasticity': 'dental amalgam creep compliance viscoelasticity static load cylinder dimensional change gamma-2 phase',
+    'acid-etching-enamel-depth-demineralization': 'enamel acid etching phosphoric acid demineralization kinetics calcium ion dissolution microporosity prism etch pattern',
+    'microtensile-bond-strength-dentin-adhesive': 'dentin bonding agent microtensile bond strength mtbs hybrid layer resin tag universal testing machine adhesion',
+    'dentin-hydraulic-conductance-tubule-occlusion': 'dentin hydraulic conductance fluid filtration dentinal tubules hydrodynamic theory desensitizing oxalate occlusion',
+    'knop-microhardness-enamel-demineralization': 'enamel remineralization sodium fluoride acidulated phosphate fluoride knoop microhardness mineral gain fluorapatite',
+    'thermal-expansion-mismatch-porcelain-fused-metal': 'porcelain fused metal pfm thermal expansion mismatch cte dilatometer crack propagation metal ceramic alloy',
+    'periodontal-probing-depth-fluid-exudate': 'periodontal pocket gingival crevicular fluid gcf flow rate filter paper periotron collagenase inflammation',
+    'endodontic-file-torsional-fatigue-resistance': 'nickel titanium niti rotary file torsional fatigue resistance torque angle failure simulated curved canal metallurgical',
+    'sodium-hypochlorite-tissue-dissolution-rate': 'root canal irrigant sodium hypochlorite naocl pulp tissue dissolution gravimetry proteolytic endodontics bio-debridement',
+    'streptococcus-mutans-biofilm-acidogenesis': 'dental plaque biofilm acidogenesis stephan curve streptococcus mutans lactic acid microelectrode critical ph glycolysis',
+    'chlorhexidine-substantivity-salivary-pellicle': 'chlorhexidine gluconate chx substantivity salivary pellicle antimicrobial adsorption spectrophotometry desorption oral hygiene',
+    'orthodontic-archwire-load-deflection-rate': 'orthodontic archwire force delivery 3-point bending load deflection rate stiffness nickel titanium stainless steel',
+    'acrylic-denture-base-residual-monomer-cure': 'heat cure acrylic denture base poly methyl methacrylate pmma residual monomer uv vis spectrophotometry conversion polymerization',
+    'dental-cement-film-thickness-seating-pressure': 'dental cement film thickness seating pressure glass slab luting agent zinc phosphate glass ionomer hydraulic flow',
+    'occlusal-bite-force-transducer-calibration': 'occlusal bite force piezoelectric transducer calibration emg masseter temporalis mastication gnathodynamometer',
+    'dental-implant-primary-stability-torque': 'dental implant primary stability insertion torque isq resonance frequency analysis polyurethane bone block osseointegration',
+    'moisture-content-forced-air-oven-drying': 'moisture content forced air oven drying gravimetric loss on drying water activity food matrix dry matter',
+    'crude-protein-kjeldahl-nitrogen-titration': 'kjeldahl crude protein nitrogen digestion titrimetry boric acid ammonium borate joness factor crude protein',
+    'soxhlet-crude-fat-petroleum-ether-extraction': 'soxhlet crude fat solvent extraction petroleum ether lipid content reflux condenser gravimetry butt tube',
+    'crude-fiber-acid-alkali-digestion-gravimetry': 'crude fiber acid alkali digestion weende method dietary fiber crucible incineration residue insoluble lignin cellulose',
+    'food-ash-muffle-furnace-gravimetric-assay': 'crude food ash muffle furnace incineration inorganic mineral residue gravimetry crucible porcelain trace elements',
+    'water-activity-chilled-mirror-dewpoint-isotherm': 'water activity chilled mirror dewpoint sorption isotherm hygrometer relative humidity microbial stability food matrix',
+    'vitamin-c-2-6-dichlorophenolindophenol-titrimetry': 'vitamin c ascorbic acid dcpip 2 6-dichlorophenolindophenol redox titration metaphosphoric acid dehydroascorbic antiscorbutic',
+    'total-anthocyanins-ph-differential-spectrophotometry': 'anthocyanin ph differential spectrophotometry flavylium cation quinonoidal base potassium chloride sodium acetate absorbance cyanidin',
+    'beta-carotene-spectrophotometric-beer-lambert': 'beta carotene spectrophotometric beer lambert law provitamin a carotenoid hexane absorption extinction coefficient',
+    'iron-content-ferrozine-spectrophotometric-assay': 'iron content ferrozine spectrophotometric assay ascorbic acid chelator spectrophotometer food mineral fortification',
+    'total-polyphenols-folin-ciocalteu-gallic-acid': 'total polyphenols folin ciocalteu gallic acid equivalence antioxidant reducing capacity phenolic compounds spectrophotometry',
+    'free-fatty-acids-titratable-acidity-oil': 'free fatty acids ffa acid value lipid titration ethanolic potassium hydroxide phenolphthalein rancidity hydrolytic lipolysis',
+    'peroxide-value-iodometric-thiosulfate-titration': 'peroxide value pov iodometric titration lipid oxidation thiosulfate starch indicator primary oxidation hydroperoxides rancidity',
+    'polyphenol-oxidase-enzymatic-browning-kinetics': 'apple polyphenol oxidase ppo enzymatic browning catechol dopachrome spectrophotometry blanching sodium metabisulfite polyphenol',
+    'titratable-acidity-fruit-juice-citric-acid': 'fruit juice titratable acidity citric acid sodium hydroxide phenolphthalein brix soluble solids sugar acid ratio',
+    'brix-refractometry-sugar-soluble-solids': 'brix refractometer soluble solids sugar concentration sucrose temperature correction abbe refractometry fruit juice',
+    'apparent-viscosity-coaxial-cylinder-rheometer': 'apparent dynamic viscosity coaxial cylinder rotational rheometer non-newtonian shear rate shear stress flow curve power law',
+    'emulsion-stability-centrifugal-creaming-index': 'food emulsion creaming stability centrifugation droplet flocculation oil-in-water surfactant turbidity phase separation',
+    'thermal-death-time-d-value-bacterial-inactivation': 'thermal death time d value bacterial inactivation decimal reduction thermal processing pasteurization kinetics z value',
+    'glycemic-index-in-vitro-starch-amylolysis': 'in vitro starch amylolysis glycemic index alpha amylase amyloglucosidase dns reducing sugars maltose digestion rate',
+    'dietary-energy-bomb-calorimetry-enthalpy': 'bomb calorimetry gross caloric energy heat of combustion benzoic acid parr oxygen bomb dewar water equivalent atwater'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):
@@ -835,6 +881,12 @@ def experiment_index(experiments):
   elif '/biological-sciences/' in exp.get('page_path',''):
    sub='biological-sciences'
    sub_name='Biological Sciences'
+  elif '/dentistry-oral-health/' in exp.get('page_path',''):
+   sub='dentistry-oral-health'
+   sub_name='Dentistry & Oral Health'
+  elif '/food-nutrition/' in exp.get('page_path',''):
+   sub='food-nutrition'
+   sub_name='Food & Nutrition'
   else:
    sub='physics'
    sub_name='Physics'
