@@ -55,6 +55,8 @@ from build_chemistry import build_chemistry
 chemistry_urls=build_chemistry(out,base,args.production)
 from build_math import build_math
 math_urls=build_math(out,base,args.production)
+from build_stats import build_stats
+stats_urls=build_stats(out,base,args.production)
 from build_catalog import build_catalog
 catalog_urls=build_catalog(out,base,args.production)
 # Keep old report/theory bookmarks working, but exclude aliases from the sitemap.
@@ -63,7 +65,7 @@ for old,new in [('/theory/','/physics/photoelectric-effect/theory/'),('/sample-l
  target.write_text('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex,follow"><link rel="canonical" href="'+base+new+'"><meta http-equiv="refresh" content="0;url='+new+'"><title>Lesson moved | Open STEM Lab</title></head><body><a href="'+new+'">Continue to the lesson</a></body></html>')
 ns='http://www.sitemaps.org/schemas/sitemap/0.9';ET.register_namespace('',ns);urlset=ET.Element('{'+ns+'}urlset')
 seen_paths=set()
-for path in [p[0] for p in pages]+physics_urls+cs_urls+chemistry_urls+math_urls+catalog_urls:
+for path in [p[0] for p in pages]+physics_urls+cs_urls+chemistry_urls+math_urls+stats_urls+catalog_urls:
  if path in seen_paths:continue
  seen_paths.add(path)
  url=ET.SubElement(urlset,'{'+ns+'}url')

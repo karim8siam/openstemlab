@@ -27,6 +27,10 @@ def run_audit(target_slugs=None, verbose=True):
         math_configs = json.loads((ROOT / 'content/math/experiments.json').read_text())
         for c in math_configs: c['subject'] = 'mathematics'
         configs.extend(math_configs)
+    if (ROOT / 'content/stats/experiments.json').exists():
+        stats_configs = json.loads((ROOT / 'content/stats/experiments.json').read_text())
+        for c in stats_configs: c['subject'] = 'statistics-probability'
+        configs.extend(stats_configs)
     
     # Identify benchmarks vs new targets
     known_benchmarks = [
@@ -211,6 +215,11 @@ def run_audit(target_slugs=None, verbose=True):
         mathModels = require('./content/math/models.js');
         mathConfigs = JSON.parse(fs.readFileSync('content/math/experiments.json', 'utf8'));
     }
+    let statsModels = null, statsConfigs = [];
+    if (fs.existsSync('content/stats/experiments.json') && fs.existsSync('content/stats/models.js')) {
+        statsModels = require('./content/stats/models.js');
+        statsConfigs = JSON.parse(fs.readFileSync('content/stats/experiments.json', 'utf8'));
+    }
     let errs = [];
     physConfigs.forEach(c => {
         try {
@@ -268,8 +277,22 @@ def run_audit(target_slugs=None, verbose=True):
             errs.push(c.slug + ': exception ' + e.message);
         }
     });
+    statsConfigs.forEach(c => {
+        try {
+            const p = statsModels.predict(c.slug, c.initial);
+            if (!p.valid) errs.push(c.slug + ': initial predict invalid');
+            const rows = c.samples.map(v => statsModels.reading(c.slug, v, statsModels.predict(c.slug, v).raw));
+            const fit = statsModels.fit(rows);
+            if (!fit || fit.r2 < 0.999) errs.push(c.slug + ': r2 < 0.999 (' + (fit ? fit.r2 : 'null') + ')');
+            const est = statsModels.estimate(c.slug, fit);
+            const diff = Math.abs(est.value - est.reference) / Math.abs(est.reference) * 100;
+            if (diff > 0.3) errs.push(c.slug + ': regression diff > 0.3% (' + diff.toFixed(4) + '%)');
+        } catch(e) {
+            errs.push(c.slug + ': exception ' + e.message);
+        }
+    });
     if (errs.length) { console.error(JSON.stringify(errs)); process.exit(1); }
-    console.log('All ' + (physConfigs.length + csConfigs.length + chemConfigs.length + mathConfigs.length) + ' experiment models passed validation.');
+    console.log('All ' + (physConfigs.length + csConfigs.length + chemConfigs.length + mathConfigs.length + statsConfigs.length) + ' experiment models passed validation.');
     """
     js_proc = subprocess.run(['node', '-e', js_test_code], cwd=ROOT, capture_output=True, text=True)
     if js_proc.returncode != 0:

@@ -11,6 +11,8 @@ def experiment_index(experiments):
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/chemistry/experiments.json').read_text())})
  if (ROOT/'content/math/experiments.json').exists():
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/math/experiments.json').read_text())})
+ if (ROOT/'content/stats/experiments.json').exists():
+  configs.update({c['slug']:c for c in json.loads((ROOT/'content/stats/experiments.json').read_text())})
  index=[]
  aliases={'simple-pendulum':'gravity g oscillation bob string time period','bifilar-suspension':'rotation inertia rod oscillation strings','young-modulus':'youngs modulus elasticity stress strain wire stretching','stokes-viscosity':'stokes law fluid liquid sphere terminal velocity','convex-lens':'optics focal length lens image uv method','photoelectric-effect':'photon light planck constant stopping potential work function','ohms-law':'ohm ohms law current voltage resistor resistance circuit ammeter voltmeter','metre-bridge':'meter metre wheatstone bridge null galvanometer unknown resistance','rc-charging':'capacitor capacitance resistor rc charge time constant exponential','glass-slab':'refraction refractive index apparent real depth glass microscope','diffraction-grating':'diffraction interference grating spectrum wavelength laser light','hookes-law':'hooke hookes law spring constant stiffness elasticity elongation extension load force','density-measurement':'density mass volume archimedes copper displacement solid balance cylinder','vernier-micrometer':'vernier caliper micrometer screw gauge least count zero error pi circumference diameter length measurement metrology','friction-laws':'friction laws amontons coulomb sliding kinetic static normal force coefficient dynamometer','principle-of-moments':'principle moments torque center gravity lever parallel forces fulcrum meter rule rotational equilibrium balance steelyard','force-table':'force table concurrent forces vector addition resultant equilibrant components pulleys ring equilibrium parallelogram law','equilibrium-forces':'parallel forces non-concurrent rigid body equilibrium beam reactions dynamometers support moments translational rotational static equilibrium',
   'free-fall':'free fall acceleration gravity g spark timer drop tower kinematics uniformly accelerated motion plummet photogate',
@@ -162,7 +164,51 @@ def experiment_index(experiments):
     'wave-equation-hyperbolic-pde-cfl': 'wave equation hyperbolic pde courant friedrichs lewy cfl condition explicit leapfrog dalembert wave packets numerical dispersion acoustic propagation',
     'laplace-poisson-elliptic-pde-relaxation': 'laplace poisson elliptic pde relaxation 5-point star stencil jacobi gauss seidel successive over relaxation sor optimal parameter young formula',
     'lotka-volterra-predator-prey-phase-plane': 'lotka volterra predator prey dynamics phase plane periodic orbits center equilibrium hamiltonian first integral conservation law volterra principle',
-    'lorenz-attractor-chaos-lyapunov-exponent': 'lorenz attractor chaos butterfly strange attractor maximal lyapunov exponent sensitive dependence initial conditions predictability horizon poincare map'}
+    'lorenz-attractor-chaos-lyapunov-exponent': 'lorenz attractor chaos butterfly strange attractor maximal lyapunov exponent sensitive dependence initial conditions predictability horizon poincare map',
+    'sample-moments-skewness-kurtosis': 'sample moments raw central moments variance skewness kurtosis expectation shape asymmetry peakedness jarque bera standard normal',
+    'kernel-density-estimation-bandwidth': 'kernel density estimation kde silverman rule bandwidth optimization gaussian kernel smoothing probability density function non-parametric',
+    'empirical-cumulative-distribution-ecdf': 'empirical cumulative distribution function ecdf dkw inequality glivenko cantelli theorem step function uniform convergence confidence bands',
+    'box-plot-tukey-fences-outliers': 'box plot exploratory data analysis five number summary median interquartile range iqr tukey fences outliers whiskers quartiles',
+    'chebyshev-markov-probability-bounds': 'chebyshev inequality markov inequality probability bounds tail probabilities variance deviation bound concentration measure',
+    'law-of-large-numbers-weak-strong': 'law of large numbers lln weak law strong law bernoulli khinchin sample mean convergence in probability almost sure convergence',
+    'central-limit-theorem-lindeberg-levy': 'central limit theorem clt lindeberg levy asymptotics standard error sample mean gaussian distribution normal approximation root n scaling',
+    'bivariate-correlation-spearman-pearson': 'bivariate correlation pearson correlation coefficient spearman rank correlation linear dependency monotonic association covariance scatter plot',
+    'order-statistics-sample-quantiles': 'order statistics sample quantiles sample median sample extrema beta distribution probability integral transform uniform order statistics',
+    'bootstrap-resampling-confidence-intervals': 'bootstrap resampling non-parametric bootstrap percentile confidence intervals efron monte carlo standard error empirical distribution',
+    'jackknife-pseudovalues-bias-reduction': 'jackknife resampling pseudo-values bias reduction variance estimation leave-one-out estimator consistency quenouille tukey',
+    'bernoulli-binomial-hypergeometric': 'bernoulli process binomial distribution hypergeometric distribution without replacement urn model combinatorics success probability variance',
+    'poisson-process-exponential-waiting': 'poisson process event counting arrivals rate parameter exponential distribution waiting times memoryless property queuing theory',
+    'geometric-negative-binomial-trials': 'geometric distribution negative binomial distribution pascal trials success failures memoryless waiting times pascal distribution',
+    'normal-gaussian-error-function': 'normal distribution gaussian distribution standard deviation variance error function erf bell curve full width at half maximum fwhm inflection points',
+    'gamma-erlang-chi-squared-family': 'gamma distribution erlang distribution chi squared distribution shape parameter scale degrees of freedom sum of squared normals queuing',
+    'student-t-distribution-heavy-tails': 'student t distribution gosset degrees of freedom heavy tails fat tails kurtosis small sample inference robust statistics',
+    'snedecor-f-distribution-variance-ratio': 'snedecor f distribution fisher variance ratio anova numerator denominator degrees of freedom hypothesis test',
+    'weibull-distribution-reliability-hazard': 'weibull distribution extreme value reliability hazard rate failure rate bathtub curve shape scale survival analysis',
+    'beta-distribution-bayesian-conjugate': 'beta distribution prior conjugacy bayesian updating order statistics shape parameters alpha beta uniform prior posterior',
+    'multinomial-distribution-joint-sampling': 'multinomial distribution joint sampling categorical distribution covariance matrix negative covariance multinomial trials',
+    'inverse-transform-rejection-sampling': 'random number generation inverse transform sampling rejection sampling von neumann acceptance envelope simulation monte carlo',
+    'maximum-likelihood-estimation-mle': 'maximum likelihood estimation mle likelihood function log likelihood score function fisher information consistency efficiency',
+    'method-of-moments-parameter-fitting': 'method of moments parameter fitting estimation sample moments theoretical moments consistency efficiency comparison',
+    'cramer-rao-lower-bound-efficiency': 'cramer rao lower bound crlb unbiased estimator minimum variance mvue fisher information efficiency regularity conditions',
+    'single-sample-z-and-t-hypothesis-tests': 'single sample z test student t test hypothesis testing null hypothesis alternative p value significance level alpha critical value',
+    'two-sample-welch-t-test-unequal-variance': 'two sample t test welch t test pooled variance unequal variances behrens fisher degrees of freedom difference in means',
+    'paired-samples-t-test-matched-pairs': 'paired samples t test matched pairs dependent samples repeated measures within subject difference scores t statistic',
+    'chi-squared-goodness-of-fit-pearson': 'pearson chi squared goodness of fit observed expected frequencies categorical deviance multinomial degrees of freedom',
+    'chi-squared-contingency-independence': 'chi squared test of independence contingency tables cramer v association cross tabulation marginal frequencies',
+    'one-way-anova-f-test-homogeneity': 'one way anova analysis of variance f test between group within group sum of squares treatment effects variance decomposition',
+    'two-way-anova-factorial-interactions': 'two way anova factorial design interaction effect main effects f ratio sum of squares balanced design',
+    'nonparametric-mann-whitney-wilcoxon': 'nonparametric test mann whitney u test wilcoxon rank sum test signed rank median shift distribution free hypothesis test',
+    'simple-linear-regression-ols-gauss-markov': 'simple linear regression ordinary least squares ols gauss markov blue best linear unbiased estimator slope intercept r squared',
+    'multiple-linear-regression-multicollinearity': 'multiple linear regression multicollinearity variance inflation factor vif adjusted r squared coefficients matrix formulation',
+    'logistic-regression-binary-odds-ratio': 'logistic regression binary classification logit function log odds odds ratio maximum likelihood sigmoid roc auc',
+    'polynomial-regression-bias-variance-tradeoff': 'polynomial regression curve fitting bias variance tradeoff overfitting underfitting model complexity degrees of freedom',
+    'ridge-and-lasso-shrinkage-regularization': 'ridge regression lasso regression regularization shrinkage l1 norm l2 norm penalty lambda sparsity hoerl tibshirani',
+    'bayes-theorem-conjugate-updating': 'bayes theorem conjugate prior updating posterior distribution prior precision likelihood normal normal conjugate map',
+    'markov-chain-transition-stationary-distribution': 'markov chain transition matrix stationary distribution steady state stochastic matrix eigenvalues spectral gap ergodicity',
+    'metropolis-hastings-mcmc-sampling': 'metropolis hastings markov chain monte carlo mcmc posterior sampling acceptance probability proposal distribution burn in',
+    'autoregressive-ar1-time-series-stationarity': 'autoregressive ar1 time series stationarity autocorrelation function acf yule walker lag pacf lag 1 dependence',
+    'principal-component-analysis-covariance-svd': 'principal component analysis pca covariance matrix singular value decomposition svd dimensionality reduction eigenvectors eigenvalues',
+    'receiver-operating-characteristic-confusion-matrix': 'receiver operating characteristic roc curve confusion matrix sensitivity specificity precision recall auc classification metrics'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):
@@ -174,6 +220,9 @@ def experiment_index(experiments):
   elif '/mathematics/' in exp.get('page_path',''):
    sub='mathematics'
    sub_name='Mathematics'
+  elif '/statistics-probability/' in exp.get('page_path',''):
+   sub='statistics-probability'
+   sub_name='Statistics & Probability'
   else:
    sub='physics'
    sub_name='Physics'
