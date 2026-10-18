@@ -138,6 +138,8 @@ def run_audit(target_slugs=None, verbose=True):
 
     dist_sitemap = (ROOT / 'dist/sitemap.xml').read_text() if (ROOT / 'dist/sitemap.xml').exists() else ''
     release_sitemap = (ROOT / 'release/sitemap.xml').read_text() if (ROOT / 'release/sitemap.xml').exists() else ''
+    site_cfg = json.loads((ROOT / 'site-config.json').read_text()) if (ROOT / 'site-config.json').exists() else {}
+    base_url = site_cfg.get('base_url', 'https://openstemlab.org').rstrip('/')
 
     def word_count(p):
         if not p.exists(): return 0
@@ -235,7 +237,7 @@ def run_audit(target_slugs=None, verbose=True):
             failures.append('Missing or insufficient keywords in build_search.py aliases')
 
         # 6. Sitemap & SEO
-        canon = f'https://openstemlab.online/{sub}/{slug}/'
+        canon = f'{base_url}/{sub}/{slug}/'
         if canon not in dist_sitemap or f'{canon}theory/' not in dist_sitemap or f'{canon}report/' not in dist_sitemap:
             failures.append('Canonical URLs missing from dist/sitemap.xml')
         if canon not in release_sitemap or f'{canon}theory/' not in release_sitemap or f'{canon}report/' not in release_sitemap:
