@@ -122,8 +122,8 @@
     "category": "Life & health",
     "practical_type": "mixed",
     "display_mode": "Field & lab",
-    "example_topics_json": "[\"Seed germination and establishment trial\", \"Soil-moisture measurement\", \"Irrigation comparison trial\", \"Forest nursery seed-treatment trial\"]",
-    "content_status": "planned"
+    "example_topics_json": "[\"Seed germination & tetrazolium viability\", \"Soil moisture neutron probe calibration\", \"Crop water stress index & infrared thermometry\", \"Soil cation exchange capacity & fertility\", \"Bitterlich relascope stand basal area\"]",
+    "content_status": "live"
   },
   {
     "slug": "biological-sciences",
@@ -212,8 +212,8 @@
     "category": "Human & field sciences",
     "practical_type": "Behavioral experiments",
     "display_mode": "Behavioral lab",
-    "example_topics_json": "[\"Choice reaction time\", \"Stroop interference\", \"Memory recall\", \"Visual perception thresholds\"]",
-    "content_status": "planned"
+    "example_topics_json": "[\"Choice reaction time & Hick's law\", \"Stroop interference & cognitive control\", \"Weber-Fechner luminance psychophysics\", \"Shepard-Metzler mental rotation\", \"Working memory Sternberg scanning\"]",
+    "content_status": "live"
   },
   {
     "slug": "geography",

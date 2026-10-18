@@ -35,6 +35,10 @@ def experiment_index(experiments):
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/archaeology/experiments.json').read_text())})
  if (ROOT/'content/geography/experiments.json').exists():
   configs.update({c['slug']:c for c in json.loads((ROOT/'content/geography/experiments.json').read_text())})
+ if (ROOT/'content/psychology/experiments.json').exists():
+  configs.update({c['slug']:c for c in json.loads((ROOT/'content/psychology/experiments.json').read_text())})
+ if (ROOT/'content/agriculture_forestry/experiments.json').exists():
+  configs.update({c['slug']:c for c in json.loads((ROOT/'content/agriculture_forestry/experiments.json').read_text())})
  index=[]
  aliases={'simple-pendulum':'gravity g oscillation bob string time period','bifilar-suspension':'rotation inertia rod oscillation strings','young-modulus':'youngs modulus elasticity stress strain wire stretching','stokes-viscosity':'stokes law fluid liquid sphere terminal velocity','convex-lens':'optics focal length lens image uv method','photoelectric-effect':'photon light planck constant stopping potential work function','ohms-law':'ohm ohms law current voltage resistor resistance circuit ammeter voltmeter','metre-bridge':'meter metre wheatstone bridge null galvanometer unknown resistance','rc-charging':'capacitor capacitance resistor rc charge time constant exponential','glass-slab':'refraction refractive index apparent real depth glass microscope','diffraction-grating':'diffraction interference grating spectrum wavelength laser light','hookes-law':'hooke hookes law spring constant stiffness elasticity elongation extension load force','density-measurement':'density mass volume archimedes copper displacement solid balance cylinder','vernier-micrometer':'vernier caliper micrometer screw gauge least count zero error pi circumference diameter length measurement metrology','friction-laws':'friction laws amontons coulomb sliding kinetic static normal force coefficient dynamometer','principle-of-moments':'principle moments torque center gravity lever parallel forces fulcrum meter rule rotational equilibrium balance steelyard','force-table':'force table concurrent forces vector addition resultant equilibrant components pulleys ring equilibrium parallelogram law','equilibrium-forces':'parallel forces non-concurrent rigid body equilibrium beam reactions dynamometers support moments translational rotational static equilibrium',
   'free-fall':'free fall acceleration gravity g spark timer drop tower kinematics uniformly accelerated motion plummet photogate',
@@ -655,7 +659,47 @@ def experiment_index(experiments):
     'gravity-model-spatial-interaction-trade': 'gravity model spatial interaction trade wilson inter city commuter flow distance decay population product',
     'rank-size-rule-urban-hierarchy-zipf': 'rank size rule urban hierarchy zipfs law city size settlement distribution primate city log log census',
     'nearest-neighbor-spatial-point-pattern-analysis': 'nearest neighbor spatial point pattern analysis clark evans ratio r poisson spatial dispersion random clustered',
-    'land-surface-temperature-split-window-landsat': 'land surface temperature lst split window landsat tirs thermal infrared satellite brightness temperature emissivity'}
+    'land-surface-temperature-split-window-landsat': 'land surface temperature lst split window landsat tirs thermal infrared satellite brightness temperature emissivity',
+    'choice-reaction-time-hicks-law': 'choice reaction time hicks law information theory bits decision latency chronograph stimulus tachistoscope',
+    'stroop-interference-effect-naming-latency': 'stroop color word interference cognitive incongruency latency vocal naming executive control attention',
+    'weber-fechner-fraction-luminance-discrimination': 'weber fechner fraction luminance contrast discrimination just noticeable difference jnd psychophysics photopic',
+    'mental-rotation-reaction-time-shepard-metzler': 'mental rotation reaction time shepard metzler angular disparity 3d voxel internal transformation spatial',
+    'working-memory-span-sternberg-search-rate': 'working memory span sternberg search rate memory set size retrieval probe latency serial exhaustive',
+    'ebbinghaus-forgetting-curve-savings-retention': 'ebbinghaus forgetting curve savings retention logarithmic decay relearning memory trace decay consolidation',
+    'fitts-law-pointing-index-of-difficulty': 'fitts law pointing index of difficulty motor control movement time speed accuracy trade off human computer',
+    'signal-detection-theory-perceptual-sensitivity-dprime': 'signal detection theory sdt perceptual sensitivity dprime roc curve hit false alarm decision criterion',
+    'rescorla-wagner-associative-strength-conditioning': 'rescorla wagner associative strength classical conditioning pavlovian error correction reinforcement learning',
+    'delay-discounting-hyperbolic-value-decay': 'delay discounting hyperbolic value decay intertemporal choice reward preference mazur impulsivity behavioral economics',
+    'prospect-theory-loss-aversion-subjective-value': 'prospect theory loss aversion subjective value kahneman tversky framing certainty equivalent risk heuristics',
+    'visual-search-feature-conjunction-slope': 'visual search feature conjunction slope treisman feature integration attention binding distractors parallel serial',
+    'galvanic-skin-response-electrodermal-arousal': 'galvanic skin response gsr electrodermal arousal skin conductance response scr sympathetic sudomotor autonomic',
+    'pupillometric-dilation-cognitive-load': 'pupillometric dilation cognitive load task evoked pupillary response locus coeruleus norepinephrine working memory',
+    'eeg-p300-event-related-potential-amplitude': 'eeg p300 event related potential erp amplitude oddball paradigm electroencephalography context updating',
+    'visual-acuity-snellen-logmar-contrast-sensitivity': 'visual acuity snellen logmar contrast sensitivity pelli robson grating spatial frequency modulation transfer',
+    'implicit-association-test-d-score-evaluative-bias': 'implicit association test iat d score evaluative bias dual categorization latency social cognition',
+    'bistable-necker-cube-perceptual-switching-rate': 'bistable necker cube perceptual switching rate binocular rivalry visual awareness neural fatigue reversal',
+    'serial-position-effect-primacy-recency-memory': 'serial position effect primacy recency free recall memory buffer atkinson shiffrin rehearsal multi store',
+    'eye-tracking-saccadic-latency-fixation-duration': 'eye tracking saccadic latency fixation duration video oculography main sequence eccentricity oculomotor',
+    'seed-germination-vigor-tetrazolium-viability': 'seed germination vigor tetrazolium viability ttc biochemical embryo germination speed index gri agronomy',
+    'soil-moisture-neutron-probe-calibration': 'soil moisture neutron probe calibration volumetric water content thermalization count ratio downhole hydrogen',
+    'crop-water-stress-index-infrared-thermometry': 'crop water stress index cwsi infrared thermometry canopy air temperature vapor pressure deficit vpd stomatal',
+    'chlorophyll-spad-meter-nitrogen-status': 'chlorophyll spad meter nitrogen status foliar kjeldahl dual wavelength optical absorbance crop nutrition',
+    'soil-cation-exchange-capacity-ammonium-acetate': 'soil cation exchange capacity cec ammonium acetate exchangeable bases clay colloids fertility soil chemistry',
+    'bray-curtis-soil-available-phosphorus': 'bray curtis soil available phosphorus acid fluoride extraction ascorbic acid molybdate blue spectrophotometry',
+    'soil-salinity-electrical-conductivity-extract': 'soil salinity electrical conductivity extract ece saturated paste osmotic potential usda salinity',
+    'plant-tissue-potassium-flame-photometry': 'plant tissue potassium flame photometry nitric perchloric wet acid digestion atomic emission foliar macronutrient',
+    'subsurface-drip-irrigation-emitter-discharge-uniformity': 'subsurface drip irrigation emitter discharge uniformity christiansen uniformity cu lateral operating pressure micro irrigation',
+    'penman-monteith-reference-evapotranspiration': 'fao 56 penman monteith reference evapotranspiration et0 surface energy balance net radiation aerodynamic vapor',
+    'furrow-irrigation-advance-infiltration-kostiakov': 'furrow irrigation advance infiltration kostiakov ponding water infiltration depth surface irrigation hydraulics',
+    'tensiometer-soil-matric-potential-retention': 'tensiometer soil matric potential retention suction water characteristic curve swcc van genuchten unsaturated flow',
+    'fungicide-bioassay-mycelial-growth-inhibition': 'fungicide bioassay mycelial growth inhibition ec50 poisoned food triazole phytopathogenic colony inhibition',
+    'insect-population-sweep-net-economic-threshold': 'insect population sweep net economic threshold injury level eil integrated pest management ipm yield damage',
+    'herbicide-spray-droplet-spectrum-water-sensitive-paper': 'herbicide spray droplet spectrum water sensitive paper vmd volume median diameter nozzle atomization drift',
+    'seed-borne-pathogen-blotter-infection-incidence': 'seed borne pathogen blotter infection incidence ista seed health assay fungal colonies phytopathology',
+    'forest-stand-basal-area-wedge-prism-relascope': 'forest stand basal area wedge prism relascope bitterlich point sampling variable radius baf silviculture',
+    'tree-height-clinometer-hypsometer-allometry': 'tree height clinometer hypsometer allometry suunto trigonometric canopy height merchantable bole forest mensuration',
+    'tree-ring-growth-increment-borer-site-index': 'tree ring growth increment borer site index pressler cambial age annual rings dendrochronology forest productivity',
+    'forest-fuel-moisture-timelag-fire-danger': 'forest fuel moisture timelag fire danger 10-hour ponderosa pine fuel stick wildland fire nfdrs equilibrium humidity'}
  for exp in experiments:
   c=configs.get(exp['slug'],{})
   if '/computer-science/' in exp.get('page_path',''):
@@ -703,6 +747,12 @@ def experiment_index(experiments):
   elif '/geography/' in exp.get('page_path',''):
    sub='geography'
    sub_name='Geography'
+  elif '/psychology/' in exp.get('page_path',''):
+   sub='psychology'
+   sub_name='Psychology'
+  elif '/agriculture-forestry/' in exp.get('page_path',''):
+   sub='agriculture-forestry'
+   sub_name='Agriculture & Forestry'
   else:
    sub='physics'
    sub_name='Physics'

@@ -75,6 +75,14 @@ def run_audit(target_slugs=None, verbose=True):
         geography_configs = json.loads((ROOT / 'content/geography/experiments.json').read_text())
         for c in geography_configs: c['subject'] = 'geography'
         configs.extend(geography_configs)
+    if (ROOT / 'content/psychology/experiments.json').exists():
+        psychology_configs = json.loads((ROOT / 'content/psychology/experiments.json').read_text())
+        for c in psychology_configs: c['subject'] = 'psychology'
+        configs.extend(psychology_configs)
+    if (ROOT / 'content/agriculture_forestry/experiments.json').exists():
+        agriculture_forestry_configs = json.loads((ROOT / 'content/agriculture_forestry/experiments.json').read_text())
+        for c in agriculture_forestry_configs: c['subject'] = 'agriculture-forestry'
+        configs.extend(agriculture_forestry_configs)
     
     # Identify benchmarks vs new targets
     known_benchmarks = [
@@ -319,6 +327,16 @@ def run_audit(target_slugs=None, verbose=True):
         geographyModels = require('./content/geography/models.js');
         geographyConfigs = JSON.parse(fs.readFileSync('content/geography/experiments.json', 'utf8'));
     }
+    let psychologyModels = null, psychologyConfigs = [];
+    if (fs.existsSync('content/psychology/experiments.json') && fs.existsSync('content/psychology/models.js')) {
+        psychologyModels = require('./content/psychology/models.js');
+        psychologyConfigs = JSON.parse(fs.readFileSync('content/psychology/experiments.json', 'utf8'));
+    }
+    let agricultureForestryModels = null, agricultureForestryConfigs = [];
+    if (fs.existsSync('content/agriculture_forestry/experiments.json') && fs.existsSync('content/agriculture_forestry/models.js')) {
+        agricultureForestryModels = require('./content/agriculture_forestry/models.js');
+        agricultureForestryConfigs = JSON.parse(fs.readFileSync('content/agriculture_forestry/experiments.json', 'utf8'));
+    }
     let errs = [];
     physConfigs.forEach(c => {
         try {
@@ -544,8 +562,36 @@ def run_audit(target_slugs=None, verbose=True):
             errs.push(c.slug + ': exception ' + e.message);
         }
     });
+    psychologyConfigs.forEach(c => {
+        try {
+            const p = psychologyModels.predict(c.slug, c.initial);
+            if (!p.valid) errs.push(c.slug + ': initial predict invalid');
+            const rows = c.samples.map(v => psychologyModels.reading(c.slug, v, psychologyModels.predict(c.slug, v).raw));
+            const fit = psychologyModels.fit(rows);
+            if (!fit || fit.r2 < 0.999) errs.push(c.slug + ': r2 < 0.999 (' + (fit ? fit.r2 : 'null') + ')');
+            const est = psychologyModels.estimate(c.slug, fit);
+            const diff = Math.abs(est.value - est.reference) / Math.abs(est.reference) * 100;
+            if (diff > 0.3) errs.push(c.slug + ': regression diff > 0.3% (' + diff.toFixed(4) + '%)');
+        } catch(e) {
+            errs.push(c.slug + ': exception ' + e.message);
+        }
+    });
+    agricultureForestryConfigs.forEach(c => {
+        try {
+            const p = agricultureForestryModels.predict(c.slug, c.initial);
+            if (!p.valid) errs.push(c.slug + ': initial predict invalid');
+            const rows = c.samples.map(v => agricultureForestryModels.reading(c.slug, v, agricultureForestryModels.predict(c.slug, v).raw));
+            const fit = agricultureForestryModels.fit(rows);
+            if (!fit || fit.r2 < 0.999) errs.push(c.slug + ': r2 < 0.999 (' + (fit ? fit.r2 : 'null') + ')');
+            const est = agricultureForestryModels.estimate(c.slug, fit);
+            const diff = Math.abs(est.value - est.reference) / Math.abs(est.reference) * 100;
+            if (diff > 0.3) errs.push(c.slug + ': regression diff > 0.3% (' + diff.toFixed(4) + '%)');
+        } catch(e) {
+            errs.push(c.slug + ': exception ' + e.message);
+        }
+    });
     if (errs.length) { console.error(JSON.stringify(errs)); process.exit(1); }
-    console.log('All ' + (physConfigs.length + csConfigs.length + chemConfigs.length + mathConfigs.length + statsConfigs.length + aeroConfigs.length + agriConfigs.length + biomedConfigs.length + chemengConfigs.length + civilConfigs.length + electricalConfigs.length + eceConfigs.length + mechanicalConfigs.length + textileConfigs.length + archaeologyConfigs.length + geographyConfigs.length) + ' experiment models passed validation.');
+    console.log('All ' + (physConfigs.length + csConfigs.length + chemConfigs.length + mathConfigs.length + statsConfigs.length + aeroConfigs.length + agriConfigs.length + biomedConfigs.length + chemengConfigs.length + civilConfigs.length + electricalConfigs.length + eceConfigs.length + mechanicalConfigs.length + textileConfigs.length + archaeologyConfigs.length + geographyConfigs.length + psychologyConfigs.length + agricultureForestryConfigs.length) + ' experiment models passed validation.');
     """
     js_proc = subprocess.run(['node', '-e', js_test_code], cwd=ROOT, capture_output=True, text=True)
     if js_proc.returncode != 0:
