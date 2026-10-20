@@ -87,3 +87,6 @@ report_file = ROOT / "audit-results" / "production-content.json"
 report_file.parent.mkdir(exist_ok=True)
 report_file.write_text(json.dumps(report, indent=2) + "\n")
 print(json.dumps(report, indent=2))
+# Do not publish an accidentally broken production sitemap or duplicate titles.
+if missing_files or sitemap_duplicates or metadata_problems or dupe_titles:
+    raise SystemExit(1)
