@@ -142,5 +142,9 @@ from tooling.seo.disambiguate_titles import disambiguate_titles
 renamed_titles=disambiguate_titles(out, seen_paths)
 print('Disambiguated '+str(renamed_titles)+' duplicate educational page titles')
 
+from tooling.seo.clarify_simulated_reports import clarify_reports
+corrected_provenance=clarify_reports(out)
+print('Corrected simulated lab report provenance in '+str(corrected_provenance)+' report pages')
+
 from package_public_source import package_public_source
 package_public_source(out)
