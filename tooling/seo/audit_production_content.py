@@ -23,6 +23,7 @@ missing_files = []
 metadata_problems = []
 short_pages = []
 report_disclosures_missing = []
+misleading_verification_claims = []
 types = Counter()
 sitemap_duplicates = [url for url, count in Counter(urls).items() if count > 1]
 h1_re = re.compile(r"<h1\b", re.I)
@@ -60,6 +61,8 @@ for url in urls:
         short_pages.append([url, len(text.split())])
     if "/report/" in url:
         types["report"] += 1
+        if re.search(r"Status:\s*(?:</strong>\s*)?Calibrated\s*(?:&amp;|&)\s*Verified", content, re.I):
+            misleading_verification_claims.append(url)
         if not re.search(r"\bsimulat(?:ed|ion|ions|ing)\b", text, re.I):
             report_disclosures_missing.append(url)
     elif "/theory/" in url:
@@ -80,6 +83,8 @@ report = {
     "pages_below_125_words_count": len(short_pages),
     "pages_below_125_words_examples": short_pages[:25],
     "report_pages_missing_simulated_keyword": len(report_disclosures_missing),
+    "reports_with_unsupported_verified_status": len(misleading_verification_claims),
+    "unsupported_verified_status_examples": misleading_verification_claims[:20],
     "report_disclosure_examples": report_disclosures_missing[:25],
     "scope": "Repository production-build audit only; not a Google Search Console indexing report."
 }
@@ -88,5 +93,5 @@ report_file.parent.mkdir(exist_ok=True)
 report_file.write_text(json.dumps(report, indent=2) + "\n")
 print(json.dumps(report, indent=2))
 # Do not publish an accidentally broken production sitemap or duplicate titles.
-if missing_files or sitemap_duplicates or metadata_problems or dupe_titles:
+if missing_files or sitemap_duplicates or metadata_problems or dupe_titles or misleading_verification_claims:
     raise SystemExit(1)
