@@ -130,7 +130,23 @@ for path in [p[0] for p in pages]+physics_urls+cs_urls+chemistry_urls+math_urls+
   ET.SubElement(url,'{'+ns+'}changefreq').text='weekly'
   ET.SubElement(url,'{'+ns+'}priority').text='0.9'
 ET.ElementTree(urlset).write(out/'sitemap.xml',encoding='utf-8',xml_declaration=True)
-(out/'robots.txt').write_text('User-agent: *\nAllow: /\n\nSitemap: '+base+'/sitemap.xml\n')
+robots_txt = (
+    "User-agent: *\n"
+    "Allow: /\n"
+    "Disallow: /release/\n"
+    "Disallow: /dist/\n"
+    "Disallow: /scratch/\n"
+    "Disallow: /data/\n\n"
+    f"Sitemap: {base}/sitemap.xml\n"
+)
+(out/'robots.txt').write_text(robots_txt)
+
+# Ensure Cloudflare Pages & SEO support files are in out
+for meta_file in ['_redirects', '_headers', '404.html']:
+    src_f = ROOT / meta_file
+    if src_f.exists():
+        shutil.copyfile(src_f, out / meta_file)
+
 print(('Production' if args.production else 'Local noindex')+' build: '+str(out)+'; '+str(len(seen_paths))+' sitemap URLs for '+base)
 
 from branding import apply_brand
@@ -148,3 +164,11 @@ print('Corrected simulated lab report provenance in '+str(corrected_provenance)+
 
 from package_public_source import package_public_source
 package_public_source(out)
+
+if args.production:
+    # Synchronize essential SEO and Cloudflare routing files to repo root
+    (ROOT / 'robots.txt').write_text(robots_txt)
+    shutil.copyfile(out / 'sitemap.xml', ROOT / 'sitemap.xml')
+    if (out / 'openstemlab-source.zip').exists():
+        shutil.copyfile(out / 'openstemlab-source.zip', ROOT / 'openstemlab-source.zip')
+

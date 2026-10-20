@@ -1,0 +1,39 @@
+# Cloudflare Pages Cache & Security Headers
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+/catalog.css
+  Cache-Control: public, max-age=31536000, immutable
+
+/style.css
+  Cache-Control: public, max-age=31536000, immutable
+
+/*-lesson.css
+  Cache-Control: public, max-age=31536000, immutable
+
+/*-engine.js
+  Cache-Control: public, max-age=31536000, immutable
+
+/*-models.js
+  Cache-Control: public, max-age=31536000, immutable
+
+/lab-search.js
+  Cache-Control: public, max-age=31536000, immutable
+
+/catalog.js
+  Cache-Control: public, max-age=31536000, immutable
+
+/brand/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/sitemap.xml
+  Cache-Control: public, max-age=3600, must-revalidate
+
+/robots.txt
+  Cache-Control: public, max-age=3600, must-revalidate
+
+/openstemlab-source.zip
+  Cache-Control: public, max-age=86400

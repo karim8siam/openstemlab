@@ -1,4 +1,8 @@
 User-agent: *
 Allow: /
+Disallow: /release/
+Disallow: /dist/
+Disallow: /scratch/
+Disallow: /data/
 
 Sitemap: https://openstemlab.org/sitemap.xml

@@ -1,0 +1,4 @@
+# Cloudflare Pages 301 Permanent Redirects for Open STEM Lab
+/release/*  /:splat  301
+/theory/  /physics/photoelectric-effect/theory/  301
+/sample-lab-report/  /physics/photoelectric-effect/report/  301

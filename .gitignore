@@ -9,6 +9,7 @@
 /outputs/
 *.zip
 !/release/*.zip
+!/openstemlab-source.zip
 
 # Local hosting identity, credentials, environment and caches
 /.openai/
