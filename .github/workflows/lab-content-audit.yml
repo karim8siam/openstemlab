@@ -18,11 +18,15 @@ jobs:
         run: python3 build.py --production
       - name: Audit 2,700+ URLs and simulated-lab disclosures
         run: python3 tooling/seo/audit_production_content.py
+      - name: Check HTML links students and Googlebot can follow
+        run: python3 tooling/quality/verify_navigation.py
+      - name: Check source and build readability policies
+        run: python3 tooling/quality/verify_reader_comfort.py
       - name: Save complete audit summary
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: lab-seo-student-content-audit
-          path: audit-results/production-content.json
+          path: audit-results/*.json
           if-no-files-found: ignore
           retention-days: 14
