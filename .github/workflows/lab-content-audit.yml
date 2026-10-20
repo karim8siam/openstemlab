@@ -2,7 +2,8 @@ name: Lab Production SEO and Student Trust Audit
 on:
   push:
     branches:
-      - 'audit/gsc-reader-coverage-20261021'
+      - main
+      - 'engineering/lab-seo-reader-structure-20261021'
   pull_request:
   workflow_dispatch:
 permissions:
@@ -16,12 +17,48 @@ jobs:
       - name: Build actual production output (no deployment)
         run: python3 build.py --production
       - name: Audit 2,700+ URLs and simulated-lab disclosures
-        run: python3 audit-production-content.py
+        run: python3 tooling/seo/audit_production_content.py
+      - name: Check HTML links students and Googlebot can follow
+        run: python3 tooling/quality/verify_navigation.py
+      - name: Check source and build readability policies
+        run: python3 tooling/quality/verify_reader_comfort.py
+      - name: Verify release sitemap integrity and reproducible source archive
+        run: python3 tooling/quality/verify_release_integrity.py
       - name: Save complete audit summary
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: lab-seo-student-content-audit
-          path: audit-results/production-content.json
+          path: audit-results/*.json
+          if-no-files-found: ignore
+          retention-days: 14
+
+  browser:
+    name: Student reader mobile / desktop
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser test dependency
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Generate public HTML
+        run: python3 build.py --production
+      - name: Check representative experiment, theory and report reading layouts
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory release > /tmp/openstemlab-http.log 2>&1 &
+          node tooling/quality/check_reader_mobile.cjs
+      - name: Save reader screenshots and browser results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: student-reader-browser
+          path: audit-results/
           if-no-files-found: ignore
           retention-days: 14

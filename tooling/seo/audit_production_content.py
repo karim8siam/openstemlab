@@ -10,7 +10,7 @@ import json
 import re
 import xml.etree.ElementTree as ET
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "release"
 BASE = "https://openstemlab.org/"
 if not (OUT / "sitemap.xml").is_file():
