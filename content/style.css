@@ -14,3 +14,35 @@
 .side-eco-discord{color:#5865f2;font-weight:600}
 .side-eco-discord:hover{background:rgba(88,101,242,0.12);color:#4752c4}
 
+
+
+/* Student reading comfort — preserve the existing warm paper palette.
+   Scope larger prose only to reading and report text, not simulation controls. */
+.theory-article p, .theory-article li,
+.lab-report p, .lab-report li {
+  font-size: 1rem;
+  line-height: 1.82;
+  max-width: 78ch;
+  overflow-wrap: break-word;
+}
+.page-heading > p {
+  font-size: 1rem;
+  line-height: 1.75;
+  max-width: 76ch;
+}
+.report-notice p {
+  font-size: 0.9375rem;
+  line-height: 1.72;
+  max-width: 78ch;
+}
+.theory-article h2, .theory-article h3,
+.lab-report h3 {
+  scroll-margin-top: 5rem;
+}
+@media print {
+  .lab-report p, .lab-report li,
+  .theory-article p, .theory-article li {
+    font: 10pt/1.55 Georgia, serif;
+    max-width: none;
+  }
+}
