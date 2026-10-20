@@ -22,6 +22,8 @@ jobs:
         run: python3 tooling/quality/verify_navigation.py
       - name: Check source and build readability policies
         run: python3 tooling/quality/verify_reader_comfort.py
+      - name: Verify release sitemap integrity and reproducible source archive
+        run: python3 tooling/quality/verify_release_integrity.py
       - name: Save complete audit summary
         if: always()
         uses: actions/upload-artifact@v4
