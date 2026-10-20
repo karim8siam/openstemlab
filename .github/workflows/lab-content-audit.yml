@@ -2,7 +2,8 @@ name: Lab Production SEO and Student Trust Audit
 on:
   push:
     branches:
-      - 'audit/gsc-reader-coverage-20261021'
+      - main
+      - 'engineering/lab-seo-reader-structure-20261021'
   pull_request:
   workflow_dispatch:
 permissions:
@@ -16,7 +17,7 @@ jobs:
       - name: Build actual production output (no deployment)
         run: python3 build.py --production
       - name: Audit 2,700+ URLs and simulated-lab disclosures
-        run: python3 audit-production-content.py
+        run: python3 tooling/seo/audit_production_content.py
       - name: Save complete audit summary
         if: always()
         uses: actions/upload-artifact@v4
