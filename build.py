@@ -112,7 +112,8 @@ for path in [p[0] for p in pages]+physics_urls+cs_urls+chemistry_urls+math_urls+
  seen_paths.add(path)
  url=ET.SubElement(urlset,'{'+ns+'}url')
  ET.SubElement(url,'{'+ns+'}loc').text=base+path
- ET.SubElement(url,'{'+ns+'}lastmod').text='2026-10-18'
+ # Do not claim every experiment was significantly updated on one fixed date.
+ # A verifiable per-page lastmod can be added when source update dates exist.
  if path in ['/','/experiments/']:
   ET.SubElement(url,'{'+ns+'}changefreq').text='daily'
   ET.SubElement(url,'{'+ns+'}priority').text='1.0'
@@ -137,7 +138,7 @@ apply_brand(out)
 
 # Avoid identical SERP titles on different department-specific laboratory lessons.
 # No academic content, canonical URLs or sitemap locations change.
-from disambiguate_titles import disambiguate_titles
+from tooling.seo.disambiguate_titles import disambiguate_titles
 renamed_titles=disambiguate_titles(out, seen_paths)
 print('Disambiguated '+str(renamed_titles)+' duplicate educational page titles')
 
