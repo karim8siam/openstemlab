@@ -22,3 +22,4 @@ __pycache__/
 *.py[cod]
 .DS_Store
 scratch/
+audit-results/
