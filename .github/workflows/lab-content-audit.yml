@@ -32,3 +32,33 @@ jobs:
           path: audit-results/*.json
           if-no-files-found: ignore
           retention-days: 14
+
+  browser:
+    name: Student reader mobile / desktop
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser test dependency
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Generate public HTML
+        run: python3 build.py --production
+      - name: Check representative experiment, theory and report reading layouts
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory release > /tmp/openstemlab-http.log 2>&1 &
+          node tooling/quality/check_reader_mobile.cjs
+      - name: Save reader screenshots and browser results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: student-reader-browser
+          path: audit-results/
+          if-no-files-found: ignore
+          retention-days: 14
