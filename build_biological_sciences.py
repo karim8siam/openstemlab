@@ -224,11 +224,11 @@ def report(c, rows, f, out):
         <div class="report-meta">
           <span><strong>Experiment:</strong> {E(c['shortTitle'])}</span>
           <span><strong>Protocol:</strong> Standard University Biological Laboratory Practice</span>
-          <span><strong>Status:</strong> Calibrated &amp; Verified</span>
+          <span><strong>Data provenance:</strong> Simulated teaching example; not a physical measurement or independent verification</span>
         </div>
       </header>
       <div class="report-links-bar">
-        <a class="btn-download" href="{csvpath}" download>Download raw sample data (.CSV)</a>
+        <a class="btn-download" href="{csvpath}" download>Download simulated example data (.CSV)</a>
       </div>
       {rep_content}
     </article>'''
