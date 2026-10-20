@@ -10,6 +10,9 @@ def package_public_source(directory):
   for ext in ['*.json','*.md','LICENSE']:
    for f in sorted(ROOT.glob(ext)):
     archive.write(f,f.name)
+  # Source archive must include generator modules needed by build.py.
+  for f in sorted((ROOT/'tooling'/'seo').rglob('*.py')):
+   archive.write(f,str(f.relative_to(ROOT)))
   for f in sorted((ROOT/'content').rglob('*')):
    if f.is_file():
     archive.write(f,str(f.relative_to(ROOT)))
