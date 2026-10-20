@@ -135,5 +135,11 @@ print(('Production' if args.production else 'Local noindex')+' build: '+str(out)
 from branding import apply_brand
 apply_brand(out)
 
+# Avoid identical SERP titles on different department-specific laboratory lessons.
+# No academic content, canonical URLs or sitemap locations change.
+from disambiguate_titles import disambiguate_titles
+renamed_titles=disambiguate_titles(out, seen_paths)
+print('Disambiguated '+str(renamed_titles)+' duplicate educational page titles')
+
 from package_public_source import package_public_source
 package_public_source(out)
