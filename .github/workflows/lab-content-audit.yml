@@ -1,0 +1,27 @@
+name: Lab Production SEO and Student Trust Audit
+on:
+  push:
+    branches:
+      - 'audit/gsc-reader-coverage-20261021'
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  content-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build actual production output (no deployment)
+        run: python3 build.py --production
+      - name: Audit 2,700+ URLs and simulated-lab disclosures
+        run: python3 audit-production-content.py
+      - name: Save complete audit summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lab-seo-student-content-audit
+          path: audit-results/production-content.json
+          if-no-files-found: ignore
+          retention-days: 14
