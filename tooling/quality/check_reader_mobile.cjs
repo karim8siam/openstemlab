@@ -21,6 +21,8 @@ try{
     const page=await context.newPage();
     const response=await page.goto(base+route.route,{waitUntil:'domcontentloaded',timeout:45000});
     assert.equal(response.status(),200,route.route+' must load');
+    // Check real rendered CSS, not only DOM readiness.
+    await page.waitForFunction(() => getComputedStyle(document.body).backgroundColor === 'rgb(247, 246, 240)', null, {timeout:15000});
     const report=await page.evaluate(()=>{
       const body=getComputedStyle(document.body);
       const p=document.querySelector('.theory-article p,.lab-report p,.page-heading>p');
