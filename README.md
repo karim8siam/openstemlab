@@ -176,7 +176,8 @@ Open STEM Lab is part of the non-profit OpenSTEM educational network:
 
 - **Open STEM Lab**: [openstemlab.org](https://openstemlab.org) — 894 Virtual Laboratories
 - **Open STEM Library**: [openstemlibrary.com](https://openstemlibrary.com) — 62 Open-Access University Textbooks
-- **Open STEM Field**: [openstemfield.org](https://openstemfield.org) — Field Research & Observational Network
+- **Open STEM Replicate**: [openstemreplicate.org](https://openstemreplicate.org) — Curated Research & Paper Replication
+- **Open STEM Tool**: [openstemtool.org](https://openstemtool.org) — 155 University Scientific Calculators & Data Tools
 - **Student Community**: [Discord Server](https://discord.com/invite/tBBKtvFJzW) — 24/7 International Study & Research Network
 
 ---
